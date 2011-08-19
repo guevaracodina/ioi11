@@ -1,0 +1,43 @@
+% __________________________________________________________________________
+% Near infrared spectroscopy Toolbox for SPM8
+% Version  0  (NIRS8)  2010-06-30
+%  http://
+% __________________________________________________________________________
+% Copyright (C) 2010 Ecole Polytechnique @gmail.com
+% 
+% ==========================================================================
+% Description
+% ==========================================================================
+% This toolbox is a and is available to the scientific 
+% community under the terms of the GNU General Public License.
+% 
+% ==========================================================================
+% Naming convention of output files
+% ==========================================================================
+%
+% segmented images:
+% -----------------
+% m[0]w[r]p[0123]*
+% m   - modulated
+%
+% 
+% bias corrected image:
+% -----------------
+% wm[r]*
+% m   - bias corrected
+% w   - warped
+% r   - dartel warped 
+%
+% estimated raw volumes:
+% -----------------------
+% pxxx_seg.txt
+% 
+%
+% ==========================================================================
+% Technical information
+% ==========================================================================
+%
+% This toolbox is an extension of the "New Segment Toolbox" in SPM8, but 
+% uses a completely different segmentation approach.  
+% 
+% 1. The PP 2010/10/05
