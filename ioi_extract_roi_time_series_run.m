@@ -33,7 +33,11 @@ for SubjIdx=1:length(job.IOImat)
                         tmp_mask = logical(spm_read_vols(vol));
                         %shrink mask to voxel size
                         if IOI.res.shrinkageOn
-                            mask{r1} = imresize(tmp_mask,[1/IOI.res.shrink_x 1/IOI.res.shrink_y],'bicubic');
+                            sz = size(tmp_mask);
+                            %careful, this floor might not lead to the
+                            %correct size - better to do a check on image
+                            %size
+                            mask{r1} = imresize(tmp_mask,[floor(sz(1)/IOI.res.shrink_x) floor(sz(2)/IOI.res.shrink_y)],'bicubic');
                         else
                             mask{r1} = tmp_mask;
                         end

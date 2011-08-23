@@ -20,6 +20,8 @@ if isfield(job.ROI_choice,'select_ROIs')
 else
     all_ROIs = 1;
 end
+%save_figures
+save_figures = job.save_figures;
 normalize_choice = job.normalize_choice;
 %get size of windows before and after stimulation to average on, in data points
 
@@ -43,6 +45,10 @@ for SubjIdx=1:length(job.IOImat)
                 [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
                 if isfield(IOI.ROI,'ROIfname')
                     load(IOI.ROI.ROIfname)
+                end
+                if save_figures
+                    dir_fig = fullfile(dir_ioimat,'fig');
+                    if ~exist(dir_fig,'dir'),mkdir(dir_fig);end
                 end
                 %get stimulation information - Careful, here onset duration is ignored!
                 %loop over sessions
@@ -191,7 +197,8 @@ for SubjIdx=1:length(job.IOImat)
                 IOI.res.GDb = GDb;
                 %arrays GSa and GSb not saved...
                 ctotal = [];
-                if generate_figures
+                h1 = 0;
+                if generate_figures || save_figures
                     %line specification - ROI x color
                     lp1{1} = '-'; lp1{2} = ':'; lp1{3} = '--'; lp1{4} = '-.';
                     if isfield(IOI.color,'HbO')
@@ -200,40 +207,44 @@ for SubjIdx=1:length(job.IOImat)
                         ctotal = [ctotal find(IOI.color.eng==IOI.color.HbO) ...
                             find(IOI.color.eng==IOI.color.HbR)];
                     end
-%                     if isfield(IOI.color,'flow')
-%                         lp2{IOI.color.eng==IOI.color.flow} = 'k'; %Flow
-%                         ctotal = [ctotal find(IOI.color.eng==IOI.color.flow)];
-%                     end
-%                     if isfield(IOI.color,'contrasts')
-%                         lp2{IOI.color.eng==IOI.color.contrasts} = 'y'; %contrast (=flow up to rescaling)
-%                         ctotal = [ctotal find(IOI.color.eng==IOI.color.contrasts)];
-%                     end
-
+                    %                     if isfield(IOI.color,'flow')
+                    %                         lp2{IOI.color.eng==IOI.color.flow} = 'k'; %Flow
+                    %                         ctotal = [ctotal find(IOI.color.eng==IOI.color.flow)];
+                    %                     end
+                    %                     if isfield(IOI.color,'contrasts')
+                    %                         lp2{IOI.color.eng==IOI.color.contrasts} = 'y'; %contrast (=flow up to rescaling)
+                    %                         ctotal = [ctotal find(IOI.color.eng==IOI.color.contrasts)];
+                    %                     end
+                    
                     %global figures, only for 1st onset
                     if exist('GMa','var')
-                        figure;
+                        h1 = h1 + 1;
+                        h(h1) = figure;
                         ls = linspace(0,job.window_after,window_after);
                         if length(GMa) <= length(lp1) %plot identifiable series
                             for r1 = 1:length(GMa)
                                 for c1 = ctotal
-                                    %if r1 <= length(lp1)
-                                        if ~add_error_bars
-                                            plot(ls,GMa{r1,1}{c1},[lp1{r1} lp2{c1}]); hold on
+                                    if ~add_error_bars
+                                        plot(ls,GMa{r1,1}{c1},[lp1{r1} lp2{c1}]); hold on
+                                    else
+                                        if r1 == 1
+                                            errorbar(ls(2:end-1),GMa{r1,1}{c1}(2:end-1),GDa{r1,1}{c1}(2:end-1),[lp1{r1} lp2{c1}]); hold on
                                         else
-                                            if r1 == 1
-                                                errorbar(ls(2:end-1),GMa{r1,1}{c1}(2:end-1),GDa{r1,1}{c1}(2:end-1),[lp1{r1} lp2{c1}]); hold on
-                                            else
-                                                plot(ls,GMa{r1,1}{c1},[lp1{r1} lp2{c1}]); hold on
-                                            end
+                                            plot(ls,GMa{r1,1}{c1},[lp1{r1} lp2{c1}]); hold on
                                         end
-                                    %end
+                                    end
+                                    if save_figures
+                                        filen = fullfile(dir_fig,['Mean_' IOI.color.eng(c1) '_ROI' int2str(r1) '.tiff']); %save as .tiff
+                                        print(h(h1), '-dtiffn', filen);
+                                    end
+                                    if ~generate_figures, close(h(h1)); end
                                 end
                             end
                         else %plot all series with random colors, skip error bars
-                             for c1 = ctotal
-                                 figure;
-                                 for r1 = 1:length(GMa)
-                               
+                            for c1 = ctotal
+                                h1 = h1 + 1;
+                                h(h1) = figure;
+                                for r1 = 1:length(GMa)                                    
                                     if r1 <= length(lp1)
                                         if ~add_error_bars
                                             plot(ls,GMa{r1,1}{c1},[lp1{r1} lp2{c1}]); hold on
@@ -244,6 +255,11 @@ for SubjIdx=1:length(job.IOImat)
                                                 plot(ls,GMa{r1,1}{c1},[lp1{r1} lp2{c1}]); hold on
                                             end
                                         end
+                                        if save_figures
+                                            filen = fullfile(dir_fig,['Mean_' IOI.color.eng(c1) '_ROI' int2str(r1) '.tiff']); %save as .tiff
+                                            print(h(h1), '-dtiffn', filen);
+                                        end
+                                        if ~generate_figures, close(h1); end
                                     end
                                 end
                             end
