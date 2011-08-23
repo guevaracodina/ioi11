@@ -146,7 +146,7 @@ window_after.tag  = 'window_after';
 window_after.name = 'Window after';
 window_after.strtype  = 'r';
 window_after.num = [1 1];
-window_after.val  = {20};
+window_after.val  = {15};
 window_after.help = {'Size of window to keep after each stimulation onset, in seconds.'};
 
 normalize_choice      = cfg_menu;
@@ -154,7 +154,7 @@ normalize_choice.tag  = 'normalize_choice';
 normalize_choice.name = 'Normalization choice';
 normalize_choice.labels = {'Median over window before','Time zero'};
 normalize_choice.values = {1,2};
-normalize_choice.val  = {1};
+normalize_choice.val  = {2};
 normalize_choice.help = {'Normalization choice.'}';
 
 generate_figures      = cfg_menu;
@@ -165,12 +165,20 @@ generate_figures.values = {1,0};
 generate_figures.val  = {1};
 generate_figures.help = {'Generate figures.'}';
 
+save_figures      = cfg_menu;
+save_figures.tag  = 'save_figures';
+save_figures.name = 'Save figures';
+save_figures.labels = {'Yes','No'};
+save_figures.values = {1,0};
+save_figures.val  = {0};
+save_figures.help = {'Save figures.'}';
+
 add_error_bars      = cfg_menu;
 add_error_bars.tag  = 'add_error_bars';
 add_error_bars.name = 'Add error bars';
 add_error_bars.labels = {'Yes','No'};
 add_error_bars.values = {1,0};
-add_error_bars.val  = {1};
+add_error_bars.val  = {0};
 add_error_bars.help = {'Add error bars.'}';
 
 % Executable Branch
@@ -179,7 +187,7 @@ stim_mean1.name = 'Average stimulations';             % The display name
 stim_mean1.tag  = 'stim_mean1'; %Very important: tag is used when calling for execution
 stim_mean1.val  = {IOImat redo1 IOImatCopyChoice stim_choice session_choice ...
     ROI_choice window_after window_before normalize_choice ...
-    generate_figures add_error_bars};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    generate_figures save_figures add_error_bars};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 stim_mean1.prog = @ioi_stim_mean_run;  % A function handle that will be called with the harvested job to run the computation
 stim_mean1.vout = @ioi_cfg_vout_stim_mean; % A function handle that will be called with the harvested job to determine virtual outputs
 stim_mean1.help = {'Calculate average over stimulations.'};

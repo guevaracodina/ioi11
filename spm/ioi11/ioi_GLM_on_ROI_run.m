@@ -64,7 +64,7 @@ for SubjIdx=1:length(job.IOImat)
                                 dur = 1;
                                 name = '';
                             else
-                                ons = IOI.sess_res{s1}.onsets{1};
+                                ons = IOI.sess_res{s1}.onsets{1}*IOI.dev.TR;
                                 dur = IOI.sess_res{s1}.durations{1};
                                 name = IOI.sess_res{s1}.names{1};
                             end
@@ -74,7 +74,7 @@ for SubjIdx=1:length(job.IOImat)
                             IOI.X{s1}.X0 = X;
                             %filter X - HPF
                             if hpf_butter_On
-                                X = ButterHPF(IOI.dev.TR,hpf_butter_freq,hpf_butter_order,X);
+                                X = ButterHPF(1/IOI.dev.TR,hpf_butter_freq,hpf_butter_order,X);
                                 %set last 10 entries to previous entry
                                 for i0=1:10 %dirty
                                     X(end-i0+1)=X(end-10);
@@ -113,7 +113,7 @@ for SubjIdx=1:length(job.IOImat)
                                             if ~isempty(y)
                                                 %filtering of the data: HPF
                                                 if hpf_butter_On
-                                                    y =  ButterHPF(IOI.dev.TR,hpf_butter_freq,hpf_butter_order,y);
+                                                    y =  ButterHPF(1/IOI.dev.TR,hpf_butter_freq,hpf_butter_order,y);
                                                 end
                                                 %filtering of the data: LPF (Gaussian)
                                                 y = spm_filter_HPF_LPF_WMDL(K,y')';

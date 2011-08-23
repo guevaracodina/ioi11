@@ -83,15 +83,15 @@ for SubjIdx=1:length(job.IOImat)
                 for i1 = 1:ROIsize(1) %N
                     for i2 = 1:ROIsize(2) %M
                         %ROI created in following order
-                        %  .    .        .       N*M
-                        %  .    .        .       .
-                        % M+1   M+2     M+3 ...  2*M
                         % 1      2       3 ...   ROIsize(2)=M
+                        % M+1   M+2     M+3 ...  2*M
+                        %  .    .        .       .
+                        %  .    .        .       N*M                                                                    
                         index = index+1;
-                        %vertices in the order: LL, LR, UL, UR
+                        %vertices in the order: UL, UR, LR, LL
                         mask = roipoly(im_anat,...
-                            [1+sz(1)*(i1-1) 1+sz(1)*(i1-1) 1+sz(1)*i1 1+sz(1)*i1],...
-                            [1+sz(2)*(i2-1) 1+sz(2)*i2 1+sz(2)*(i2-1) 1+sz(2)*i2]);
+                            [1+sz(2)*(i2-1) 1+sz(2)*i2 1+sz(2)*i2 1+sz(2)*(i2-1)],...
+                            [1+sz(1)*(i1-1) 1+sz(1)*(i1-1) 1+sz(1)*i1 1+sz(1)*i1]);
                         mask = single(mask);
                         if index < 10, str0 = '0'; else str0 = ''; end
                         str = [str0 int2str(index)];
