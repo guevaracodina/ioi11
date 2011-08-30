@@ -125,8 +125,8 @@ dP.strtype  = 'r';
 dP.num = [1 1];
 dP.val{1} = 25;
 dP.help = {'Enter minimal distance allowed between peaks in milliseconds'}';
-%%%%%%%%%%%%%%% HRF %%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---------------------------------------------------------------------
 % derivs Model derivatives
 % ---------------------------------------------------------------------
@@ -141,6 +141,28 @@ derivs.labels = {
 }';
 derivs.values = {[0 0] [1 0] [1 1]};
 derivs.val    = {[0 0]};
+
+%Additional HRFs
+
+% ---------------------------------------------------------------------
+% hrf Canonical HRF
+% ---------------------------------------------------------------------
+rat         = cfg_branch;
+rat.tag     = 'rat';
+rat.name    = 'HRF for rats';
+rat.val     = {derivs };
+rat.help    = {'Rat Hemodynamic Response Function.'};
+
+mouse         = cfg_branch;
+mouse.tag     = 'mouse';
+mouse.name    = 'HRF for mice';
+mouse.val     = {derivs };
+mouse.help    = {'Mouse Hemodynamic Response Function.'};
+
+%%%%%%%%%%%%%%% HRF %%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
 % ---------------------------------------------------------------------
 % hrf Canonical HRF
 % ---------------------------------------------------------------------
@@ -261,7 +283,7 @@ bases.tag     = 'bases';
 bases.name    = 'Basis Functions';
 bases.val     = {hrf };
 bases.help    = {'The most common choice of basis function is the Canonical HRF with or without time and dispersion derivatives. '};
-bases.values  = {hrf fourier fourier_han gamma fir };
+bases.values  = {hrf rat mouse fourier fourier_han gamma fir };
 % ---------------------------------------------------------------------
 % volt Model Interactions (Volterra)
 % ---------------------------------------------------------------------

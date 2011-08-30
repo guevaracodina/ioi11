@@ -65,7 +65,7 @@ for SubjIdx=1:length(job.IOImat)
                                 name = '';
                             else
                                 ons = IOI.sess_res{s1}.onsets{1}*IOI.dev.TR;
-                                dur = IOI.sess_res{s1}.durations{1};
+                                dur = IOI.sess_res{s1}.durations{1}*IOI.dev.TR;
                                 name = IOI.sess_res{s1}.names{1};
                             end
                             %convolve with hemodynamic response function
@@ -75,11 +75,7 @@ for SubjIdx=1:length(job.IOImat)
                             %filter X - HPF
                             if hpf_butter_On
                                 X = ButterHPF(1/IOI.dev.TR,hpf_butter_freq,hpf_butter_order,X);
-                                %set last 10 entries to previous entry
-                                for i0=1:10 %dirty
-                                    X(end-i0+1)=X(end-10);
-                                end
-                            end
+                             end
                             %add a constant
                             X = [X ones(size(X,1),1)];
                             %get K for low pass filtering:
@@ -177,23 +173,26 @@ SPM.xBF.dt = IOI.dev.TR;
 SPM.xBF.T = 1;
 SPM.xBF.T0 = 0;
 SPM.xBF.UNITS = 'secs';
-if strcmp(fieldnames(bases),'hrf')
-    if all(bases.hrf.derivs == [0 0])
+nambase = fieldnames(bases);
+if ischar(nambase)
+    nam=nambase;
+else
+    nam=nambase{1};
+end
+if strcmp(fieldnames(bases),'hrf') || strcmp(fieldnames(bases),'rat') ...
+        || strcmp(fieldnames(bases),'mouse')
+    %canonical HRF or rat or mouse
+    if all(bases.(nam).derivs == [0 0])
         SPM.xBF.name = 'hrf';
-    elseif all(bases.hrf.derivs == [1 0])
+    elseif all(bases.(nam).derivs == [1 0])
         SPM.xBF.name = 'hrf (with time derivative)';
-    elseif all(bases.hrf.derivs == [1 1])
+    elseif all(bases.(nam).derivs == [1 1])
         SPM.xBF.name = 'hrf (with time and dispersion derivatives)';
     else
         disp('Unrecognized hrf derivative choices.')
     end
+    SPM.xBF.nam = nam;
 else
-    nambase = fieldnames(bases);
-    if ischar(nambase)
-        nam=nambase;
-    else
-        nam=nambase{1};
-    end
     switch nam,
         case 'fourier',
             SPM.xBF.name = 'Fourier set';
@@ -206,11 +205,11 @@ else
         otherwise
             error('Unrecognized hrf derivative choices.')
     end
-    SPM.xBF.length = job.bases.(nam).length;
-    SPM.xBF.order  = job.bases.(nam).order;
+    SPM.xBF.length = bases.(nam).length;
+    SPM.xBF.order  = bases.(nam).order;
 end
 
-SPM.xBF = spm_get_bf(SPM.xBF);
+SPM.xBF = spm_get_bf_rat_mouse(SPM.xBF);
 if size(SPM.xBF.bf,1) == 1 || size(SPM.xBF.bf,2) == 1
     SPM.xBF.bf = SPM.xBF.bf/sum(SPM.xBF.bf); %normalize
 end
