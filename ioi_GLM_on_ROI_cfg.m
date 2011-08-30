@@ -31,7 +31,7 @@ NewIOIdir         = cfg_entry;
 NewIOIdir.name    = 'New directory for IOI.mat';
 NewIOIdir.tag     = 'NewIOIdir';       
 NewIOIdir.strtype = 's';
-NewIOIdir.val{1}    = 'Series';
+NewIOIdir.val{1}    = 'GLM';
 NewIOIdir.num     = [1 Inf];     
 NewIOIdir.help    = {'Directory for IOI.mat.'}'; 
 
