@@ -27,7 +27,7 @@ normalize_choice = job.normalize_choice;
 
 generate_figures = job.generate_figures;
 add_error_bars = job.add_error_bars;
-
+which_ons = 1; %which onset type to use
 for SubjIdx=1:length(job.IOImat)
     try
         tic
@@ -57,7 +57,7 @@ for SubjIdx=1:length(job.IOImat)
                         if ~electro_stims %default stims
                             onsets_list{s1} = IOI.sess_res{s1}.onsets;
                         else
-                            onsets_list{s1} = IOI.Sess(s1).U(1).ons; %take first type of onsets
+                            onsets_list{s1} = IOI.Sess(s1).U(which_ons).ons; %take first type of onsets
                         end
                     end
                 end
@@ -84,20 +84,22 @@ for SubjIdx=1:length(job.IOImat)
                 if global_M
                     M = possible_global_M;
                     %loop over onset types
-                    for m1=1:M
+                    for m1=1:M %loop not used; which_ons
                         %loop over colors
                         for c1=1:length(IOI.color.eng)
                             %loop over ROIs
+                            r2 = 0;
                             for r1=1:length(ROI)
                                 if all_ROIs || sum(r1==selected_ROIs)
+                                    r2 = r2 + 1;
                                     tmp_array_before = zeros(1,window_before);
                                     tmp_array_after = zeros(1,window_after);
                                     kb = 0; %counter of segments before onsets
                                     ka = 0; %counter of segments after onsets
                                     kb2 = 0; %counter of skipped segments before onsets
                                     ka2 = 0; %counter of skipped segments after onsets
-                                    GSa{r1,m1}{c1} = [];
-                                    GSb{r1,m1}{c1} = [];
+                                    GSa{r2,m1}{c1} = [];
+                                    GSb{r2,m1}{c1} = [];
                                     %loop over sessions
                                     for s1=1:length(IOI.sess_res)
                                         if all_sessions || sum(s1==selected_sessions)
@@ -117,7 +119,7 @@ for SubjIdx=1:length(job.IOImat)
                                                         end
                                                         tmp_array_before = tmp_array_before + tmp1-tmp_median;
                                                         kb = kb+1;
-                                                        GSb{r1,m1}{c1} = [GSb{r1,m1}{c1};tmp1-tmp_median];
+                                                        GSb{r2,m1}{c1} = [GSb{r2,m1}{c1};tmp1-tmp_median];
                                                     catch
                                                         kb2 = kb2+1;
                                                         if kb2 < 3
@@ -134,7 +136,7 @@ for SubjIdx=1:length(job.IOImat)
                                                         end
                                                         tmp_array_after = tmp_array_after + tmp1-tmp_median;
                                                         ka = ka+1;
-                                                        GSa{r1,m1}{c1} = [GSa{r1,m1}{c1};tmp1-tmp_median];
+                                                        GSa{r2,m1}{c1} = [GSa{r2,m1}{c1};tmp1-tmp_median];
                                                     catch
                                                         ka2 = ka2+1;
                                                         if ka2<3
@@ -145,9 +147,9 @@ for SubjIdx=1:length(job.IOImat)
                                                             
                                                         end
                                                     end
-                                                    if any(isnan(tmp_array_after))
-                                                        a=1;
-                                                    end
+%                                                     if any(isnan(tmp_array_after))
+%                                                         a=1;
+%                                                     end
                                                 end
                                             else
                                                 if ~(IOI.color.eng(c1)==IOI.color.contrasts)
@@ -156,10 +158,10 @@ for SubjIdx=1:length(job.IOImat)
                                             end
                                         end
                                     end
-                                    GMb{r1,m1}{c1} = tmp_array_before/kb; %global mean before
-                                    GMa{r1,m1}{c1} = tmp_array_after/ka; %global mean after
-                                    GDa{r1,m1}{c1} = std(GSa{r1,m1}{c1},0,1)/sqrt(ka); %SEM
-                                    GDb{r1,m1}{c1} = std(GSb{r1,m1}{c1},0,1)/sqrt(kb); %SEM
+                                    GMb{r2,m1}{c1} = tmp_array_before/kb; %global mean before
+                                    GMa{r2,m1}{c1} = tmp_array_after/ka; %global mean after
+                                    GDa{r2,m1}{c1} = std(GSa{r2,m1}{c1},0,1)/sqrt(ka); %SEM
+                                    GDb{r2,m1}{c1} = std(GSb{r2,m1}{c1},0,1)/sqrt(kb); %SEM
                                     if ka2>0 || kb2 > 0
                                         disp(['Skipped ' int2str(ka2) ' segments after onsets and ' int2str(kb2) ' segments before onsets']);
                                     end
@@ -218,10 +220,10 @@ for SubjIdx=1:length(job.IOImat)
                     
                     %global figures, only for 1st onset
                     if exist('GMa','var')
-                        h1 = h1 + 1;
-                        h(h1) = figure;
-                        ls = linspace(0,job.window_after,window_after);
                         if length(GMa) <= length(lp1) %plot identifiable series
+                            h1 = h1 + 1;
+                            h(h1) = figure;
+                            ls = linspace(0,job.window_after,window_after);
                             for r1 = 1:length(GMa)
                                 for c1 = ctotal
                                     if ~add_error_bars
@@ -233,35 +235,36 @@ for SubjIdx=1:length(job.IOImat)
                                             plot(ls,GMa{r1,1}{c1},[lp1{r1} lp2{c1}]); hold on
                                         end
                                     end
-                                    if save_figures
-                                        filen = fullfile(dir_fig,['Mean_' IOI.color.eng(c1) '_ROI' int2str(r1) '.tiff']); %save as .tiff
-                                        print(h(h1), '-dtiffn', filen);
-                                    end
-                                    if ~generate_figures, close(h(h1)); end
                                 end
                             end
+                            if save_figures
+                                filen = fullfile(dir_fig,['Mean_ROI.tiff']); %save as .tiff
+                                print(h(h1), '-dtiffn', filen);
+                            end
+                            if ~generate_figures, close(h(h1)); end
                         else %plot all series with random colors, skip error bars
+                            ColorSet = varycolor(size(GMa,1));
                             for c1 = ctotal
                                 h1 = h1 + 1;
                                 h(h1) = figure;
-                                for r1 = 1:length(GMa)                                    
-                                    if r1 <= length(lp1)
-                                        if ~add_error_bars
-                                            plot(ls,GMa{r1,1}{c1},[lp1{r1} lp2{c1}]); hold on
-                                        else
-                                            if r1 == 1
-                                                errorbar(ls(2:end-1),GMa{r1,1}{c1}(2:end-1),GDa{r1,1}{c1}(2:end-1),[lp1{r1} lp2{c1}]); hold on
-                                            else
-                                                plot(ls,GMa{r1,1}{c1},[lp1{r1} lp2{c1}]); hold on
-                                            end
-                                        end
-                                        if save_figures
-                                            filen = fullfile(dir_fig,['Mean_' IOI.color.eng(c1) '_ROI' int2str(r1) '.tiff']); %save as .tiff
-                                            print(h(h1), '-dtiffn', filen);
-                                        end
-                                        if ~generate_figures, close(h1); end
-                                    end
+                                ls = linspace(0,job.window_after,window_after);
+                                %                                 a1 = zeros(size(GMa,1),size(GMa{r1,1}{c1},2));
+                                %                                 for r1=1:size(GMa,1)
+                                %                                     a1(r1,:) = GMa{r1,1}{c1};
+                                %                                 end
+                                set(gca, 'ColorOrder', ColorSet);
+                                hold all
+                                for r1=1:size(GMa,1)
+                                    plot(ls,GMa{r1,1}{c1}); %hold on
                                 end
+                                legend off
+                                set(gcf, 'Colormap', ColorSet);
+                                colorbar
+                                if save_figures
+                                    filen = fullfile(dir_fig,['Mean_' IOI.color.eng(c1) '_allROI.tiff']); %save as .tiff
+                                    print(h(h1), '-dtiffn', filen);
+                                end
+                                if ~generate_figures, close(h(h1)); end
                             end
                         end
                     else
