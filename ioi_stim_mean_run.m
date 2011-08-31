@@ -152,7 +152,7 @@ for SubjIdx=1:length(job.IOImat)
 %                                                     end
                                                 end
                                             else
-                                                if ~(IOI.color.eng(c1)==IOI.color.contrasts)
+                                                if ~isfield(IOI.color,'contrasts') || (isfield(IOI.color,'contrasts') && ~(IOI.color.eng(c1)==IOI.color.contrasts))
                                                     disp(['Skipped session ' int2str(s1) ' for color ' int2str(c1) ' for ROI ' int2str(r1)]);
                                                 end
                                             end
