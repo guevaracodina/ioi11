@@ -121,7 +121,7 @@ for SubjIdx=1:length(job.subj.top_bin_dir)
                 IOI.color.red = str_red;
                 IOI.color.green = str_green;
                 IOI.color.yellow = str_yellow;
-                IOI.color.contrasts = str_contrast;
+                IOI.color.contrast = str_contrast;
                 %Create required directories
                 if ~exist(dir_group_res,'dir'),mkdir(dir_group_res); end
                 if ~exist(dir_subj_res,'dir'),mkdir(dir_subj_res); end

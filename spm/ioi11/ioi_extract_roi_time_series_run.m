@@ -27,6 +27,7 @@ for SubjIdx=1:length(job.IOImat)
             if ~isfield(IOI.res,'seriesOK') || job.force_redo
                 [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
                 %loop over ROIs
+                first_pass = 1;
                 for r1=1:length(IOI.res.ROI)
                     if all_ROIs || sum(r1==selected_ROIs)
                         vol = spm_vol(IOI.res.ROI{r1}.fname);
@@ -41,6 +42,23 @@ for SubjIdx=1:length(job.IOImat)
                         else
                             mask{r1} = tmp_mask;
                         end
+                        if first_pass
+                            %check size of mask is OK
+                            if all_sessions %first available session
+                                s1 = 1;
+                            else
+                                s1 = selected_sessions(1);
+                            end                          
+                            fname_list = IOI.sess_res{s1}.fname{1}; %1st color
+                            fname = fname_list{1}; %1st file in list
+                            vols = spm_vol(fname);
+                            d = spm_read_vols(vols);
+                            [d1 d2 d3 d4] = size(d);
+                            first_pass = 0;
+                        end
+                        if ~(d1 == size(mask{1},1) && d2 == size(mask{1},2))
+                            mask{r1} = imresize(mask{r1},[d1 d2]);                            
+                        end                                    
                     end
                 end
                 
@@ -76,7 +94,8 @@ for SubjIdx=1:length(job.IOImat)
                                                     %tmp_d = squeeze(d(:,:,i3,i4));
                                                     tmp_d = d(:,:,i3,i4);
                                                     %just take mean over mask for now
-                                                    if ~(IOI.color.eng(c1)==IOI.color.contrasts)
+                                                    
+                                                    if ~isfield(IOI.color,'contrasts') || (isfield(IOI.color,'contrasts') && ~(IOI.color.eng(c1)==IOI.color.contrasts))
                                                         e = mean(tmp_d(mask{r1}));
                                                     else
                                                         %contrast images will be smaller and need to be resized
