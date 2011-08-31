@@ -64,8 +64,8 @@ for SubjIdx=1:length(job.IOImat)
                                 dur = 1;
                                 name = '';
                             else
-                                ons = IOI.sess_res{s1}.onsets{1}*IOI.dev.TR;
-                                dur = IOI.sess_res{s1}.durations{1}*IOI.dev.TR;
+                                ons = IOI.sess_res{s1}.onsets{1}; %already in seconds *IOI.dev.TR;
+                                dur = IOI.sess_res{s1}.durations{1}; %*IOI.dev.TR;
                                 name = IOI.sess_res{s1}.names{1};
                             end
                             %convolve with hemodynamic response function

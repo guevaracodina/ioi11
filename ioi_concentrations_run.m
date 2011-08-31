@@ -1,6 +1,5 @@
 function out = ioi_concentrations_run(job)
 rescaling_factor = 1e6;
-% Only take the colors we have -oops, don't we have 3 colors?
 lambda1=450;
 lambda2=700;
 npoints=512;
@@ -76,10 +75,11 @@ for SubjIdx=1:length(job.IOImat)
                                 % Loop over volumes within each files
                                 nx = vols{1}(1).dim(1);
                                 ny = vols{1}(1).dim(2);
-                                nt = vols{1}(1).dim(3);
+                                nt = vols{1}(1).dim(4);
                                 image_hbo=zeros(nx,ny,1,nt);
                                 image_hbr=zeros(nx,ny,1,nt);
                                 clear slice
+                                slice = zeros(nx
                                 if job.MemoryManagementMenu %load all at once
                                     for c1 = 1:length(vols)
                                         %slice(c1,:,:,:)=ioi_read_time_vol(vols{c1},1);
