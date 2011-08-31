@@ -125,13 +125,19 @@ session_choice.val    = {all_sessions};
 session_choice.help   = {'Choose session selection method'}';
 
 sess_min_image_files         = cfg_entry; 
-sess_min_image_files.name    = 'Minimum number of image files';
+sess_min_image_files.name    = 'Minimum length of each session in seconds';
 sess_min_image_files.tag     = 'sess_min_image_files';       
 sess_min_image_files.strtype = 'r';
 sess_min_image_files.num     = [1 1];
-sess_min_image_files.val     = {10};
-sess_min_image_files.help    = {'Minimum number of image files per color'
-    'to declare a session valid'}'; 
+sess_min_image_files.val     = {60};
+sess_min_image_files.help    = {'Minimum length of each session in seconds'
+    'to declare a session valid'
+    'Otherwise, session will be ignored'
+    'and will be absent from the list of processed sessions'
+    'Note that for this, an assumption is made that data is acquired at 5 Hz'
+    'If that is not the case, change temp_TR in ioi_msioi_run'
+    'Another assumption is made that there are approximately 80 images per'
+    'raw binary file. If that is not the case, change temp_ImNum in ioi_msioi_run'};   
 
 % save_choice        = cfg_choice;
 % save_choice.name   = 'Choose saving method';
@@ -140,20 +146,20 @@ sess_min_image_files.help    = {'Minimum number of image files per color'
 % save_choice.val    = {one_file_per_session};
 % save_choice.help   = {'Choose saving method'}';
 
-% save_choice        = cfg_menu;
-% save_choice.name   = 'Choose saving method';
-% save_choice.tag    = 'save_choice';
-% save_choice.labels = {'One file per session','One file per block','One file per image'};
-% save_choice.values = {1,2,3};
-% save_choice.val    = {3};
-% save_choice.help   = {'Choose saving method'}';
+save_choice        = cfg_menu;
+save_choice.name   = 'Choose saving method';
+save_choice.tag    = 'save_choice';
+save_choice.labels = {'One file per session','One file per block','One file per image'};
+save_choice.values = {1,2,3};
+save_choice.val    = {2};
+save_choice.help   = {'Choose saving method'}';
 
 memmapfileOn        = cfg_menu;
 memmapfileOn.name   = 'Choose memory management method';
 memmapfileOn.tag    = 'memmapfileOn';
 memmapfileOn.labels = {'Keep all in memory','Use disk space for large structures'};
 memmapfileOn.values = {0,1};
-memmapfileOn.val    = {0};
+memmapfileOn.val    = {1};
 memmapfileOn.help   = {'Select memory management method. Keeping all in memory'
     'is faster, but may require too much memory.'}';
 
@@ -166,13 +172,12 @@ forceProcessingOn.val    = {0};
 forceProcessingOn.help   = {'Force processing of bad sessions: attempt will be'
     'made to process sessions with inconsistent number of files; '}';
 
-
 % Executable Branch
 msioi1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 msioi1.name = 'Read Multi-Spectral IOI';             % The display name
 msioi1.tag  = 'msioi1'; %Very important: tag is used when calling for execution
 msioi1.val  = {subj configuration_choice output_path_choice ...
-    session_choice memmapfileOn sess_min_image_files forceProcessingOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    session_choice save_choice memmapfileOn sess_min_image_files forceProcessingOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 msioi1.prog = @ioi_msioi_run;  % A function handle that will be called with the harvested job to run the computation
 msioi1.vout = @ioi_cfg_vout_msioi; % A function handle that will be called with the harvested job to determine virtual outputs
 msioi1.help = {'Module to create .nifti images from .bin images'
