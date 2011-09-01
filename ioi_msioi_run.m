@@ -169,27 +169,29 @@ for SubjIdx=1:length(job.subj.top_bin_dir)
                                 [files_bin,dummy] = cfg_getfile('FPListRec',dirs{2*i,:},'.bin');
                                 sess.images = files_bin; %all images
                                 for c1=1:length(str_color)
-                                    %str1 = str_color(c1);
-                                    strf = str_color_french(c1);
-                                    %separate images into various colors
-                                    [files_bin,dummy] = cfg_getfile('FPListRec',dirs{2*i,:},[strf strf]);
-                                    sess.fnames{c1} = files_bin;
-                                    if c1 ==1
-                                        image_count = length(files_bin);
-                                        %approximate computation of length
-                                        %of session in seconds
-                                        if image_count*temp_ImNum*temp_TR < min_session_duration
-                                            sess_OK = 0;
-                                            IOI = disp_msg(IOI,['Insufficient number of images for ' dirs{2*i-1,:} ' ...skipping.']);
-                                        end
-                                    else
-                                        %weaker criterion - number of image
-                                        %files might differ by 1 because
-                                        %one only one extra image
-                                        if abs(length(files_bin)- image_count)>= 1
-                                            if ~strcmp(strf,str_contrast) %OK if contrast files missing
+                                    if sess_OK
+                                        %str1 = str_color(c1);
+                                        strf = str_color_french(c1);
+                                        %separate images into various colors
+                                        [files_bin,dummy] = cfg_getfile('FPListRec',dirs{2*i,:},[strf strf]);
+                                        sess.fnames{c1} = files_bin;
+                                        if c1 ==1
+                                            image_count = length(files_bin);
+                                            %approximate computation of length
+                                            %of session in seconds
+                                            if image_count*temp_ImNum*temp_TR < min_session_duration
                                                 sess_OK = 0;
-                                                IOI = disp_msg(IOI,['Problem with number of ' strf strf ' images for ' dirs{2*i-1,:}]);
+                                                IOI = disp_msg(IOI,['Insufficient number of images for ' dirs{2*i-1,:} ' ...skipping.']);
+                                            end
+                                        else
+                                            %weaker criterion - number of image
+                                            %files might differ by 1 because
+                                            %one only one extra image
+                                            if abs(length(files_bin)- image_count)>= 1
+                                                if ~strcmp(strf,str_contrast) %OK if contrast files missing
+                                                    sess_OK = 0;
+                                                    IOI = disp_msg(IOI,['Problem with number of ' strf strf ' images for ' dirs{2*i-1,:}]);
+                                                end
                                             end
                                         end
                                     end
@@ -338,6 +340,7 @@ for SubjIdx=1:length(job.subj.top_bin_dir)
                                 image_total = [];
                                 %Do NOT shrink laser speckle! - this will
                                 %be done later, in the flow calculation module
+                                vx = [1 1 1];
                                 if ~(str1 == str_laser) %OK to shrink contrast images though
                                     if shrinkageOn
                                         %Keep same whatever value of PartialRedo2
@@ -345,8 +348,6 @@ for SubjIdx=1:length(job.subj.top_bin_dir)
                                         IOI.res.shrink_y=shrink_y;
                                         vx=[shrink_x shrink_y 1];
                                     end
-                                else
-                                    vx = [1 1 1];
                                 end
                                 %loop over binary files for this session and color
                                 for f1=1:length(sess_raw{s1}.fnames{c1})
@@ -376,6 +377,10 @@ for SubjIdx=1:length(job.subj.top_bin_dir)
                                     %interpolated for missing frames
                                     [nx ny nz nt] = size(image_part); %Here nz = 1, always
                                     im_count = im_count+nt;
+                                    if f1==1
+                                        nx0 = nx;
+                                        ny0 = ny;
+                                    end
                                     if f1==1 && memmapfileOn
                                         %create temporary file
                                         fid = fopen('tmp_file.dat','w');
@@ -388,7 +393,7 @@ for SubjIdx=1:length(job.subj.top_bin_dir)
                                     %catch case when there is a resizing of the images during acquisition
                                     %Ideally, this should never happen, but it has
                                     if f1>1
-                                        if ~(size(image_part,1)==size(image_total,1) && size(image_part,2)==size(image_total,2))
+                                        if ~(size(image_part,1)==nx0 && size(image_part,2)==ny0)
                                             if need_resize_message
                                                 need_resize_message = 0; %first pass
                                                 warning_message = ['Image resizing required for session ' ...
@@ -433,7 +438,7 @@ for SubjIdx=1:length(job.subj.top_bin_dir)
                                         end
                                     case 2
                                         %save per block of size size_block
-                                        for j1=1:block_size:n_frames                              
+                                        for j1=1:block_size:n_frames
                                             if j1 <= n_frames-block_size
                                                 last_index = j1+block_size-1;
                                             else
@@ -446,7 +451,7 @@ for SubjIdx=1:length(job.subj.top_bin_dir)
                                             if ~memmapfileOn
                                                 ioi_save_nifti(image_total(:,:,:,j1:last_index), fname, vx);
                                             else
-                                                ioi_save_nifti(im_obj.Data.image_total(:,:,:,j1:last_index), fname, vx); 
+                                                ioi_save_nifti(im_obj.Data.image_total(:,:,:,j1:last_index), fname, vx);
                                             end
                                         end
                                     case 3
@@ -460,7 +465,7 @@ for SubjIdx=1:length(job.subj.top_bin_dir)
                                             else
                                                 ioi_save_nifti(im_obj.Data.image_total(:,:,:,j1),fname,vx);
                                             end
-                                        end                                        
+                                        end
                                 end
                                 if memmapfileOn %clean up
                                     clear im_obj;
@@ -493,7 +498,7 @@ for SubjIdx=1:length(job.subj.top_bin_dir)
             %IOI.mat already exists, and rerun is not enforced - therefore just
             %skip this module and pass IOImat structure to the next module
             IOImat = fullfile(dir_subj_res,'IOI.mat');
-        end        
+        end
         out.IOImat = [out.IOImat IOImat];
         toc
         disp(['Subject ' int2str(SubjIdx) ' complete']);
@@ -586,7 +591,7 @@ temp(:,indices(list_frames)-indices(list_frames(1))+1) = image_part(:,list_frame
 shft = indices(list_frames(1))-1;
 for idx=1:length(missing_indices)
     b=missing_indices(idx)+1;
-    e=b+diff_index(idx)-2;    
+    e=b+diff_index(idx)-2;
     if ~last_missing_is_last_index || ~(idx == length(missing_indices))
         % Find gap width
         for n=b:e
@@ -653,7 +658,7 @@ image_total = single(image_total);
 
 % Internal private function to read anatomical binary image
 function image_total = private_read_single_bin_image(fname)
-% Open file containing a single volume 
+% Open file containing a single volume
 read_format = 'int16';
 fidA = fopen(fname);
 I = fread(fidA,2,read_format);
