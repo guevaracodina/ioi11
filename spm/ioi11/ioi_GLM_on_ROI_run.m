@@ -54,6 +54,7 @@ for SubjIdx=1:length(job.IOImat)
                 disp(['Extracted series not available for subject ' int2str(SubjIdx) ' ... skipping GLM']);
             else
                 if ~isfield(IOI.res,'GLMOK') || job.force_redo
+                    IOI = rmfield(IOI,'X');
                     [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
                     %loop over sessions
                     for s1=1:length(IOI.sess_res)
@@ -119,8 +120,8 @@ for SubjIdx=1:length(job.IOImat)
                                                 %Compute t stat
                                                 res = y'-X*b;
                                                 res2 = sum(res.^2);
-                                                IOI.X{1,s1}.r{r1,c1} = res2; % Residuals
-                                                IOI.X{1,s1}.t{r1,c1} = b(1)/(res2*bcov(1,1)/trRV)^0.5;
+                                                IOI.X{1,s1}.r(r1,c1) = res2; % Residuals
+                                                IOI.X{1,s1}.t(r1,c1) = b(1)/(res2*bcov(1,1)/trRV)^0.5;
                                             end
                                         end
                                     end

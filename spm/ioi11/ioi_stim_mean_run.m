@@ -152,7 +152,7 @@ for SubjIdx=1:length(job.IOImat)
 %                                                     end
                                                 end
                                             else
-                                                if ~isfield(IOI.color,'contrasts') || (isfield(IOI.color,'contrasts') && ~(IOI.color.eng(c1)==IOI.color.contrasts))
+                                                if ~isfield(IOI.color,'contrast') || (isfield(IOI.color,'contrast') && ~(IOI.color.eng(c1)==IOI.color.contrast))
                                                     disp(['Skipped session ' int2str(s1) ' for color ' int2str(c1) ' for ROI ' int2str(r1)]);
                                                 end
                                             end
@@ -213,9 +213,9 @@ for SubjIdx=1:length(job.IOImat)
                     %                         lp2{IOI.color.eng==IOI.color.flow} = 'k'; %Flow
                     %                         ctotal = [ctotal find(IOI.color.eng==IOI.color.flow)];
                     %                     end
-                    %                     if isfield(IOI.color,'contrasts')
-                    %                         lp2{IOI.color.eng==IOI.color.contrasts} = 'y'; %contrast (=flow up to rescaling)
-                    %                         ctotal = [ctotal find(IOI.color.eng==IOI.color.contrasts)];
+                    %                     if isfield(IOI.color,'contrast')
+                    %                         lp2{IOI.color.eng==IOI.color.contrast} = 'y'; %contrast (=flow up to rescaling)
+                    %                         ctotal = [ctotal find(IOI.color.eng==IOI.color.contrast)];
                     %                     end
                     
                     %global figures, only for 1st onset
