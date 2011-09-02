@@ -393,14 +393,14 @@ for SubjIdx=1:length(job.subj.top_bin_dir)
                                     %catch case when there is a resizing of the images during acquisition
                                     %Ideally, this should never happen, but it has
                                     if f1>1
-                                        if ~(size(image_part,1)==nx0 && size(image_part,2)==ny0)
-                                            if need_resize_message
+                                        if ~(nx==nx0 && ny==ny0)
+                                            if need_resize_message %Boolean, to avoid repeating warning message
                                                 need_resize_message = 0; %first pass
                                                 warning_message = ['Image resizing required for session ' ...
                                                     int2str(s1) ' file ' int2str(f1) ' color ' int2str(c1)];
                                                 IOI = disp_msg(IOI,warning_message);
                                             end
-                                            image_part = ioi_imresize(image_part,1,size(image_total,1),size(image_total,2),1,1);
+                                            image_part = ioi_imresize(image_part,1,nx0,ny0,1,1);
                                         end
                                     end
                                     %Build large image_total array, for later calculating the median
@@ -691,6 +691,3 @@ else
 end
 image_total = single(image_total);
 
-function IOI = disp_msg(IOI,msg)
-disp(msg);
-IOI.warning = [IOI.warning msg];
