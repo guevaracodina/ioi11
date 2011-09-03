@@ -54,7 +54,7 @@ for SubjIdx=1:length(job.IOImat)
                 disp(['Extracted series not available for subject ' int2str(SubjIdx) ' ... skipping GLM']);
             else
                 if ~isfield(IOI.res,'GLMOK') || job.force_redo
-                    IOI = rmfield(IOI,'X');
+                    if isfield(IOI,'X'), IOI = rmfield(IOI,'X'); end
                     [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
                     %loop over sessions
                     for s1=1:length(IOI.sess_res)
