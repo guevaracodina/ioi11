@@ -239,8 +239,16 @@ for SubjIdx=1:length(job.subj.top_bin_dir)
                     %Partial in force_redo, leading to PartialRedo2 == 1.
                     if ~PartialRedo2 || all_sessions || sum(s1==selected_sessions)
                         % First read all information concerning the experiment
-                        [scan_info, physio]=ioi_extract_info(IOI.info.expt,...
-                            sess_raw{s1}.info,sess_raw{s1}.TTL,sess_raw{s1}.Frame);
+                        try
+                            [scan_info, physio]=ioi_extract_info(IOI.info.expt,...
+                                sess_raw{s1}.info,sess_raw{s1}.TTL,sess_raw{s1}.Frame);
+                        catch exception
+                            disp(exception.identifier)
+                            disp(exception.stack(1))
+                            IOI = disp_msg(IOI,['Problem with raw session ' int2str(i) ': could not extract info']);
+                            disp('Session will be kept, but this could lead to various problems later');
+                            disp('Best is to find out the problem with this session, and fix it or remove it from the raw data folder');
+                        end
                         if s1==1 %assume acquisition frequency is unchanged for later sessions
                             % Identifiy times for each frame and each color separately
                             IOI.dev.acq_freq_hz=(scan_info.Frame(end,1)-scan_info.Frame(1,1))/scan_info.Frame(end,3);
