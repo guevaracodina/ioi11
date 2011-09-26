@@ -64,6 +64,10 @@ for SubjIdx=1:length(job.IOImat)
                                 [pkh ons] = ioi_get_onsets(IOI,s1,nSD,dP); %pk in seconds; pkh in arbitrary units
                                 dur = 1;
                                 name = '';
+%                                 separate_slow_fast = 1;
+%                                 if separate_slow_fast
+%                                     name{1}
+%                                 end
                             else
                                 ons = IOI.sess_res{s1}.onsets{1}; %already in seconds *IOI.dev.TR;
                                 dur = IOI.sess_res{s1}.durations{1}; %*IOI.dev.TR;
@@ -152,6 +156,14 @@ for SubjIdx=1:length(job.IOImat)
 end
 end
 function [pkh pk] = ioi_get_onsets(IOI,s1,nSD,nP)
+%sampling frequency - hard-coded:
+sf = 10000;
+%resolution in data points - 5 milliseconds
+rs = 50; %
+%select fast and slow rising onsets
+select_fast = 1; %peak reached within 40 ms of onsets
+fast_pk = 400; %data points at 10000 Hz
+select_slow = 1;
 %load raw electrophysiology vector
 load(IOI.res.el{s1});
 %remove time stamps for actual or spurious stimulations
@@ -159,10 +171,52 @@ ind = el>2; ind2 = [ind(7:end) false false false false false false];
 el(ind)=el(ind2);
 SD = std(el); %used 0.05 before
 MN = mean(el);
-sf = 10000;
+%apply high pass filter to remove drifts
+%el2 = ButterHPF(sf,cutoff,2,el);
+dP = floor(sf*nP);
 %find onsets peaks: pkh: peak height; pk: onset time at sf sampling frequency
-[pkh pk] = findpeaks(el,'MINPEAKHEIGHT',MN+nSD*SD,'MINPEAKDISTANCE',floor(sf*nP)); %25ms
-pk = pk/sf;
+[pkh pk] = findpeaks(el,'MINPEAKHEIGHT',MN+nSD*SD,'MINPEAKDISTANCE',rs); 
+
+npk = [];
+npkh = [];
+%Narrow down to good events, by making sure it goes above then below baseline
+for i=1:length(pk)
+    good = 0;
+    %check that next peak is at least dP points later
+    if (i>1 && pk(i)-pk(i-1) > dP) || (i==1)
+        if i== 1
+            pkm = -Inf;
+        else
+            %minimum over interval of 2*dP points
+            pkm = min(el(pk(i-1):pk(i)));
+        end
+        if pkm < MN-SD
+            %went below baseline, found new peak
+            
+            %calculate max 
+            [dummy pkM]= max(el(pk(i):min(length(el),(pk(i)+3*fast_pk))));
+            
+            if select_fast
+                if pkM <= fast_pk
+                    if pkM > 1
+                        good =1;
+                    end
+                end
+            end
+            if select_slow
+                if  pkM> fast_pk
+                    good = 1;
+                end
+            end
+            if good
+                npk =[npk pk(i)];
+                npkh = [npkh pkh(i)];
+            end
+        end
+    end
+end
+pk = npk/sf;
+pkh = npkh;
 %we2 = zeros(1,ns);
 %we2(pk) = -0.05;
 %inx = 0*1e6+(1:1e6);
