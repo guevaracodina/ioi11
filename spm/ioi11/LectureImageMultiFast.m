@@ -42,7 +42,7 @@ if frameRead(1,1)==-1
         while  EOF==0
             try
                 [ frameReadOut(indA,1)  count]= fread(fidA,1,'int32');
-                [~]=fread(fidA,s1*s2+4,'int16');
+                [dummy]=fread(fidA,s1*s2+4,'int16');
                 frameReadOut(indA,2)=indB;
                 frameReadOut(indA,3)=fileNo(i1);
                 indA=indA+1; indB=indB+1;
