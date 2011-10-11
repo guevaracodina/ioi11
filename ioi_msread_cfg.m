@@ -58,12 +58,13 @@ output_path_choice.help   = {'Choose output_path_choice'}';
 
 % Executable Branch
 msread1      = cfg_exbranch;       % This is the branch that has information about how to run this module
-msread1.name = 'Read Multi-Spectral IOI';             % The display name
+msread1.name = 'Read Multi-Spectral IOI, new, interlaced format';             % The display name
 msread1.tag  = 'msread1'; %Very important: tag is used when calling for execution
 msread1.val  = {top_bin_dir redo1 output_path_choice};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 msread1.prog = @ioi_msread_run;  % A function handle that will be called with the harvested job to run the computation
 msread1.vout = @ioi_cfg_vout_msread; % A function handle that will be called with the harvested job to determine virtual outputs
-msread1.help = {'Module to create .nifti images from .bin images'
+msread1.help = {'This is for the new format - interlaced colors and TDMS'
+    'Module to create .nifti images from .bin images'
     'for intrinsic optical imaging'}';
 return
 

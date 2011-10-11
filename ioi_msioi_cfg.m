@@ -174,13 +174,14 @@ forceProcessingOn.help   = {'Force processing of bad sessions: attempt will be'
 
 % Executable Branch
 msioi1      = cfg_exbranch;       % This is the branch that has information about how to run this module
-msioi1.name = 'Read Multi-Spectral IOI';             % The display name
+msioi1.name = 'Read Multi-Spectral IOI, old, non-interlaced format';             % The display name
 msioi1.tag  = 'msioi1'; %Very important: tag is used when calling for execution
 msioi1.val  = {subj configuration_choice output_path_choice ...
     session_choice save_choice memmapfileOn sess_min_image_files forceProcessingOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 msioi1.prog = @ioi_msioi_run;  % A function handle that will be called with the harvested job to run the computation
 msioi1.vout = @ioi_cfg_vout_msioi; % A function handle that will be called with the harvested job to determine virtual outputs
-msioi1.help = {'Module to create .nifti images from .bin images'
+msioi1.help = {'This is for the old .bin non-interlaced format. '
+    'Module to create .nifti images from .bin images'
     'for intrinsic optical imaging'}';
 return
 
