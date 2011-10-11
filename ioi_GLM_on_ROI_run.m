@@ -164,6 +164,10 @@ rs = 50; %
 select_fast = 1; %peak reached within 40 ms of onsets
 fast_pk = 400; %data points at 10000 Hz
 select_slow = 1;
+%method:
+%1: detection of spikes based on thresholds
+%2: detection of spikes based on fitting gamma functions
+method = 1; 
 %load raw electrophysiology vector
 load(IOI.res.el{s1});
 %remove time stamps for actual or spurious stimulations
