@@ -109,14 +109,38 @@ session_choice.values = {all_sessions,select_sessions};
 session_choice.val    = {all_sessions};
 session_choice.help   = {'Choose session selection method'}';
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Electrophysiology
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+sf      = cfg_entry;
+sf.tag  = 'sf';
+sf.name = 'Enter electrophysiology sampling frequency';
+sf.strtype  = 'r';
+sf.num = [1 1];
+sf.val{1} = 10000;
+sf.help = {'Enter electrophysiology sampling frequency.'}';
+
 nSD      = cfg_entry;
 nSD.tag  = 'nSD';
 nSD.name = 'Enter number of standard deviations';
 nSD.strtype  = 'r';
 nSD.num = [1 1];
-nSD.val{1} = 3;
+nSD.val{1} = 2; %1.8; %3;
 nSD.help = {'Enter number of standard deviations above mean of electrophysiology'
     'signal to use for detection of peaks.'}';
+
+mbSD      = cfg_entry;
+mbSD.tag  = 'mbSD';
+mbSD.name = 'Enter minimum standard deviation';
+mbSD.strtype  = 'r';
+mbSD.num = [1 1];
+mbSD.val{1} = 0.02;
+mbSD.help = {'Enter minimum standard deviation to be used for detection.'
+    'The detection threshold will be the mean signal plus the specified'
+    'multiple of standard deviations, times the maximum of the calculated'
+    'standard deviation of the electrophysiological signal after filtering'
+    'and the specified minimum standard deviation.'}';
 
 dP      = cfg_entry;
 dP.tag  = 'dP';
@@ -125,6 +149,80 @@ dP.strtype  = 'r';
 dP.num = [1 1];
 dP.val{1} = 25;
 dP.help = {'Enter minimal distance allowed between peaks in milliseconds'}';
+
+%HPF
+electro_hpf_butter_freq         = cfg_entry; 
+electro_hpf_butter_freq.name    = 'Cutoff frequency for HPF';
+electro_hpf_butter_freq.tag     = 'electro_hpf_butter_freq';       
+electro_hpf_butter_freq.strtype = 'r';
+electro_hpf_butter_freq.num     = [1 1];     
+electro_hpf_butter_freq.val     = {0.2};
+electro_hpf_butter_freq.help    = {'Enter cutoff frequency in Hz for Butterworth HPF.'};
+
+electro_hpf_butter_order         = cfg_entry; 
+electro_hpf_butter_order.name    = 'Order of Butterworth HPF';
+electro_hpf_butter_order.tag     = 'electro_hpf_butter_order';       
+electro_hpf_butter_order.strtype = 'r';
+electro_hpf_butter_order.num     = [1 1];     
+electro_hpf_butter_order.val     = {3};
+electro_hpf_butter_order.help    = {'Enter order of Butterworth HPF (preferred value = 3).'};
+
+electro_hpf_butter_On         = cfg_branch;
+electro_hpf_butter_On.tag     = 'electro_hpf_butter_On';
+electro_hpf_butter_On.name    = 'Butterworth HP filter';
+electro_hpf_butter_On.val     = {electro_hpf_butter_freq electro_hpf_butter_order}; 
+electro_hpf_butter_On.help    = {'Butterworth high-pass filter.'};
+
+electro_hpf_butter_Off         = cfg_branch;
+electro_hpf_butter_Off.tag     = 'electro_hpf_butter_Off';
+electro_hpf_butter_Off.name    = 'HP filter off';
+electro_hpf_butter_Off.val     = {}; 
+electro_hpf_butter_Off.help    = {'High pass filter turned off.'};
+
+electro_hpf_butter      = cfg_choice;
+electro_hpf_butter.tag  = 'electro_hpf_butter';
+electro_hpf_butter.name = 'Butterworth High Pass Filter';
+electro_hpf_butter.values = {electro_hpf_butter_On electro_hpf_butter_Off};
+electro_hpf_butter.val = {electro_hpf_butter_On};
+electro_hpf_butter.help = {'Choose whether to include a Butterworth High Pass Filter.'
+        'Parameters are: order (e.g. 3) and frequency (e.g. 0.01 Hz)'}';
+
+%LPF
+electro_lpf_butter_freq         = cfg_entry; 
+electro_lpf_butter_freq.name    = 'Cutoff frequency for LPF';
+electro_lpf_butter_freq.tag     = 'electro_lpf_butter_freq';       
+electro_lpf_butter_freq.strtype = 'r';
+electro_lpf_butter_freq.num     = [1 1];     
+electro_lpf_butter_freq.val     = {130};
+electro_lpf_butter_freq.help    = {'Enter cutoff frequency in Hz for Butterworth LPF.'};
+
+electro_lpf_butter_order         = cfg_entry; 
+electro_lpf_butter_order.name    = 'Order of Butterworth LPF';
+electro_lpf_butter_order.tag     = 'electro_lpf_butter_order';       
+electro_lpf_butter_order.strtype = 'r';
+electro_lpf_butter_order.num     = [1 1];     
+electro_lpf_butter_order.val     = {3};
+electro_lpf_butter_order.help    = {'Enter order of Butterworth LPF (preferred value = 3).'};
+
+electro_lpf_butter_On         = cfg_branch;
+electro_lpf_butter_On.tag     = 'electro_lpf_butter_On';
+electro_lpf_butter_On.name    = 'Butterworth LP filter';
+electro_lpf_butter_On.val     = {electro_lpf_butter_freq electro_lpf_butter_order}; 
+electro_lpf_butter_On.help    = {'Butterworth low-pass filter.'};
+
+electro_lpf_butter_Off         = cfg_branch;
+electro_lpf_butter_Off.tag     = 'electro_lpf_butter_Off';
+electro_lpf_butter_Off.name    = 'LP filter off';
+electro_lpf_butter_Off.val     = {}; 
+electro_lpf_butter_Off.help    = {'Low pass filter turned off.'};
+
+electro_lpf_butter      = cfg_choice;
+electro_lpf_butter.tag  = 'electro_lpf_butter';
+electro_lpf_butter.name = 'Butterworth Low Pass Filter';
+electro_lpf_butter.values = {electro_lpf_butter_On electro_lpf_butter_Off};
+electro_lpf_butter.val = {electro_lpf_butter_On};
+electro_lpf_butter.help = {'Choose whether to include a Butterworth Low Pass Filter.'
+        'Parameters are: order (e.g. 3) and frequency (e.g. 130 Hz)'}';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---------------------------------------------------------------------
@@ -358,10 +456,29 @@ lpf_gauss.help    = {'Specify properties of Gaussian filter'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+use_epilepsy_convention      = cfg_menu;
+use_epilepsy_convention.tag  = 'use_epilepsy_convention';
+use_epilepsy_convention.name = 'Use epilepsy convention for plots';
+use_epilepsy_convention.labels = {'False','True'};
+use_epilepsy_convention.values = {0,1};
+use_epilepsy_convention.val  = {1};
+use_epilepsy_convention.help = {'Use epilepsy/neurology convention for plots '
+    'of electrophysiology: vertical axis is inverted.'}';
+
+write_pictures      = cfg_menu;
+write_pictures.tag  = 'write_pictures';
+write_pictures.name = 'Write plots of electrophysiology';
+write_pictures.labels = {'False','True'};
+write_pictures.values = {0,1};
+write_pictures.val  = {1};
+write_pictures.help = {'Generate plots of electrophysiology.'
+    'Currently only applies to choice Stimulations from electrophysiology.'}';
+
 electro_stims         = cfg_branch;
 electro_stims.tag     = 'electro_stims';
 electro_stims.name    = 'Stimulations from electrophysiology';
-electro_stims.val     = {nSD dP};
+electro_stims.val     = {sf nSD mbSD dP electro_hpf_butter electro_lpf_butter ...
+        write_pictures use_epilepsy_convention};
 electro_stims.help    = {'Electrophysiology information'
     'Stimulations are assumed to last one data point.'
     'Information stored in IOI.Sess (not to be confused with protocol info in IOI.sess_res).'}';
@@ -378,6 +495,7 @@ stim_choice.tag    = 'stim_choice';
 stim_choice.values = {default_stims,electro_stims};
 stim_choice.val    = {electro_stims};
 stim_choice.help   = {'Choose stimulation selection method'}';
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

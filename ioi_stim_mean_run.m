@@ -35,6 +35,9 @@ for SubjIdx=1:length(job.IOImat)
         %Load IOI.mat information
         IOImat = job.IOImat{SubjIdx};
         load(IOImat);
+        if ~isfield(IOI,'dev')
+            IOI.dev.TR = 0.1999;
+        end
         window_after = round(job.window_after/IOI.dev.TR);
         window_before = round(job.window_before/IOI.dev.TR);
         
