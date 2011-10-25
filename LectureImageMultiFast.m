@@ -7,9 +7,9 @@ function [Imout frameout frameReadOut fileNo] = LectureImageMultiFast(Path,file,
 %if frameRead is a vector, Imout is a cell
 % frameReadOut : frames present in the file (frameNo  indexInFileNo fileNo)
 % fileNo : number of the file containing image
-persistent zzz filenameOld  filename00Old s1 s2 
+persistent zzz filenameOld  filename00Old persistent_s1 persistent_s2 
 if nargin==0
-    clear zzz filenameOld  filename00Old s1 s2
+    clear zzz filenameOld  filename00Old persistent_s1 persistent_s2
     return
 end
 if ~strcmp(Path(end),'\')
@@ -26,8 +26,8 @@ end
 if ~strcmp([Path file],filename00Old) || frameRead(1)==-1
     fidA = fopen([Path file '0.bin']);
     I = fread(fidA,5,'int32');
-    s1= I(3);
-    s2= I(2);
+    persistent_s1= I(3);
+    persistent_s2= I(2);
     fclose(fidA);
 end
 if frameRead(1,1)==-1
@@ -42,7 +42,7 @@ if frameRead(1,1)==-1
         while  EOF==0
             try
                 [ frameReadOut(indA,1)  count]= fread(fidA,1,'int32');
-                [dummy]=fread(fidA,s1*s2+4,'int16');
+                [dummy]=fread(fidA,persistent_s1*persistent_s2+4,'int16');
                 frameReadOut(indA,2)=indB;
                 frameReadOut(indA,3)=fileNo(i1);
                 indA=indA+1; indB=indB+1;
@@ -71,7 +71,7 @@ for i1=1:size(frameRead,1)
         else
             zzz=[];
             zzz=int16((fread(fidA,'int16')));
-            zzz=reshape(zzz,(s1*s2+6),round(length(zzz)/(s1*s2+6)));            
+            zzz=reshape(zzz,(persistent_s1*persistent_s2+6),round(length(zzz)/(persistent_s1*persistent_s2+6)));            
             fclose(fidA);
         end
     else
@@ -81,7 +81,7 @@ for i1=1:size(frameRead,1)
     if fidA~=-1   
         %disp(zzz(1,frameRead(i1,2)))
         frameout(i1)= frameRead(i1,1);
-        Imout=double(reshape(zzz(7:end,frameRead(i1,2)),[s1 s2])'); %note :on tourne la figure
+        Imout=double(reshape(zzz(7:end,frameRead(i1,2)),[persistent_s2 persistent_s1])'); %note :on tourne la figure
         
         if size(frameRead,1)>1
             Imoutcell{i1}= Imout;
@@ -92,7 +92,7 @@ for i1=1:size(frameRead,1)
         catch
             disp([],['frame : ' num2str(frameRead(i1)) ' non trouvé' ]) 
         end
-        Imout=zeros(s2, s1);
+        Imout=zeros(persistent_s2, persistent_s1);
         frameout=0;
     end
     filenameOld=filename;

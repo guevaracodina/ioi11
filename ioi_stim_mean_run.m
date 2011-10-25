@@ -36,7 +36,7 @@ for SubjIdx=1:length(job.IOImat)
         IOImat = job.IOImat{SubjIdx};
         load(IOImat);
         if ~isfield(IOI,'dev')
-            IOI.dev.TR = 0.1999;
+            IOI.dev.TR = 0.2;
         end
         window_after = round(job.window_after/IOI.dev.TR);
         window_before = round(job.window_before/IOI.dev.TR);
@@ -106,10 +106,14 @@ for SubjIdx=1:length(job.IOImat)
                                     %loop over sessions
                                     for s1=1:length(IOI.sess_res)
                                         if all_sessions || sum(s1==selected_sessions)
+                                            try
                                             tmp_d = ROI{r1}{s1,c1};
+                                            catch 
+                                                tmp_d = [];
+                                            end
                                             if ~isempty(tmp_d)
                                                 %loop over onsets for that session
-                                                U = onsets_list{s1}{m1};
+                                                U = round(onsets_list{s1}{m1}/IOI.dev.TR);
                                                 for u1=1:length(U)
                                                     clear tmp_median;
                                                     try
