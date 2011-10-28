@@ -137,6 +137,7 @@ for SubjIdx=1:length(job.top_bin_dir)
                 fileNo = sort(fileNo);
                 missing_frames = [];
                 n_frames = ceil(max(frameReadOut(:,1))/nColors);
+                sess.n_frames = n_frames;
                 for i0=1:(n_frames*nColors)
                     tmp = find(i0==frameReadOut(:,1), 1);
                     if isempty(tmp)
