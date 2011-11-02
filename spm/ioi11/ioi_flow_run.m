@@ -6,6 +6,11 @@ if isfield(job.session_choice,'select_sessions')
 else
     all_sessions = 1;
 end
+try
+    RemoveLC = job.RemoveLC;
+catch
+    RemoveLC = 1;
+end
 for SubjIdx=1:length(job.IOImat)
     try
         tic
@@ -106,6 +111,26 @@ for SubjIdx=1:length(job.IOImat)
                 IOImat = fullfile(newDir,'IOI.mat');
             end
             save(IOImat,'IOI');
+            
+            %remove LC images
+            if RemoveLC
+                for s1=1:length(IOI.sess_res)  
+                    if all_sessions || sum(s1==selected_sessions)
+                         if length(IOI.sess_res{s1}.fname)>=Li
+                            fname_list = IOI.sess_res{s1}.fname{Li};                        
+                            if ~isempty(fname_list)
+                                for f1=1:length(fname_list)
+                                    remove_vols_each_color(IOI,str_laser,f1,s1);
+                                    if isfield(IOI.color,'str_contrast')
+                                        remove_vols_each_color(IOI,IOI.color.str_contrast,f1,s1);
+                                    end
+                                    
+                                end
+                            end
+                        end
+                    end
+                end
+            end
         end
         out.IOImat{SubjIdx} = IOImat;
         toc

@@ -102,12 +102,21 @@ session_choice.values = {all_sessions,select_sessions};
 session_choice.val    = {all_sessions};
 session_choice.help   = {'Choose session selection method'}';
 
+RemoveLC      = cfg_menu;
+RemoveLC.tag  = 'RemoveLC';
+RemoveLC.name = 'Remove Laser/Contrast nifti images';
+RemoveLC.labels = {'Yes','No'};
+RemoveLC.values = {1,0};
+RemoveLC.val  = {1};
+RemoveLC.help = {'After flow images are obtained'
+    'Laser and contrast nifti images (LC) are usually no longer required.'}';
+
 % Executable Branch
 flow1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 flow1.name = 'Compute Flow';             % The display name
 flow1.tag  = 'flow1'; %Very important: tag is used when calling for execution
 flow1.val  = {IOImat redo1 IOImatCopyChoice configuration ...
-    session_choice};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    session_choice RemoveLC};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 flow1.prog = @ioi_flow_run;  % A function handle that will be called with the harvested job to run the computation
 flow1.vout = @ioi_cfg_vout_flow; % A function handle that will be called with the harvested job to determine virtual outputs
 flow1.help = {'Flow computations.'};

@@ -15,21 +15,18 @@ top_bin_dir.num     = [1 Inf];
 top_bin_dir.help    = {'For each subject, select the top level directory'
     'containing folders of .bin image files and folders of recording information'}';
 
-redo1      = cfg_menu;
+redo1      = cfg_entry;
 redo1.tag  = 'force_redo';
 redo1.name = 'Force processing';
-redo1.labels = {'False','True','Partial'};
-redo1.values = {0,1,2};
-redo1.def  = @(val)ioi_get_defaults('msioi1.force_redo', val{:});
-redo1.help = {'If false and an IOI.mat exists, module will be skipped; '
-    'If true and an IOI.mat exists, it will be ignored (no previous information kept);'
-    'If partial and an IOI.mat exists, it will be loaded, and some of its fields will be modified'}';
-
-subj         = cfg_branch;
-subj.tag     = 'subj';
-subj.name    = 'Subject';
-subj.val     = {top_bin_dir redo1}; 
-subj.help    = {};
+redo1.strtype = 'r';
+redo1.num     = [1 Inf];
+redo1.val  = {0};
+redo1.help = {'Enter an array of 0 (do not force redo), 1 (force redo) or 2 (partial redo)'
+    'with one entry for each subject. If only one number is entered, it will '
+    'be applied to all subjects'
+    'If 0 is entered, and an IOI.mat exists, module will be skipped; '
+    'If 1 is entered and an IOI.mat exists, it will be ignored (no previous information kept);'
+    'If 2 is entered and an IOI.mat exists, it will be loaded, and some of its fields will be modified'}';
 
 %path structure
 output_path_default         = cfg_branch;
@@ -46,13 +43,14 @@ output_path.name    = 'path for .ioi output files';
 output_path.tag     = 'output_path';       
 output_path.strtype = 's';
 output_path.num     = [1 Inf];     
+%output_path.val     = {fullfile('D:/Users/')};
 output_path.def     = @(val)ioi_get_defaults('msioi1.output_path_select.output_path', val{:}); 
 output_path.help    = {'Choose path for .ioi output files'}; 
 
 output_path_select         = cfg_branch;
 output_path_select.tag     = 'output_path_select';
 output_path_select.name    = 'output_path_select';
-output_path_select.val     = {output_path}; %{input1 input2 input3 input4 input5 input6 redo1};
+output_path_select.val     = {output_path}; 
 output_path_select.help    = {};
 
 output_path_choice        = cfg_choice;
@@ -122,7 +120,8 @@ session_choice.name   = 'Choose session selection method';
 session_choice.tag    = 'session_choice';
 session_choice.values = {all_sessions,select_sessions};
 session_choice.val    = {all_sessions};
-session_choice.help   = {'Choose session selection method'}';
+session_choice.help   = {'Choose session selection method'
+    'Applies to old data format only'}';
 
 sess_min_image_files         = cfg_entry; 
 sess_min_image_files.name    = 'Minimum length of each session in seconds';
@@ -137,7 +136,8 @@ sess_min_image_files.help    = {'Minimum length of each session in seconds'
     'Note that for this, an assumption is made that data is acquired at 5 Hz'
     'If that is not the case, change temp_TR in ioi_msioi_run'
     'Another assumption is made that there are approximately 80 images per'
-    'raw binary file. If that is not the case, change temp_ImNum in ioi_msioi_run'};   
+    'raw binary file. If that is not the case, change temp_ImNum in ioi_msioi_run'
+    'Applies to old data format only'};   
 
 % save_choice        = cfg_choice;
 % save_choice.name   = 'Choose saving method';
@@ -152,7 +152,8 @@ save_choice.tag    = 'save_choice';
 save_choice.labels = {'One file per session','One file per block','One file per image'};
 save_choice.values = {1,2,3};
 save_choice.val    = {2};
-save_choice.help   = {'Choose saving method'}';
+save_choice.help   = {'Choose saving method'
+    'Applies to old data format only; new format: always one file per block'}';
 
 memmapfileOn        = cfg_menu;
 memmapfileOn.name   = 'Choose memory management method';
@@ -161,7 +162,8 @@ memmapfileOn.labels = {'Keep all in memory','Use disk space for large structures
 memmapfileOn.values = {0,1};
 memmapfileOn.val    = {1};
 memmapfileOn.help   = {'Select memory management method. Keeping all in memory'
-    'is faster, but may require too much memory.'}';
+    'is faster, but may require too much memory.'
+    'Applies to old data format only; new format: always using disk space'}';
 
 forceProcessingOn        = cfg_menu;
 forceProcessingOn.name   = 'Force processing of bad sessions';
@@ -170,13 +172,14 @@ forceProcessingOn.labels = {'Yes','No'};
 forceProcessingOn.values = {1,0};
 forceProcessingOn.val    = {0};
 forceProcessingOn.help   = {'Force processing of bad sessions: attempt will be'
-    'made to process sessions with inconsistent number of files; '}';
+    'made to process sessions with inconsistent number of files; '
+    'Applies to old data format only'}';
 
 % Executable Branch
 msioi1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 msioi1.name = 'Read Multi-Spectral IOI';             % The display name
 msioi1.tag  = 'msioi1'; %Very important: tag is used when calling for execution
-msioi1.val  = {subj configuration_choice output_path_choice ...
+msioi1.val  = {top_bin_dir redo1 configuration_choice output_path_choice ...
     session_choice save_choice memmapfileOn sess_min_image_files forceProcessingOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 msioi1.prog = @ioi_msioi_run;  % A function handle that will be called with the harvested job to run the computation
 msioi1.vout = @ioi_cfg_vout_msioi; % A function handle that will be called with the harvested job to determine virtual outputs
