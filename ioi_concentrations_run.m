@@ -7,7 +7,11 @@ str_HbO = 'O'; %oxy
 str_HbR = 'D'; %deoxy
 tmp_str_HbO = ['_' str_HbO '_'];
 tmp_str_HbR = ['_' str_HbR '_'];
-
+try
+    RemoveRGY = job.RemoveRGY;
+catch
+    RemoveRGY = 1;
+end
 for SubjIdx=1:length(job.IOImat)
     try
         tic
@@ -128,6 +132,22 @@ for SubjIdx=1:length(job.IOImat)
                 IOImat = fullfile(newDir,'IOI.mat');
             end
             save(IOImat,'IOI');
+            
+            %remove RGY images
+            if RemoveRGY
+                for s1=1:length(IOI.sess_res)
+                    if all_sessions || sum(s1==selected_sessions)
+                        fname_list = IOI.sess_res{s1}.fname{hasRGY(1)};
+                        for c1 = 1:length(hasRGY)
+                            if ~isempty(fname_list)
+                                for f1=1:length(fname_list)
+                                    remove_vols_each_color(IOI,hasRGY(c1),f1,s1);
+                                end
+                            end
+                        end
+                    end
+                end
+            end
         end
         out.IOImat{SubjIdx} = IOImat;
         toc
@@ -137,6 +157,7 @@ for SubjIdx=1:length(job.IOImat)
         disp(exception.stack(1))
     end
 end
+
 function [vols vi] = get_vols_each_color(IOI,vols,vi,str_color,f1,s1)
 c1 = find(IOI.color.eng==str_color);
 if length(IOI.sess_res{s1}.fname)>=c1

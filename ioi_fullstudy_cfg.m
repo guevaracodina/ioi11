@@ -1,8 +1,8 @@
 % -----------------------------------------------------------------------
 % Job configuration created by cfg_util (rev $Rev: 4252 $)
 % -----------------------------------------------------------------------
-matlabbatch{1}.spm.tools.ioi11.msioi1.subj.top_bin_dir = '';
-matlabbatch{1}.spm.tools.ioi11.msioi1.subj.force_redo = 0;
+matlabbatch{1}.spm.tools.ioi11.msioi1.top_bin_dir = '';
+matlabbatch{1}.spm.tools.ioi11.msioi1.force_redo = 0;
 matlabbatch{1}.spm.tools.ioi11.msioi1.configuration_choice.no_shrinkage = struct([]);
 matlabbatch{1}.spm.tools.ioi11.msioi1.output_path_choice.output_path_default = struct([]);
 matlabbatch{1}.spm.tools.ioi11.msioi1.session_choice.all_sessions = struct([]);
@@ -27,6 +27,7 @@ matlabbatch{2}.spm.tools.ioi11.ComputeHbConcentrations.configuration.leds_conv =
 matlabbatch{2}.spm.tools.ioi11.ComputeHbConcentrations.configuration.HbT0 = 0.02;
 matlabbatch{2}.spm.tools.ioi11.ComputeHbConcentrations.MemoryManagementMenu = 1;
 matlabbatch{2}.spm.tools.ioi11.ComputeHbConcentrations.session_choice.all_sessions = struct([]);
+matlabbatch{2}.spm.tools.ioi11.ComputeHbConcentrations.RemoveRGY = 1;
 matlabbatch{3}.spm.tools.ioi11.flow1.IOImat(1) = cfg_dep;
 matlabbatch{3}.spm.tools.ioi11.flow1.IOImat(1).tname = 'Select IOI.mat';
 matlabbatch{3}.spm.tools.ioi11.flow1.IOImat(1).tgt_spec{1}(1).name = 'filter';
@@ -41,6 +42,7 @@ matlabbatch{3}.spm.tools.ioi11.flow1.IOImatCopyChoice.IOImatOverwrite = struct([
 matlabbatch{3}.spm.tools.ioi11.flow1.configuration.integ_time = 0.2;
 matlabbatch{3}.spm.tools.ioi11.flow1.configuration.window_size = 5;
 matlabbatch{3}.spm.tools.ioi11.flow1.session_choice.all_sessions = struct([]);
+matlabbatch{3}.spm.tools.ioi11.flow1.RemoveLC = 1;
 matlabbatch{4}.spm.tools.ioi11.create_roi1.IOImat(1) = cfg_dep;
 matlabbatch{4}.spm.tools.ioi11.create_roi1.IOImat(1).tname = 'Select IOI.mat';
 matlabbatch{4}.spm.tools.ioi11.create_roi1.IOImat(1).tgt_spec{1}(1).name = 'filter';

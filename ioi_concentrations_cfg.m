@@ -126,12 +126,21 @@ session_choice.values = {all_sessions,select_sessions};
 session_choice.val    = {all_sessions};
 session_choice.help   = {'Choose session selection method'}';
 
+RemoveRGY      = cfg_menu;
+RemoveRGY.tag  = 'RemoveRGY';
+RemoveRGY.name = 'Remove RGY nifti images';
+RemoveRGY.labels = {'Yes','No'};
+RemoveRGY.values = {1,0};
+RemoveRGY.val  = {1};
+RemoveRGY.help = {'After concentration concentrations are obtained'
+    'Optical intensity images (RGY) are usually no longer required.'}';
+
 % Executable Branch
 conc1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 conc1.name = 'Compute Concentrations';             % The display name
 conc1.tag  = 'ComputeHbConcentrations'; %Very important: tag is used when calling for execution
 conc1.val  = {IOImat redo1 IOImatCopyChoice configuration ...
-    MemoryManagementMenu session_choice};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    MemoryManagementMenu session_choice RemoveRGY};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 conc1.prog = @ioi_concentrations_run;  % A function handle that will be called with the harvested job to run the computation
 conc1.vout = @ioi_cfg_vout_concentrations; % A function handle that will be called with the harvested job to determine virtual outputs
 conc1.help = {'Concentration computations.'};
