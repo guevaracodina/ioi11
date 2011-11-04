@@ -11,10 +11,15 @@ try
     str_red = 'R'; %Varying number of colors allowed
     str_green = 'G';
     str_yellow = 'Y';
+    str_green_french = 'V'; %vert
+    str_yellow_french = 'J'; %jaune
+    %Code will read info.txt file for each session to find actual color
+    %order, and then will swap the order to get str_color order 
+    str_color_default = [str_green str_yellow str_laser str_red]; %VJLR -- this is the default at time of recording
     %If adding or removing colors, make sure the string of English and French
     %colors have the same length and are a one-to-one mapping (code loops over colors
     %to find images):
-    str_color = [str_red str_green str_yellow str_laser]; %red, green, yellow and laser speckle
+    str_color = [str_red str_green str_yellow str_laser]; %red, green, yellow and laser speckle -- this is the desired color order for processed images
     hasRGY = [str_red str_green str_yellow];
     nColors = length(str_color);
     OD_label = 'OD'; %label for optical density images
@@ -52,6 +57,29 @@ try
             sess_str = [sess_label gen_num_str(s1,2)];
             dir_sess = fullfile(dir_subj_res,sess_str);
             if ~exist(dir_sess,'dir'), mkdir(dir_sess); end
+            %read info file
+            try
+                [file_info,dummy] = cfg_getfile('FPList',dirs{s1},'info.txt');
+                fid = fopen(file_info{1},'r');
+                t0 = fread(fid,'uint8');
+                fclose(fid);
+                t0 = char(t0');
+                color_order_french = t0(end-4:end);
+                color_order_french = color_order_french(1:4);
+                color_order = color_order_french;
+                %get English colors
+                for i0 = 1:length(color_order_french)
+                    if strcmp(color_order_french(i0),str_yellow_french)
+                        color_order(i0) = str_yellow;
+                    end
+                    if strcmp(color_order_french(i0),str_green_french)
+                        color_order(i0) = str_green;
+                    end
+                end
+            catch
+                color_order = str_color_default;
+                IOI = disp_msg(IOI,['Problem with colors in info.txt for session ' int2str(s1) ';  defaulting to ' str_color_default]);
+            end
             %Read electro
             [files_el,dummy] = cfg_getfile('FPList',dirs{s1},[el_label '.' el_suffix]);
             [ConvertedData,ConvertVer,ChanNames,GroupNames,ci]=convertTDMS(1,files_el{1});
@@ -171,9 +199,15 @@ try
                 end
                 
                 for fr1=1:(nColors*nImages)
-                    tcol = mod(fr1,nColors); %which color for this image
-                    if tcol == 0
-                        tcol = nColors;
+                    tcol0 = mod(fr1,nColors); %which color for this image
+                    if tcol0 == 0
+                        tcol0 = nColors;
+                    end
+                    %which color tcol0 corresponds to:
+                    for i0=1:length(color_order)
+                        if strcmp(color_order(tcol0),str_color(i0))
+                            tcol = i0;
+                        end
                     end
                     tframe = ceil(fr1/nColors); %which image for this frame
                     if ~(any(fr1+iC*nColors == missing_frames))
@@ -184,7 +218,7 @@ try
                     end
                     im_obj.Data.image_total(:,:,:,tframe+iC,tcol) = tmp_image{tcol};
                     %image_total{tcol}(:,:,:,tframe) = tmp_image{tcol};
-                    if s1==1 && f1==1 && (fr1 <= nColors) && strcmp(str_color(fr1),str_anat)
+                    if s1==1 && f1==1 && (fr1 <= nColors) && strcmp(str_color(tcol),str_anat)
                         image_anat = images{fr1};
                     end
                 end
