@@ -71,7 +71,8 @@ for SubjIdx=1:length(job.top_bin_dir)
             if ~isempty(files_txt) && ~isempty(strfind(files_txt{1},'resume_manip.txt'))
                 data_format = 0; %old format
             else
-                if ~isempty(files_txt) && ~isempty(strfind(files_txt{1},'resume.txt'))
+                if ~isempty(files_txt) && (~isempty(strfind(files_txt{1},'resume.txt')) || ...
+                        ~isempty(strfind(files_txt{1},'resumeExp.txt')))
                     data_format = 1; %new format
                 else
                     subj_OK = 0;
