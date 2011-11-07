@@ -144,14 +144,15 @@ try
             %acquisition, corrected for new acquisitions
             [nx ny0] = size(images);
             nxt = round(nx/2); nyt = round(ny0/2); %center of image
-            %two tests should be enough...
-            if (images(nxt,nyt) == images(nxt,nyt+1)) && (images(nxt+3,nyt+3) == images(nxt+3,nyt+4))
-                if mod(ny,2) == 0
+            %two tests should be enough... -- weaker test now
+            if (images(nxt,nyt) == images(nxt,nyt+1)) || (images(nxt,nyt+1) == images(nxt,nyt+2))
+                %(images(nxt,nyt) == images(nxt,nyt+1)) && (images(nxt+3,nyt+3) == images(nxt+3,nyt+4))
+                %if mod(ny,2) == 0
                     dupOn = 1;
-                    ny = ny0/2; 
-                else
-                    disp('Odd number of pixels in y direction, yet pixels are duplicated!')
-                end
+                    ny = length(images(1,1:2:end)); 
+                %else %This happens sometimes, that's OK
+                %    disp('Odd number of pixels in y direction, yet pixels are duplicated!')
+                %end
             else
                 dupOn = 0;
                 ny = ny0;
@@ -229,16 +230,18 @@ try
             for c1=1:nColors
                 %skip laser
                 if ~(str_color(c1)==str_laser)
-                    median0 = median(im_obj.Data.image_total(:,:,:,:,c1),4);
-                    %careful: cannot take log of int16 object
-                    %im_obj.Data.image_total(:,:,:,:,c1) = im_obj.Data.image_total(:,:,:,:,c1)./repmat(median0,[1 1 1 n_frames]);
+                    median0{c1} = median(im_obj.Data.image_total(:,:,:,:,c1),4);
                 end
             end
             for f1 = 1:length(fileNo)
                 ind0 = sess.si{f1}:sess.ei{f1};
                 %save images in nifti format
                 for c1=1:nColors
-                    ioi_save_nifti(-log(single(im_obj.Data.image_total(:,:,:,ind0,c1))./repmat(single(median0),[1 1 1 length(ind0)])),sess.fname{c1}{f1},vx);
+                    if ~(str_color(c1)==str_laser)
+                        ioi_save_nifti(-log(single(im_obj.Data.image_total(:,:,:,ind0,c1))./repmat(single(median0{c1}),[1 1 1 length(ind0)])),sess.fname{c1}{f1},vx);
+                    else
+                        ioi_save_nifti(single(im_obj.Data.image_total(:,:,:,ind0,c1)),sess.fname{c1}{f1},vx);                        
+                    end
                 end
             end
             %disp(['Done processing session: ' int2str(s1) ', color: ' str1]);

@@ -108,6 +108,10 @@ for SubjIdx=1:length(job.IOImat)
                                         if all_sessions || sum(s1==selected_sessions)
                                             try
                                             tmp_d = ROI{r1}{s1,c1};
+                                                %normalize flow
+                                                if IOI.color.eng(c1)==IOI.color.flow
+                                                    tmp_d = tmp_d/mean(tmp_d); %or median
+                                                end
                                             catch 
                                                 tmp_d = [];
                                             end
@@ -160,7 +164,7 @@ for SubjIdx=1:length(job.IOImat)
                                                 end
                                             else
                                                 if ~isfield(IOI.color,'contrast') || (isfield(IOI.color,'contrast') && ~(IOI.color.eng(c1)==IOI.color.contrast))
-                                                    disp(['Skipped session ' int2str(s1) ' for color ' int2str(c1) ' for ROI ' int2str(r1)]);
+                                                    disp(['Skipped session ' int2str(s1) ' for color ' IOI.color.eng(c1) ' for ROI ' int2str(r1)]);
                                                 end
                                             end
                                         end
@@ -216,10 +220,10 @@ for SubjIdx=1:length(job.IOImat)
                         ctotal = [ctotal find(IOI.color.eng==IOI.color.HbO) ...
                             find(IOI.color.eng==IOI.color.HbR)];
                     end
-                    %                     if isfield(IOI.color,'flow')
-                    %                         lp2{IOI.color.eng==IOI.color.flow} = 'k'; %Flow
-                    %                         ctotal = [ctotal find(IOI.color.eng==IOI.color.flow)];
-                    %                     end
+                    if isfield(IOI.color,'flow')
+                        lp2{IOI.color.eng==IOI.color.flow} = 'k'; %Flow
+                        ctotal = [ctotal find(IOI.color.eng==IOI.color.flow)];
+                    end
                     %                     if isfield(IOI.color,'contrast')
                     %                         lp2{IOI.color.eng==IOI.color.contrast} = 'y'; %contrast (=flow up to rescaling)
                     %                         ctotal = [ctotal find(IOI.color.eng==IOI.color.contrast)];

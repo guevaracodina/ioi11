@@ -49,10 +49,19 @@ for SubjIdx=1:length(job.IOImat)
                             else
                                 s1 = selected_sessions(1);
                             end                          
-                            fname_list = IOI.sess_res{s1}.fname{1}; %1st color
-                            fname = fname_list{1}; %1st file in list
-                            vols = spm_vol(fname);
-                            d = spm_read_vols(vols);
+                            %find non-deleted file
+                            foundfile = 0;
+                            for c0=1:length(IOI.sess_res{s1}.fname)
+                                if ~foundfile
+                                    fname_list = IOI.sess_res{s1}.fname{c0};
+                                    fname = fname_list{1}; %1st file in list
+                                    try
+                                        vols = spm_vol(fname);
+                                        d = spm_read_vols(vols);
+                                        foundfile = 1;
+                                    end
+                                end
+                            end                            
                             [d1 d2 d3 d4] = size(d);
                             first_pass = 0;
                         end
@@ -80,10 +89,14 @@ for SubjIdx=1:length(job.IOImat)
                                 end
                                 %loop over files
                                 for f1=1:length(fname_list)
-                                    fname = fname_list{f1};
-                                    vols = spm_vol(fname);
-                                    d = spm_read_vols(vols);
-                                    [d1 d2 d3 d4] = size(d);
+                                    try
+                                        fname = fname_list{f1};
+                                        vols = spm_vol(fname);
+                                        d = spm_read_vols(vols);
+                                        [d1 d2 d3 d4] = size(d);
+                                    catch
+                                        colorOK = 0;
+                                    end
                                     %time dimension in 3rd dimension for colors
                                     %R, G, Y, but in 4th dimension for O, D, F
                                     %Loop over ROIs
@@ -93,9 +106,9 @@ for SubjIdx=1:length(job.IOImat)
                                                 for i4=1:d4
                                                     %extracted data
                                                     %tmp_d = squeeze(d(:,:,i3,i4));
-                                                    tmp_d = d(:,:,i3,i4);
+                                                    try tmp_d = d(:,:,i3,i4); end
                                                     %just take mean over mask for now
-                                                    
+                                                   
                                                     if ~isfield(IOI.color,'contrast') || (isfield(IOI.color,'contrast') && ~(IOI.color.eng(c1)==IOI.color.contrast))
                                                         try
                                                             e = mean(tmp_d(mask{r1}));
