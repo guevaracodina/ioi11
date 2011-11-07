@@ -141,7 +141,7 @@ for SubjIdx=1:length(job.IOImat)
                         for c1 = 1:length(hasRGY)
                             if ~isempty(fname_list)
                                 for f1=1:length(fname_list)
-                                    remove_vols_each_color(IOI,hasRGY(c1),f1,s1);
+                                    remove_vols_each_color(IOI,tmp_hasRGY(c1),f1,s1);
                                 end
                             end
                         end

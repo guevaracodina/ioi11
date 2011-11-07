@@ -68,7 +68,7 @@ for SubjIdx=1:length(job.IOImat)
                                     OPTIONS.Power2Flag = 0;
                                     OPTIONS.Brep = 0;
                                     for i3=1:nt
-                                        tmp_laser = squeeze(laser(:,:,i3));
+                                        tmp_laser = squeeze(laser(:,:,:,i3));
                                         std_laser=stdfilt(tmp_laser,win2);
                                         %this is much faster (4 times) than conv2
                                         %tic
