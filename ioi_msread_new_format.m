@@ -61,11 +61,12 @@ try
             try
                 [file_info,dummy] = cfg_getfile('FPList',dirs{s1},'info.txt');
                 fid = fopen(file_info{1},'r');
-                t0 = fread(fid,'uint8');
+                t0 = fread(fid,'uint8');               
                 fclose(fid);
                 t0 = char(t0');
-                color_order_french = t0(end-4:end);
-                color_order_french = color_order_french(1:4);
+                t0 = deblank(t0);
+                color_order_french = t0(end-3:end);
+                %color_order_french = color_order_french(1:4);
                 color_order = color_order_french;
                 %get English colors
                 for i0 = 1:length(color_order_french)
@@ -112,6 +113,9 @@ try
             %IOI.res.elinfo{sC} = elfile_info; %not used in later modules as did not exist in earlier reading module
             copyfile(fil_loc, elfile_info);
             delete(fil_loc);
+            %save electrophysiological data
+            el = ConvertedData.Data.MeasuredData(5).Data;
+            save(elfile,'el');
             IOI.res.electroOK = 1; %not by session...
             %extract ttl
             ttl=TDMS2ttl(ConvertedData);
