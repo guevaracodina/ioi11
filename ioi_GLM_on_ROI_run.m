@@ -201,8 +201,8 @@ try
     %load raw electrophysiology vector
     load(IOI.res.el{s1});
     %remove time stamps for actual or spurious stimulations
-    ind = el>2; ind2 = [ind(7:end) false false false false false false];
-    el(ind)=el(ind2);
+    %ind = el>2; ind2 = [ind(7:end) false false false false false false];
+    %el(ind)=el(ind2);
     el0 = el;
     if E.use_epilepsy_convention, sgn = -1; else sgn = 1; end
     if E.write_pictures
@@ -489,7 +489,9 @@ function A = private_analyze_LFP(E,el,ons,IOI,s)
     A{s}.Pb = Pb;
     A{s}.Y = [aM am ad A0 sA0 P b aMb amb Ab sAb Pb];
     %Protocole
+    try
     A{s}.Pt = IOI.sess_res{s}.scan_info.protocoleStimulation;
+    end
     A{s}.ons = ons;
     %clear aM am ad A sA P b mb aMb amb Ab sAb Pb
 end
