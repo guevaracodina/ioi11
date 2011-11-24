@@ -81,14 +81,13 @@ IOImatCopyChoice.help      = {'Choose whether to overwrite the IOI.mat structure
 % Model_Choice.val    = {BF};
 % Model_Choice.help   = {'Choose hemodynamic model'}';
 
-Model_Choice        = cfg_menu;
-Model_Choice.name   = 'Choose hemodynamic model';
-Model_Choice.tag    = 'Model_Choice';
-Model_Choice.labels = {'Buxton-Friston','Zheng-Mayhew','Boas-Huppert'};
-Model_Choice.values = {0,1,2};
-Model_Choice.val    = {0};
-Model_Choice.help   = {'Choose hemodynamic model'}';
-
+PhysioModel_Choice        = cfg_menu;
+PhysioModel_Choice.name   = 'Choose hemodynamic model';
+PhysioModel_Choice.tag    = 'PhysioModel_Choice';
+PhysioModel_Choice.labels = {'Buxton-Friston','Zheng-Mayhew','Boas-Huppert'};
+PhysioModel_Choice.values = {0,1,2};
+PhysioModel_Choice.val    = {0};
+PhysioModel_Choice.help   = {'Choose hemodynamic model'}';
 
 all_ROIs         = cfg_branch;
 all_ROIs.tag     = 'all_ROIs';
@@ -539,7 +538,7 @@ stim_choice.help   = {'Choose stimulation selection method'}';
 hdm1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 hdm1.name = 'HDM on ROI';             % The display name
 hdm1.tag  = 'hdm1'; %Very important: tag is used when calling for execution
-hdm1.val  = {IOImat redo1 IOImatCopyChoice Model_Choice session_choice ROI_choice...
+hdm1.val  = {IOImat redo1 IOImatCopyChoice PhysioModel_Choice session_choice ROI_choice...
      bases volt hpf_butter lpf_gauss stim_choice};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 hdm1.prog = @ioi_HDM_run;  % A function handle that will be called with the harvested job to run the computation
 hdm1.vout = @ioi_cfg_vout_HDM; % A function handle that will be called with the harvested job to determine virtual outputs

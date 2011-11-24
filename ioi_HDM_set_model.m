@@ -1,5 +1,5 @@
 function M=ioi_HDM_set_model(M)
-% Model choice
+% Physiological Model choice
 M.m=1;
 M.N=64; %default 64
 
@@ -13,7 +13,7 @@ end
 
 %%%M.TE=0.03; % optional param for BOLD
 %--------------------------------------------------------------------------
-switch M.Model_Choice
+switch M.PhysioModel_Choice
     case 0 %Buxton-Friston
         M.f     = 'ioi_HDM_fx';
         M.g     = 'ioi_HDM_gx';

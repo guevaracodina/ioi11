@@ -77,7 +77,7 @@ for SubjIdx=1:length(job.IOImat)
 
 out=[];
 M = []; %may need to fill this with subject-dependent information, etc.
-M.Model_Choice = job.Model_Choice;
+M.PhysioModel_Choice = job.PhysioModel_Choice;
 M.curveToFit = 3; %For now: 'HbR','HbT','Flow' 
 %M.GroupPriors
 %choose model

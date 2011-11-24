@@ -94,6 +94,9 @@ for SubjIdx=1:length(job.IOImat)
                                         vols = spm_vol(fname);
                                         d = spm_read_vols(vols);
                                         [d1 d2 d3 d4] = size(d);
+                                        if d1 <= 1 || d2 <= 1
+                                            colorOK = 0;
+                                        end
                                     catch
                                         colorOK = 0;
                                     end
@@ -148,7 +151,9 @@ for SubjIdx=1:length(job.IOImat)
                                         end
                                     end
                                 end
-                                disp(['ROIs for session ' int2str(s1) ' and color ' IOI.color.eng(c1) ' completed']);
+                                if colorOK
+                                    disp(['ROIs for session ' int2str(s1) ' and color ' IOI.color.eng(c1) ' completed']);
+                                end
                             end
                         end
                     end
