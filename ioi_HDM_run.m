@@ -78,6 +78,7 @@ for SubjIdx=1:length(job.IOImat)
                                 for r1=1:length(IOI.res.ROI)
                                     if all_ROIs || sum(r1==selected_ROIs)
                                         HDM0 = [];
+                                        Y = [];
                                         %Choose onsets: stimulations or electrophysiology
                                         if electro_stims
                                             U = IOI.Sess(s1).U;
@@ -89,15 +90,23 @@ for SubjIdx=1:length(job.IOImat)
                                             volt = 0; %not used
                                             [X U] = ioi_get_X(IOI,name,ons,dur,s1,bases,volt);
                                         end
+                                        HDM0.U = U;
                                         HDM0.TR = IOI.dev.TR;
                                         %data specification - which modalities to include:
                                         HDM0.PS = PS0;
                                         HDM0.HPF = HPF; %High pass filter on data
-                                        HDM0 = ioi_get_data(ROI,HDM0,r1,s1);
+                                        HDM0=ioi_get_data(ROI,HDM0,r1,s1);
                                         HDM0=ioi_set_physiomodel(HDM0);
                                         %choose priors
                                         HDM0=ioi_set_priors(HDM0);
-                                        
+                                        Y.y = HDM0.Y;
+                                        %setup for priors
+                                        HDM0.pE = HDM0.PS.pE;
+                                        HDM0.pC = HDM0.PS.pC;
+                                        % nonlinear system identification
+                                        %--------------------------------------------------------------------------
+                                        [Ep,Cp,Ce,K0,K1,K2,M0,M1] = ioi_nlsi(HDM0,U,Y);
+
                                         HDM{r1,s1} = HDM0;
                                         save(HDMfname,'HDM');   
                                     end

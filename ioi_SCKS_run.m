@@ -81,6 +81,9 @@ for SubjIdx=1:length(job.IOImat)
                                     catch
                                         U = [];
                                     end
+                                    %set priors
+                                    SCKS0.pE = SCKS0.PS.pE;
+                                    SCKS0.pC = SCKS0.PS.pC;
                                     SCKS0 = ioi_SCKS_set_SCKS(SCKS0,U);
                                     if job.SCKSparams.SCKSnoise
                                         SCKS0 = ioi_SCKS(SCKS0,0); %noise and parameters promoted to states 
