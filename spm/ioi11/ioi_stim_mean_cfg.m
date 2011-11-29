@@ -138,7 +138,7 @@ window_before.tag  = 'window_before';
 window_before.name = 'Window before';
 window_before.strtype  = 'r';
 window_before.num = [1 1];
-window_before.val  = {3};
+window_before.val  = {2};
 window_before.help = {'Size of window to keep prior to each stimulation onset, in seconds.'};
 
 window_after      = cfg_entry;
@@ -154,16 +154,44 @@ normalize_choice.tag  = 'normalize_choice';
 normalize_choice.name = 'Normalization choice';
 normalize_choice.labels = {'Median over window before','Time zero'};
 normalize_choice.values = {1,2};
-normalize_choice.val  = {2};
-normalize_choice.help = {'Normalization choice.'}';
+normalize_choice.val  = {1};
+normalize_choice.help = {'Normalization choice. In one test,'
+    'The mean standard deviation was higher by 10% or more'
+    'when using time zero as the baseline, compared to taking '
+    'an average (median) over the window before.'}';
+
+include_flow      = cfg_menu;
+include_flow.tag  = 'include_flow';
+include_flow.name = 'Include flow';
+include_flow.labels = {'Yes','No'};
+include_flow.values = {1,0};
+include_flow.val  = {0};
+include_flow.help = {'Include flow.'}';
+
+extract_HRF      = cfg_menu;
+extract_HRF.tag  = 'extract_HRF';
+extract_HRF.name = 'Extract HRF';
+extract_HRF.labels = {'Yes','No'};
+extract_HRF.values = {1,0};
+extract_HRF.val  = {1};
+extract_HRF.help = {'Extract 6 coefficients of hemodynamic response function,' 
+    'by fitting the average curves to a difference of two gamma functions'}';
+
+generate_global      = cfg_menu;
+generate_global.tag  = 'generate_global';
+generate_global.name = 'Generate global data';
+generate_global.labels = {'Yes','No'};
+generate_global.values = {1,0};
+generate_global.val  = {0};
+generate_global.help = {'Generate data averaged over all sessions.'}';
 
 generate_figures      = cfg_menu;
 generate_figures.tag  = 'generate_figures';
-generate_figures.name = 'Generate figures';
+generate_figures.name = 'Show figures';
 generate_figures.labels = {'Yes','No'};
 generate_figures.values = {1,0};
-generate_figures.val  = {1};
-generate_figures.help = {'Generate figures.'}';
+generate_figures.val  = {0};
+generate_figures.help = {'Show figures. When selecting this option, the figures will stay opened after the code has completed.'}';
 
 save_figures      = cfg_menu;
 save_figures.tag  = 'save_figures';
@@ -181,13 +209,60 @@ add_error_bars.values = {1,0};
 add_error_bars.val  = {0};
 add_error_bars.help = {'Add error bars.'}';
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+hpf_butter_freq         = cfg_entry; 
+hpf_butter_freq.name    = 'Cutoff frequency for HPF';
+hpf_butter_freq.tag     = 'hpf_butter_freq';       
+hpf_butter_freq.strtype = 'r';
+hpf_butter_freq.num     = [1 1];     
+hpf_butter_freq.val     = {0.01};
+hpf_butter_freq.help    = {'Enter cutoff frequency in Hz for Butterworth HPF.'};
+
+hpf_butter_order         = cfg_entry; 
+hpf_butter_order.name    = 'Order of Butterworth HPF';
+hpf_butter_order.tag     = 'hpf_butter_order';       
+hpf_butter_order.strtype = 'r';
+hpf_butter_order.num     = [1 1];     
+hpf_butter_order.val     = {3};
+hpf_butter_order.help    = {'Enter order of Butterworth HPF (preferred value = 3).'};
+
+hpf_butter_On         = cfg_branch;
+hpf_butter_On.tag     = 'hpf_butter_On';
+hpf_butter_On.name    = 'Butterworth HP filter';
+hpf_butter_On.val     = {hpf_butter_freq hpf_butter_order}; 
+hpf_butter_On.help    = {'Butterworth high-pass filter.'};
+
+hpf_butter_Off         = cfg_branch;
+hpf_butter_Off.tag     = 'hpf_butter_Off';
+hpf_butter_Off.name    = 'HP filter off';
+hpf_butter_Off.val     = {}; 
+hpf_butter_Off.help    = {'High pass filter turned off.'};
+
+hpf_butter      = cfg_choice;
+hpf_butter.tag  = 'hpf_butter';
+hpf_butter.name = 'Butterworth High Pass Filter';
+hpf_butter.values = {hpf_butter_On hpf_butter_Off};
+hpf_butter.val = {hpf_butter_On};
+hpf_butter.help = {'Choose whether to include a Butterworth High Pass Filter.'
+        'Parameters are: order (e.g. 3) and frequency (e.g. 0.01 Hz)'}';
+
+remove_segment_drift      = cfg_menu;
+remove_segment_drift.tag  = 'remove_segment_drift';
+remove_segment_drift.name = 'Remove segment drift';
+remove_segment_drift.labels = {'Yes','No'};
+remove_segment_drift.values = {1,0};
+remove_segment_drift.val  = {0};
+remove_segment_drift.help = {'Remove linear drift separately on each segment.'}';
+
 % Executable Branch
 stim_mean1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 stim_mean1.name = 'Average stimulations';             % The display name
 stim_mean1.tag  = 'stim_mean1'; %Very important: tag is used when calling for execution
 stim_mean1.val  = {IOImat redo1 IOImatCopyChoice stim_choice session_choice ...
-    ROI_choice window_after window_before normalize_choice ...
-    generate_figures save_figures add_error_bars};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    ROI_choice window_after window_before normalize_choice include_flow extract_HRF ...
+    generate_global generate_figures save_figures add_error_bars hpf_butter ...
+    remove_segment_drift};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 stim_mean1.prog = @ioi_stim_mean_run;  % A function handle that will be called with the harvested job to run the computation
 stim_mean1.vout = @ioi_cfg_vout_stim_mean; % A function handle that will be called with the harvested job to determine virtual outputs
 stim_mean1.help = {'Calculate average over stimulations.'};

@@ -130,7 +130,11 @@ for SubjIdx=1:length(job.IOImat)
                             IOI.X{s1}.Xm = Xm;
                             IOI.X{s1}.bcov = bcov;
                             %load ROI
-                            load(IOI.ROI.ROIfname);
+                            try
+                                load(IOI.ROI.ROIfname);
+                            catch
+                                load(fullfile(dir_ioimat,'ROI.mat'));
+                            end
                             %approximate calculation of effective degrees of freedom
                             [trRV trRVRV] = approx_trRV(KX.X,Xm,K.KL);
                             IOI.X{s1}.trRV = trRV;
