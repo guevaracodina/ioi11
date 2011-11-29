@@ -43,10 +43,15 @@ for SubjIdx=1:length(job.IOImat)
                 if ~isfield(IOI.res,'SCKSOK') || job.force_redo
                     [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
                     %load ROI.mat
-                    if ~isempty(job.ROImat)
-                        load(job.ROImat{SubjIdx});
-                    else
+%                     if ~isempty(job.ROImat)
+%                         load(job.ROImat{SubjIdx});
+%                     else
+%                         load(IOI.ROI.ROIfname);
+%                     end
+                    try
                         load(IOI.ROI.ROIfname);
+                    catch
+                        load(fullfile(dir_ioimat,'ROI.mat'));
                     end
                     if isfield(job.IOImatCopyChoice,'IOImatCopy')
                         newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;

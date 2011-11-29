@@ -101,6 +101,10 @@ for SubjIdx=1:length(job.IOImat)
                     end
                 end
             end
+            IOI.ROIname = {};
+            for i0=1:length(IOI.res.ROI), 
+                IOI.ROIname = [IOI.ROIname; IOI.res.ROI{i0}.name]; 
+            end
             IOI.res.ROIOK = 1;
             if isfield(job.IOImatCopyChoice,'IOImatCopy')
                 newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
