@@ -33,6 +33,12 @@ try
 catch
     remove_segment_drift = 1;
 end
+try
+    fit_3_gamma = job.fit_3_gamma;
+catch
+    fit_3_gamma = 0;
+end
+
 %Other options
 generate_global = job.generate_global;
 include_flow = job.include_flow;
@@ -313,7 +319,49 @@ for SubjIdx=1:length(job.IOImat)
                 IOI.res.Sa = Sa; %each segment
                 IOI.res.Sb = Sb;
                 save(IOImat,'IOI');
-                
+                %Define M structure for Expectation-Maximization algorithm                 
+                %Fit difference of two gamma functions
+                if extract_HRF                    
+                    x = linspace(0,job.window_after-IOI.dev.TR,window_after);
+                    %loop over onset types
+                    for m1=1:maxM
+                        %loop over colors
+                        for c1=1:length(IOI.color.eng)
+                            %loop over ROIs
+                            r2 = 0;
+                            for r1=1:length(ROI)
+                                if all_ROIs || sum(r1==selected_ROIs)
+                                    r2 = r2 + 1;
+                                    %loop over sessions
+                                    for s1=1:length(IOI.sess_res)
+                                        if all_sessions || sum(s1==selected_sessions)
+                                            d = Ma{r2,m1}{c1,s1};
+                                            if ~isempty(d)
+                                                F{r2,m1}{c1,s1} = ioi_nlinfit(x,d,IOI.color,c1,include_flow);
+                                                H{r2,m1}{c1,s1} = ioi_HDM_hrf(IOI.dev.TR,x,d,IOI.color,c1,include_flow,fit_3_gamma);
+                                            end
+                                        end
+                                    end
+                                    if global_M
+                                        d = GMa{r2,m1}{c1};
+                                        if ~isempty(d)
+                                            GF{r2,m1}{c1} = ioi_nlinfit(x,d,IOI.color,c1,include_flow);
+                                            GH{r2,m1}{c1,s1} = ioi_HDM_hrf(IOI.dev.TR,x,d,IOI.color,c1,include_flow,fit_3_gamma);
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    if global_M
+                        IOI.res.GF = GF; %mean of all segments
+                        IOI.res.GH = GH;
+                    end
+                    %Session results
+                    IOI.res.F = F;
+                    IOI.res.H = H;
+                    save(IOImat,'IOI');
+                end
                 %Global Figures
                 ctotal = [];
                 h1 = 0;
@@ -332,11 +380,6 @@ for SubjIdx=1:length(job.IOImat)
                             ctotal = [ctotal find(IOI.color.eng==IOI.color.flow)];
                         end
                     end
-                    %                     if isfield(IOI.color,'contrast')
-                    %                         lp2{IOI.color.eng==IOI.color.contrast} = 'y'; %contrast (=flow up to rescaling)
-                    %                         ctotal = [ctotal find(IOI.color.eng==IOI.color.contrast)];
-                    %                     end
-                    
                     %global figures, only for 1st onset
                     if exist('GMa','var')
                         ls = linspace(0,job.window_after,window_after);
@@ -356,37 +399,27 @@ for SubjIdx=1:length(job.IOImat)
                                     end
                                 end
                             end
-                            if save_figures
-                                filen = fullfile(dir_fig,['Mean_ROI.tiff']); %save as .tiff
-                                print(h(h1), '-dtiffn', filen);
-                            end
-                            if ~generate_figures, close(h(h1)); end
+                            tit = 'Mean_ROI';
+                            title(tit);
+                            save_mean_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                         else %plot all series with random colors, skip error bars
                             ColorSet = varycolor(size(GMa,1));
                             for c1 = ctotal
                                 h1 = h1 + 1;
                                 h(h1) = figure;
-                                %                                 a1 = zeros(size(GMa,1),size(GMa{r1,1}{c1},2));
-                                %                                 for r1=1:size(GMa,1)
-                                %                                     a1(r1,:) = GMa{r1,1}{c1};
-                                %                                 end
                                 set(gca, 'ColorOrder', ColorSet);
                                 hold all
                                 for r1=1:size(GMa,1)
                                     plot(ls,GMa{r1,1,c1}); %hold on
                                 end
+                                hc1 = set_colorbar(gcf,size(GMa,1));
                                 legend off
                                 set(gcf, 'Colormap', ColorSet);
-                                colorbar
-                                if save_figures
-                                    filen = fullfile(dir_fig,['Mean_' IOI.color.eng(c1) '_allROI.tiff']); %save as .tiff
-                                    print(h(h1), '-dtiffn', filen);
-                                end
-                                if ~generate_figures, close(h(h1)); end
+                                tit = ['Mean_' IOI.color.eng(c1) '_allROI'];
+                                title(tit);
+                                save_mean_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                             end
                         end
-                    else
-                        
                     end
                     
                     %Figures by session and by stimulus type
@@ -405,23 +438,31 @@ for SubjIdx=1:length(job.IOImat)
                                         h(h1) = figure;
                                         for c1 = ctotal
                                             if ~add_error_bars
-                                                plot(ls,Ma{r1,m1}{c1,s1},lp2{c1}); hold on
+                                                plot(ls,Ma{r2,m1}{c1,s1},[lp1{1} lp2{c1}]); hold on
                                             else
-                                                errorbar(ls(2:end-1),Ma{r2,m1}{c1,s1}(2:end-1),Da{r2,m1}{c1,s1}(2:end-1),lp2{c1}); hold on
+                                                errorbar(ls(2:end-1),Ma{r2,m1}{c1,s1}(2:end-1),Da{r2,m1}{c1,s1}(2:end-1),[lp1{1} lp2{c1}]); hold on
+                                            end
+                                            if extract_HRF
+                                                plot(ls,F{r2,m1}{c1,s1}.yp,[lp1{2} lp2{c1}]); hold on
+                                                plot(ls,H{r2,m1}{c1,s1}.yp,[lp1{3} lp2{c1}]); hold on
                                             end
                                         end
+                                        if ~extract_HRF
                                         if include_flow
                                             legend(gca,'HbO','HbR','Flow');
                                         else
                                             legend(gca,'HbO','HbR');
                                         end
+                                        else
+                                        if include_flow
+                                            legend(gca,'HbO','HbO-NL','HbO-EM','HbR','HbR-NL','HbR-EM','Flow','Flow-NL','Flow-EM');
+                                        else
+                                            legend(gca,'HbO','HbO-NL','HbO-EM','HbR','HbR-NL','HbR-EM');
+                                        end   
+                                        end
                                         tit = ['ROI ' int2str(r1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
                                         title(tit);
-                                        if save_figures
-                                            filen = fullfile(dir_fig,[tit '.tiff']); %save as .tiff
-                                            print(h(h1), '-dtiffn', filen);
-                                        end
-                                        if ~generate_figures, close(h(h1)); end
+                                        save_mean_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                                     end
                                 end
                                 
@@ -446,11 +487,7 @@ for SubjIdx=1:length(job.IOImat)
                                         legend(gca,leg);
                                         tit = ['Color ' IOI.color.eng(c1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
                                         title(tit);
-                                        if save_figures
-                                            filen = fullfile(dir_fig,[tit '.tiff']); %save as .tiff
-                                            print(h(h1), '-dtiffn', filen);
-                                        end
-                                        if ~generate_figures, close(h(h1)); end
+                                        save_mean_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                                     end
                                 else
                                     %plot all series with random colors, skip error bars
@@ -458,10 +495,6 @@ for SubjIdx=1:length(job.IOImat)
                                     for c1 = ctotal
                                         h1 = h1 + 1;
                                         h(h1) = figure;
-                                        %                                 a1 = zeros(size(GMa,1),size(GMa{r1,1}{c1},2));
-                                        %                                 for r1=1:size(GMa,1)
-                                        %                                     a1(r1,:) = GMa{r1,1}{c1};
-                                        %                                 end
                                         set(gca, 'ColorOrder', ColorSet);
                                         hold all
                                         for r1=1:size(Ma,1)
@@ -469,65 +502,15 @@ for SubjIdx=1:length(job.IOImat)
                                         end
                                         legend off
                                         set(gcf, 'Colormap', ColorSet);
-                                        hc1 = colorbar;
-                                        set(hc1, 'YLim', [1 size(Ma,1)+1]);
-                                        y_tick = linspace(1, size(Ma,1), size(Ma,1))'+0.49;
-                                        set(hc1, 'YTick', y_tick);
-                                        %set(hc1, 'YTickMode', 'Manual');
-                                        set(hc1, 'FontSize', 12);
-                                        %Customize here number of decimals
-                                        set(hc1,'YTickLabel',sprintf('%.0f |',get(hc1,'YTick')'));
+                                        hc1 = set_colorbar(gcf,size(Ma,1));
                                         tit = ['Color ' IOI.color.eng(c1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
                                         title(tit);
-                                        if save_figures
-                                            filen = fullfile(dir_fig,[tit '.tiff']); %save as .tiff
-                                            print(h(h1), '-dtiffn', filen);
-                                        end
-                                        if ~generate_figures, close(h(h1)); end
-                                    end
-                                    
+                                        save_mean_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
+                                    end                                    
                                 end
                             end
                         end
                     end
-                end
-                %Fit difference of two gamma functions
-                if extract_HRF                    
-                    x = linspace(0,job.window_after-IOI.dev.TR,window_after);
-                    %loop over onset types
-                    for m1=1:maxM
-                        %loop over colors
-                        for c1=1:length(IOI.color.eng)
-                            %loop over ROIs
-                            r2 = 0;
-                            for r1=1:length(ROI)
-                                if all_ROIs || sum(r1==selected_ROIs)
-                                    r2 = r2 + 1;
-                                    %loop over sessions
-                                    for s1=1:length(IOI.sess_res)
-                                        if all_sessions || sum(s1==selected_sessions)
-                                            d = Ma{r2,m1}{c1,s1};
-                                            if ~isempty(d)
-                                                F{r2,m1}{c1,s1} = ioi_nlinfit(x,d,IOI.color,c1,include_flow);
-                                            end
-                                        end
-                                    end
-                                    if global_M
-                                        d = GMa{r2,m1}{c1};
-                                        if ~isempty(d)
-                                            GF{r2,m1}{c1} = ioi_nlinfit(x,d,IOI.color,c1,include_flow);
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end
-                    if global_M
-                        IOI.res.GFa = GFa; %mean of all segments
-                    end
-                    %Session results
-                    IOI.res.F = F;
-                    save(IOImat,'IOI');
                 end
             end
         end
@@ -541,73 +524,22 @@ for SubjIdx=1:length(job.IOImat)
 end
 end
 
-function F = ioi_nlinfit(x,d,color,c1,include_flow)
-warning('off')
-%nonlinear fit - two steps
-%fit the hemodynamic increase (decrease for HbR)
-if strcmp(color.eng(c1),color.HbR)
-    d = -d;
-    p1 = [5.8 0.3];
-    p2 = [10 0.5 8];
-else
-    p1 = [4.3 0.5];
-    p2 = [9 0.5 8];
+function save_mean_figures(save_figures,generate_figures,h,tit,dir_fig)
+if save_figures
+    filen = fullfile(dir_fig,[tit '.tiff']); %save as .tiff
+    print(h, '-dtiffn', filen);
 end
-if ~strcmp(color.eng(c1),color.flow) || include_flow
-    try
-        %options = statset('Robust','on','DerivStep',eps^(1/3),'TolX',1e-8,'Display','Iter','TolFun',1e-8);
-        [beta1,R1,J1,COVB1,mse1] = nlinfit(x,d/sum(d),@ioi_hrf1,p1); %,options);
-        F.R1 = R1;
-        F.J1 = J1;
-        F.COVB1 = COVB1;
-        F.mse1 = mse1;
-        F.FitIncreaseOK = 1;
-    catch
-        %could not fit
-        beta1 = p1;
-        F.FitIncreaseOK = 0;
-    end
-    %fit the undershoot
-    %p   = [beta(1) 10 beta(2) 1 6];
-    d2 = d/sum(d) - ioi_hrf1(beta1,x);
-    
-    try
-        %options = statset('Robust','on','DerivStep',eps^(1/3),'TolX',1e-8,'Display','Iter','TolFun',1e-8);
-        [beta2,R2,J2,COVB2,mse2] = nlinfit(x,d2,@ioi_hrf2,p2); %,options);
-        F.R2 = R2;
-        F.J2 = J2;
-        F.COVB2 = COVB2;
-        F.mse2 = mse2;
-        F.FitDecreaseOK = 1;
-    catch
-        beta2 = p2;
-        F.FitDecreaseOK = 0;
-    end
-    % figure; plot(d/sum(d),'k'); hold on; plot( ioi_hrf1(beta1,x),'r'); hold on; plot( ioi_hrf2(beta2,x),'g'); hold on; plot( ioi_hrf1(beta1,x)+ioi_hrf2(beta2,x),'b');
-    
-    p = [beta1(1) beta2(1) beta1(2) beta2(2) beta2(3)];
-    %Then try to fit both
-    %together
-    try
-        %options = statset('Robust','on','DerivStep',eps^(1/3),'TolX',1e-8,'Display','Iter','TolFun',1e-8);
-        [beta,R,J,COVB,mse] = nlinfit(x,d/sum(d),@ioi_hrf,p); %,options);
-        %confidence intervals
-        [ypred dlt] = nlpredci(@ioi_hrf,max(x),beta,R,'Covar',COVB);
-        F.R = R;
-        F.J = J;
-        F.COVB = COVB;
-        F.mse = mse;
-        F.FitBothOK = 1;
-    catch
-        beta = p;
-        F.FitBothOK = 0;
-    end
-    %Fill F
-    F.beta = beta;
-    F.beta1 = beta1;
-    F.beta2 = beta2;
-else
-    F = [];
+if ~generate_figures, close(h); end
 end
-warning('on')
+
+function hc1 = set_colorbar(gcf,len)
+figure(gcf)
+hc1 = colorbar;
+set(hc1, 'YLim', [1 len+1]);
+y_tick = linspace(1, len, len)'+0.49;
+set(hc1, 'YTick', y_tick);
+%set(hc1, 'YTickMode', 'Manual');
+set(hc1, 'FontSize', 12);
+%Customize here number of decimals
+set(hc1,'YTickLabel',sprintf('%.0f |',get(hc1,'YTick')'));
 end
