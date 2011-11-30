@@ -72,11 +72,25 @@ for SubjIdx=1:length(job.IOImat)
                     if all_sessions || sum(s1==selected_sessions)
                         
                         %loop over colors
-                        for c1=1:length(IOI.color.eng)
-                            %load the images
-                            
+                        for c1=5 %1:length(IOI.color.eng)
                             %loop over onset types
                             for m1=1:length(onsets_list{s1})
+                                %Image arrays 
+                                
+                                %loop over onsets for that session
+                                U = round(onsets_list{s1}{m1}/IOI.dev.TR); %in data points
+                                for u1=1:length(U)
+                                    %Frames to get:
+                                    fr_before = U(u1)-window_before:U(u1)-1;
+                                    fr_after = U(u1):U(u1)+window_after-1;
+                                    %Load images before and after stimulus
+                                    Yb = get_images(IOI,fr_before,c1,s1,dir_ioimat);
+                                    Ya = get_images(IOI,fr_after,c1,s1,dir_ioimat);
+                                    
+                                        
+                                        
+                                        
+                                
                                 kb = 0; %counter of segments before onsets
                                 ka = 0; %counter of segments after onsets
                                 kb2 = 0; %counter of skipped segments before onsets
@@ -99,9 +113,7 @@ for SubjIdx=1:length(job.IOImat)
                                     end
                                     Sb{r2,m1}{c1,s1} = [];
                                     Sa{r2,m1}{c1,s1} = [];
-                                    %loop over onsets for that session
-                                    U = round(onsets_list{s1}{m1}/IOI.dev.TR); %in data points
-                                    for u1=1:length(U)
+                                    
                                         clear tmp_median;
                                         try
                                             tmp1 = tmp_d(U(u1)-window_before:U(u1)-1);
@@ -183,5 +195,56 @@ for SubjIdx=1:length(job.IOImat)
         disp(exception.identifier)
         disp(exception.stack(1))
     end
+end
+end
+
+function Ya = get_images(IOI,frames,c1,s1,dir_ioimat)
+Ya = [];
+first_pass = 1;
+fmod_previous = 1;
+for i=1:length(frames)
+    frames_loaded = 0;
+    if i==1
+        %find number of frames per block
+        if length(IOI.sess_res{s1}.si) > 1
+            fpb = IOI.sess_res{s1}.si{2}-IOI.sess_res{s1}.si{1};
+        else
+            fpb = IOI.sess_res{s1}.ei{1}-IOI.sess_res{s1}.si{1}+1;
+        end
+    end
+    fmod = mod(frames(i),fpb);
+    if fmod < fmod_previous 
+        frames_loaded = 0;
+    end
+    fct = ceil(frames(i)/fpb);
+    if ~frames_loaded
+    try        
+        V = spm_vol(IOI.sess_res{s1}.fname{c1}{fct});
+        Y = spm_read_vols(V);
+        frames_loaded = 1;
+    catch
+        [dir0 fil0 ext0] = fileparts(IOI.sess_res{s1}.fname{c1}{fct});
+        fsep = strfind(dir0,filesep);
+        res = strfind(dir0,'Res');
+        fgr = fsep(fsep > res);
+        tdir = dir0(1:fgr(2)); 
+        tfname = fullfile(dir_ioimat,['S' gen_num_str(s1,2)],[fil0 ext0]);
+        try
+            V = spm_vol(tfname);
+            Y = spm_read_vols(V);
+            frames_loaded = 1;            
+        catch
+            %file does not exist
+            return
+        end
+    end
+    if first_pass
+        %initialize Ya
+        Ya = zeros(size(Y,1),size(Y,2),length(frames));
+        first_pass = 0;
+    end
+    end
+    
+    Ya(:,:,i) = squeeze(Y(:,:,1,fmod));
 end
 end
