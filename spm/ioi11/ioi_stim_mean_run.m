@@ -142,6 +142,8 @@ for SubjIdx=1:length(job.IOImat)
                 if all_ROIs
                     selected_ROIs = 1:length(ROI);
                 end
+                %Keep track later (for GLM) of which ROIs were selected
+                IOI.res.mean.selected_ROIs = selected_ROIs;
                 Nroi = length(selected_ROIs);
                 Nc = length(IOI.color.eng);
                 
@@ -401,7 +403,7 @@ for SubjIdx=1:length(job.IOImat)
                             end
                             tit = 'Mean_ROI';
                             title(tit);
-                            save_mean_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
+                            ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                         else %plot all series with random colors, skip error bars
                             ColorSet = varycolor(size(GMa,1));
                             for c1 = ctotal
@@ -417,7 +419,7 @@ for SubjIdx=1:length(job.IOImat)
                                 set(gcf, 'Colormap', ColorSet);
                                 tit = ['Mean_' IOI.color.eng(c1) '_allROI'];
                                 title(tit);
-                                save_mean_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
+                                ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                             end
                         end
                     end
@@ -462,7 +464,7 @@ for SubjIdx=1:length(job.IOImat)
                                         end
                                         tit = ['ROI ' int2str(r1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
                                         title(tit);
-                                        save_mean_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
+                                        ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                                     end
                                 end
                                 
@@ -477,7 +479,7 @@ for SubjIdx=1:length(job.IOImat)
                                             if all_ROIs || sum(r1==selected_ROIs)
                                                 r2 = r2+1;
                                                 if ~add_error_bars
-                                                    plot(ls,Ma{r1,m1}{c1,s1},[lp1{r2} lp2{c1}]); hold on
+                                                    plot(ls,Ma{r2,m1}{c1,s1},[lp1{r2} lp2{c1}]); hold on
                                                 else
                                                     errorbar(ls(2:end-1),Ma{r2,m1}{c1,s1}(2:end-1),Da{r2,m1}{c1,s1}(2:end-1),[lp1{r2} lp2{c1}]); hold on
                                                 end
@@ -487,7 +489,7 @@ for SubjIdx=1:length(job.IOImat)
                                         legend(gca,leg);
                                         tit = ['Color ' IOI.color.eng(c1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
                                         title(tit);
-                                        save_mean_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
+                                        ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                                     end
                                 else
                                     %plot all series with random colors, skip error bars
@@ -505,7 +507,7 @@ for SubjIdx=1:length(job.IOImat)
                                         hc1 = set_colorbar(gcf,size(Ma,1));
                                         tit = ['Color ' IOI.color.eng(c1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
                                         title(tit);
-                                        save_mean_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
+                                        ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                                     end                                    
                                 end
                             end
@@ -522,14 +524,6 @@ for SubjIdx=1:length(job.IOImat)
         disp(exception.stack(1))
     end
 end
-end
-
-function save_mean_figures(save_figures,generate_figures,h,tit,dir_fig)
-if save_figures
-    filen = fullfile(dir_fig,[tit '.tiff']); %save as .tiff
-    print(h, '-dtiffn', filen);
-end
-if ~generate_figures, close(h); end
 end
 
 function hc1 = set_colorbar(gcf,len)

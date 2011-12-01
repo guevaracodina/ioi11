@@ -1,7 +1,7 @@
 function [X U] = ioi_get_X(IOI,name,ons,dur,s1,bases,volt)
 SPM.xBF.dt = IOI.dev.TR;
 SPM.xBF.T = 1;
-SPM.xBF.T0 = 0;
+SPM.xBF.T0 = 1;
 SPM.xBF.UNITS = 'secs';
 nambase = fieldnames(bases);
 if ischar(nambase)
@@ -9,8 +9,12 @@ if ischar(nambase)
 else
     nam=nambase{1};
 end
-if strcmp(fieldnames(bases),'hrf') || strcmp(fieldnames(bases),'rat') ...
-        || strcmp(fieldnames(bases),'mouse')
+if strcmp(fieldnames(bases),'specific_nlinfit') ...
+        || strcmp(fieldnames(bases),'specific_EM')
+     SPM.xBF.nam = nam;
+     SPM.xBF.name = 'hrf';
+else
+if strcmp(fieldnames(bases),'hrf') 
     %canonical HRF or rat or mouse
     if all(bases.(nam).derivs == [0 0])
         SPM.xBF.name = 'hrf';
@@ -38,11 +42,8 @@ else
     SPM.xBF.length = bases.(nam).length;
     SPM.xBF.order  = bases.(nam).order;
 end
-
-SPM.xBF = spm_get_bf_rat_mouse(SPM.xBF);
-if size(SPM.xBF.bf,1) == 1 || size(SPM.xBF.bf,2) == 1
-    SPM.xBF.bf = SPM.xBF.bf/sum(SPM.xBF.bf); %normalize
 end
+SPM.xBFtmp = spm_get_bf_rat_mouse(SPM.xBF,IOI,bases);
 
 % Get inputs, neuronal causes or stimulus functions U
 %------------------------------------------------------------------
@@ -60,15 +61,34 @@ SPM.Sess.U.P = P;
 U = spm_get_ons(SPM,1);
 % Convolve stimulus functions with basis functions
 %------------------------------------------------------------------
-[X,Xn,Fc] = spm_Volterra(U,SPM.xBF.bf,volt);
-
-% Resample regressors at acquisition times (32 bin offset)
-%-------------------------------------------------
-X = X((0:(SPM.nscan - 1))*SPM.xBF.T + SPM.xBF.T0 + 32,:);
-
-% and orthogonalise (within trial type)
-%--------------------------------------
-for i = 1:length(Fc)
-    X(:,Fc(i).i) = spm_orth(X(:,Fc(i).i));
+if ~iscell(SPM.xBFtmp)
+    SPM.xBF = SPM.xBFtmp;
+    if size(SPM.xBF.bf,1) == 1 || size(SPM.xBF.bf,2) == 1
+        SPM.xBF.bf = SPM.xBF.bf/abs(sum(SPM.xBF.bf)); %normalize
+    end
+    [X,Xn,Fc] = spm_Volterra(U,SPM.xBF.bf,volt);
+    
+    % Resample regressors at acquisition times (32 bin offset)
+    %-------------------------------------------------
+    X = X((0:(SPM.nscan - 1))*SPM.xBF.T + SPM.xBF.T0 + 32,:);
+    
+    % and orthogonalise (within trial type)
+    %--------------------------------------
+    for i = 1:length(Fc)
+        X(:,Fc(i).i) = spm_orth(X(:,Fc(i).i));
+    end
+else
+    for ibf=1:length(SPM.xBFtmp)
+        if ~isempty(SPM.xBFtmp{ibf})
+            bf = SPM.xBFtmp{ibf};
+            if size(bf,1) == 1 || size(bf,2) == 1
+                bf = bf/abs(sum(bf)); %normalize
+            end
+            [X{ibf},Xn,Fc] = spm_Volterra(U,bf',volt);
+            X{ibf} = X{ibf}((0:(SPM.nscan - 1))*SPM.xBF.T + SPM.xBF.T0 + 32,:);
+        else
+            X{ibf} = [];
+        end
+    end
 end
 end

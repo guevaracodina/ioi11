@@ -12,18 +12,18 @@ IOImat.num     = [1 Inf];     % Number of inputs required
 IOImat.help    = {'Select IOImat dependency if available. '
     'Otherwise, for each subject, select IOI.mat.'}'; % help text displayed
 
-% ROImat         = cfg_files; 
-% ROImat.name    = 'Select ROI.mat'; 
-% ROImat.tag     = 'ROImat';      
-% ROImat.filter = 'mat';
-% ROImat.ufilter = '^ROI.mat$';
-% ROImat.val     = {''};
-% ROImat.num     = [1 Inf];    
-% ROImat.help    = {'Optional: Select ROImat. This allows working on ROI data even'
-%     'if the paths are not correct in IOI.mat. If not specified, the ROI.mat '
-%     'specified in IOI.mat will be used.'
-%     'If several subjects are run, and ROImat is explicitly specified, then'
-%     'it should be specified for all subjects, in the same order as the list of IOI.mat'}'; 
+ROImat         = cfg_files; 
+ROImat.name    = 'Select ROI.mat'; 
+ROImat.tag     = 'ROImat';      
+ROImat.filter = 'mat';
+ROImat.ufilter = '^ROI.mat$';
+ROImat.val     = {''};
+ROImat.num     = [1 Inf];    
+ROImat.help    = {'Optional: Select ROImat. This allows working on ROI data even'
+    'if the paths are not correct in IOI.mat. If not specified, the ROI.mat '
+    'specified in IOI.mat will be used.'
+    'If several subjects are run, and ROImat is explicitly specified, then'
+    'it should be specified for all subjects, in the same order as the list of IOI.mat'}'; 
 
 redo1      = cfg_menu;
 redo1.tag  = 'force_redo';
@@ -245,7 +245,7 @@ hpf_butter.help = {'Choose whether to include a Butterworth High Pass Filter.'
 hdm1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 hdm1.name = 'HDM on ROI';             % The display name
 hdm1.tag  = 'hdm1'; %Very important: tag is used when calling for execution
-hdm1.val  = {IOImat redo1 IOImatCopyChoice session_choice ROI_choice...
+hdm1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ROI_choice...
      PhysioModel_Choice includeHbR includeHbT includeFlow ... 
      stim_choice hpf_butter};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 hdm1.prog = @ioi_HDM_run;  % A function handle that will be called with the harvested job to run the computation
