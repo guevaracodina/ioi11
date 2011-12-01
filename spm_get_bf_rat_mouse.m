@@ -1,4 +1,4 @@
-function [xBF] = spm_get_bf_rat_mouse(xBF)
+function [xBF] = spm_get_bf_rat_mouse(xBF,IOI,bases)
 % fills in basis function structure
 % FORMAT [xBF] = spm_get_bf(xBF);
 %
@@ -38,7 +38,7 @@ if ~nargin
     xBF.dt = spm_input(str,'+1','r',1/16,1);
 end
 dt   = xBF.dt;
-
+list_color = 0;
 
 % assemble basis functions
 %==========================================================================
@@ -119,51 +119,11 @@ switch xBF.name
         bf = 1;
         
     otherwise
-        if strcmp(xBF.nam,'rat')
-            [bf p] = spm_hrf_rat(dt);
-            
-            % add time derivative
-            %----------------------------------------------------------------------
-            if strfind(xBF.name,'time')
-                dp     = 1;
-                p(6)   = p(6) + dp;
-                D      = (bf(:,1) - spm_hrf_rat(dt,p))/dp;
-                bf     = [bf D(:)];
-                p(6)   = p(6) - dp;
-                
-                % add dispersion derivative
-                %------------------------------------------------------------------
-                if strfind(xBF.name,'dispersion')
-                    dp    = 0.01;
-                    p(3)  = p(3) + dp;
-                    D     = (bf(:,1) - spm_hrf_rat(dt,p))/dp;
-                    bf    = [bf D(:)];
-                end
-            end
-            
+        if strcmp(xBF.nam,'specific_nlinfit')         
+            [bf list_color] = get_specific_bf(IOI,bases);
         else
-            if strcmp(xBF.nam,'mouse')
-                [bf p] = spm_hrf_mouse(dt);
-                
-                % add time derivative
-                %----------------------------------------------------------------------
-                if strfind(xBF.name,'time')
-                    dp     = 1;
-                    p(6)   = p(6) + dp;
-                    D      = (bf(:,1) - spm_hrf_mouse(dt,p))/dp;
-                    bf     = [bf D(:)];
-                    p(6)   = p(6) - dp;
-                    
-                    % add dispersion derivative
-                    %------------------------------------------------------------------
-                    if strfind(xBF.name,'dispersion')
-                        dp    = 0.01;
-                        p(3)  = p(3) + dp;
-                        D     = (bf(:,1) - spm_hrf_mouse(dt,p))/dp;
-                        bf    = [bf D(:)];
-                    end
-                end
-                
+            if strcmp(xBF.nam,'specific_EM')
+                [bf list_color] = get_specific_bf(IOI,bases);
             else
                 % canonical hemodynamic response function
                 %----------------------------------------------------------------------
@@ -199,7 +159,11 @@ end
 
 % Orthogonalise and fill in basis function structure
 %--------------------------------------------------------------------------
-xBF.bf  =  spm_orth(bf);
+if ~list_color
+    xBF.bf  =  spm_orth(bf);
+else
+    xBF = bf;
+end
 
 
 %==========================================================================
@@ -221,4 +185,56 @@ for i = 2:(1 + h)
     m   = 2^i;
     s   = sqrt(m);
     bf  = [bf spm_Gpdf(u,(m/s)^2,m/s^2)];
+end
+
+function [bf list_color] = get_specific_bf(IOI,bases)
+%[bf p] = spm_hrf_mouse(dt);
+r1 = bases.specific_EM.HRF_ROI;
+r2 = find(IOI.res.mean.selected_ROIs==r1);%need correspondance between r1 and r2
+m1 = bases.specific_EM.HRF_selected_stimulus;
+if isfield(bases.specific_EM.HRF_chromophore_choice,'HRF_respective')
+    list_color = 1;
+else
+    list_color = 0;
+    HRF_selected_chromophore = bases.specific_EM.HRF_chromophore_choice.HRF_select_chromophore.HRF_selected_chromophore;
+    switch HRF_selected_chromophore
+        case 0
+            sel_chromophore = 'D';
+        case 1
+            sel_chromophore = 'O';
+        case 2
+            sel_chromophore = 'T';
+        case 3
+            sel_chromophore = 'F';
+    end
+    for c2=1:length(IOI.color.eng)
+        if strcmp(IOI.color.eng(c2),sel_chromophore)
+            c1 = c2;
+        end
+    end
+end
+if list_color
+    for c1=1:length(IOI.color.eng)
+        if isfield(bases.specific_EM.HRF_session_choice,'HRF_global')
+            if ~isempty(IOI.res.GH{r2,m1}{c1})
+            bf{c1} = IOI.res.GH{r2,m1}{c1}.yp;
+            else
+                bf{c1} = [];
+            end
+        else
+            s1 = bases.specific_EM.HRF_session_choice.HRF_select_session.HRF_selected_session;
+            if ~isempty(IOI.res.H{r2,m1}{c1,s1})
+                bf{c1} = IOI.res.H{r2,m1}{c1,s1}.yp;
+            else
+                bf{c1} = [];
+            end
+        end
+    end
+else
+    if isfield(bases.specific_EM.HRF_session_choice,'HRF_global')
+        bf = IOI.res.GH{r2,m1}{c1}.yp;
+    else
+        s1 = bases.specific_EM.HRF_session_choice.HRF_select_session.HRF_selected_session;
+        bf = IOI.res.H{r2,m1}{c1,s1}.yp;
+    end
 end

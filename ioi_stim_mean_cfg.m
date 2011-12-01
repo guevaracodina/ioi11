@@ -146,7 +146,7 @@ window_after.tag  = 'window_after';
 window_after.name = 'Window after';
 window_after.strtype  = 'r';
 window_after.num = [1 1];
-window_after.val  = {15};
+window_after.val  = {20};
 window_after.help = {'Size of window to keep after each stimulation onset, in seconds.'};
 
 normalize_choice      = cfg_menu;

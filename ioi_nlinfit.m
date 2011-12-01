@@ -64,7 +64,11 @@ if ~strcmp(color.eng(c1),color.flow) || include_flow
     F.beta1 = beta1;
     F.beta2 = beta2;
     %Calculate the fitting curve:
-    F.yp = sum(d)*(ioi_hrf(beta,x));
+    if strcmp(color.eng(c1),color.HbR)
+        F.yp = -sum(d)*(ioi_hrf(beta,x));
+    else
+        F.yp = sum(d)*(ioi_hrf(beta,x));
+    end
 else
     F = [];
 end

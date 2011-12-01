@@ -12,6 +12,19 @@ IOImat.num     = [1 Inf];     % Number of inputs required
 IOImat.help    = {'Select IOImat dependency if available. '
     'Otherwise, for each subject, select IOI.mat.'}'; % help text displayed
 
+ROImat         = cfg_files; 
+ROImat.name    = 'Select ROI.mat'; 
+ROImat.tag     = 'ROImat';      
+ROImat.filter = 'mat';
+ROImat.ufilter = '^ROI.mat$';
+ROImat.val     = {''};
+ROImat.num     = [1 Inf];    
+ROImat.help    = {'Optional: Select ROImat. This allows working on ROI data even'
+    'if the paths are not correct in IOI.mat. If not specified, the ROI.mat '
+    'specified in IOI.mat will be used.'
+    'If several subjects are run, and ROImat is explicitly specified, then'
+    'it should be specified for all subjects, in the same order as the list of IOI.mat'}'; 
+
 redo1      = cfg_menu;
 redo1.tag  = 'force_redo';
 redo1.name = 'Force processing';
@@ -242,24 +255,104 @@ derivs.val    = {[0 0]};
 
 %Additional HRFs
 
+HRF_ROI      = cfg_entry;
+HRF_ROI.tag  = 'HRF_ROI';
+HRF_ROI.name = 'Enter ROI for desired HRF';
+HRF_ROI.strtype  = 'r';
+HRF_ROI.num = [1 1];
+HRF_ROI.val{1} = 1;
+HRF_ROI.help = {'Enter ROI for desired HRF.'};
+
+HRF_global         = cfg_branch;
+HRF_global.tag     = 'HRF_global';
+HRF_global.name    = 'HRF calculated from all sessions';
+HRF_global.val     = {};
+HRF_global.help    = {'Use global calculation of HRF obtained from all '
+    'previously specified sessions in averaging module.'}';
+
+HRF_selected_session      = cfg_entry;
+HRF_selected_session.tag  = 'HRF_selected_session';
+HRF_selected_session.name = 'Enter session where HRF was calculated';
+HRF_selected_session.strtype  = 'r';
+HRF_selected_session.num = [1 1];
+HRF_selected_session.val{1} = 1;
+HRF_selected_session.help = {'Enter session where HRF was calculated.'};
+
+HRF_select_session         = cfg_branch;
+HRF_select_session.tag     = 'HRF_select_session';
+HRF_select_session.name    = 'Select session where HRF was calculated';
+HRF_select_session.val     = {HRF_selected_session};
+HRF_select_session.help    = {'Select session where HRF was calculated.'};
+
+HRF_session_choice        = cfg_choice;
+HRF_session_choice.name   = 'Choose session selection method';
+HRF_session_choice.tag    = 'HRF_session_choice';
+HRF_session_choice.values = {HRF_global,HRF_select_session};
+HRF_session_choice.val    = {HRF_select_session};
+HRF_session_choice.help   = {'Choose session selection method'}';
+
+%%%%%%%%%%%%%
+
+HRF_respective         = cfg_branch;
+HRF_respective.tag     = 'HRF_respective';
+HRF_respective.name    = 'Use HRF calculated over same chromophore as the data to do the GLM over';
+HRF_respective.val     = {};
+HRF_respective.help    = {'Use HRF calculated over same chromophore as the data to do the GLM over'}';
+
+HRF_selected_chromophore         = cfg_menu;
+HRF_selected_chromophore.tag     = 'HRF_selected_chromophore';
+HRF_selected_chromophore.name    = 'Chromophore of HRF to select';
+HRF_selected_chromophore.help    = {'Select chromophore for the HRF to be used on all data, irrespective of their chromophore'};
+HRF_selected_chromophore.labels = {
+                 'HbR'
+                 'HbO'
+                 'HbT'
+                 'Flow'
+}';
+HRF_selected_chromophore.values = {0 1 2 3};
+HRF_selected_chromophore.val    = {0};
+
+HRF_select_chromophore         = cfg_branch;
+HRF_select_chromophore.tag     = 'HRF_select_chromophore';
+HRF_select_chromophore.name    = 'Select chromophore corresponding to desired HRF';
+HRF_select_chromophore.val     = {HRF_selected_chromophore};
+HRF_select_chromophore.help    = {'Select chromophore corresponding to desired HRF.'};
+
+HRF_chromophore_choice        = cfg_choice;
+HRF_chromophore_choice.name   = 'Choose chromophore selection method';
+HRF_chromophore_choice.tag    = 'HRF_chromophore_choice';
+HRF_chromophore_choice.values = {HRF_respective,HRF_select_chromophore};
+HRF_chromophore_choice.val    = {HRF_select_chromophore};
+HRF_chromophore_choice.help   = {'Choose session selection method'}';
+
+HRF_selected_stimulus      = cfg_entry;
+HRF_selected_stimulus.tag  = 'HRF_selected_stimulus';
+HRF_selected_stimulus.name = 'Enter stimulus number (onset type)  where HRF was calculated';
+HRF_selected_stimulus.strtype  = 'r';
+HRF_selected_stimulus.num = [1 1];
+HRF_selected_stimulus.val{1} = 1;
+HRF_selected_stimulus.help = {'Enter stimulus number (onset type) where HRF was calculated.'};
+
 % ---------------------------------------------------------------------
 % hrf Canonical HRF
 % ---------------------------------------------------------------------
-rat         = cfg_branch;
-rat.tag     = 'rat';
-rat.name    = 'HRF for rats';
-rat.val     = {derivs };
-rat.help    = {'Rat Hemodynamic Response Function.'};
+specific_nlinfit         = cfg_branch;
+specific_nlinfit.tag     = 'specific_nlinfit'; %note tag "rat" is historical and no longer applies
+specific_nlinfit.name    = 'animal-specific: nlinfit';
+specific_nlinfit.val     = {HRF_ROI HRF_session_choice HRF_chromophore_choice ...
+    HRF_selected_stimulus};
+specific_nlinfit.help    = {'Animal specific Hemodynamic Response Function.'
+    'Calculated with Matlab nlinfit'}';
 
-mouse         = cfg_branch;
-mouse.tag     = 'mouse';
-mouse.name    = 'HRF for mice';
-mouse.val     = {derivs };
-mouse.help    = {'Mouse Hemodynamic Response Function.'};
+specific_EM         = cfg_branch;
+specific_EM.tag     = 'specific_EM'; %note tag "mouse" is historical and no longer applies
+specific_EM.name    = 'animal-specific: EM';
+specific_EM.val     = {HRF_ROI HRF_session_choice HRF_chromophore_choice ...
+    HRF_selected_stimulus};
+specific_EM.help    = {'Animal specific Hemodynamic Response Function.'
+    'Calculated with EM (Expectation Maximization) - The preferred choice'}';
 
 %%%%%%%%%%%%%%% HRF %%%%%%%%%%%%%%%%%%%%%%%%
-
-
 
 % ---------------------------------------------------------------------
 % hrf Canonical HRF
@@ -381,7 +474,7 @@ bases.tag     = 'bases';
 bases.name    = 'Basis Functions';
 bases.val     = {hrf };
 bases.help    = {'The most common choice of basis function is the Canonical HRF with or without time and dispersion derivatives. '};
-bases.values  = {hrf rat mouse fourier fourier_han gamma fir };
+bases.values  = {hrf specific_nlinfit specific_EM fourier fourier_han gamma fir };
 % ---------------------------------------------------------------------
 % volt Model Interactions (Volterra)
 % ---------------------------------------------------------------------
@@ -496,6 +589,21 @@ stim_choice.values = {default_stims,electro_stims};
 stim_choice.val    = {electro_stims};
 stim_choice.help   = {'Choose stimulation selection method'}';
 
+generate_figures      = cfg_menu;
+generate_figures.tag  = 'generate_figures';
+generate_figures.name = 'Show figures';
+generate_figures.labels = {'Yes','No'};
+generate_figures.values = {1,0};
+generate_figures.val  = {0};
+generate_figures.help = {'Show figures. When selecting this option, the figures will stay opened after the code has completed.'}';
+
+save_figures      = cfg_menu;
+save_figures.tag  = 'save_figures';
+save_figures.name = 'Save figures';
+save_figures.labels = {'Yes','No'};
+save_figures.values = {1,0};
+save_figures.val  = {0};
+save_figures.help = {'Save figures.'}';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -503,8 +611,8 @@ stim_choice.help   = {'Choose stimulation selection method'}';
 glm_roi1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 glm_roi1.name = 'GLM on ROI';             % The display name
 glm_roi1.tag  = 'glm_roi1'; %Very important: tag is used when calling for execution
-glm_roi1.val  = {IOImat redo1 IOImatCopyChoice session_choice ROI_choice...
-     bases volt hpf_butter lpf_gauss stim_choice};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+glm_roi1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ROI_choice...
+     bases volt hpf_butter lpf_gauss stim_choice generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 glm_roi1.prog = @ioi_GLM_on_ROI_run;  % A function handle that will be called with the harvested job to run the computation
 glm_roi1.vout = @ioi_cfg_vout_glm_roi; % A function handle that will be called with the harvested job to determine virtual outputs
 glm_roi1.help = {'Run GLMs on ROIs.'};
