@@ -59,6 +59,7 @@ SPM.Sess.U.ons = ons;
 SPM.Sess.U.dur = dur;
 SPM.Sess.U.P = P;
 U = spm_get_ons(SPM,1);
+%U.u = U.u(33:end); %?
 % Convolve stimulus functions with basis functions
 %------------------------------------------------------------------
 if ~iscell(SPM.xBFtmp)

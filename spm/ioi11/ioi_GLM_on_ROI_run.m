@@ -133,7 +133,7 @@ for SubjIdx=1:length(job.IOImat)
                                     %add a constant
                                     X = [X ones(size(X,1),1)];
                                     %get K for low pass filtering:
-                                    K = get_K(X,fwhm,IOI.dev.TR);
+                                    K = get_K(1:size(X,1),fwhm,IOI.dev.TR);
                                     %filter X - LPF
                                     %calculate X inverse
                                     %Xm = pinv(X);
@@ -449,19 +449,6 @@ catch exception
     disp(exception.identifier)
     disp(exception.stack(1))
 end
-end
-
-function K = get_K(X,fwhm,TR)
-svec = 1:size(X,1);
-K.HParam.type = 'none';
-K.LParam.FWHM = fwhm;
-K.LParam.type = 'Gaussian';
-K = struct( 'HParam', K.HParam,...
-    'row', svec ,...
-    'RT', TR,...
-    'LParam', K.LParam);
-K = spm_filter_HPF_LPF_WMDL(K);
-K.row = 1:length(svec);
 end
 
 function A = private_analyze_LFP(E,el,ons,IOI,s)

@@ -223,13 +223,29 @@ SCKSparams.name    = 'SCKS parameters';
 SCKSparams.val     = {SCKSnoise State_annealing Parameter_annealing}; 
 SCKSparams.help    = {'User-controlled SCKS parameters.'};
 
+generate_figures      = cfg_menu;
+generate_figures.tag  = 'generate_figures';
+generate_figures.name = 'Show figures';
+generate_figures.labels = {'Yes','No'};
+generate_figures.values = {1,0};
+generate_figures.val  = {0};
+generate_figures.help = {'Show figures. When selecting this option, the figures will stay opened after the code has completed.'}';
+
+save_figures      = cfg_menu;
+save_figures.tag  = 'save_figures';
+save_figures.name = 'Save figures';
+save_figures.labels = {'Yes','No'};
+save_figures.values = {1,0};
+save_figures.val  = {0};
+save_figures.help = {'Save figures.'}';
+
 % Executable Branch
 SCKS1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 SCKS1.name = 'SCKS Deconvolution';             % The display name
 SCKS1.tag  = 'SCKS1'; %Very important: tag is used when calling for execution
 SCKS1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ROI_choice ...
     PhysioModel_Choice includeHbR includeHbT includeFlow hpf_butter ...
-    SCKSparams};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    SCKSparams generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 SCKS1.prog = @ioi_SCKS_run;  % A function handle that will be called with the harvested job to run the computation
 SCKS1.vout = @ioi_cfg_vout_SCKS; % A function handle that will be called with the harvested job to determine virtual outputs
 SCKS1.help = {'Create regions of interest.'};
