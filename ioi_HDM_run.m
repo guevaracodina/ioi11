@@ -30,10 +30,20 @@ if isfield(job.hpf_butter,'hpf_butter_On')
 else
     HPF.hpf_butter_On = 0;
 end
+%LPF
+if isfield(job.lpf_choice,'lpf_gauss_On')
+    LPF.lpf_gauss_On = 1;
+    LPF.fwhm1 = job.lpf_choice.lpf_gauss_On.fwhm1;
+else
+    LPF.lpf_gauss_On = 0;
+end
 %modalities to include
 includeHbR = job.includeHbR;
 includeHbT = job.includeHbT;
 includeFlow = job.includeFlow;
+%save_figures
+save_figures = job.save_figures;
+generate_figures = job.generate_figures;
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
@@ -83,6 +93,10 @@ for SubjIdx=1:length(job.IOImat)
                                     if all_ROIs || sum(r1==selected_ROIs)
                                         HDM0 = [];
                                         Y = [];
+                                        %save_figures
+                                        HDM0.save_figures = save_figures;
+                                        HDM0.generate_figures = generate_figures;
+                                        HDM0.dir1 = dir1;
                                         %Choose onsets: stimulations or electrophysiology
                                         if electro_stims
                                             U = IOI.Sess(s1).U;
@@ -94,23 +108,32 @@ for SubjIdx=1:length(job.IOImat)
                                             volt = 1; %not used
                                             [X U] = ioi_get_X(IOI,name,ons,dur,s1,bases,volt);
                                         end
+                                        U.u = U.u(33:end); %?
                                         HDM0.U = U;
                                         HDM0.TR = IOI.dev.TR;
+                                        HDM0.dt = IOI.dev.TR; %do we need both?!
+                                        HDM0.N = 20/IOI.dev.TR; %too large?
                                         %data specification - which modalities to include:
                                         HDM0.PS = PS0;
                                         HDM0.HPF = HPF; %High pass filter on data
+                                        HDM0.LPF = LPF;
                                         HDM0=ioi_get_data(ROI,HDM0,r1,s1);
                                         HDM0=ioi_set_physiomodel(HDM0);
                                         %choose priors
                                         HDM0=ioi_set_priors(HDM0);
                                         Y.y = HDM0.Y;
+                                        Y.dt = IOI.dev.TR;
                                         %setup for priors
                                         HDM0.pE = HDM0.PS.pE;
-                                        HDM0.pC = 100*HDM0.PS.pC;
+                                        HDM0.pC = 10*HDM0.PS.pC;
+                                        HDM0.pC(end,end) = 10*HDM0.pC(end,end);
+                                        warning('off','MATLAB:nearlySingularMatrix');
+                                        warning('off','MATLAB:singularMatrix');
                                         % nonlinear system identification
                                         %--------------------------------------------------------------------------
-                                        [Ep,Cp,Ce,K0,K1,K2,M0,M1] = ioi_nlsi(HDM0,U,Y);
-
+                                        HDM0 = ioi_nlsi(HDM0,U,Y);
+                                        warning('on','MATLAB:nearlySingularMatrix');
+                                        warning('on','MATLAB:singularMatrix');
                                         HDM{r1,s1} = HDM0;
                                         save(HDMfname,'HDM');   
                                     end

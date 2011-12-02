@@ -236,6 +236,11 @@ try
                 if ~(str_color(c1)==str_laser)
                     median0{c1} = median(im_obj.Data.image_total(:,:,:,:,c1),4);
                 end
+                %Save the median
+                str1 = str_color(c1);
+                sess.fname_median{c1} = fullfile(dir_subj_res,sess_str, ...
+                        [subj_name '_' OD_label '_median_' str1 '_' sess_str '.nii']);
+                ioi_save_nifti(single(median0{c1}),sess.fname_median{c1},vx);
             end
             for f1 = 1:length(fileNo)
                 ind0 = sess.si{f1}:sess.ei{f1};

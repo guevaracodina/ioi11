@@ -45,10 +45,10 @@ include_flow = job.include_flow;
 extract_HRF = job.extract_HRF;
 %save_figures
 save_figures = job.save_figures;
+generate_figures = job.generate_figures;
 normalize_choice = job.normalize_choice;
 %get size of windows before and after stimulation to average on, in data points
 
-generate_figures = job.generate_figures;
 add_error_bars = job.add_error_bars;
 for SubjIdx=1:length(job.IOImat)
     try

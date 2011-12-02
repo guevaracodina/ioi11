@@ -1,4 +1,4 @@
-function varargout = ioi_nlsi(M,U,Y)
+function M = ioi_nlsi(M,U,Y)
 % nonlinear system identification of a MIMO system
 % FORMAT [Ep,Cp,Eh,K0,K1,K2,M0,M1,L1,L2] = spm_nlsi(M,U,Y)
 % FORMAT [K0,K1,K2,M0,M1,L1,L2]          = spm_nlsi(M)
@@ -107,8 +107,6 @@ if nargin == 3
     %======================================================================
     [Ep,Cp,Eh,F] = spm_nlsi_GN(M,U,Y);
 
-    if nargout < 4, varargout = {Ep,Cp,Eh}; return, end
-
 else
     % Use prior expectation to expand around
     %----------------------------------------------------------------------
@@ -142,6 +140,23 @@ end
 % get kernels
 %--------------------------------------------------------------------------
 [K0,K1,K2]   = spm_kernels(M0,M1,L1,L2,N,dt);
+[dummy,H1] = spm_kernels(M0,M1,M.N,M.dt);
+
+M.Ep = Ep;
+M.Cp = Cp;
+%M.Ce = Ce;
+M.Eh = Eh;
+M.K0 = K0;
+M.K1 = K1;
+M.K2 = K2;
+M.M0 = M0;
+M.M1 = M1;
+M.L1 = L1;
+M.L2 = L2;
+M.F = F;
+M.H1 = H1;
+
+ioi_HDM_display(M);
 
 % graphics
 %==========================================================================
@@ -162,13 +177,4 @@ if ~isdeployed && length(dbstack) < 2
     grid on
     axis image
     drawnow
-end
-
-
-% output arguments
-%--------------------------------------------------------------------------
-if nargin == 3
-    varargout = {Ep,Cp,Eh,K0,K1,K2,M0,M1,L1,L2,F};
-else
-    varargout = {K0,K1,K2,M0,M1,L1,L2};
 end

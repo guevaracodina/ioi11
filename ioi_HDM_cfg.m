@@ -238,8 +238,56 @@ hpf_butter.values = {hpf_butter_On hpf_butter_Off};
 hpf_butter.val = {hpf_butter_On};
 hpf_butter.help = {'Choose whether to include a Butterworth High Pass Filter.'
         'Parameters are: order (e.g. 3) and frequency (e.g. 0.01 Hz)'}';
-    
+  
+% ---------------------------------------------------------------------
+% lpf Low-pass filter
+% ---------------------------------------------------------------------
+fwhm1      = cfg_entry;
+fwhm1.tag  = 'fwhm1';
+fwhm1.name = 'FWHM in seconds';
+fwhm1.val = {1};
+fwhm1.strtype = 'r';  
+fwhm1.num     = [1 1]; 
+fwhm1.help    = {'FWHM in seconds.'}; 
+
+lpf_gauss_On         = cfg_branch;
+lpf_gauss_On.tag     = 'lpf_gauss_On';
+lpf_gauss_On.name    = 'Gaussian LP filter';
+lpf_gauss_On.val     = {fwhm1}; 
+lpf_gauss_On.help    = {'Gaussian low-pass filter '
+    '(applied forward then backward so that it does not create a time shift)'}';
+
+lpf_Off         = cfg_branch;
+lpf_Off.tag     = 'lpf_Off';
+lpf_Off.name    = 'LP filter off';
+lpf_Off.val     = {}; 
+lpf_Off.help    = {'Low pass filter turned off.'};
+
+lpf_choice      = cfg_choice;
+lpf_choice.tag  = 'lpf_choice';
+lpf_choice.name = 'Choose Low Pass Filter';
+lpf_choice.values = {lpf_gauss_On lpf_Off};
+lpf_choice.val = {lpf_gauss_On};
+lpf_choice.help = {'Choose whether to include a Low Pass Filter.'
+        'Parameters'}';
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+generate_figures      = cfg_menu;
+generate_figures.tag  = 'generate_figures';
+generate_figures.name = 'Show figures';
+generate_figures.labels = {'Yes','No'};
+generate_figures.values = {1,0};
+generate_figures.val  = {0};
+generate_figures.help = {'Show figures. When selecting this option, the figures will stay opened after the code has completed.'}';
+
+save_figures      = cfg_menu;
+save_figures.tag  = 'save_figures';
+save_figures.name = 'Save figures';
+save_figures.labels = {'Yes','No'};
+save_figures.values = {1,0};
+save_figures.val  = {0};
+save_figures.help = {'Save figures.'}';
 
 % Executable Branch
 hdm1      = cfg_exbranch;       % This is the branch that has information about how to run this module
@@ -247,7 +295,8 @@ hdm1.name = 'HDM on ROI';             % The display name
 hdm1.tag  = 'hdm1'; %Very important: tag is used when calling for execution
 hdm1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ROI_choice...
      PhysioModel_Choice includeHbR includeHbT includeFlow ... 
-     stim_choice hpf_butter};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+     stim_choice hpf_butter lpf_choice ...
+     generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 hdm1.prog = @ioi_HDM_run;  % A function handle that will be called with the harvested job to run the computation
 hdm1.vout = @ioi_cfg_vout_HDM; % A function handle that will be called with the harvested job to determine virtual outputs
 hdm1.help = {'Run hemodynamic modelling (HDM) on average ROI time courses.'};
