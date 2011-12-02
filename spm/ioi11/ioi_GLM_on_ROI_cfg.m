@@ -25,6 +25,19 @@ ROImat.help    = {'Optional: Select ROImat. This allows working on ROI data even
     'If several subjects are run, and ROImat is explicitly specified, then'
     'it should be specified for all subjects, in the same order as the list of IOI.mat'}'; 
 
+elDir         = cfg_files;
+elDir.tag     = 'elDir';
+elDir.name    = 'Subject directory for electrophysiology';
+elDir.filter = 'dir'; 
+elDir.num     = [1 Inf];
+elDir.val     = {''};
+elDir.help    = {'Optional: Select directory where processed electrophysiology files are located.'
+    'This allows working on electrophysiology data even'
+    'if the paths are not correct in IOI.mat. If not specified, the el '
+    'specified in IOI.mat will be used.'
+    'If several subjects are run, and elDir is explicitly specified, then'
+    'it should be specified for all subjects, in the same order as the list of IOI.mat'}';
+
 redo1      = cfg_menu;
 redo1.tag  = 'force_redo';
 redo1.name = 'Force processing';
@@ -611,7 +624,7 @@ save_figures.help = {'Save figures.'}';
 glm_roi1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 glm_roi1.name = 'GLM on ROI';             % The display name
 glm_roi1.tag  = 'glm_roi1'; %Very important: tag is used when calling for execution
-glm_roi1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ROI_choice...
+glm_roi1.val  = {IOImat ROImat elDir redo1 IOImatCopyChoice session_choice ROI_choice...
      bases volt hpf_butter lpf_gauss stim_choice generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 glm_roi1.prog = @ioi_GLM_on_ROI_run;  % A function handle that will be called with the harvested job to run the computation
 glm_roi1.vout = @ioi_cfg_vout_glm_roi; % A function handle that will be called with the harvested job to determine virtual outputs

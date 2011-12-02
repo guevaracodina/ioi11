@@ -64,7 +64,7 @@ else
     %default stims
     electro_stims = 0;
 end
-
+elDir = job.elDir;
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
@@ -99,7 +99,7 @@ for SubjIdx=1:length(job.IOImat)
                         if all_sessions || sum(s1==selected_sessions)
                             %Electrophysiology, for each subject and session
                             if electro_stims
-                                [pkh ons] = ioi_get_onsets(IOI,s1,E,cdir); %pk in seconds; pkh in arbitrary units
+                                [pkh ons] = ioi_get_onsets(IOI,s1,E,newDir,elDir{SubjIdx}); %pk in seconds; pkh in arbitrary units
                                 dur = 1;
                                 name = '';
                                 %                                 separate_slow_fast = 1;
@@ -165,7 +165,7 @@ for SubjIdx=1:length(job.IOImat)
                                     IOI.X{s1}.erdf{cX} = (trRV)^2/trRVRV;
                                     %load ROI
                                     if ~isempty(job.ROImat)
-                                        load(job.ROImat{1});
+                                        load(job.ROImat{SubjIdx});
                                     else
                                         try
                                             load(IOI.ROI.ROIfname);
@@ -289,7 +289,7 @@ for SubjIdx=1:length(job.IOImat)
     end
 end
 end
-function [pkh pk] = ioi_get_onsets(IOI,s1,E,cdir)
+function [pkh pk] = ioi_get_onsets(IOI,s1,E,cdir,elDir)
 try
     %sampling frequency
     sf = E.sf;
@@ -307,7 +307,14 @@ try
     %2: detection of spikes based on fitting gamma functions -- not coded up
     %method = 1;
     %load raw electrophysiology vector
-    load(IOI.res.el{s1});
+    try
+        load(IOI.res.el{s1});
+    catch
+        [dir0 fil0 ext0] = fileparts(IOI.res.el{s1});
+        fil = fullfile(elDir,[fil0 ext0]);
+        load(fil);
+    end
+       
     %remove time stamps for actual or spurious stimulations
     %ind = el>2; ind2 = [ind(7:end) false false false false false false];
     %el(ind)=el(ind2);
