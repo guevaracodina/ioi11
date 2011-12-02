@@ -55,16 +55,15 @@ for SubjIdx=1:length(job.IOImat)
                 else
                     if ~isfield(IOI.res,'HDMOK') || job.force_redo
                         [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-                        %load ROI.mat
-%                         if ~isempty(job.ROImat)
-%                             load(job.ROImat{SubjIdx});
-%                         else
-%                             load(IOI.ROI.ROIfname);
-%                         end
-                        try
-                            load(IOI.ROI.ROIfname);
-                        catch
-                            load(fullfile(dir_ioimat,'ROI.mat'));
+                        %load ROI
+                        if ~isempty(job.ROImat)
+                            load(job.ROImat{SubjIdx});
+                        else
+                            try
+                                load(IOI.ROI.ROIfname);
+                            catch
+                                load(fullfile(dir_ioimat,'ROI.mat'));
+                            end
                         end
                         if isfield(job.IOImatCopyChoice,'IOImatCopy')
                             newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
@@ -92,7 +91,7 @@ for SubjIdx=1:length(job.IOImat)
                                             ons = IOI.sess_res{s1}.onsets{1};
                                             dur = IOI.sess_res{s1}.durations{1};
                                             bases.hrf.derivs = [0 0]; %not used
-                                            volt = 0; %not used
+                                            volt = 1; %not used
                                             [X U] = ioi_get_X(IOI,name,ons,dur,s1,bases,volt);
                                         end
                                         HDM0.U = U;
@@ -107,7 +106,7 @@ for SubjIdx=1:length(job.IOImat)
                                         Y.y = HDM0.Y;
                                         %setup for priors
                                         HDM0.pE = HDM0.PS.pE;
-                                        HDM0.pC = HDM0.PS.pC;
+                                        HDM0.pC = 100*HDM0.PS.pC;
                                         % nonlinear system identification
                                         %--------------------------------------------------------------------------
                                         [Ep,Cp,Ce,K0,K1,K2,M0,M1] = ioi_nlsi(HDM0,U,Y);
