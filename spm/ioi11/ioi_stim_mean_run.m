@@ -462,7 +462,7 @@ for SubjIdx=1:length(job.IOImat)
                                             legend(gca,'HbO','HbO-NL','HbO-EM','HbR','HbR-NL','HbR-EM');
                                         end   
                                         end
-                                        tit = ['ROI ' int2str(r1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
+                                        tit = ['ROI ' int2str(r1) '_' IOI.res.ROI{r1}.name ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
                                         title(tit);
                                         ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                                     end
