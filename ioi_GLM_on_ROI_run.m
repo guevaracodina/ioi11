@@ -31,7 +31,7 @@ else
 end
 save_figures = job.save_figures;
 generate_figures = job.generate_figures;
-figure_show_stim = job.figure_show_stim;
+figure_show_stim = 0; %job.figure_show_stim;
 figure_rebase_to_zero_at_stim = job.figure_rebase_to_zero_at_stim;
 %select onsets
 if isfield(job.stim_choice,'electro_stims')
