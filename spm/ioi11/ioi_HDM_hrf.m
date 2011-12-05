@@ -32,7 +32,7 @@ if ~strcmp(color.eng(c1),color.flow) || include_flow
     U = H.U;
     % nonlinear system identification
     %--------------------------------------------------------------------------
-    [H.Ep,H.Cp,H.Eh,H.F] = spm_nlsi_GN(H,U,Y);
+    [H.Ep,H.Cp,H.Eh,H.F] = ioi_nlsi_GN(H,U,Y);
     %calculate the fitting curve
     H.yp = sum(d)*feval(H.g,x,[],H.Ep,[]);
 end
