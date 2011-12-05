@@ -38,7 +38,6 @@ try
 catch
     fit_3_gamma = 0;
 end
-figure_show_stim = job.figure_show_stim;
 %Other options
 generate_global = job.generate_global;
 include_flow = job.include_flow;
@@ -403,12 +402,7 @@ for SubjIdx=1:length(job.IOImat)
                                     end
                                 end
                             end
-                            %plot stims
-                            if figure_show_stim
-                                u0 = full(U0{s1}.u(33:end)');
-                                u0(u0==0) = NaN;
-                                stem(lp,u0,'k');
-                            end
+                            
                             tit = 'Mean_ROI';
                             title(tit);
                             ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
@@ -425,12 +419,7 @@ for SubjIdx=1:length(job.IOImat)
                                 hc1 = set_colorbar(gcf,size(GMa,1));
                                 legend off
                                 set(gcf, 'Colormap', ColorSet);
-                                %plot stims
-                                if figure_show_stim
-                                    u0 = full(U0{s1}.u(33:end)');
-                                    u0(u0==0) = NaN;
-                                    stem(lp,u0,'k');
-                                end
+                                
                                 tit = ['Mean_' IOI.color.eng(c1) '_allROI'];
                                 title(tit);
                                 ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
@@ -476,13 +465,8 @@ for SubjIdx=1:length(job.IOImat)
                                             legend(gca,'HbO','HbO-NL','HbO-EM','HbR','HbR-NL','HbR-EM');
                                         end   
                                         end
-                                        %plot stims
-                                        if figure_show_stim
-                                            u0 = full(U0{s1}.u(33:end)');
-                                            u0(u0==0) = NaN;
-                                            stem(lp,u0,'k');
-                                        end
-                                        tit = ['ROI ' int2str(r1) '_' IOI.res.ROI{r1}.name ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
+                                        
+                                        tit = ['ROI ' int2str(r1) ' ' IOI.res.ROI{r1}.name ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
                                         title(tit);
                                         ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                                     end
@@ -507,12 +491,7 @@ for SubjIdx=1:length(job.IOImat)
                                             end
                                         end
                                         legend(gca,leg);
-                                        %plot stims
-                                        if figure_show_stim
-                                            u0 = full(U0{s1}.u(33:end)');
-                                            u0(u0==0) = NaN;
-                                            stem(lp,u0,'k');
-                                        end
+                                        
                                         tit = ['Color ' IOI.color.eng(c1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
                                         title(tit);
                                         ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
@@ -531,12 +510,7 @@ for SubjIdx=1:length(job.IOImat)
                                         legend off
                                         set(gcf, 'Colormap', ColorSet);
                                         hc1 = set_colorbar(gcf,size(Ma,1));
-                                        %plot stims
-                                        if figure_show_stim
-                                            u0 = full(U0{s1}.u(33:end)');
-                                            u0(u0==0) = NaN;
-                                            stem(lp,u0,'k');
-                                        end
+                                        
                                         tit = ['Color ' IOI.color.eng(c1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
                                         title(tit);
                                         ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
