@@ -512,7 +512,7 @@ hpf_butter_freq.name    = 'Cutoff frequency for HPF';
 hpf_butter_freq.tag     = 'hpf_butter_freq';       
 hpf_butter_freq.strtype = 'r';
 hpf_butter_freq.num     = [1 1];     
-hpf_butter_freq.val     = {0.05};
+hpf_butter_freq.val     = {0.01};
 hpf_butter_freq.help    = {'Enter cutoff frequency in Hz for Butterworth HPF.'};
 
 hpf_butter_order         = cfg_entry; 
@@ -615,7 +615,7 @@ save_figures.tag  = 'save_figures';
 save_figures.name = 'Save figures';
 save_figures.labels = {'Yes','No'};
 save_figures.values = {1,0};
-save_figures.val  = {0};
+save_figures.val  = {1};
 save_figures.help = {'Save figures.'}';
 
 figure_show_stim      = cfg_menu;

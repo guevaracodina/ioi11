@@ -248,6 +248,9 @@ if HDMdisplay || save_figures
     xlabel({'time {seconds} for'; U.name{j}})
     grid on
     
+    
+    %Add output of prediction of other variables
+    
     %-Reset title
     %--------------------------------------------------------------------------
     spm('FigName',header);
