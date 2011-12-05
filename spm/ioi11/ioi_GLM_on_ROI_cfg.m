@@ -618,6 +618,23 @@ save_figures.values = {1,0};
 save_figures.val  = {0};
 save_figures.help = {'Save figures.'}';
 
+figure_show_stim      = cfg_menu;
+figure_show_stim.tag  = 'figure_show_stim';
+figure_show_stim.name = 'Show stim timings';
+figure_show_stim.labels = {'Yes','No'};
+figure_show_stim.values = {1,0};
+figure_show_stim.val  = {1};
+figure_show_stim.help = {'Show timings of stimuli on figures.'}';
+
+figure_rebase_to_zero_at_stim      = cfg_menu;
+figure_rebase_to_zero_at_stim.tag  = 'figure_rebase_to_zero_at_stim';
+figure_rebase_to_zero_at_stim.name = 'Rebase series to zero at stimuli';
+figure_rebase_to_zero_at_stim.labels = {'Yes','No'};
+figure_rebase_to_zero_at_stim.values = {1,0};
+figure_rebase_to_zero_at_stim.val  = {0};
+figure_rebase_to_zero_at_stim.help = {'(Affects only the display of figures: rebase'
+    'the series to zero after each stimuli.'}';
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Executable Branch
@@ -625,7 +642,8 @@ glm_roi1      = cfg_exbranch;       % This is the branch that has information ab
 glm_roi1.name = 'GLM on ROI';             % The display name
 glm_roi1.tag  = 'glm_roi1'; %Very important: tag is used when calling for execution
 glm_roi1.val  = {IOImat ROImat elDir redo1 IOImatCopyChoice session_choice ROI_choice...
-     bases volt hpf_butter lpf_gauss stim_choice generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+     bases volt hpf_butter lpf_gauss stim_choice generate_figures save_figures ...
+     figure_show_stim figure_rebase_to_zero_at_stim};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 glm_roi1.prog = @ioi_GLM_on_ROI_run;  % A function handle that will be called with the harvested job to run the computation
 glm_roi1.vout = @ioi_cfg_vout_glm_roi; % A function handle that will be called with the harvested job to determine virtual outputs
 glm_roi1.help = {'Run GLMs on ROIs.'};

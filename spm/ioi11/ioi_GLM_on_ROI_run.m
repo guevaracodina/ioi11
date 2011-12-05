@@ -31,6 +31,8 @@ else
 end
 save_figures = job.save_figures;
 generate_figures = job.generate_figures;
+figure_show_stim = job.figure_show_stim;
+figure_rebase_to_zero_at_stim = job.figure_rebase_to_zero_at_stim;
 %select onsets
 if isfield(job.stim_choice,'electro_stims')
     electro_stims = 1;
@@ -256,6 +258,17 @@ for SubjIdx=1:length(job.IOImat)
                                                 yf = IOI.X{s1}.yf{r1,c1};
                                                 %reconstructed data
                                                 yp = IOI.X{s1}.yp{r1,c1};
+                                                if figure_rebase_to_zero_at_stim
+                                                    u0 = full(IOI.Sess(s1).U.u(33:end)');
+                                                    u0(u0==0) = NaN;
+                                                    for k0=1:length(u0)
+                                                        if u0(k0) > 0
+                                                            yf(k0:end) = yf(k0:end)-yf(k0);
+                                                            yp(k0:end) = yp(k0:end)-yp(k0);
+                                                        end
+                                                    end
+                                                end
+                                                
                                                 t = IOI.X{s1}.t(r1,c1);
                                                 if volt==2, t2 = IOI.X{s1}.t2(r1,c1); end
                                                 plot(lp,yf,[lp1{1} lp2{c1}]); hold on
@@ -268,6 +281,12 @@ for SubjIdx=1:length(job.IOImat)
                                                 end
                                             end
                                         end
+                                    end
+                                    %plot stims
+                                    if figure_show_stim
+                                        u0 = full(IOI.Sess(s1).U.u(33:end)');
+                                        u0(u0==0) = NaN;
+                                        stem(lp,u0,'k');
                                     end
                                     tit = ['Session ' int2str(s1) ', ROI ' int2str(r1)];
                                     title(tit);

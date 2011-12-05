@@ -263,6 +263,14 @@ remove_segment_drift.values = {1,0};
 remove_segment_drift.val  = {0};
 remove_segment_drift.help = {'Remove linear drift separately on each segment.'}';
 
+figure_show_stim      = cfg_menu;
+figure_show_stim.tag  = 'figure_show_stim';
+figure_show_stim.name = 'Show stim timings';
+figure_show_stim.labels = {'Yes','No'};
+figure_show_stim.values = {1,0};
+figure_show_stim.val  = {1};
+figure_show_stim.help = {'Show timings of stimuli on figures.'}';
+
 % Executable Branch
 stim_mean1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 stim_mean1.name = 'Average stimulations';             % The display name
@@ -270,7 +278,7 @@ stim_mean1.tag  = 'stim_mean1'; %Very important: tag is used when calling for ex
 stim_mean1.val  = {IOImat redo1 IOImatCopyChoice stim_choice session_choice ...
     ROI_choice window_after window_before normalize_choice include_flow extract_HRF fit_3_gamma ...
     generate_global generate_figures save_figures add_error_bars hpf_butter ...
-    remove_segment_drift};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    remove_segment_drift figure_show_stim};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 stim_mean1.prog = @ioi_stim_mean_run;  % A function handle that will be called with the harvested job to run the computation
 stim_mean1.vout = @ioi_cfg_vout_stim_mean; % A function handle that will be called with the harvested job to determine virtual outputs
 stim_mean1.help = {'Calculate average over stimulations.'};
