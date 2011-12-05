@@ -15,12 +15,13 @@ if ~strcmp(color.eng(c1),color.flow) || include_flow
     H.U.u = u';
     H.f     = 'ioi_fx_hrf';
     if fit_3_gamma   
-        p = [5.8 10 0.3 0.5 8 15 0.5 8 0];
+        p = [5.8 10 0.3 0.5 1/8 15 0.5 1/8 0];
         H.g     = 'ioi_gx_hrf_3gamma';
     else  
-        p = [5.8 10 0.3 0.5 8 0];
+        p = [5.8 10 0.3 0.5 1/8 0];
         H.g     = 'ioi_gx_hrf';
     end
+    H.fit_3_gamma = fit_3_gamma;
     H.x     = 0;
     H.n     = 1;
     %Number of inputs of direct model

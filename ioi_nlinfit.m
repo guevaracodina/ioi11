@@ -5,10 +5,10 @@ warning('off')
 if strcmp(color.eng(c1),color.HbR)
     d = -d;
     p1 = [5.8 0.3];
-    p2 = [10 0.5 8];
+    p2 = [10 0.5 1/8];
 else
     p1 = [4.3 0.5];
-    p2 = [9 0.5 8];
+    p2 = [9 0.5 1/8];
 end
 if ~strcmp(color.eng(c1),color.flow) || include_flow
     try

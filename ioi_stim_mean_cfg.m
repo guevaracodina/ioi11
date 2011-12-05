@@ -206,7 +206,7 @@ save_figures.tag  = 'save_figures';
 save_figures.name = 'Save figures';
 save_figures.labels = {'Yes','No'};
 save_figures.values = {1,0};
-save_figures.val  = {0};
+save_figures.val  = {1};
 save_figures.help = {'Save figures.'}';
 
 add_error_bars      = cfg_menu;
