@@ -101,7 +101,26 @@ for SubjIdx=1:length(job.IOImat)
                         if all_sessions || sum(s1==selected_sessions)
                             %Electrophysiology, for each subject and session
                             if electro_stims
-                                [pkh ons] = ioi_get_onsets(IOI,s1,E,newDir,elDir{SubjIdx}); %pk in seconds; pkh in arbitrary units
+                                %try to specify a valid folder for
+                                %electrophysiology
+                                if SubjIdx > 1 
+                                    if length(elDir) > 1
+                                        if ~isempty(elDir)
+                                            elDir0 = elDir{SubjIdx};
+                                        else
+                                            elDir0 = [];
+                                        end
+                                    else
+                                        elDir0 = [];
+                                    end                                   
+                                else
+                                    if ~isempty(elDir)
+                                        elDir0 = elDir{1};
+                                    else
+                                        elDir0 = [];
+                                    end
+                                end
+                                [pkh ons] = ioi_get_onsets(IOI,s1,E,newDir,elDir0); %pk in seconds; pkh in arbitrary units
                                 dur = 1;
                                 name = '';
                                 %                                 separate_slow_fast = 1;
