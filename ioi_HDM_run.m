@@ -125,8 +125,6 @@ for SubjIdx=1:length(job.IOImat)
                                         HDM0=ioi_set_physiomodel(HDM0);
                                         %choose priors
                                         HDM0=ioi_set_priors(HDM0);
-                                        Y.y = HDM0.Y;
-                                        Y.dt = IOI.dev.TR;
                                         %setup for priors
                                         HDM0.pE = HDM0.PS.pE;
                                         HDM0.pC = 10*HDM0.PS.pC;
@@ -135,7 +133,7 @@ for SubjIdx=1:length(job.IOImat)
                                         warning('off','MATLAB:singularMatrix');
                                         % nonlinear system identification
                                         %--------------------------------------------------------------------------
-                                        HDM0 = ioi_nlsi(HDM0,U,Y);
+                                        HDM0 = ioi_nlsi(HDM0);
                                         warning('on','MATLAB:nearlySingularMatrix');
                                         warning('on','MATLAB:singularMatrix');
                                         HDM{r1,s1} = HDM0;
