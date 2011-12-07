@@ -105,7 +105,7 @@ if nargin == 3
 
     % Gauss-Newton/Bayesian/EM estimation
     %======================================================================
-    [Ep,Cp,Eh,F] = spm_nlsi_GN(M,U,Y);
+    [Ep,Cp,Eh,F] = ioi_nlsi_GN(M,U,Y);
 
 else
     % Use prior expectation to expand around

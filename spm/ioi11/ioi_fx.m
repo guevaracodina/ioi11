@@ -14,7 +14,7 @@ function [f] = ioi_fx(x,u,P,M)
 %   P(4) - exponent for Fout(v)                           (alpha)
 %   P(5) - resting oxygen extraction                      (E0)
 %   P(6) - ratio of intra- to extra-vascular components   (epsilon)
-%          of the gradient echo signal
+%          of the gradient echo signal -- not used for IOI
 %
 %   P(6 + 1:m)   - input efficacies                       d(ds/dt)/du)
 %
@@ -40,7 +40,7 @@ switch M.PS.PhysioModel_Choice
         % implement differential state equations
         %--------------------------------------------------------------------------
         % f(1,:)     = sum(P(7:end,:),1).*u(:,:) - P(1)*x(1,:) - P(2)*(x(2,:) - 1);
-        f(1,:)     = P(7).*u(:,:) - P(1)*x(1,:) - P(2)*(x(2,:) - 1);
+        f(1,:)     = P(6).*u(:,:) - P(1)*x(1,:) - P(2)*(x(2,:) - 1);
         f(2,:)     = x(1,:)./x(2,:);
         f(3,:)     = (x(2,:) - fv)./(P(3).*x(3,:));
         f(4,:)     = (ff.*x(2,:) - fv.*x(4,:)./x(3,:))./(P(3).*x(4,:));
@@ -56,7 +56,7 @@ switch M.PS.PhysioModel_Choice
         
         % implement differential state equations
         %--------------------------------------------------------------------------
-        f(1,:)     = P(9)'*u(:,:) - P(1)*x(1,:) - P(2)*(x(2,:) - 1);
+        f(1,:)     = P(8)'*u(:,:) - P(1)*x(1,:) - P(2)*(x(2,:) - 1);
         f(2,:)     = x(1,:)/x(2,:);
         f(3,:)     = (x(2,:) - fv)/(P(3)*x(3,:));
         f(4,:)     = (ff*x(2,:) - fv*x(4,:)/x(3,:))/(P(3)*x(4,:));

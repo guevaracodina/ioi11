@@ -82,7 +82,7 @@ for SubjIdx=1:length(job.IOImat)
                             IOImat = fullfile(newDir,'IOI.mat');
                         end
                         [dir1 dummy] = fileparts(IOImat);
-                        HDMfname = fullfile(dir1,'HDM.mat');                        
+                                               
                         PS0 = ioi_get_PS(IOI,includeHbR,includeHbT,includeFlow,job.PhysioModel_Choice);
                                                                    
                         %loop over sessions
@@ -91,12 +91,16 @@ for SubjIdx=1:length(job.IOImat)
                                 %loop over ROIs
                                 for r1=1:length(IOI.res.ROI)
                                     if all_ROIs || sum(r1==selected_ROIs)
+                                        HDM_str = ['S' gen_num_str(s1,2) '_ROI' gen_num_str(r1,3)];
+                                        HDMfname = fullfile(dir1,['HDM_' HDM_str '.mat']); 
+                                        IOI.HDM{s1,r1}.HDMfname = HDMfname;
                                         HDM0 = [];
                                         Y = [];
                                         %save_figures
                                         HDM0.save_figures = save_figures;
                                         HDM0.generate_figures = generate_figures;
                                         HDM0.dir1 = dir1;
+                                        HDM0.HDM_str = HDM_str;
                                         %Choose onsets: stimulations or electrophysiology
                                         if electro_stims
                                             U = IOI.Sess(s1).U;
@@ -135,7 +139,13 @@ for SubjIdx=1:length(job.IOImat)
                                         warning('on','MATLAB:nearlySingularMatrix');
                                         warning('on','MATLAB:singularMatrix');
                                         HDM{r1,s1} = HDM0;
-                                        save(HDMfname,'HDM');   
+                                        save(HDMfname,'HDM');  
+                                        IOI.HDM{s1,r1}.Ep = HDM0.Ep;
+                                        IOI.HDM{s1,r1}.Cp = HDM0.Cp;
+                                        IOI.HDM{s1,r1}.K1 = HDM0.K1;
+                                        IOI.HDM{s1,r1}.H1 = HDM0.H1;
+                                        IOI.HDM{s1,r1}.PS = HDM0.PS;
+                                        IOI.HDM{s1,r1}.F  = HDM0.F;
                                     end
                                 end
                                 disp(['HDM for session ' int2str(s1) ' completed']);                                      
@@ -153,6 +163,7 @@ for SubjIdx=1:length(job.IOImat)
     catch exception
         disp(exception.identifier)
         disp(exception.stack(1))
+        out.IOImat{SubjIdx} = job.IOImat{SubjIdx};
     end
 end
 end

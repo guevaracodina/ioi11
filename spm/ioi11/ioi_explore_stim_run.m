@@ -286,5 +286,6 @@ for SubjIdx=1:length(job.IOImat)
     catch exception
         disp(exception.identifier)
         disp(exception.stack(1))
+        out.IOImat{SubjIdx} = job.IOImat{SubjIdx};
     end
 end

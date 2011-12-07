@@ -15,7 +15,7 @@ function [pE,pC] = ioi_SCKS_priors_base_case(m,h)
 %    P(5) - resting oxygen extraction     (E0)
 %    P(6) - ratio of intra- to extra-     (epsilon)
 %           vascular components of the
-%           gradient echo signal   
+%           gradient echo signal   -- not used in IOI
 %
 % plus (m) efficacy priors
 %    P(7) - ....
@@ -55,10 +55,10 @@ i     = (h + 1):5;
 e(i)  = 0;
 pC    = v*diag(e)*v'/32;
 
-% append scaling parameter for epsilon: prior variance = 1/32,
-%---------------------------------------------------------------------------
-pE    = [pE 0];
-pC    = blkdiag(pC,1/32);
+% % append scaling parameter for epsilon: prior variance = 1/32,
+% %---------------------------------------------------------------------------
+% pE    = [pE 0];
+% pC    = blkdiag(pC,1/32);
 
 % append m efficacy priors
 %---------------------------------------------------------------------------
