@@ -245,11 +245,11 @@ try
                        %min and max and relative change
                        min_image = min(im_obj.Data.image_total(:,:,:,:,c1),[],4);
                        max_image = max(im_obj.Data.image_total(:,:,:,:,c1),[],4);
-                       change = max_image ./min_image;
+                       change = single(max_image) ./single(min_image);
                        %10th and 90th percentiles and relative change
                        tenthpctle_image = prctile(im_obj.Data.image_total(:,:,:,:,c1),10,4);
                        ninetiethpctle_image = prctile(im_obj.Data.image_total(:,:,:,:,c1),90,4);
-                       change_90_10 = ninetiethpctle_image ./ tenthpctle_image;
+                       change_90_10 = single(ninetiethpctle_image) ./ single(tenthpctle_image);
                        sess.fname_min{c1} = fullfile(dir_subj_res,sess_str, ...
                            [subj_name '_' OD_label '_min_' str1 '_' sess_str '.nii']);
                        sess.fname_max{c1} = fullfile(dir_subj_res,sess_str, ...
