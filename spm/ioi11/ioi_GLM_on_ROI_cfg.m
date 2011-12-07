@@ -585,7 +585,7 @@ electro_stims.tag     = 'electro_stims';
 electro_stims.name    = 'Stimulations from electrophysiology';
 electro_stims.val     = {sf nSD mbSD dP electro_hpf_butter electro_lpf_butter ...
         write_pictures use_epilepsy_convention};
-electro_stims.help    = {'Electrophysiology information'
+electro_stims.help    = {    'Electrophysiology information'
     'Stimulations are assumed to last one data point.'
     'Information stored in IOI.Sess (not to be confused with protocol info in IOI.sess_res).'}';
 

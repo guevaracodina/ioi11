@@ -61,12 +61,6 @@ pC    = v*diag(e)*v';
 %Append for vascular tone and gain parameters
 pC = blkdiag(pC,diag([0.01 0.1]));
 
-% append scaling parameter for epsilon: prior variance = 1/32,
-%for this reason, this parameter must be the last one before the efficacies
-%---------------------------------------------------------------------------
-pE    = [pE 0];
-pC    = blkdiag(pC,1/32);  %MODIFIER?
-
 % append m efficacy priors
 %---------------------------------------------------------------------------
 pE    = [pE(:); zeros(m,1)];

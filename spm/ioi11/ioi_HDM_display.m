@@ -32,7 +32,7 @@ if HDMdisplay || save_figures
         case 1 %Zheng-Mayhew
             Np = 8;
         case 2 %Huppert1
-            Np = 8;
+            Np = 12;
         otherwise
             Np = 6;
     end
