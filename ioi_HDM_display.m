@@ -198,14 +198,14 @@ if HDMdisplay || save_figures
     title('Hemodynamic Fits');
     %header = get(Fhdm_fits,'Name');
     %set(Fhdm_fits,'name','Hemodynamic Fits')
-    x    = (1:size(M.Y.y,2))*M.Y.dt;
+    x    = (1:size(M.Y,1))*M.dt;
     u0 = full(M.U.u);
     u0(u0==0) = NaN;
-    stem(x,u0); hold on
+    stem(x,u0,'k'); hold on
     %Loop over the measures -- this depends on the model
     cH1 = [];
     for i0=1:size(H1,2)
-        tH1 = conv(U.u,exp(H1(:,i0,j)))';
+        tH1 = conv(full(M.U.u),exp(H1(:,i0,j)));
         cH1 = [cH1 tH1(1:length(U.u))];
     end
     if plot_algebraic_CMRO2
@@ -219,7 +219,8 @@ if HDMdisplay || save_figures
     title({['1st order kernels for ' U.name{j}];...
         'state variables'},'FontSize',9)
     ylabel('normalized values')
-    legend(leg_str,0);
+    leg_str = ['Stim'; leg_str];
+    legend(leg_str);
     grid on
     xlabel('time (seconds)')
     
@@ -244,9 +245,9 @@ if HDMdisplay || save_figures
         filen6 = fullfile(dir1,['HDM_fits' HDM_str '.tiff']);
         saveas(Fhdm_fits,filen5,'fig');
         print(Fhdm_fits, '-dtiffn', filen6);
-        if HDMdisplay
-            try, close(Fhdm); end
-            try, close(Fhdm_fits); end
+        if ~HDMdisplay
+            try close(Fhdm); end
+            try close(Fhdm_fits); end
         end
     end
 end
