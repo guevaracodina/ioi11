@@ -105,6 +105,7 @@ for SubjIdx=1:length(job.top_bin_dir)
     catch exception
         disp(exception.identifier)
         disp(exception.stack(1))
+        out.IOImat = [out.IOImat dir_subj_raw];
     end
 end
 

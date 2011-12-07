@@ -5,12 +5,12 @@ switch M.PS.PhysioModel_Choice
         [pE,pC] = ioi_SCKS_priors_base_case(M.m,5);
         pE(end)=0.025; % put a better approximation around effFlow to extract good estimate of covariance
         M.name={'Signal_decay', 'Feedback', 'Transit_time',...
-            'Exponent', 'Extraction',  'log_signal_ratio' 'eff'};
+            'Exponent', 'Extraction', 'eff'};
         %M = ioi_SCKS_priors_Buxton(M,5);
     case 1 %Zheng-Mayhew
         [pE,pC] = ioi_priors_ZM(M.m);
         M.name={'Signal_decay', 'Feedback', 'Transit_time',...
-            'Exponent', 'Extraction','Vascular_tone' 'Gain_parameter', 'log_signal_ratio' 'eff'};
+            'Exponent', 'Extraction','Vascular_tone' 'Gain_parameter', 'eff'};
         pE(pE==0)=min(pE(pE~=0));%obligatoire que cela vaille pas zéro
     case 2 %Huppert1
         M.name={'ks'    'kr'    'kx'    'km'    'Vw0'    'beta'    'Ra0'    'effCMRO'    'effFlow'};
