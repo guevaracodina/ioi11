@@ -16,7 +16,7 @@ function [f] = ioi_fx(x,u,P,M)
 %   P(6) - ratio of intra- to extra-vascular components   (epsilon)
 %          of the gradient echo signal -- not used for IOI
 %
-%   P(6 + 1:m)   - input efficacies                       d(ds/dt)/du)
+%   P(5 + 1:m)   - input efficacies                       d(ds/dt)/du)
 %
 % y      - dx/dt
 %__________________________________________________________________________

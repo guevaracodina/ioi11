@@ -1,4 +1,4 @@
-function [Ep,Cp,Eh,F,k] = nirs_nlsi_GN(M,U,Y)
+function [Ep,Cp,Eh,F,k] = ioi_nlsi_GN(M,U,Y)
 % Bayesian inversion of a nonlinear model using a Gauss-Newton/EM algorithm
 % FORMAT [Ep,Cp,Eh,F] = spm_nlsi_GN(M,U,Y)
 %

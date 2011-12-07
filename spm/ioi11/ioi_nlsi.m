@@ -1,4 +1,4 @@
-function M = ioi_nlsi(M,U,Y)
+function M = ioi_nlsi(M)
 % nonlinear system identification of a MIMO system
 % FORMAT [Ep,Cp,Eh,K0,K1,K2,M0,M1,L1,L2] = spm_nlsi(M,U,Y)
 % FORMAT [K0,K1,K2,M0,M1,L1,L2]          = spm_nlsi(M)
@@ -99,43 +99,21 @@ catch
     M.IS = 'spm_int';
 end
 
-% Expansion point (in parameter space) for Bilinear-kernel representations
-%--------------------------------------------------------------------------
-if nargin == 3
-
-    % Gauss-Newton/Bayesian/EM estimation
-    %======================================================================
-    [Ep,Cp,Eh,F] = ioi_nlsi_GN(M,U,Y);
-
-else
-    % Use prior expectation to expand around
-    %----------------------------------------------------------------------
-    Ep         = M.pE;
-    
-end
-
+% Gauss-Newton/Bayesian/EM estimation
+%======================================================================
+[Ep,Cp,Eh,F] = ioi_nlsi_GN(M,M.U,M.Y);
 
 % Bilinear representation
 %==========================================================================
 [M0,M1,L1,L2] = spm_bireduce(M,Ep);
 
-
 % Volterra kernels
 %==========================================================================
-
 % time bins (if not specified)
 %--------------------------------------------------------------------------
-try 
-    dt   = M.dt;
-    N    = M.N;
-catch
-    s    = real(eig(full(M0)));
-    s    = max(s(s < 0));
-    N    = 32;
-    dt   = -4/(s*N);
-    M.dt = dt;
-    M.N  = N;
-end
+
+dt   = M.dt;
+N    = M.N;
 
 % get kernels
 %--------------------------------------------------------------------------
@@ -157,24 +135,3 @@ M.F = F;
 M.H1 = H1;
 
 ioi_HDM_display(M);
-
-% graphics
-%==========================================================================
-if ~isdeployed && length(dbstack) < 2
-
-    subplot(2,1,1)
-    plot([1:N]*dt,K1(:,:,1))
-    xlabel('time')
-    ylabel('response')
-    title('1st-order kernel')
-    grid on
-
-    subplot(2,1,2)
-    imagesc([1:N]*dt,[1:N]*dt,K2(:,:,1,1,1))
-    xlabel('time')
-    ylabel('time')
-    title('2nd-order kernel')
-    grid on
-    axis image
-    drawnow
-end

@@ -23,7 +23,7 @@ if includeHbR
     end
     
     %try, ty = ty/abs(median(ty))-1; end
-    Y(:,cl) = ty;
+    Y(:,cl) = ty/40; %to get percent change
     %Y(:,cl) = ROI{r1}{s1,cHbR}/median(ROI{r1}{s1,cHbR});
 end
 if includeHbT
@@ -36,7 +36,7 @@ if includeHbT
     end
     ty = ty1+ty2;
     %ty = ty/mean(ty)-1;
-    Y(:,cl) =ty;
+    Y(:,cl) =ty/100; %to get percent change
     %Y(:,cl) = ROI{r1}{s1,cHbR}/median(ROI{r1}{s1,cHbR})+ROI{r1}{s1,cHbO}/median(ROI{r1}{s1,cHbO});
 end
 if includeFlow
@@ -65,5 +65,6 @@ if LPF.lpf_gauss_On
         Y(:,i) = y;
     end
 end
-M.Y = Y;
+M.Y.y = Y;
+M.Y.dt = M.dt;
 end
