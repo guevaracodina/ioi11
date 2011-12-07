@@ -18,16 +18,6 @@ function y = ioi_gx(x,u,P,M)
 
 % exponentiation of hemodynamic state variables
 %--------------------------------------------------------------------------
-% if isstruct(PS)
-%P = PS.pE(:,1); % .* PS.pEreal;
-% else
-%     P = PS;
-%     clear PS;
-%     PS.PhysioModel_Choice = 0;
-%     PS.xY.includeHbR = 1;
-%     PS.xY.includeHbT = 1;
-%     PS.xY.includeFlow = 1;
-% end
 x     = exp(x);
 switch M.PS.PhysioModel_Choice
     case 0 %Buxton, 
@@ -49,7 +39,7 @@ switch M.PS.PhysioModel_Choice
         out.vascTone=x(5,:)-1;
     case 2 %Huppert1        
         BH = M.PS.BH;
-        BH = ioi_fillBH(x,BH);
+        BH = ioi_fillBH(x,P,BH);
         %from dissociation curve
 % % %         out.SwO2=BH.S ;
 % % %         out.SwO2Ratio=(BH.S -BH.SwO20)/BH.SwO20;

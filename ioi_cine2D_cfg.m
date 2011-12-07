@@ -179,7 +179,7 @@ hpf_butter.help = {'Choose whether to include a Butterworth High Pass Filter.'
 
 % Executable Branch
 cine2D1      = cfg_exbranch;       % This is the branch that has information about how to run this module
-cine2D1.name = 'Average stimulations';             % The display name
+cine2D1.name = '2D Cine';             % The display name
 cine2D1.tag  = 'cine2D1'; %Very important: tag is used when calling for execution
 cine2D1.val  = {IOImat redo1 IOImatCopyChoice stim_choice session_choice ...
     window_after window_before normalize_choice include_flow hpf_butter};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs

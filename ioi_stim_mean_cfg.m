@@ -72,7 +72,9 @@ stim_choice.name   = 'Choose stimulation selection method';
 stim_choice.tag    = 'stim_choice';
 stim_choice.values = {default_stims,electro_stims};
 stim_choice.val    = {default_stims};
-stim_choice.help   = {'Choose stimulation selection method'}';
+stim_choice.help   = {'Choose stimulation selection method'
+       'NOTE: this electrophysiology option only applies when electrophysiological events '
+    'have been detected in an earlier module. Currently only the GLM module performs this detection.'}';
 
 %%%%%%%%%%%%%%%%%%
 
@@ -174,7 +176,9 @@ extract_HRF.name = 'Extract HRF';
 extract_HRF.labels = {'Yes','No'};
 extract_HRF.values = {1,0};
 extract_HRF.val  = {1};
-extract_HRF.help = {'Extract 6 coefficients of hemodynamic response function,' 
+extract_HRF.help = {'Note: this should only be used for impulse-like responses,'
+    'meaning short stimulations of 1 second or less.'
+    'Extract 6 coefficients of hemodynamic response function,' 
     'by fitting the average curves to a difference of two gamma functions'}';
 
 fit_3_gamma      = cfg_menu;
@@ -268,8 +272,8 @@ stim_mean1      = cfg_exbranch;       % This is the branch that has information 
 stim_mean1.name = 'Average stimulations';             % The display name
 stim_mean1.tag  = 'stim_mean1'; %Very important: tag is used when calling for execution
 stim_mean1.val  = {IOImat redo1 IOImatCopyChoice stim_choice session_choice ...
-    ROI_choice window_after window_before normalize_choice include_flow extract_HRF fit_3_gamma ...
-    generate_global generate_figures save_figures add_error_bars hpf_butter ...
+    ROI_choice window_after window_before normalize_choice hpf_butter include_flow extract_HRF fit_3_gamma ...
+    generate_global generate_figures save_figures add_error_bars ...
     remove_segment_drift};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 stim_mean1.prog = @ioi_stim_mean_run;  % A function handle that will be called with the harvested job to run the computation
 stim_mean1.vout = @ioi_cfg_vout_stim_mean; % A function handle that will be called with the harvested job to determine virtual outputs

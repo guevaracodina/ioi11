@@ -63,14 +63,15 @@ switch M.PS.PhysioModel_Choice
         f(5,:)     = (-x(5,:)+exp(-10*P(7)*f(3)))/(10*P(6)*x(5,:)); %%Why 10???
     case 2 %B-H
         x([2 3 5 6 7],:) = exp(x([2 3 5 6 7],:)); 
+        
         BH = M.PS.BH;
-        BH = ioi_fillBH(x,BH);
+        BH = ioi_fillBH(x,P,BH);
         
         %--------------------------------------------------------------------------
-        f(1,:)     = -BH.effFlow'*u(1,:)/10 - BH.ks*x(1,:) - BH.kr*(x(2,:) -1);
+        f(1,:)     = -BH.effFlow'*u(1,:)/10 - BH.ksr*x(1,:) - BH.kr*(x(2,:) -1);
         f(2,:)     = x(1,:)/x(2,:);
         f(3,:)     = BH.eta*(BH.fin - BH.fv)/x(3,:);
-        f(4,:)     =  BH.effCMRO'*u(1,:)/10 - BH.kx*x(4,:) - BH.km*(x(5,:) - 1);
+        f(4,:)     =  BH.effCMRO'*u(1,:)/10 - BH.ksm*x(4,:) - BH.km*(x(5,:) - 1);
         f(5,:)     = x(4,:)/x(5,:);
         f(6,:)     = BH.gamma*   (BH.Gamma0*x(7,:)-x(6,:)-x(5,:)*(BH.Gamma0-1))   /x(6,:);
         f(7,:)     = BH.eta*(  (BH.fin+BH.fv*BH.delta/(1-BH.delta)) *...
