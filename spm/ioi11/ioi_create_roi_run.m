@@ -41,6 +41,16 @@ for SubjIdx=1:length(job.IOImat)
             [dir1 fil1] = fileparts(vol.fname);
             im_anat = spm_read_vols(vol);
             if ~autoROI
+                %Display images of changes from 10th to 90th percentile for all sessions 
+                try 
+                    for i0=1:length(IOI.Sess_res)
+                        hs{i0} = figure;
+                        V = spm_vol(IOI.Sess_res{i0}.fname_change_90_10{1}`); %color green
+                        tmp_image = spm_read_vols(V);
+                        imagesc(tmp_image);
+                        title(['Session ' int2str(i0) ': ratio of 90th to 10th percentile']);
+                    end
+                end
                 p = 1;
                 h2 = figure; spm_input(['Subject ' int2str(SubjIdx)],'-1','d');
                 full_mask = ones(size(im_anat));
@@ -74,6 +84,9 @@ for SubjIdx=1:length(job.IOImat)
                 end
                 try close(h1); end
                 try close(h2); end
+                for i0=1:length(IOI.Sess_res)
+                    try close(hs{i0}); end
+                end
             else
                 %automatic ROIs
                 %h1 = figure('Position',[20 50 3*size(im_anat,1) 3*size(im_anat,2)]);
