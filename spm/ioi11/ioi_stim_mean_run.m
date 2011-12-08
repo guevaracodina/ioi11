@@ -6,13 +6,16 @@ if isfield(job.session_choice,'select_sessions')
 else
     all_sessions = 1;
 end
-%select onsets
+
+%select onsets, default is stimulation based
+stim_choice=0;
 if isfield(job.stim_choice,'electro_stims')
-    electro_stims = 1;
-else
-    %default stims
-    electro_stims = 0;
+    stim_choice = 1;
 end
+if isfield(job.stim_choice,'manual_stims')
+    stim_choice = 2;
+end
+
 %select nature of stimulation data to be used for averaging
 if isfield(job.ROI_choice,'select_ROIs')
     all_ROIs = 0;
@@ -92,13 +95,19 @@ for SubjIdx=1:length(job.IOImat)
                 %loop over sessions
                 for s1=1:Ns
                     if all_sessions || sum(s1==selected_sessions)
-                        if ~electro_stims %default stims
-                            onsets_list{s1} = IOI.sess_res{s1}.onsets;
-                        else
-                            onsets_list{s1} = {};
-                            for i0=1:length(IOI.Sess(s1).U)
-                                onsets_list{s1} = [onsets_list{s1}; IOI.Sess(s1).U(i0).ons];
-                            end
+                        
+                        switch(stim_choice)
+                            case 0 % Default
+                                onsets_list{s1} = IOI.sess_res{s1}.onsets;
+                            case 1 % Electrophysio
+                                onsets_list{s1} = {};
+                                for i0=1:length(IOI.Sess(s1).U)
+                                    onsets_list{s1} = [onsets_list{s1}; IOI.Sess(s1).U(i0).ons];
+                                end
+                            case 2 % Manual
+                                h2 = figure; spm_input(['Session ' s1],'-1','d');
+                                figure(h2);
+                                onsets_list{s1}{1} = spm_input('Enter onsets in second','-1','e','',NaN)
                         end
                     end
                 end
