@@ -12,8 +12,8 @@ if nargin==0
     clear zzz filenameOld  filename00Old persistent_s1 persistent_s2
     return
 end
-if ~strcmp(Path(end),'\')
-    Path=[Path '\'];
+if ~strcmp(Path(end),filesep)
+    Path=[Path filesep];
 end
 if nargout>3
     fichier=dir([Path file '*.bin']);

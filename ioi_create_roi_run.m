@@ -43,9 +43,9 @@ for SubjIdx=1:length(job.IOImat)
             if ~autoROI
                 %Display images of changes from 10th to 90th percentile for all sessions 
                 try 
-                    for i0=1:length(IOI.Sess_res)
+                    for i0=1:length(IOI.sess_res)
                         hs{i0} = figure;
-                        V = spm_vol(IOI.Sess_res{i0}.fname_change_90_10{1}`); %color green
+                        V = spm_vol(IOI.sess_res{i0}.fname_change_90_10{1}); %color green
                         tmp_image = spm_read_vols(V);
                         imagesc(tmp_image);
                         title(['Session ' int2str(i0) ': ratio of 90th to 10th percentile']);
@@ -84,7 +84,7 @@ for SubjIdx=1:length(job.IOImat)
                 end
                 try close(h1); end
                 try close(h2); end
-                for i0=1:length(IOI.Sess_res)
+                for i0=1:length(IOI.sess_res)
                     try close(hs{i0}); end
                 end
             else
