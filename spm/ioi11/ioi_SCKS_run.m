@@ -21,6 +21,12 @@ if isfield(job.hpf_butter,'hpf_butter_On')
 else
     HPF.hpf_butter_On = 0;
 end
+if isfield(job.lpf_choice,'lpf_gauss_On')
+    LPF.lpf_gauss_On = 1;
+    LPF.fwhm1 = job.lpf_choice.lpf_gauss_On.fwhm1;
+else
+    LPF.lpf_gauss_On = 0;
+end
 %modalities to include
 includeHbR = job.includeHbR;
 includeHbT = job.includeHbT;
