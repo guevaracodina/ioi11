@@ -91,14 +91,6 @@ function M = ioi_nlsi(M)
 % Karl Friston
 % $Id: spm_nlsi.m 3764 2010-03-08 20:18:10Z guillaume $
 
-% check integrator
-%--------------------------------------------------------------------------
-try
-    M.IS;
-catch
-    M.IS = 'spm_int';
-end
-
 % Gauss-Newton/Bayesian/EM estimation
 %======================================================================
 [Ep,Cp,Eh,F] = ioi_nlsi_GN(M,M.U,M.Y);

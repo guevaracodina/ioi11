@@ -6,13 +6,15 @@ if isfield(job.session_choice,'select_sessions')
 else
     all_sessions = 1;
 end
-%select onsets
+%select onsets, default is stimulation based
+stim_choice=0;
 if isfield(job.stim_choice,'electro_stims')
-    electro_stims = 1;
-else
-    %default stims
-    electro_stims = 0;
+    stim_choice = 1;
 end
+if isfield(job.stim_choice,'manual_stims')
+    stim_choice = 2;
+end
+
 %HPF
 if isfield(job.hpf_butter,'hpf_butter_On')
     HPF.hpf_butter_On = 1;

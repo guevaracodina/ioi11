@@ -15,13 +15,15 @@ if isfield(job.ROI_choice,'select_ROIs')
 else
     all_ROIs = 1;
 end
-%select onsets
+%select onsets, default is stimulation based
+stim_choice=0;
 if isfield(job.stim_choice,'electro_stims')
-    electro_stims = 1;
-else
-    %default stims
-    electro_stims = 0;
+    stim_choice = 1;
 end
+if isfield(job.stim_choice,'manual_stims')
+    stim_choice = 2;
+end
+
 %HPF
 if isfield(job.hpf_butter,'hpf_butter_On')
     HPF.hpf_butter_On = 1;
@@ -41,9 +43,32 @@ end
 includeHbR = job.includeHbR;
 includeHbT = job.includeHbT;
 includeFlow = job.includeFlow;
+%EM parameters
+spm_integrator = job.EM_parameters.spm_integrator;
+Niterations = job.EM_parameters.Niterations;
+dFcriterion = job.EM_parameters.dFcriterion;
+LogAscentRate = job.EM_parameters.LogAscentRate;
+Mstep_iterations = job.EM_parameters.Mstep_iterations;
+%Baseline choice
+if isfield(job.baseline_choice,'baseline_percentile_choice')
+    baseline_choice = 1;
+    baseline_correction{1} = job.baseline_choice.baseline_percentile_choice.baseline_percentile_HbR/100;
+    baseline_correction{2} = job.baseline_choice.baseline_percentile_choice.baseline_percentile_HbT/100;
+    baseline_correction{3} = job.baseline_choice.baseline_percentile_choice.baseline_percentile_flow/100;
+else
+    if isfield(job.baseline_choice,'baseline_offset_choice')
+        baseline_choice = 2;
+        baseline_correction{1} = job.baseline_choice.baseline_offset_choice.baseline_offset_HbR;
+        baseline_correction{2} = job.baseline_choice.baseline_offset_choice.baseline_offset_HbT;
+        baseline_correction{3} = job.baseline_choice.baseline_offset_choice.baseline_offset_flow;
+    else
+        baseline_choice = 0;
+    end
+end
 %save_figures
 save_figures = job.save_figures;
 generate_figures = job.generate_figures;
+show_normalized_parameters = job.show_normalized_parameters;
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
@@ -84,7 +109,12 @@ for SubjIdx=1:length(job.IOImat)
                         [dir1 dummy] = fileparts(IOImat);
                                                
                         PS0 = ioi_get_PS(IOI,includeHbR,includeHbT,includeFlow,job.PhysioModel_Choice);
-                                                                   
+                        if all_sessions
+                            selected_sessions = 1:length(IOI.sess_res);
+                        end
+                        if all_ROIs
+                            selected_ROIs = 1:length(IOI.res.ROI);
+                        end
                         %loop over sessions
                         for s1=1:length(IOI.sess_res)
                             if all_sessions || sum(s1==selected_sessions)
@@ -96,11 +126,21 @@ for SubjIdx=1:length(job.IOImat)
                                         IOI.HDM{s1,r1}.HDMfname = HDMfname;
                                         HDM0 = [];
                                         Y = [];
-                                        %save_figures
+                                        %Various options
                                         HDM0.save_figures = save_figures;
                                         HDM0.generate_figures = generate_figures;
+                                        HDM0.show_normalized_parameters = show_normalized_parameters;
                                         HDM0.dir1 = dir1;
                                         HDM0.HDM_str = HDM_str;
+                                        HDM0.Niterations = Niterations;
+                                        HDM0.spm_integrator = spm_integrator;
+                                        HDM0.dFcriterion = dFcriterion;
+                                        HDM0.LogAscentRate = LogAscentRate;
+                                        HDM0.Mstep_iterations = Mstep_iterations;
+                                        HDM0.selected_sessions = selected_sessions;
+                                        HDM0.selected_ROIs = selected_ROIs;
+                                        HDM0.baseline_choice = baseline_choice;
+                                        HDM0.baseline_correction = baseline_correction;
                                         %Choose onsets: stimulations or electrophysiology
                                         if electro_stims
                                             U = IOI.Sess(s1).U;

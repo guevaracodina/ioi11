@@ -95,8 +95,7 @@ for SubjIdx=1:length(job.IOImat)
                 %loop over sessions
                 for s1=1:Ns
                     if all_sessions || sum(s1==selected_sessions)
-                        
-                        switch(stim_choice)
+                        switch stim_choice
                             case 0 % Default
                                 onsets_list{s1} = IOI.sess_res{s1}.onsets;
                             case 1 % Electrophysio
@@ -107,7 +106,7 @@ for SubjIdx=1:length(job.IOImat)
                             case 2 % Manual
                                 h2 = figure; spm_input(['Session ' s1],'-1','d');
                                 figure(h2);
-                                onsets_list{s1}{1} = spm_input('Enter onsets in second','-1','e','',NaN)
+                                onsets_list{s1}{1} = spm_input('Enter onsets in second','-1','e','',NaN);
                         end
                     end
                 end
