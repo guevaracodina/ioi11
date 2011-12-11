@@ -145,7 +145,10 @@ for SubjIdx=1:length(job.IOImat)
                     end
                 end
             end
+            IOI.res.OnsetsOK = 1;
+            save(IOImat,'IOI');
         end
+        
         toc
         disp(['Subject ' int2str(SubjIdx) ' complete']);
         out.IOImat{SubjIdx} = IOImat;

@@ -1,4 +1,4 @@
-function [X U] = ioi_get_X(IOI,name,ons,dur,s1,bases,volt)
+function [X U] = ioi_get_X(IOI,name,ons,dur,amp,s1,bases,volt)
 SPM.xBF.dt = IOI.dev.TR;
 SPM.xBF.T = 1;
 SPM.xBF.T0 = 1;
@@ -48,8 +48,10 @@ SPM.xBFtmp = spm_get_bf_rat_mouse(SPM.xBF,IOI,bases);
 % Get inputs, neuronal causes or stimulus functions U
 %------------------------------------------------------------------
 SPM.nscan = IOI.sess_res{s1}.n_frames;
+
 P.name = 'none';
 P.h    = 0;
+
 if isempty(name)
     SPM.Sess.U.name = {'Spk'};
 else
@@ -58,7 +60,8 @@ end
 SPM.Sess.U.ons = ons;
 SPM.Sess.U.dur = dur;
 SPM.Sess.U.P = P;
-U = spm_get_ons(SPM,1);
+SPM.Sess.U.A = amp;
+U = ioi_get_ons(SPM,1);
 %U.u = U.u(33:end); %?
 % Convolve stimulus functions with basis functions
 %------------------------------------------------------------------

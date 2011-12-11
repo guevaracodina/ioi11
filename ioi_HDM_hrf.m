@@ -6,7 +6,7 @@ warning('off')
 % if strcmp(color.eng(c1),color.HbR)
 %     d = -d;
 % end
-if ~strcmp(color.eng(c1),color.flow) || include_flow  
+if ~strcmp(color.eng(c1),'F') || include_flow  
     H.U.dt = TR;
     H.Y.dt = TR;
     H.Y.y = d'/sum(d);

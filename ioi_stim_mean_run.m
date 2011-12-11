@@ -203,8 +203,10 @@ for SubjIdx=1:length(job.IOImat)
                                         try
                                             tmp_d = ROI{r1}{s1,c1};
                                             %normalize flow
-                                            if IOI.color.eng(c1)==IOI.color.flow
-                                                tmp_d = tmp_d/mean(tmp_d); %or median
+                                            if isfield(IOI.color,'flow')
+                                                if IOI.color.eng(c1)==IOI.color.flow
+                                                    tmp_d = tmp_d/mean(tmp_d); %or median
+                                                end
                                             end
                                         catch
                                             tmp_d = [];

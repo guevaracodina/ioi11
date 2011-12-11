@@ -10,7 +10,7 @@ else
     p1 = [4.3 0.5];
     p2 = [9 0.5 1/8];
 end
-if ~strcmp(color.eng(c1),color.flow) || include_flow
+if ~strcmp(color.eng(c1),'F') || include_flow
     try
         %options = statset('Robust','on','DerivStep',eps^(1/3),'TolX',1e-8,'Display','Iter','TolFun',1e-8);
         [beta1,R1,J1,COVB1,mse1] = nlinfit(x,d/sum(d),@ioi_hrf1,p1); %,options);
