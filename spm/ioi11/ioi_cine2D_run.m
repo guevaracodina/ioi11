@@ -125,38 +125,50 @@ for SubjIdx=1:length(job.IOImat)
                                         else
                                             if isempty(Ya)
                                                 ka2 = ka2+1;
-                                                if ka2<3 
+                                                if ka2<3
                                                     disp(['Could not include segment due to incomplete data after onset ' int2str(u1) ' at time ' num2str(U(u1)*IOI.dev.TR) ...
                                                         ' for session ' int2str(s1) ...
                                                         ' for color ' int2str(c1) ' for onset type ' int2str(m1) ...
-                                                        ' in global average over all sessions... skipping ' int2str(ka2) ' so far']);
+                                                        '... skipping ' int2str(ka2) ' so far']);
                                                     
                                                 end
                                             end
                                             if isempty(Yb)
                                                 kb2 = kb2+1;
-                                                if kb2 < 3 
+                                                if kb2 < 3
                                                     disp(['Could not include segment due to incomplete data before onset ' int2str(u1) ' at time ' num2str(U(u1)*IOI.dev.TR) ...
                                                         ' for session ' int2str(s1) ...
                                                         ' for color ' int2str(c1) ' for onset type ' int2str(m1) ...
-                                                        ' in global average over all sessions... skipping ' int2str(kb2) ' so far']);
+                                                        '... skipping ' int2str(kb2) ' so far']);
                                                 end
                                             end
                                         end
                                     end
                                     %divide by number of found segments (ka = kb always in this module)
                                 end
-                                %generate movie
-                                tmp_array_before = tmp_array_before/ka;
-                                f = im2frame(tmp_array_before);
-                                movie(f);
                                 %save movie
                                 fname_movie = fullfile(cineDir,['cine_S' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '.avi']);
-                                movie(f,1,IOI.dev.TR);
-                                VideoWrite(fname_movie);
+                                d = tmp_array_after/ka;
+                                m0 = min(d(:));
+                                M0 = max(d(:));
+                                Nf = size(d,3);
+                                F(Nf) = struct('cdata',[],'colormap',[]);
+                                h0 = figure;
+                                clims = [m0 M0];
+                                vidObj = VideoWriter(fname_movie);
+                                open(vidObj);
+                                %set(gca,'NextPlot','replacechildren');
+                                for i0=1:Nf
+                                    imagesc(squeeze(d(:,:,i0)),clims);
+                                    F(i0) = getframe;
+                                    writeVideo(vidObj,F(i0));
+                                end
+                                close(vidObj);
+                                %movie(h0,F,1,1/IOI.dev.TR); %,[0 0 0 0]);
+                                try close(h0); end                                
                                 IOI.cine{s1,m1}{c1}.fname_movie = fname_movie;
                             end
-                            if (ka2>0 || kb2 > 0) 
+                            if (ka2>0 || kb2 > 0)
                                 disp(['Skipped ' int2str(ka2+kb2) ' segments']);
                             end
                         end
@@ -182,54 +194,57 @@ try
     Ya = [];
     first_pass = 1;
     fmod_previous = 1;
-    for i=1:length(frames)
-        frames_loaded = 0;
-        if i==1
-            %find number of frames per block
-            if length(IOI.sess_res{s1}.si) > 1
-                fpb = IOI.sess_res{s1}.si{2}-IOI.sess_res{s1}.si{1};
-            else
-                fpb = IOI.sess_res{s1}.ei{1}-IOI.sess_res{s1}.si{1}+1;
+    frames_loaded = 0;
+    if ~any(frames < 1)
+        for i=1:length(frames)           
+            if i==1
+                %find number of frames per block
+                if length(IOI.sess_res{s1}.si) > 1
+                    fpb = IOI.sess_res{s1}.si{2}-IOI.sess_res{s1}.si{1};
+                else
+                    fpb = IOI.sess_res{s1}.ei{1}-IOI.sess_res{s1}.si{1}+1;
+                end
             end
-        end
-        fmod = mod(frames(i),fpb);
-        if fmod < fmod_previous
-            frames_loaded = 0;
-        end
-        fct = ceil(frames(i)/fpb);
-        if ~frames_loaded
-            try
-                V = spm_vol(IOI.sess_res{s1}.fname{c1}{fct});
-                Y = spm_read_vols(V);
-                frames_loaded = 1;
-            catch
-                [dir0 fil0 ext0] = fileparts(IOI.sess_res{s1}.fname{c1}{fct});
-                fsep = strfind(dir0,filesep);
-                res = strfind(dir0,'Res');
-                fgr = fsep(fsep > res);
-                tdir = dir0(1:fgr(2));
-                tfname = fullfile(dir_ioimat,['S' gen_num_str(s1,2)],[fil0 ext0]);
+            fmod = mod(frames(i),fpb);
+            if fmod == 0
+                fmod = fpb;
+            end
+            if fmod <= fmod_previous
+                frames_loaded = 0;
+            end
+            fct = ceil(frames(i)/fpb);
+            if ~frames_loaded
                 try
-                    V = spm_vol(tfname);
+                    V = spm_vol(IOI.sess_res{s1}.fname{c1}{fct});
                     Y = spm_read_vols(V);
                     frames_loaded = 1;
                 catch
-                    %file does not exist
-                    return
+                    [dir0 fil0 ext0] = fileparts(IOI.sess_res{s1}.fname{c1}{fct});
+                    fsep = strfind(dir0,filesep);
+                    res = strfind(dir0,'Res');
+                    fgr = fsep(fsep > res);
+                    tdir = dir0(1:fgr(2));
+                    tfname = fullfile(dir_ioimat,['S' gen_num_str(s1,2)],[fil0 ext0]);
+                    try
+                        V = spm_vol(tfname);
+                        Y = spm_read_vols(V);
+                        frames_loaded = 1;
+                    catch
+                        %file does not exist
+                        return
+                    end
+                end
+                if first_pass
+                    %initialize Ya
+                    Ya = zeros(size(Y,1),size(Y,2),length(frames));
+                    first_pass = 0;
                 end
             end
-            if first_pass
-                %initialize Ya
-                Ya = zeros(size(Y,1),size(Y,2),length(frames));
-                first_pass = 0;
-            end
+            Ya(:,:,i) = squeeze(Y(:,:,1,fmod));
         end
-        
-        Ya(:,:,i) = squeeze(Y(:,:,1,fmod));
     end
 catch exception
     disp(exception.identifier)
     disp(exception.stack(1))
-    out.IOImat{SubjIdx} = job.IOImat{SubjIdx};
 end
 end
