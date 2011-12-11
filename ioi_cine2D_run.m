@@ -240,7 +240,12 @@ try
                     first_pass = 0;
                 end
             end
+            try
             Ya(:,:,i) = squeeze(Y(:,:,1,fmod));
+            catch
+                Ya = [];
+                return
+            end
         end
     end
 catch exception
