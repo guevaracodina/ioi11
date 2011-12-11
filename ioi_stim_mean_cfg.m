@@ -177,6 +177,23 @@ include_flow.values = {1,0};
 include_flow.val  = {0};
 include_flow.help = {'Include flow.'}';
 
+include_HbT      = cfg_menu;
+include_HbT.tag  = 'include_HbT';
+include_HbT.name = 'Include HbT';
+include_HbT.labels = {'Yes','No'};
+include_HbT.values = {1,0};
+include_HbT.val  = {1};
+include_HbT.help = {'Include HbT.'}';
+
+include_OD      = cfg_menu;
+include_OD.tag  = 'include_OD';
+include_OD.name = 'Include optical intensity';
+include_OD.labels = {'Yes','No'};
+include_OD.values = {1,0};
+include_OD.val  = {0};
+include_OD.help = {'If the optical intensity images (Green, Red, Yellow) have not been deleted'
+    'previously, choose whether to generate movies for these colors.'}';
+
 extract_HRF      = cfg_menu;
 extract_HRF.tag  = 'extract_HRF';
 extract_HRF.name = 'Extract HRF';
@@ -265,7 +282,39 @@ hpf_butter.values = {hpf_butter_On hpf_butter_Off};
 hpf_butter.val = {hpf_butter_On};
 hpf_butter.help = {'Choose whether to include a Butterworth High Pass Filter.'
         'Parameters are: order (e.g. 3) and frequency (e.g. 0.01 Hz)'}';
+    
+% ---------------------------------------------------------------------
+% lpf Low-pass filter
+% ---------------------------------------------------------------------
+fwhm1      = cfg_entry;
+fwhm1.tag  = 'fwhm1';
+fwhm1.name = 'FWHM in seconds';
+fwhm1.val = {1};
+fwhm1.strtype = 'r';  
+fwhm1.num     = [1 1]; 
+fwhm1.help    = {'FWHM in seconds.'}; 
 
+lpf_gauss_On         = cfg_branch;
+lpf_gauss_On.tag     = 'lpf_gauss_On';
+lpf_gauss_On.name    = 'Gaussian LP filter';
+lpf_gauss_On.val     = {fwhm1}; 
+lpf_gauss_On.help    = {'Gaussian low-pass filter '
+    '(applied forward then backward so that it does not create a time shift)'}';
+
+lpf_Off         = cfg_branch;
+lpf_Off.tag     = 'lpf_Off';
+lpf_Off.name    = 'LP filter off';
+lpf_Off.val     = {}; 
+lpf_Off.help    = {'Low pass filter turned off.'};
+
+lpf_choice      = cfg_choice;
+lpf_choice.tag  = 'lpf_choice';
+lpf_choice.name = 'Choose Low Pass Filter';
+lpf_choice.values = {lpf_gauss_On lpf_Off};
+lpf_choice.val = {lpf_Off};
+lpf_choice.help = {'Choose whether to include a Low Pass Filter.'
+        'Parameters'}';
+    
 remove_segment_drift      = cfg_menu;
 remove_segment_drift.tag  = 'remove_segment_drift';
 remove_segment_drift.name = 'Remove segment drift';
@@ -279,7 +328,8 @@ stim_mean1      = cfg_exbranch;       % This is the branch that has information 
 stim_mean1.name = 'Average stimulations';             % The display name
 stim_mean1.tag  = 'stim_mean1'; %Very important: tag is used when calling for execution
 stim_mean1.val  = {IOImat redo1 IOImatCopyChoice stim_choice session_choice ...
-    ROI_choice window_after window_before normalize_choice hpf_butter include_flow extract_HRF fit_3_gamma ...
+    ROI_choice window_after window_before normalize_choice hpf_butter ...
+    lpf_choice include_flow include_HbT include_OD extract_HRF fit_3_gamma ...
     generate_global generate_figures save_figures add_error_bars ...
     remove_segment_drift};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 stim_mean1.prog = @ioi_stim_mean_run;  % A function handle that will be called with the harvested job to run the computation

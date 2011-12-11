@@ -7,15 +7,6 @@ else
     all_sessions = 1;
 end
 
-%select onsets, default is stimulation based
-stim_choice=0;
-if isfield(job.stim_choice,'electro_stims')
-    stim_choice = 1;
-end
-if isfield(job.stim_choice,'manual_stims')
-    stim_choice = 2;
-end
-
 %select nature of stimulation data to be used for averaging
 if isfield(job.ROI_choice,'select_ROIs')
     all_ROIs = 0;
@@ -31,6 +22,13 @@ if isfield(job.hpf_butter,'hpf_butter_On')
 else
     HPF.hpf_butter_On = 0;
 end
+%LPF
+if isfield(job.lpf_choice,'lpf_gauss_On')
+    LPF.lpf_gauss_On = 1;
+    LPF.fwhm1 = job.lpf_choice.lpf_gauss_On.fwhm1;
+else
+    LPF.lpf_gauss_On = 0;
+end
 try 
     remove_segment_drift = job.remove_segment_drift;
 catch
@@ -43,7 +41,9 @@ catch
 end
 %Other options
 generate_global = job.generate_global;
+include_OD = job.include_OD;
 include_flow = job.include_flow;
+include_HbT = job.include_HbT;
 extract_HRF = job.extract_HRF;
 %save_figures
 save_figures = job.save_figures;
@@ -92,6 +92,13 @@ for SubjIdx=1:length(job.IOImat)
                 
                 %get stimulation information - Careful, here onset duration is ignored!
                 Ns = length(IOI.sess_res);
+                if include_HbT
+                    if ~isfield(IOI.color,'HbT')
+                        IOI.color.HbT = 'T';
+                        IOI.color.eng = [IOI.color.eng IOI.color.HbT];
+                    end
+                end
+                Nc = length(IOI.color.eng);
                 %loop over sessions
                 for s1=1:Ns
                     if all_sessions || sum(s1==selected_sessions)

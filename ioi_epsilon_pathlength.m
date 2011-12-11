@@ -32,6 +32,7 @@ if nargin>4
     plot(lambda_vec,c_led(3,:),'y')
 end
 
+%Input basehbt1 not used...
 
 % Create vectors of values for the fits
 CHbO = 0.6*c_tot*(.5:.1:1.5);
