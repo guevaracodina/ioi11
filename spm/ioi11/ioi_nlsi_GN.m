@@ -107,12 +107,14 @@ end
 
 % check integrator
 %--------------------------------------------------------------------------
-try
-    M.IS;
-catch
-    M.IS = 'spm_int';
-end
- 
+% try
+%     M.IS;
+% catch
+%     M.IS = 'spm_int';
+% end
+%  
+M.IS = M.spm_integrator;
+
 % composition of feature selection and prediction (usually an integrator)
 %--------------------------------------------------------------------------
 try
@@ -266,10 +268,10 @@ Ep    = spm_unvec(spm_vec(pE) + V*p(ip),pE);
 criterion = [0 0 0 0];
 
 C.F   = -Inf;                                   % free energy
-v     = -2;                                     % log ascent rate
+vLogAscentRate     = M.LogAscentRate; %-2;                                     % log ascent rate
 dFdh  = zeros(nh,1);
 dFdhh = zeros(nh,nh);
-for k = 1:4*128 %number of iterations
+for k = 1:M.Niterations %number of iterations
     
     % time
     %----------------------------------------------------------------------  
@@ -292,7 +294,7 @@ for k = 1:4*128 %number of iterations
  
     % M-step; Fisher scoring scheme to find h = max{F(p,h)}
     %======================================================================
-    for m = 1:8
+    for m = 1:M.Mstep_iterations
  
         % check for stability
         %------------------------------------------------------------------
@@ -349,7 +351,7 @@ for k = 1:4*128 %number of iterations
         % convergence
         %------------------------------------------------------------------
         dF    = dFdh'*dh;
-        if dF < 1e-2, break, end
+        if dF <  M.dFcriterion, break, end
  
     end
 
@@ -397,7 +399,7 @@ for k = 1:4*128 %number of iterations
         
         % decrease regularization
         %------------------------------------------------------------------
-        v     = min(v + 1/2,4);
+        vLogAscentRate     = min(vLogAscentRate + 1/2,4);
         str   = 'EM:(+)';
         
     else
@@ -414,14 +416,14 @@ for k = 1:4*128 %number of iterations
  
         % and increase regularization
         %------------------------------------------------------------------
-        v     = min(v - 2,-4);
+        vLogAscentRate     = min(vLogAscentRate - 2,-4);
         str   = 'EM:(-)';
         
     end
  
     % E-Step: update
     %======================================================================
-    dp    = spm_dx(dFdpp,dFdp,{v});
+    dp    = spm_dx(dFdpp,dFdp,{vLogAscentRate});
     p     = p + dp;
     Ep    = spm_unvec(spm_vec(pE) + V*p(ip),pE);
  
@@ -491,7 +493,7 @@ for k = 1:4*128 %number of iterations
     dF  = dFdp'*dp;
     fprintf('%-6s: %i %6s %-6.3e %6s %.3e ',str,k,'F:',full(C.F - F0),'dF predicted:',full(dF))
     %criterion = [(dF < 1e-2) criterion(1:end - 1)];
-    criterion = [(dF < 1e-3) criterion(1:end - 1)];
+    criterion = [(dF < M.dFcriterion) criterion(1:end - 1)];
     if all(criterion), fprintf(' convergence\n'), break, end
  
 end

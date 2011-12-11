@@ -127,6 +127,7 @@ for SubjIdx=1:length(job.IOImat)
             end
             save(IOImat,'IOI');
         end
+        disp(['Subject ' int2str(SubjIdx) ' complete']);
         out.IOImat{SubjIdx} = IOImat;
     catch exception
         disp(exception.identifier)
