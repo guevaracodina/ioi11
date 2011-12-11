@@ -155,15 +155,26 @@ for SubjIdx=1:length(job.IOImat)
                                 F(Nf) = struct('cdata',[],'colormap',[]);
                                 h0 = figure;
                                 clims = [m0 M0];
-                                vidObj = VideoWriter(fname_movie);
-                                open(vidObj);
+                                try
+                                    vidObj = VideoWriter(fname_movie);
+                                    open(vidObj);
+                                    VideoOK = 1;
+                                catch
+                                    VideoOK = 0;
+                                end
                                 %set(gca,'NextPlot','replacechildren');
                                 for i0=1:Nf
                                     imagesc(squeeze(d(:,:,i0)),clims);
                                     F(i0) = getframe;
-                                    writeVideo(vidObj,F(i0));
+                                    if VideoOK
+                                        writeVideo(vidObj,F(i0));
+                                    end
                                 end
-                                close(vidObj);
+                                if VideoOK
+                                    close(vidObj);
+                                else
+                                    save(fname_movie,'F');
+                                end
                                 %movie(h0,F,1,1/IOI.dev.TR); %,[0 0 0 0]);
                                 try close(h0); end                                
                                 IOI.cine{s1,m1}{c1}.fname_movie = fname_movie;
