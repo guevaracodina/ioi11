@@ -223,10 +223,19 @@ if list_color
             end
         else
             s1 = bases.specific_EM.HRF_session_choice.HRF_select_session.HRF_selected_session;
-            if ~isempty(IOI.res.H{r2,m1}{c1,s1})
-                bf{c1} = IOI.res.H{r2,m1}{c1,s1}.yp;
+            if isfield(IOI.res,'H')
+                try
+                    if ~isempty(IOI.res.H{r2,m1}{c1}) %? problems with the cells of cells
+                        bf{c1} = IOI.res.H{r2,m1}{c1}.yp; %?
+                    else
+                        bf{c1} = [];
+                        
+                    end
+                catch
+                    bf{c1} = [];
+                end
             else
-                bf{c1} = [];
+                disp('Animal specific HRF was not calculated. Run averaging module with extract_HRF option.');
             end
         end
     end
