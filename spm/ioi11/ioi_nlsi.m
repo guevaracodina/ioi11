@@ -128,4 +128,3 @@ M.H1 = H1;
 M.k = k;
 M.MSE = MSE;
 M.MSE_HbR = MSE_HbR;
-ioi_HDM_display(M);

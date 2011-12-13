@@ -1,5 +1,9 @@
 function ioi_HDM_display(M)
-plot_algebraic_CMRO2 =1;
+try
+plot_algebraic_CMRO2 =M.plot_algebraic_CMRO2;
+catch
+    plot_algebraic_CMRO2 = 1;
+end
 save_figures = M.save_figures;
 HDMdisplay = M.generate_figures;
 dir1 = M.dir1;
@@ -208,6 +212,70 @@ if HDMdisplay || save_figures
     xlabel({'time {seconds} for'; U.name{j}})
     grid on
     
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %REPEATED CODE, to generate separate figures
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    h3 = figure;
+    leg_str = {'s';'f';'v';'q'};
+    switch M.PS.PhysioModel_Choice
+        case 0 %Buxton-Friston
+        case 1 %Zheng-Mayhew
+            leg_str = [leg_str; 'w'];
+        case 2 %Huppert1
+            leg_str = {'sf';'f';'v';'sm';'m';'t';'p'};
+        otherwise
+    end
+    if plot_algebraic_CMRO2
+        leg_str = [leg_str; 'ma'];
+    end
+    if plot_algebraic_CMRO2
+        tmp_H1 = exp(H1(:,:,j));
+        %Algebraic relation for m = CMRO2, in arbitrary units
+        %m = f * HbR /HbT; assuming gamma_R and gamma_T = 1; f: flow
+        tmp_ma = tmp_H1(:,2) .* tmp_H1(:,4) ./ tmp_H1(:,3);
+        tmp_H1 = [tmp_H1 tmp_ma];
+        plot(t,tmp_H1)
+    else
+        plot(t,exp(H1(:,:,j)))
+    end
+    %axis square
+    title({['1st order kernels for ' U.name{j}];...
+        'state variables'},'FontSize',9)
+    ylabel('normalized values')    
+    %grid on
+    legend(leg_str,0);
+    xlabel('time (s)')
+    
+    
+    % display output kernels (i.e. BOLD response)
+    %--------------------------------------------------------------------------
+    h4 = figure;
+    plot(t,K1(:,:,j))
+    %axis square
+    modalities = [];
+    leg_str = {};
+    xY = M.PS.xY;
+    if xY.includeHbR
+        modalities = [modalities 'HbR; '];
+        leg_str = [leg_str 'HbR'];
+    end
+    if xY.includeHbT
+        modalities = [modalities 'HbT; '];
+        leg_str = [leg_str 'HbT'];
+    end
+    if xY.includeFlow
+        modalities = [modalities 'Flow'];
+        leg_str = [leg_str 'Flow'];
+    end
+    title({ '1st order kernel';['output: ' modalities]},'FontSize',9)
+    ylabel('normalized measure response')
+    legend(leg_str)
+    xlabel('time (s)')
+    %grid on    
+       
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    
     
     %Add output of prediction of other variables
     
@@ -275,18 +343,22 @@ if HDMdisplay || save_figures
             print(Fhdm_pred{i0+1}, '-dtiffn', filen6);
         end
         %extract some of the subpblots and put in full plots
-%         figure(Fhdm);
-%         axOld = subplot(3,2,2);
-%         fh1 = figure;
-%         ax1 = gca;
-%         %set(fh1,'CurrentAxes',ax1);
-%         copyobj(allchild(axOld),ax1);
+        filen1 = fullfile(dir1,['HDM' HDM_str '_kernels_large.fig']);
+        filen2 = fullfile(dir1,['HDM' HDM_str '_kernels_large.tiff']);
+        saveas(h3,filen1,'fig');
+        print(h3, '-dtiffn', filen2);
+        filen1 = fullfile(dir1,['HDM' HDM_str '_output_large.fig']);
+        filen2 = fullfile(dir1,['HDM' HDM_str '_output_large.tiff']);
+        saveas(h4,filen1,'fig');
+        print(h4, '-dtiffn', filen2);
         if ~HDMdisplay
             try close(Fhdm); end
             for i0=0:size(cH1,2)
                 try close(Fhdm_pred{i0+1}); end
             end
         end
+        try close(h3); end
+        try close(h4); end
     end
 end
 end

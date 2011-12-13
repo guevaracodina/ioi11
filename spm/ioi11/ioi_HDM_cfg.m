@@ -34,6 +34,18 @@ redo1.val  = {0};
 redo1.help = {'Force redoing this processing even when it has been done already.'
     'Use option below for treatment of previous ROIs.'}';
 
+only_display      = cfg_menu;
+only_display.tag  = 'only_display';
+only_display.name = 'Only display';
+only_display.labels = {'Yes','No'};
+only_display.values = {1,0};
+only_display.val  = {0};
+only_display.help = {'Only display:'
+    'Use this option if this HDM has already been generated.'
+    'With this option, it will not be regenerated, but display options can be changed.'
+    'It will overwrite figures, so if you want to keep the old figures, you should rename'
+    'the old figure directory, but not the location where the HDM.mat structure is located.'}';
+
 IOImatOverwrite         = cfg_branch;
 IOImatOverwrite.tag     = 'IOImatOverwrite';
 IOImatOverwrite.name    = 'Overwrite IOI.mat structure'; 
@@ -438,14 +450,22 @@ show_mse.values = {1,0};
 show_mse.val  = {1};
 show_mse.help = {'Show mean square error on figures.'}';
 
+plot_algebraic_CMRO2      = cfg_menu;
+plot_algebraic_CMRO2.tag  = 'plot_algebraic_CMRO2';
+plot_algebraic_CMRO2.name = 'Plot algebraic CMRO2';
+plot_algebraic_CMRO2.labels = {'Yes','No'};
+plot_algebraic_CMRO2.values = {1,0};
+plot_algebraic_CMRO2.val  = {1};
+plot_algebraic_CMRO2.help = {'Plot algebraic CMRO2.'}';
+
 % Executable Branch
 hdm1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 hdm1.name = 'HDM on ROI';             % The display name
 hdm1.tag  = 'hdm1'; %Very important: tag is used when calling for execution
-hdm1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ROI_choice...
+hdm1.val  = {IOImat ROImat redo1 only_display IOImatCopyChoice session_choice ROI_choice...
      PhysioModel_Choice use_onset_amplitudes includeHbR includeHbT includeFlow ... 
      hpf_butter lpf_choice baseline_choice EM_parameters show_normalized_parameters ...
-     generate_figures save_figures show_mse};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+     generate_figures save_figures show_mse plot_algebraic_CMRO2};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 hdm1.prog = @ioi_HDM_run;  % A function handle that will be called with the harvested job to run the computation
 hdm1.vout = @ioi_cfg_vout_HDM; % A function handle that will be called with the harvested job to determine virtual outputs
 hdm1.help = {'Run hemodynamic modelling (HDM) on average ROI time courses.'};
