@@ -191,7 +191,8 @@ for SubjIdx=1:length(job.IOImat)
                                             warning('off','MATLAB:singularMatrix');
                                             % nonlinear system identification
                                             %--------------------------------------------------------------------------
-                                            
+                                            warning('on','MATLAB:nearlySingularMatrix');
+                                            warning('on','MATLAB:singularMatrix');
                                             HDM0 = ioi_nlsi(HDM0);
                                         else
                                             try
@@ -201,8 +202,6 @@ for SubjIdx=1:length(job.IOImat)
                                                 disp(['HDM.mat not found for Session ' int2str(s1) ' and ROI ' int2str(r1)]);
                                             end
                                         end
-                                        warning('on','MATLAB:nearlySingularMatrix');
-                                        warning('on','MATLAB:singularMatrix');
                                         ioi_HDM_display(HDM0);
                                         HDM{r1,s1} = HDM0;
                                         save(HDMfname,'HDM');
