@@ -40,14 +40,24 @@ dFcriterion = job.EM_parameters.dFcriterion;
 LogAscentRate = job.EM_parameters.LogAscentRate;
 Mstep_iterations = job.EM_parameters.Mstep_iterations;
 try
-use_onset_amplitudes = job.use_onset_amplitudes;
+    use_onset_amplitudes = job.use_onset_amplitudes;
 catch
     use_onset_amplitudes = 0;
 end
-try 
+try
     show_mse = job.show_mse;
 catch
     show_mse = 1;
+end
+try
+    only_display = job.only_display;
+catch
+    only_display = 1;
+end
+try
+    plot_algebraic_CMRO2 = job.plot_algebraic_CMRO2;
+catch
+    plot_algebraic_CMRO2 = 1;
 end
 %Baseline choice
 if isfield(job.baseline_choice,'baseline_percentile_choice')
@@ -108,7 +118,7 @@ for SubjIdx=1:length(job.IOImat)
                             IOImat = fullfile(newDir,'IOI.mat');
                         end
                         [dir1 dummy] = fileparts(IOImat);
-                                               
+                        
                         PS0 = ioi_get_PS(IOI,includeHbR,includeHbT,includeFlow,job.PhysioModel_Choice);
                         if all_sessions
                             selected_sessions = 1:length(IOI.sess_res);
@@ -123,67 +133,79 @@ for SubjIdx=1:length(job.IOImat)
                                 for r1=1:length(IOI.res.ROI)
                                     if all_ROIs || sum(r1==selected_ROIs)
                                         HDM_str = ['S' gen_num_str(s1,2) '_ROI' gen_num_str(r1,3)];
-                                        HDMfname = fullfile(dir1,['HDM_' HDM_str '.mat']); 
+                                        HDMfname = fullfile(dir1,['HDM_' HDM_str '.mat']);
                                         IOI.HDM{s1,r1}.HDMfname = HDMfname;
-                                        HDM0 = [];
-                                        Y = [];
-                                        %Various options
-                                        HDM0.save_figures = save_figures;
-                                        HDM0.generate_figures = generate_figures;
-                                        HDM0.show_normalized_parameters = show_normalized_parameters;
-                                        HDM0.show_mse = show_mse;
-                                        HDM0.dir1 = dir1;
-                                        HDM0.HDM_str = HDM_str;
-                                        HDM0.Niterations = Niterations;
-                                        HDM0.spm_integrator = spm_integrator;
-                                        HDM0.dFcriterion = dFcriterion;
-                                        HDM0.LogAscentRate = LogAscentRate;
-                                        HDM0.Mstep_iterations = Mstep_iterations;
-                                        HDM0.selected_sessions = selected_sessions;
-                                        HDM0.selected_ROIs = selected_ROIs;
-                                        HDM0.baseline_choice = baseline_choice;
-                                        HDM0.baseline_correction = baseline_correction;
-                                        %onsets: they are now specified in the module create_onsets
-                                        name = IOI.sess_res{s1}.names{1};
-                                        ons = IOI.sess_res{s1}.onsets{1};
-                                        dur = IOI.sess_res{s1}.durations{1};
-                                        if use_onset_amplitudes 
-                                            amp = IOI.sess_res{s1}.parameters{1};
-                                            %normalize -- but what if amp takes extreme values?
-                                            amp = amp/mean(amp);
+                                        if ~only_display
+                                            HDM0 = [];
+                                            Y = [];
+                                            %Various options
+                                            HDM0.save_figures = save_figures;
+                                            HDM0.generate_figures = generate_figures;
+                                            HDM0.show_normalized_parameters = show_normalized_parameters;
+                                            HDM0.show_mse = show_mse;
+                                            HDM0.dir1 = dir1;
+                                            HDM0.HDM_str = HDM_str;
+                                            HDM0.Niterations = Niterations;
+                                            HDM0.spm_integrator = spm_integrator;
+                                            HDM0.dFcriterion = dFcriterion;
+                                            HDM0.LogAscentRate = LogAscentRate;
+                                            HDM0.Mstep_iterations = Mstep_iterations;
+                                            HDM0.selected_sessions = selected_sessions;
+                                            HDM0.selected_ROIs = selected_ROIs;
+                                            HDM0.baseline_choice = baseline_choice;
+                                            HDM0.baseline_correction = baseline_correction;
+                                            HDM0.plot_algebraic_CMRO2 = plot_algebraic_CMRO2;
+                                            %onsets: they are now specified in the module create_onsets
+                                            name = IOI.sess_res{s1}.names{1};
+                                            ons = IOI.sess_res{s1}.onsets{1};
+                                            dur = IOI.sess_res{s1}.durations{1};
+                                            if use_onset_amplitudes
+                                                amp = IOI.sess_res{s1}.parameters{1};
+                                                %normalize -- but what if amp takes extreme values?
+                                                amp = amp/mean(amp);
+                                            else
+                                                amp = [];
+                                            end
+                                            bases.hrf.derivs = [0 0]; %not used
+                                            volt = 1; %not used
+                                            [X U] = ioi_get_X(IOI,name,ons,dur,amp,s1,bases,volt);
+                                            
+                                            U.u = U.u(33:end); %?
+                                            HDM0.U = U;
+                                            HDM0.TR = IOI.dev.TR;
+                                            HDM0.dt = IOI.dev.TR; %do we need both?!
+                                            HDM0.N = 20/IOI.dev.TR; %too large?
+                                            %data specification - which modalities to include:
+                                            HDM0.PS = PS0;
+                                            HDM0.HPF = HPF; %High pass filter on data
+                                            HDM0.LPF = LPF;
+                                            HDM0=ioi_get_data(ROI,HDM0,r1,s1);
+                                            HDM0=ioi_set_physiomodel(HDM0);
+                                            %choose priors
+                                            HDM0=ioi_set_priors(HDM0);
+                                            %setup for priors
+                                            HDM0.pE = HDM0.PS.pE;
+                                            HDM0.pC = 10*HDM0.PS.pC;
+                                            HDM0.pC(end,end) = 10*HDM0.pC(end,end);
+                                            warning('off','MATLAB:nearlySingularMatrix');
+                                            warning('off','MATLAB:singularMatrix');
+                                            % nonlinear system identification
+                                            %--------------------------------------------------------------------------
+                                            
+                                            HDM0 = ioi_nlsi(HDM0);
                                         else
-                                            amp = [];
+                                            try
+                                                load(HDMfname);
+                                                HDM0 = HDM{r1,s1};
+                                            catch
+                                                disp(['HDM.mat not found for Session ' int2str(s1) ' and ROI ' int2str(r1)]);
+                                            end
                                         end
-                                        bases.hrf.derivs = [0 0]; %not used
-                                        volt = 1; %not used
-                                        [X U] = ioi_get_X(IOI,name,ons,dur,amp,s1,bases,volt);
-                                        
-                                        U.u = U.u(33:end); %?
-                                        HDM0.U = U;
-                                        HDM0.TR = IOI.dev.TR;
-                                        HDM0.dt = IOI.dev.TR; %do we need both?!
-                                        HDM0.N = 20/IOI.dev.TR; %too large?
-                                        %data specification - which modalities to include:
-                                        HDM0.PS = PS0;
-                                        HDM0.HPF = HPF; %High pass filter on data
-                                        HDM0.LPF = LPF;
-                                        HDM0=ioi_get_data(ROI,HDM0,r1,s1);
-                                        HDM0=ioi_set_physiomodel(HDM0);
-                                        %choose priors
-                                        HDM0=ioi_set_priors(HDM0);
-                                        %setup for priors
-                                        HDM0.pE = HDM0.PS.pE;
-                                        HDM0.pC = 10*HDM0.PS.pC;
-                                        HDM0.pC(end,end) = 10*HDM0.pC(end,end);
-                                        warning('off','MATLAB:nearlySingularMatrix');
-                                        warning('off','MATLAB:singularMatrix');
-                                        % nonlinear system identification
-                                        %--------------------------------------------------------------------------
-                                        HDM0 = ioi_nlsi(HDM0);
                                         warning('on','MATLAB:nearlySingularMatrix');
                                         warning('on','MATLAB:singularMatrix');
+                                        ioi_HDM_display(HDM0);
                                         HDM{r1,s1} = HDM0;
-                                        save(HDMfname,'HDM');  
+                                        save(HDMfname,'HDM');
                                         IOI.HDM{s1,r1}.Ep = HDM0.Ep;
                                         IOI.HDM{s1,r1}.Cp = HDM0.Cp;
                                         IOI.HDM{s1,r1}.K1 = HDM0.K1;
@@ -192,7 +214,7 @@ for SubjIdx=1:length(job.IOImat)
                                         IOI.HDM{s1,r1}.F  = HDM0.F;
                                     end
                                 end
-                                disp(['HDM for session ' int2str(s1) ' completed']);                                      
+                                disp(['HDM for session ' int2str(s1) ' completed']);
                             end
                         end
                         IOI.res.HDMOK = 1;
@@ -200,10 +222,10 @@ for SubjIdx=1:length(job.IOImat)
                     end
                 end
             end
-        end     
+        end
         toc
         disp(['Subject ' int2str(SubjIdx) ' complete']);
-        out.IOImat{SubjIdx} = IOImat;        
+        out.IOImat{SubjIdx} = IOImat;
     catch exception
         disp(exception.identifier)
         disp(exception.stack(1))
