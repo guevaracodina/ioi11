@@ -549,9 +549,11 @@ else
 %     leg_str = [leg_str;  'Filtered hemodynamic data'];
 %     legend(leg_str);
 end
+if exist('HDM_str','var')
 filen2 = fullfile(M.dir1,['HDM' HDM_str 'fit_large.fig']);
 filen4 = fullfile(M.dir1,['HDM' HDM_str 'fit_large.tiff']);
 saveas(Ffit,filen2,'fig');
 print(Ffit, '-dtiffn', filen4);
+end
 close(Ffit)      
         
