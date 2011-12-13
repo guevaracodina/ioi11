@@ -1,4 +1,4 @@
-function [Ep,Cp,Eh,F,k] = ioi_nlsi_GN(M,U,Y)
+function [Ep,Cp,Eh,F,k,MSE,MSE_HbR] = ioi_nlsi_GN(M,U,Y)
 % Bayesian inversion of a nonlinear model using a Gauss-Newton/EM algorithm
 % FORMAT [Ep,Cp,Eh,F] = spm_nlsi_GN(M,U,Y)
 %
@@ -107,13 +107,13 @@ end
 
 % check integrator
 %--------------------------------------------------------------------------
-% try
-%     M.IS;
-% catch
-%     M.IS = 'spm_int';
-% end
-%  
-M.IS = M.spm_integrator;
+try
+    M.IS = M.spm_integrator;
+catch
+    M.IS = 'spm_int';
+end
+ 
+
 
 % composition of feature selection and prediction (usually an integrator)
 %--------------------------------------------------------------------------
@@ -271,6 +271,8 @@ C.F   = -Inf;                                   % free energy
 vLogAscentRate     = M.LogAscentRate; %-2;                                     % log ascent rate
 dFdh  = zeros(nh,1);
 dFdhh = zeros(nh,nh);
+
+M.maxNorm_J = 32; %exp will be taken, was 32
 for k = 1:M.Niterations %number of iterations
     
     % time
@@ -298,19 +300,19 @@ for k = 1:M.Niterations %number of iterations
  
         % check for stability
         %------------------------------------------------------------------
-        if norm(J,'inf') > exp(32), break, end
+        if norm(J,'inf') > exp(M.maxNorm_J), break, end
         
         % precision and conditional covariance
         %------------------------------------------------------------------
         iS    = sparse(0);
         for i = 1:nh
-            iS = iS + Q{i}*(exp(-32) + exp(h(i)));
+            iS = iS + Q{i}*(exp(-M.maxNorm_J) + exp(h(i)));
         end
         S     = spm_inv(iS);
         iS    = kron(speye(nq),iS);
         Pp    = real(J)'*iS*real(J) + imag(J)'*iS*imag(J);
         Cp    = spm_inv(Pp + ipC);
-        if any(isnan(Cp(:))) || rcond(full(Cp)) < exp(-32), break, end
+        if any(isnan(Cp(:))) || rcond(full(Cp)) < exp(-M.maxNorm_J), break, end
  
         % precision operators for M-Step
         %------------------------------------------------------------------
@@ -451,10 +453,10 @@ for k = 1:M.Niterations %number of iterations
             
             subplot(2,1,1)
             plot(x,f,'-b'), hold on
-            plot(x,y,':r'), hold on
+            %plot(x,y,':r'), hold on
             plot(x,f + spm_unvec(e,f),':k'), hold off
             xlabel(xLab)
-            title(sprintf('%s: %i','prediction (blue) and filtered response (black): E-Step',k))
+            title(sprintf('%s: %i','prediction (blue, solid) and filtered response (black, dotted): E-Step',k))
             grid on
             
         else
@@ -476,7 +478,29 @@ for k = 1:M.Niterations %number of iterations
             grid on
             
         end
-        
+        %Compute MSE
+        x0 = spm_unvec(e,f);
+        if M.PS.xY.includeHbR
+            x0(:,1) = M.HbRnorm*x0(:,1);
+        else
+            M.show_mse = 0;
+        end
+        if M.PS.xY.includeHbT
+            x0(:,2) = M.HbTnorm*x0(:,2);
+        else
+            M.show_mse = 0;
+        end
+        if M.show_mse
+            MSE = sum(x0(:).^2)/length(x0(:));
+            x0_HbR = x0(:,1);
+            x0_HbO = x0(:,2)-x0(:,1);
+            MSE_HbR = sum(x0_HbR.^2)/length(x0_HbR(:));
+            MSE_HbO = sum(x0_HbO.^2)/length(x0_HbO(:));
+            if M.show_mse
+                legend(['MSE: ' sprintf('%2.3f',MSE)], ['(MSE HbR: ' sprintf('%2.3f',MSE_HbR) ...
+                    ', MSE HbO: ' sprintf('%2.3f',MSE_HbO) ')']);
+            end
+        end
         % subplot parameters
         %------------------------------------------------------------------
         subplot(2,1,2)
@@ -504,4 +528,30 @@ Ep     = spm_unvec(spm_vec(pE) + V*C.p(ip),pE);
 Cp     = V*C.Cp(ip,ip)*V';
 Eh     = C.h;
 F      = full(C.F - F0); %C.F;
+ 
 %k %: number of iterations used
+HDM_str = ['_' M.HDM_str];
+Ffit    = figure;
+header = get(Ffit,'Name');
+set(Ffit,'name','Hemodynamic Fit')
+plot(x,f,'-b'), hold on
+plot(x,f + spm_unvec(e,f),':k'), hold off
+xlabel(xLab)
+title('prediction (blue, solid) and filtered response (black, dotted)')
+if M.show_mse
+legend(['MSE: '  sprintf('%2.3f',MSE) ', MSE HbR: ' sprintf('%2.3f',MSE_HbR) ...
+    ', MSE HbO: ' sprintf('%2.3f',MSE_HbO)]);
+else
+%     leg_str = {'Prediction'};
+%     for i0=2:size(f,2)
+%         leg_str = [leg_str; ''];
+%     end    
+%     leg_str = [leg_str;  'Filtered hemodynamic data'];
+%     legend(leg_str);
+end
+filen2 = fullfile(M.dir1,['HDM' HDM_str 'fit_large.fig']);
+filen4 = fullfile(M.dir1,['HDM' HDM_str 'fit_large.tiff']);
+saveas(Ffit,filen2,'fig');
+print(Ffit, '-dtiffn', filen4);
+close(Ffit)      
+        

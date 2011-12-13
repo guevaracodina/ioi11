@@ -30,6 +30,8 @@ if isfield(job.stim_choice,'electro_stims')
     E.write_pictures = job.stim_choice.electro_stims.write_pictures;
     E.use_epilepsy_convention = job.stim_choice.electro_stims.use_epilepsy_convention;
     E.electrophysiology_onset_name = job.stim_choice.electro_stims.electrophysiology_onset_name;
+    E.tb = job.stim_choice.electro_stims.tb;
+    E.ta = job.stim_choice.electro_stims.ta;
 end
 if isfield(job.stim_choice,'manual_stims')
     stim_choice = 2;
@@ -204,6 +206,9 @@ try
         el = ButterHPF(sf,cutoff,order,el0);
         if E.write_pictures
             h = figure; plot(lp,sgn*el0(1:ds:end),'k'); hold on; plot(lp,-el(1:ds:end),'r');
+            xlabel('time (s)')
+            ylabel('LFP (a.u.)')
+            title('Detected onsets')
             filen1 = fullfile(fdir,['el_hpf_S' gen_num_str(s1,2) '.fig']);
             saveas(h,filen1,'fig'); %save as .fig
             filen2 = fullfile(fdir,['el_hpf_S' gen_num_str(s1,2) '.tiff']);
@@ -223,6 +228,9 @@ try
         el = el(end:-1:1);
         if E.write_pictures
             h = figure; plot(lp,sgn*el0(1:ds:end),'k'); hold on; plot(lp,-el(1:ds:end),'r'); hold off
+            xlabel('time (s)')
+            ylabel('LFP (a.u.)')
+            title('Detected onsets')
             filen1 = fullfile(fdir,['el_hpf_lpf_S' gen_num_str(s1,2) '.fig']);
             saveas(h,filen1,'fig'); %save as .fig
             filen2 = fullfile(fdir,['el_hpf_lpf_S' gen_num_str(s1,2) '.tiff']);
@@ -240,6 +248,9 @@ try
     [pkh2 pk2] = findpeaks(-el,'MINPEAKHEIGHT',MN+nSD*max(SD0,mbSD),'MINPEAKDISTANCE',rs);
     if E.write_pictures
         h = figure; plot(lp,sgn*el(1:ds:end),'k'); hold on; stem(pk/sf,sgn*(MN+nSD*eSD)*ones(1,length(pk)),'r');
+        xlabel('time (s)')
+        ylabel('LFP (a.u.)')
+        title('Detected onsets')
         stem(25,sgn*MN,'b'); stem(50,sgn*SD0,'g'); %stem(75,sgn*(MN+nSD*SD),'m'); hold off
         filen1 = fullfile(fdir,['el_stem_tmp_S' gen_num_str(s1,2) '.fig']);
         saveas(h,filen1,'fig'); %save as .fig
@@ -293,6 +304,9 @@ try
     pkh = npkh;
     if E.write_pictures
         h = figure; plot(lp,sgn*el(1:ds:end),'k'); hold on; stem(pk,sgn*(MN+nSD*eSD)*ones(1,length(pk)),'r');
+        xlabel('time (s)')
+        ylabel('LFP (a.u.)')
+        title('Detected onsets')
         stem(25,sgn*MN,'b'); stem(50,sgn*SD0,'g'); %stem(75,sgn*(MN+nSD*SD),'m'); hold off
         filen1 = fullfile(fdir,['el_stem_S' gen_num_str(s1,2) '.fig']);
         saveas(h,filen1,'fig'); %save as .fig
@@ -304,6 +318,9 @@ try
     if E.write_pictures
         df = diff(pk);
         h = figure; hist(df,120);
+        xlabel('time (s)')
+        ylabel('Number of onset intervals')
+        title('Histogram of onset intervals')
         legend(sprintf( '%s\n%s\n%s', ['Total spikes: ' int2str(length(pk))],...
             ['Mean filt el: ' num2str(MN,'%.3f')],...
             ['SD filt el: ' num2str(SD0,'%.3f')]));
@@ -314,29 +331,35 @@ try
         close(h);
         df0 = df(df<1); %spike intervals less than 1 s
         h = figure; hist(df0,120); legend(['Spike intervals < 1 s: ' int2str(length(df0))]);
+        xlabel('time (s)')
+        ylabel('Number of onset intervals')
+        title('Zoomed-in histogram of onset intervals')
         filen1 = fullfile(fdir,['el_hist_zoom_S' gen_num_str(s1,2) '.fig']);
         saveas(h,filen1,'fig'); %save as .fig
         filen2 = fullfile(fdir,['el_hist_zoom_S' gen_num_str(s1,2) '.tiff']);
         print(h, '-dtiffn', filen2);
         close(h);
     end
-    A = private_analyze_LFP(E,el,pk,IOI,s1);
+    A = private_analyze_LFP(E,el,pk,IOI,s1,fdir);
 catch exception
     disp(exception.identifier)
     disp(exception.stack(1))
 end
 end
 
-function A = private_analyze_LFP(E,el,ons,IOI,s)
+function A = private_analyze_LFP(E,el,ons,IOI,s,fdir)
 n = length(ons);
 sf = E.sf; %Hz, sampling frequency
-tb = 0.2; %time before, in seconds
-ta = 0.5; %time after, in seconds
+tb = E.tb; %0.2; %time before, in seconds
+ta = E.ta; %0.5; %time after, in seconds
 Pf = 10; %rescaling factor for power, to put it on a similar scale in plots
 lb = ceil(sf*tb);
 la = ceil(sf*ta);
 m = zeros(n,lb+la);
 lp = linspace(-tb,ta,(ta+tb)*sf);
+if E.use_epilepsy_convention
+el = -el;
+end
 for i=1:n
     st = ceil(ons(i)*sf);
     try
@@ -346,7 +369,22 @@ for i=1:n
         %data after last onset or before first onset might be incomplete
     end
 end
-figure; plot(lp,m')
+h = figure; plot(lp,m','k')
+xlabel('seconds')
+filen1 = fullfile(fdir,['Onset_profile_S' gen_num_str(s,2) '.fig']);
+saveas(h,filen1,'fig'); %save as .fig
+filen2 = fullfile(fdir,['Onset_profile_S' gen_num_str(s,2) '.tiff']);
+print(h, '-dtiffn', filen2);
+close(h);
+
+h = figure; plot(lp,m') %with colors
+xlabel('seconds')
+filen1 = fullfile(fdir,['Onset_profile_colors_S' gen_num_str(s,2) '.fig']);
+saveas(h,filen1,'fig'); %save as .fig
+filen2 = fullfile(fdir,['Onset_profile_colors_S' gen_num_str(s,2) '.tiff']);
+print(h, '-dtiffn', filen2);
+close(h);
+
 %Calculate some properties of the spike
 %max amplitude
 aM = max(m(:,lb:lb+la),[],2);

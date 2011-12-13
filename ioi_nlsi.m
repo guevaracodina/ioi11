@@ -93,7 +93,7 @@ function M = ioi_nlsi(M)
 
 % Gauss-Newton/Bayesian/EM estimation
 %======================================================================
-[Ep,Cp,Eh,F] = ioi_nlsi_GN(M,M.U,M.Y);
+[Ep,Cp,Eh,F,k,MSE,MSE_HbR] = ioi_nlsi_GN(M,M.U,M.Y);
 
 % Bilinear representation
 %==========================================================================
@@ -125,5 +125,7 @@ M.L1 = L1;
 M.L2 = L2;
 M.F = F;
 M.H1 = H1;
-
+M.k = k;
+M.MSE = MSE;
+M.MSE_HbR = MSE_HbR;
 ioi_HDM_display(M);

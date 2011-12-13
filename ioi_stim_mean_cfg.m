@@ -12,6 +12,19 @@ IOImat.num     = [1 Inf];     % Number of inputs required
 IOImat.help    = {'Select IOImat dependency if available. '
     'Otherwise, for each subject, select IOI.mat.'}'; % help text displayed
 
+ROImat         = cfg_files; 
+ROImat.name    = 'Select ROI.mat'; 
+ROImat.tag     = 'ROImat';      
+ROImat.filter = 'mat';
+ROImat.ufilter = '^ROI.mat$';
+ROImat.val     = {''};
+ROImat.num     = [1 Inf];    
+ROImat.help    = {'Optional: Select ROImat. This allows working on ROI data even'
+    'if the paths are not correct in IOI.mat. If not specified, the ROI.mat '
+    'specified in IOI.mat will be used.'
+    'If several subjects are run, and ROImat is explicitly specified, then'
+    'it should be specified for all subjects, in the same order as the list of IOI.mat'}'; 
+
 redo1      = cfg_menu;
 redo1.tag  = 'force_redo';
 redo1.name = 'Force processing';
@@ -205,6 +218,14 @@ extract_HRF.help = {'Note: this should only be used for impulse-like responses,'
     'Extract 6 coefficients of hemodynamic response function,' 
     'by fitting the average curves to a difference of two gamma functions'}';
 
+include_nlinfit      = cfg_menu;
+include_nlinfit.tag  = 'include_nlinfit';
+include_nlinfit.name = 'Include nlinfit';
+include_nlinfit.labels = {'Yes','No'};
+include_nlinfit.values = {1,0};
+include_nlinfit.val  = {0};
+include_nlinfit.help = {'Include nlinfit (option eventually to plot biophysical model response).'}';
+
 fit_3_gamma      = cfg_menu;
 fit_3_gamma.tag  = 'fit_3_gamma';
 fit_3_gamma.name = 'Fit 3 gamma functions';
@@ -327,9 +348,9 @@ remove_segment_drift.help = {'Remove linear drift separately on each segment.'}'
 stim_mean1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 stim_mean1.name = 'Average stimulations';             % The display name
 stim_mean1.tag  = 'stim_mean1'; %Very important: tag is used when calling for execution
-stim_mean1.val  = {IOImat redo1 IOImatCopyChoice stim_choice session_choice ...
+stim_mean1.val  = {IOImat ROImat redo1 IOImatCopyChoice stim_choice session_choice ...
     ROI_choice window_after window_before normalize_choice hpf_butter ...
-    lpf_choice include_flow include_HbT include_OD extract_HRF fit_3_gamma ...
+    lpf_choice include_flow include_HbT include_OD extract_HRF fit_3_gamma include_nlinfit ...
     generate_global generate_figures save_figures add_error_bars ...
     remove_segment_drift};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 stim_mean1.prog = @ioi_stim_mean_run;  % A function handle that will be called with the harvested job to run the computation

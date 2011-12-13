@@ -15,15 +15,20 @@ Y = zeros(ns,l);
 cl = 0;
 HPF = M.HPF;
 LPF = M.LPF;
+M.HbRnorm = 40;
+M.HbOnorm = 60;
+M.HbTnorm = M.HbRnorm + M.HbOnorm;
 if includeHbR
     cl = cl+1;
     ty = ROI{r1}{s1,cHbR};
     if HPF.hpf_butter_On
         ty = ButterHPF(1/M.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,ty);
     end
-    ty = baseline_correction(M,ty,1,r1,s1);
+    
+    ty = private_baseline_correction(M,ty,1,r1,s1);
     %try, ty = ty/abs(median(ty))-1; end
-    Y(:,cl) = ty/40; %to get percent change
+    
+    Y(:,cl) = ty/M.HbRnorm; %to get percent change
     %Y(:,cl) = ROI{r1}{s1,cHbR}/median(ROI{r1}{s1,cHbR});
 end
 if includeHbT
@@ -35,9 +40,9 @@ if includeHbT
         ty2 = ButterHPF(1/M.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,ty2);
     end
     ty = ty1+ty2;
-    ty = baseline_correction(M,ty,2,r1,s1);
+    ty = private_baseline_correction(M,ty,2,r1,s1);
     %ty = ty/mean(ty)-1;
-    Y(:,cl) =ty/100; %to get percent change
+    Y(:,cl) =ty/M.HbTnorm; %to get percent change
     %Y(:,cl) = ROI{r1}{s1,cHbR}/median(ROI{r1}{s1,cHbR})+ROI{r1}{s1,cHbO}/median(ROI{r1}{s1,cHbO});
 end
 if includeFlow
@@ -46,7 +51,7 @@ if includeFlow
     if HPF.hpf_butter_On
         ty = ButterHPF(1/M.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,ty);
     end
-    ty = baseline_correction(M,ty,3,r1,s1);
+    ty = private_baseline_correction(M,ty,3,r1,s1);
     %ty = ty/mean(ty)-1;
     Y(:,cl) = ty;
 end
@@ -71,21 +76,23 @@ M.Y.y = Y;
 M.Y.dt = M.dt;
 end
 
-function y = baseline_correction(M,y,modality,r1,s1)
-if size(M.baseline_correction{modality},1) > 1 || size(M.baseline_correction{modality},2) > 1
-    r2 = find(r1==M.selected_ROIs);
-    s2 = find(s1==M.selected_sessions);
-else
-    r2 = 1;
-    s2 = 1;
-end
-switch M.baseline_choice
-    case 0
-    case 1
-        pctle = M.baseline_correction{modality}(s2,r2);
-        y_offset = prctile(y,pctle);
-        y = y-y_offset;
-    case 2
-        y = y-M.baseline_correction{modality}(s2,r2);
+function y = private_baseline_correction(M,y,modality,r1,s1)
+if ~isempty(M.baseline_correction)
+    if size(M.baseline_correction{modality},1) > 1 || size(M.baseline_correction{modality},2) > 1
+        r2 = find(r1==M.selected_ROIs);
+        s2 = find(s1==M.selected_sessions);
+    else
+        r2 = 1;
+        s2 = 1;
+    end
+    switch M.baseline_choice
+        case 0
+        case 1
+            pctle = M.baseline_correction{modality}(s2,r2);
+            y_offset = prctile(y,pctle);
+            y = y-y_offset;
+        case 2
+            y = y-M.baseline_correction{modality}(s2,r2);
+    end
 end
 end

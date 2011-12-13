@@ -6,14 +6,24 @@ dir1 = M.dir1;
 height_stems = 0.1; %for plotting inputs
 Ep = M.Ep;
 Cp = M.Cp;
+pE = M.PS.pE;
+if M.show_normalized_parameters
+    Ep = Ep./pE;
+    pE = ones(size(pE));
+    sd1 = diag(M.PS.pC).^0.5;
+    Cp = Cp./(sd1 * sd1');
+    norm_str = '(Normalized) ';
+else
+    norm_str = '';
+end
 m = M.m;
 U = M.U;
-pE = M.PS.pE;
 M0 = M.M0;
 M1 = M.M1;
 H1 = M.H1;
 K1 = M.K1;
 K2 = M.K2;
+M.plot_separate_figures = 1;
 
 %-display results
 %==========================================================================
@@ -70,7 +80,7 @@ if HDMdisplay || save_figures
             set(gca,'Ytick',[1:m2*3]/3 + 1/2,'YTickLabel',str)
         otherwise
     end
-    xlabel('relative efficacy per event/sec')
+    xlabel(['relative efficacy per event/sec' norm_str])
     
     Np = Np -1;
     % display hemodynamic parameters
@@ -80,7 +90,7 @@ if HDMdisplay || save_figures
     pE    = pE(1:Np);
     C     = diag(Cp(1:Np,1:Np));
     spm_barh(P,C,pE)
-    title({ 'hemodynamic parameters'},'FontSize',10)
+    title({ [norm_str 'hemodynamic parameters']},'FontSize',10)
     set(gca,'Ytick',[1:3*Np]/3 + 1/2)
     switch M.PS.PhysioModel_Choice
         case 0 %Buxton-Friston
@@ -244,26 +254,33 @@ if HDMdisplay || save_figures
     if save_figures
         HDM_str = ['_' M.HDM_str];
         %Save figure
-        filen1 = fullfile(dir1,['HDM_kernels' HDM_str '.fig']);
-        filen2 = fullfile(dir1,['HDM_kernels' HDM_str '.tiff']);
+        filen1 = fullfile(dir1,['HDM' HDM_str '_kernels.fig']);
+        filen2 = fullfile(dir1,['HDM' HDM_str '_kernels.tiff']);
         saveas(Fhdm,filen1,'fig');
         print(Fhdm, '-dtiffn', filen2);
         Fsi = spm_figure('GetWin','SI');
-        filen2 = fullfile(dir1,['HDM_fit' HDM_str '.fig']);
-        filen4 = fullfile(dir1,['HDM_fit' HDM_str '.tiff']);
+        filen2 = fullfile(dir1,['HDM' HDM_str 'fit.fig']);
+        filen4 = fullfile(dir1,['HDM' HDM_str 'fit.tiff']);
         saveas(Fsi,filen2,'fig');
         print(Fsi, '-dtiffn', filen4);
         for i0=0:size(cH1,2)
             if i0 == 0
-                filen5 = fullfile(dir1,['HDM_predictions_less1' HDM_str '_all.fig']);
-                filen6 = fullfile(dir1,['HDM_predictions_less1' HDM_str '_all.tiff']);
+                filen5 = fullfile(dir1,['HDM' HDM_str '_predictions_less1_all.fig']);
+                filen6 = fullfile(dir1,['HDM' HDM_str '_predictions_less1_all.tiff']);
             else
-                filen5 = fullfile(dir1,['HDM_predictions_less1' HDM_str '_' leg_str{i0+1} '.fig']);
-                filen6 = fullfile(dir1,['HDM_predictions_less1' HDM_str '_' leg_str{i0+1} '.tiff']);
+                filen5 = fullfile(dir1,['HDM' HDM_str '_' leg_str{i0+1} '_predictions_less1.fig']);
+                filen6 = fullfile(dir1,['HDM' HDM_str '_' leg_str{i0+1} '_predictions_less1.tiff']);
             end
             saveas(Fhdm_pred{i0+1},filen5,'fig');
             print(Fhdm_pred{i0+1}, '-dtiffn', filen6);
         end
+        %extract some of the subpblots and put in full plots
+%         figure(Fhdm);
+%         axOld = subplot(3,2,2);
+%         fh1 = figure;
+%         ax1 = gca;
+%         %set(fh1,'CurrentAxes',ax1);
+%         copyobj(allchild(axOld),ax1);
         if ~HDMdisplay
             try close(Fhdm); end
             for i0=0:size(cH1,2)
