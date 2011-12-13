@@ -530,6 +530,7 @@ Eh     = C.h;
 F      = full(C.F - F0); %C.F;
  
 %k %: number of iterations used
+if isfield(M,'HDM_str')
 HDM_str = ['_' M.HDM_str];
 Ffit    = figure;
 header = get(Ffit,'Name');
@@ -549,7 +550,7 @@ else
 %     leg_str = [leg_str;  'Filtered hemodynamic data'];
 %     legend(leg_str);
 end
-if exist('HDM_str','var')
+
 filen2 = fullfile(M.dir1,['HDM' HDM_str 'fit_large.fig']);
 filen4 = fullfile(M.dir1,['HDM' HDM_str 'fit_large.tiff']);
 saveas(Ffit,filen2,'fig');
