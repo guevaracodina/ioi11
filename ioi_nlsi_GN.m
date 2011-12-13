@@ -555,6 +555,7 @@ filen2 = fullfile(M.dir1,['HDM' HDM_str 'fit_large.fig']);
 filen4 = fullfile(M.dir1,['HDM' HDM_str 'fit_large.tiff']);
 saveas(Ffit,filen2,'fig');
 print(Ffit, '-dtiffn', filen4);
+close(Ffit) 
 end
-close(Ffit)      
+     
         

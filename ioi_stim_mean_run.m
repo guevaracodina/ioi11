@@ -188,15 +188,20 @@ for SubjIdx=1:length(job.IOImat)
                                 Gtmp_array_after = zeros(1,window_after);
                                 GSb{r2,m1}{c1} = [];
                                 GSa{r2,m1}{c1} = [];
-                                kb = 0; %counter of segments before onsets
-                                ka = 0; %counter of segments after onsets
-                                kb2 = 0; %counter of skipped segments before onsets
-                                ka2 = 0; %counter of skipped segments after onsets
+                                Gkb = 0; %counter of segments before onsets
+                                Gka = 0; %counter of segments after onsets
+                                Gkb2 = 0; %counter of skipped segments before onsets
+                                Gka2 = 0; %counter of skipped segments after onsets
                                 %loop over sessions
                                 for s1=1:length(IOI.sess_res)
                                     if all_sessions || sum(s1==selected_sessions)
                                         tmp_array_before = zeros(1,window_before);
                                         tmp_array_after = zeros(1,window_after);
+                                        kb = 0; %counter of segments before onsets
+                                        ka = 0; %counter of segments after onsets
+                                        kb2 = 0; %counter of skipped segments before onsets
+                                        ka2 = 0; %counter of skipped segments after onsets
+                                        %loop over sessions
                                         try
                                             if include_HbT
                                                 if IOI.color.eng(c1) == IOI.color.HbT
@@ -252,6 +257,7 @@ for SubjIdx=1:length(job.IOImat)
                                                     tmp_array_before = tmp_array_before + tmp1-tmp_median;
                                                     Gtmp_array_before = Gtmp_array_before + tmp1-tmp_median;
                                                     kb = kb+1;
+                                                    Gkb = Gkb+1;
                                                     Sb{r2,m1}{c1,s1} = [Sb{r2,m1}{c1,s1};tmp1-tmp_median];
                                                     if global_M && m1 <= possible_global_M
                                                         GSb{r2,m1}{c1} = [GSb{r2,m1}{c1};tmp1-tmp_median];
@@ -285,7 +291,8 @@ for SubjIdx=1:length(job.IOImat)
                                                     tmp_array_after = tmp_array_after + tmp1;
                                                     Gtmp_array_after = Gtmp_array_after + tmp1;
                                                     ka = ka+1;
-                                                    Sa{r2,m1}{c1} = [Sa{r2,m1}{c1};tmp1];
+                                                    Gka = Gka+1;
+                                                    Sa{r2,m1}{c1,s1} = [Sa{r2,m1}{c1,s1};tmp1];
                                                     if global_M && m1 <= possible_global_M
                                                         GSa{r2,m1}{c1} = [GSa{r2,m1}{c1};tmp1];
                                                     end
@@ -318,10 +325,10 @@ for SubjIdx=1:length(job.IOImat)
                                 end
                                 
                                 if global_M && m1 <= possible_global_M
-                                    GMb{r2,m1}{c1} = tmp_array_before/kb; %global mean before
-                                    GMa{r2,m1}{c1} = tmp_array_after/ka; %global mean after
-                                    GDa{r2,m1}{c1} = std(GSa{r2,m1}{c1},0,1)/sqrt(ka); %SEM
-                                    GDb{r2,m1}{c1} = std(GSb{r2,m1}{c1},0,1)/sqrt(kb); %SEM
+                                    GMb{r2,m1}{c1} = tmp_array_before/Gkb; %global mean before
+                                    GMa{r2,m1}{c1} = tmp_array_after/Gka; %global mean after
+                                    GDa{r2,m1}{c1} = std(GSa{r2,m1}{c1},0,1)/sqrt(Gka); %SEM
+                                    GDb{r2,m1}{c1} = std(GSb{r2,m1}{c1},0,1)/sqrt(Gkb); %SEM
                                     GDma{r2,m1}{c1} = mean(GDa{r2,m1}{c1});
                                     GDmb{r2,m1}{c1} = mean(GDb{r2,m1}{c1});
                                 end
