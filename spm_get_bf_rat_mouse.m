@@ -225,8 +225,8 @@ if list_color
             s1 = bases.specific_EM.HRF_session_choice.HRF_select_session.HRF_selected_session;
             if isfield(IOI.res,'H')
                 try
-                    if ~isempty(IOI.res.H{r2,m1}{c1}) %? problems with the cells of cells
-                        bf{c1} = IOI.res.H{r2,m1}{c1}.yp; %?
+                    if ~isempty(IOI.res.H{r2,m1}{c1,s1}) %? problems with the cells of cells
+                        bf{c1} = IOI.res.H{r2,m1}{c1,s1}.yp; %?
                     else
                         bf{c1} = [];
                         
