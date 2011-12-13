@@ -253,23 +253,23 @@ if HDMdisplay || save_figures
     plot(t,K1(:,:,j))
     %axis square
     modalities = [];
-    leg_str = {};
+    leg_str0 = {};
     xY = M.PS.xY;
     if xY.includeHbR
         modalities = [modalities 'HbR; '];
-        leg_str = [leg_str 'HbR'];
+        leg_str0 = [leg_str0 'HbR'];
     end
     if xY.includeHbT
         modalities = [modalities 'HbT; '];
-        leg_str = [leg_str 'HbT'];
+        leg_str0 = [leg_str0 'HbT'];
     end
     if xY.includeFlow
         modalities = [modalities 'Flow'];
-        leg_str = [leg_str 'Flow'];
+        leg_str0 = [leg_str0 'Flow'];
     end
     title({ '1st order kernel';['output: ' modalities]},'FontSize',9)
     ylabel('normalized measure response')
-    legend(leg_str)
+    legend(leg_str0)
     xlabel('time (s)')
     %grid on    
        
