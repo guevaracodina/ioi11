@@ -20,6 +20,8 @@ include_HbT = job.include_HbT;
 normalize_choice = job.normalize_choice;
 show_movie = job.show_movie;
 dir_cine = 'Cine_movies';
+high_limit = job.high_limit/100;
+low_limit = job.low_limit/100;
 %get size of windows before and after stimulation to average on, in data points
 for SubjIdx=1:length(job.IOImat)
     try
@@ -151,10 +153,15 @@ for SubjIdx=1:length(job.IOImat)
                                 d = tmp_array_after/ka;
                                 m0 = min(d(:));
                                 M0 = max(d(:));
+                                dM = M0-m0;
                                 Nf = size(d,3);
                                 F(Nf) = struct('cdata',[],'colormap',[]);
                                 h0 = figure;
-                                clims = [m0 M0];
+                                %if IOI.color.eng(c1) == IOI.color.HbR
+                                %    clims = [m0+dM*(1-5*high_limit) M0+dM*(1-low_limit)];
+                                %else
+                                    clims = [m0+dM*low_limit M0+dM*high_limit];
+                                %end
                                 try
                                     vidObj = VideoWriter(fname_movie);
                                     open(vidObj);
@@ -163,7 +170,7 @@ for SubjIdx=1:length(job.IOImat)
                                     VideoOK = 0;
                                 end
                                 %set(gca,'NextPlot','replacechildren');
-                                for i0=1:Nf
+                                for i0=1:20
                                     imagesc(squeeze(d(:,:,i0)),clims);
                                     F(i0) = getframe;
                                     if VideoOK

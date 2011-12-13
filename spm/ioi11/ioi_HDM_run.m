@@ -1,6 +1,5 @@
 function out = ioi_HDM_run(job)
 %Based on SPM HDM
-
 %select a subset of sessions
 if isfield(job.session_choice,'select_sessions')
     all_sessions = 0;
@@ -15,15 +14,6 @@ if isfield(job.ROI_choice,'select_ROIs')
 else
     all_ROIs = 1;
 end
-%select onsets, default is stimulation based
-stim_choice=0;
-if isfield(job.stim_choice,'electro_stims')
-    stim_choice = 1;
-end
-if isfield(job.stim_choice,'manual_stims')
-    stim_choice = 2;
-end
-
 %HPF
 if isfield(job.hpf_butter,'hpf_butter_On')
     HPF.hpf_butter_On = 1;
@@ -49,6 +39,16 @@ Niterations = job.EM_parameters.Niterations;
 dFcriterion = job.EM_parameters.dFcriterion;
 LogAscentRate = job.EM_parameters.LogAscentRate;
 Mstep_iterations = job.EM_parameters.Mstep_iterations;
+try
+use_onset_amplitudes = job.use_onset_amplitudes;
+catch
+    use_onset_amplitudes = 0;
+end
+try 
+    show_mse = job.show_mse;
+catch
+    show_mse = 1;
+end
 %Baseline choice
 if isfield(job.baseline_choice,'baseline_percentile_choice')
     baseline_choice = 1;
@@ -63,6 +63,7 @@ else
         baseline_correction{3} = job.baseline_choice.baseline_offset_choice.baseline_offset_flow;
     else
         baseline_choice = 0;
+        baseline_correction = [];
     end
 end
 %save_figures
@@ -130,6 +131,7 @@ for SubjIdx=1:length(job.IOImat)
                                         HDM0.save_figures = save_figures;
                                         HDM0.generate_figures = generate_figures;
                                         HDM0.show_normalized_parameters = show_normalized_parameters;
+                                        HDM0.show_mse = show_mse;
                                         HDM0.dir1 = dir1;
                                         HDM0.HDM_str = HDM_str;
                                         HDM0.Niterations = Niterations;
@@ -141,17 +143,21 @@ for SubjIdx=1:length(job.IOImat)
                                         HDM0.selected_ROIs = selected_ROIs;
                                         HDM0.baseline_choice = baseline_choice;
                                         HDM0.baseline_correction = baseline_correction;
-                                        %Choose onsets: stimulations or electrophysiology
-                                        if electro_stims
-                                            U = IOI.Sess(s1).U;
+                                        %onsets: they are now specified in the module create_onsets
+                                        name = IOI.sess_res{s1}.names{1};
+                                        ons = IOI.sess_res{s1}.onsets{1};
+                                        dur = IOI.sess_res{s1}.durations{1};
+                                        if use_onset_amplitudes 
+                                            amp = IOI.sess_res{s1}.parameters{1};
+                                            %normalize -- but what if amp takes extreme values?
+                                            amp = amp/mean(amp);
                                         else
-                                            name = IOI.sess_res{s1}.names{1};
-                                            ons = IOI.sess_res{s1}.onsets{1};
-                                            dur = IOI.sess_res{s1}.durations{1};
-                                            bases.hrf.derivs = [0 0]; %not used
-                                            volt = 1; %not used
-                                            [X U] = ioi_get_X(IOI,name,ons,dur,s1,bases,volt);
+                                            amp = [];
                                         end
+                                        bases.hrf.derivs = [0 0]; %not used
+                                        volt = 1; %not used
+                                        [X U] = ioi_get_X(IOI,name,ons,dur,amp,s1,bases,volt);
+                                        
                                         U.u = U.u(33:end); %?
                                         HDM0.U = U;
                                         HDM0.TR = IOI.dev.TR;

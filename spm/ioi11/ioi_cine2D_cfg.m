@@ -117,6 +117,23 @@ which_onset_type.help    = {'Enter which onset type(s) (relevant if there are'
     'several onset types.'
     'Enter (a list of) ordinal number(s) indicating the desired onset type(s) in the onset type list.'}';
 
+low_limit         = cfg_entry; 
+low_limit.name    = 'Enter low limit as percentage of min to max';
+low_limit.tag     = 'low_limit';       
+low_limit.strtype = 'r';
+low_limit.num     = [1 1];     
+low_limit.val     = {0};
+low_limit.help    = {'Enter low limit as percentage of min to max.'}';
+
+high_limit         = cfg_entry; 
+high_limit.name    = 'Enter high limit as percentage of min to max';
+high_limit.tag     = 'high_limit';       
+high_limit.strtype = 'r';
+high_limit.num     = [1 1];     
+high_limit.val     = {10};
+high_limit.help    = {'Enter high limit as percentage of min to max.'
+    'For HbR, the code will invert min and max so the user does not have to worry about it.'}';
+
 include_flow      = cfg_menu;
 include_flow.tag  = 'include_flow';
 include_flow.name = 'Include flow';
@@ -186,7 +203,8 @@ cine2D1      = cfg_exbranch;       % This is the branch that has information abo
 cine2D1.name = '2D Cine';             % The display name
 cine2D1.tag  = 'cine2D1'; %Very important: tag is used when calling for execution
 cine2D1.val  = {IOImat redo1 IOImatCopyChoice session_choice ...
-    window_after window_before normalize_choice which_onset_type include_flow include_OD include_HbT ...
+    window_after window_before normalize_choice which_onset_type ...
+    high_limit low_limit include_flow include_OD include_HbT ...
     lpf_choice show_movie};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 cine2D1.prog = @ioi_cine2D_run;  % A function handle that will be called with the harvested job to run the computation
 cine2D1.vout = @ioi_cfg_vout_cine2D; % A function handle that will be called with the harvested job to determine virtual outputs

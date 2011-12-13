@@ -29,16 +29,8 @@ if isfield(job.lpf_choice,'lpf_gauss_On')
 else
     LPF.lpf_gauss_On = 0;
 end
-try 
-    remove_segment_drift = job.remove_segment_drift;
-catch
-    remove_segment_drift = 1;
-end
-try
-    fit_3_gamma = job.fit_3_gamma;
-catch
-    fit_3_gamma = 0;
-end
+remove_segment_drift = job.remove_segment_drift;
+fit_3_gamma = job.fit_3_gamma;
 %Other options
 generate_global = job.generate_global;
 include_OD = job.include_OD;
@@ -49,6 +41,7 @@ extract_HRF = job.extract_HRF;
 save_figures = job.save_figures;
 generate_figures = job.generate_figures;
 normalize_choice = job.normalize_choice;
+include_nlinfit = job.include_nlinfit;
 %get size of windows before and after stimulation to average on, in data points
 
 add_error_bars = job.add_error_bars;
@@ -78,7 +71,10 @@ for SubjIdx=1:length(job.IOImat)
                 else
                     newDir = dir_ioimat;
                 end
-                if isfield(IOI.ROI,'ROIfname')
+                %load ROI
+                if ~isempty(job.ROImat)
+                    load(job.ROImat{SubjIdx});
+                else
                     try
                         load(IOI.ROI.ROIfname);
                     catch
@@ -102,19 +98,20 @@ for SubjIdx=1:length(job.IOImat)
                 %loop over sessions
                 for s1=1:Ns
                     if all_sessions || sum(s1==selected_sessions)
-                        switch stim_choice
-                            case 0 % Default
-                                onsets_list{s1} = IOI.sess_res{s1}.onsets;
-                            case 1 % Electrophysio
-                                onsets_list{s1} = {};
-                                for i0=1:length(IOI.Sess(s1).U)
-                                    onsets_list{s1} = [onsets_list{s1}; IOI.Sess(s1).U(i0).ons];
-                                end
-                            case 2 % Manual
-                                h2 = figure; spm_input(['Session ' s1],'-1','d');
-                                figure(h2);
-                                onsets_list{s1}{1} = spm_input('Enter onsets in second','-1','e','',NaN);
-                        end
+                        onsets_list{s1} = IOI.sess_res{s1}.onsets;
+%                         switch stim_choice
+%                             case 0 % Default
+%                                 onsets_list{s1} = IOI.sess_res{s1}.onsets;
+%                             case 1 % Electrophysio
+%                                 onsets_list{s1} = {};
+%                                 for i0=1:length(IOI.Sess(s1).U)
+%                                     onsets_list{s1} = [onsets_list{s1}; IOI.Sess(s1).U(i0).ons];
+%                                 end
+%                             case 2 % Manual
+%                                 h2 = figure; spm_input(['Session ' s1],'-1','d');
+%                                 figure(h2);
+%                                 onsets_list{s1}{1} = spm_input('Enter onsets in second','-1','e','',NaN);
+%                         end
                     end
                 end
                 %Check whether there is the same number of onset types in
@@ -179,7 +176,7 @@ for SubjIdx=1:length(job.IOImat)
                 Db = cell(Nroi,maxM);
                 
                 %loop over onset types
-                for m1=1:maxM 
+                for m1=1:maxM
                     %loop over colors
                     for c1=1:length(IOI.color.eng)
                         %loop over ROIs
@@ -201,7 +198,16 @@ for SubjIdx=1:length(job.IOImat)
                                         tmp_array_before = zeros(1,window_before);
                                         tmp_array_after = zeros(1,window_after);
                                         try
-                                            tmp_d = ROI{r1}{s1,c1};
+                                            if include_HbT
+                                                if IOI.color.eng(c1) == IOI.color.HbT
+                                                    tmp_d = ROI{r1}{s1,IOI.color.eng == IOI.color.HbO}+...
+                                                        ROI{r1}{s1,IOI.color.eng == IOI.color.HbR};
+                                                else
+                                                    tmp_d = ROI{r1}{s1,c1};
+                                                end
+                                            else
+                                                tmp_d = ROI{r1}{s1,c1};
+                                            end
                                             %normalize flow
                                             if isfield(IOI.color,'flow')
                                                 if IOI.color.eng(c1)==IOI.color.flow
@@ -215,6 +221,18 @@ for SubjIdx=1:length(job.IOImat)
                                             if HPF.hpf_butter_On
                                                 tmp_d = ButterHPF(1/IOI.dev.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,tmp_d);
                                             end
+                                            if LPF.lpf_gauss_On
+                                                K = get_K(1:length(tmp_d),LPF.fwhm1,IOI.dev.TR);
+                                                y = tmp_d;
+                                                %forward
+                                                y = spm_filter_HPF_LPF_WMDL(K,y')';
+                                                %backward
+                                                y = y(end:-1:1);
+                                                y = spm_filter_HPF_LPF_WMDL(K,y')';
+                                                y = y(end:-1:1);
+                                                tmp_d = y;
+                                            end
+                                            
                                             Sb{r2,m1}{c1,s1} = [];
                                             Sa{r2,m1}{c1,s1} = [];
                                             %loop over onsets for that session
@@ -339,9 +357,9 @@ for SubjIdx=1:length(job.IOImat)
                 IOI.res.Sa = Sa; %each segment
                 IOI.res.Sb = Sb;
                 save(IOImat,'IOI');
-                %Define M structure for Expectation-Maximization algorithm                 
+                %Define M structure for Expectation-Maximization algorithm
                 %Fit difference of two gamma functions
-                if extract_HRF                    
+                if extract_HRF
                     x = linspace(0,job.window_after-IOI.dev.TR,window_after);
                     %loop over onset types
                     for m1=1:maxM
@@ -391,14 +409,25 @@ for SubjIdx=1:length(job.IOImat)
                     if isfield(IOI.color,'HbO')
                         lp2{IOI.color.eng==IOI.color.HbO} = 'r'; %HbO
                         lp2{IOI.color.eng==IOI.color.HbR} = 'b'; %HbR
+                        lp3{IOI.color.eng==IOI.color.HbO} = 'HbO'; %HbO
+                        lp3{IOI.color.eng==IOI.color.HbR} = 'HbR'; %HbR
                         ctotal = [ctotal find(IOI.color.eng==IOI.color.HbO) ...
                             find(IOI.color.eng==IOI.color.HbR)];
+                        if include_HbT
+                            lp2{IOI.color.eng==IOI.color.HbT} = 'g';
+                            lp3{IOI.color.eng==IOI.color.HbT} = 'HbT'; %HbT
+                            ctotal = [ctotal find(IOI.color.eng==IOI.color.HbT)];
+                        end
                     end
                     if include_flow
                         if isfield(IOI.color,'flow')
                             lp2{IOI.color.eng==IOI.color.flow} = 'k'; %Flow
+                            lp3{IOI.color.eng==IOI.color.flow} = 'Flow';
                             ctotal = [ctotal find(IOI.color.eng==IOI.color.flow)];
                         end
+                    end
+                    if include_OD
+                        %to do...
                     end
                     %global figures, only for 1st onset
                     if exist('GMa','var')
@@ -437,7 +466,7 @@ for SubjIdx=1:length(job.IOImat)
                                 legend off
                                 set(gcf, 'Colormap', ColorSet);
                                 
-                                if save_figures                                   
+                                if save_figures
                                     tit = ['Mean_' IOI.color.eng(c1) '_allROI'];
                                     title(tit);
                                     ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
@@ -460,30 +489,24 @@ for SubjIdx=1:length(job.IOImat)
                                         r2 = r2+1;
                                         h1 = h1 + 1;
                                         h(h1) = figure;
+                                        leg_str = {};
                                         for c1 = ctotal
                                             if ~add_error_bars
                                                 plot(ls,Ma{r2,m1}{c1,s1},[lp1{1} lp2{c1}]); hold on
                                             else
                                                 errorbar(ls(2:end-1),Ma{r2,m1}{c1,s1}(2:end-1),Da{r2,m1}{c1,s1}(2:end-1),[lp1{1} lp2{c1}]); hold on
                                             end
+                                            leg_str = [leg_str; lp3{c1}];
                                             if extract_HRF
-                                                plot(ls,F{r2,m1}{c1,s1}.yp,[lp1{2} lp2{c1}]); hold on
+                                                if include_nlinfit
+                                                    plot(ls,F{r2,m1}{c1,s1}.yp,[lp1{2} lp2{c1}]); hold on
+                                                    leg_str = [leg_str; [lp3{c1} '-NL']];
+                                                end
                                                 plot(ls,H{r2,m1}{c1,s1}.yp,[lp1{3} lp2{c1}]); hold on
+                                                leg_str = [leg_str; [lp3{c1} '-EM']];
                                             end
                                         end
-                                        if ~extract_HRF
-                                        if include_flow
-                                            legend(gca,'HbO','HbR','Flow');
-                                        else
-                                            legend(gca,'HbO','HbR');
-                                        end
-                                        else
-                                        if include_flow
-                                            legend(gca,'HbO','HbO-NL','HbO-EM','HbR','HbR-NL','HbR-EM','Flow','Flow-NL','Flow-EM');
-                                        else
-                                            legend(gca,'HbO','HbO-NL','HbO-EM','HbR','HbR-NL','HbR-EM');
-                                        end   
-                                        end
+                                        legend(leg_str);
                                         if save_figures
                                             tit = ['ROI ' int2str(r1) ' ' IOI.res.ROI{r1}.name ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
                                             title(tit);
@@ -536,7 +559,7 @@ for SubjIdx=1:length(job.IOImat)
                                             title(tit);
                                             ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                                         end
-                                    end                                    
+                                    end
                                 end
                             end
                         end

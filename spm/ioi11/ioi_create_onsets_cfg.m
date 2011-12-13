@@ -143,6 +143,22 @@ dP.num = [1 1];
 dP.val{1} = 25;
 dP.help = {'Enter minimal distance allowed between peaks in milliseconds'}';
 
+tb         = cfg_entry; 
+tb.name    = 'Time window before';
+tb.tag     = 'tb';       
+tb.strtype = 'r';
+tb.num     = [1 1];     
+tb.val{1}  = 0.2;
+tb.help    = {'Specify the time window before onset to use for display (in seconds).'}';
+
+ta         = cfg_entry; 
+ta.name    = 'Time window after';
+ta.tag     = 'ta';       
+ta.strtype = 'r';
+ta.num     = [1 1];     
+ta.val{1}  = 0.5;
+ta.help    = {'Specify the time window after onset to use for display (in seconds).'}';
+
 %HPF
 electro_hpf_butter_freq         = cfg_entry; 
 electro_hpf_butter_freq.name    = 'Cutoff frequency for HPF';
@@ -242,7 +258,7 @@ electro_stims         = cfg_branch;
 electro_stims.tag     = 'electro_stims';
 electro_stims.name    = 'Onsets from electrophysiology';
 electro_stims.val     = {electrophysiology_onset_name ...
-    sf nSD mbSD dP electro_hpf_butter electro_lpf_butter ...
+    sf nSD mbSD dP tb ta electro_hpf_butter electro_lpf_butter ...
         write_pictures use_epilepsy_convention};
 electro_stims.help    = {    'Electrophysiology information'
     'Stimulations are assumed to last one data point.'
