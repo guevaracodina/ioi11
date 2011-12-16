@@ -250,7 +250,15 @@ if HDMdisplay || save_figures
     % display output kernels (i.e. BOLD response)
     %--------------------------------------------------------------------------
     h4 = figure;
-    plot(t,K1(:,:,j))
+    tY = K1(:,:,j);
+    show_HbO = 1;
+    if show_HbO
+        if xY.includeHbR && xY.includeHbT
+            tY = [tY(:,1:2) -tY(:,1)+tY(:,2) tY(:,3:end)];
+        end
+    end
+            
+    plot(t,tY);
     %axis square
     modalities = [];
     leg_str0 = {};
@@ -262,7 +270,13 @@ if HDMdisplay || save_figures
     if xY.includeHbT
         modalities = [modalities 'HbT; '];
         leg_str0 = [leg_str0 'HbT'];
-    end
+    end 
+    if show_HbO
+        if xY.includeHbR && xY.includeHbT
+            modalities = [modalities 'HbO; '];
+            leg_str0 = [leg_str0 'HbO'];
+        end
+    end            
     if xY.includeFlow
         modalities = [modalities 'Flow'];
         leg_str0 = [leg_str0 'Flow'];
