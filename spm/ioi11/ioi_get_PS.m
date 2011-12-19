@@ -1,4 +1,7 @@
 function O = ioi_get_PS(IOI,O)
+cHbO = [];
+cHbR = [];
+cFlow = [];
 %Loop to find HbO, HbR and Flow positions in ROI
 for c1=1:length(IOI.color.eng)
     if IOI.color.eng(c1)==IOI.color.HbO, cHbO = c1; end

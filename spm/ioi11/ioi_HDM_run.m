@@ -172,15 +172,14 @@ for SubjIdx=1:length(job.IOImat)
                                             HDM0=ioi_set_physiomodel(HDM0);
                                             %choose priors
                                             HDM0=ioi_set_priors(HDM0);
-                                            %setup for priors
-                                            HDM0.pE = HDM0.PS.pE;
                                             %scaling factors on covariance ... do we need that?
-                                            HDM0.pC = 10*HDM0.PS.pC;
-                                            HDM0.pC(end,end) = 10*HDM0.pC(end,end);
+                                            %HDM0.pC = 10*HDM0.pC;
+                                            %HDM0.pC(end,end) = 10*HDM0.pC(end,end);
                                             if S.simuOn
                                                 HDM0 = ioi_simu_gen_parameters(HDM0);
                                                 simuIt = HDM0.S.simuIt; 
-                                                HDM0.Y0 = Y; %background
+                                                HDM0.Y0 = HDM0.Y; %background
+                                                HDM0.HDM_str0 = HDM0.HDM_str; %save each figure of fit
                                                 SHDM = []; %simulation HDM structure
                                             else                                              
                                                 simuIt = 1;
@@ -190,7 +189,6 @@ for SubjIdx=1:length(job.IOImat)
                                             % big loop over simulation iterations
                                             %--------------------------------------------------------------------------
                                             for it1=1:simuIt
-                                                HDM0 = ioi_set_simu(HDM0);
                                                 if S.simuOn
                                                     HDM0 = ioi_set_simu(HDM0,it1);
                                                 end
@@ -198,7 +196,7 @@ for SubjIdx=1:length(job.IOImat)
                                                 %--------------------------------------------------------------------------                                               
                                                 HDM0 = ioi_nlsi(HDM0);
                                                 if S.simuOn
-                                                    SHDM{it1} = ioi_save_simu(HDM0); 
+                                                    SHDM{it1} = ioi_save_simu(HDM0,it1); 
                                                 end
                                             end
                                             warning('on','MATLAB:nearlySingularMatrix');

@@ -13,4 +13,7 @@ end
 M.n     = length(M.x);
 %Number of inputs of direct model
 M.m=1;
+%Number of outputs
+M.l = M.O.includeHbR + M.O.includeHbT + M.O.includeFlow;
+
 

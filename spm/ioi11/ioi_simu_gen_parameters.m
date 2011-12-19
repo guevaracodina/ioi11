@@ -30,7 +30,7 @@ if M.S.simuOn
     M.S.pA = pA;
     %stimuli types to include, if including all
     if M.S.simuS == 0
-        M.S.simuS = 1:size(U.u,2);
+        M.S.simuS = 1:size(M.U.u,2);
     end
 end
 end
