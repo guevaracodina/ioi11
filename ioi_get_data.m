@@ -74,27 +74,28 @@ end
 % if M.S.simuOn && ~M.S.simuNoise
 %     Y = zeros(size(Y)); %null background
 % end
+
 M.Y.y = Y;
 M.Y.dt = M.dt;
 end
 
 function y = private_baseline_correction(M,y,modality,r1,s1)
-if ~isempty(M.baseline_correction)
-    if size(M.baseline_correction{modality},1) > 1 || size(M.baseline_correction{modality},2) > 1
-        r2 = find(r1==M.selected_ROIs);
-        s2 = find(s1==M.selected_sessions);
+if ~isempty(M.O.baseline_correction)
+    if size(M.O.baseline_correction{modality},1) > 1 || size(M.O.baseline_correction{modality},2) > 1
+        r2 = find(r1==M.O.selected_ROIs);
+        s2 = find(s1==M.O.selected_sessions);
     else
         r2 = 1;
         s2 = 1;
     end
-    switch M.baseline_choice
+    switch M.O.baseline_choice
         case 0
         case 1
-            pctle = M.baseline_correction{modality}(s2,r2);
+            pctle = M.O.baseline_correction{modality}(s2,r2);
             y_offset = prctile(y,pctle);
             y = y-y_offset;
         case 2
-            y = y-M.baseline_correction{modality}(s2,r2);
+            y = y-M.O.baseline_correction{modality}(s2,r2);
     end
 end
 end

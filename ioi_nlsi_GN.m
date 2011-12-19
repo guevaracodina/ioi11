@@ -6,7 +6,7 @@ function [Ep,Cp,Eh,F,k,MSE,MSE_HbR] = ioi_nlsi_GN(M,U,Y)
 %__________________________________________________________________________
 %
 % M.IS - function name f(P,M,U) - generative model
-%        This function specifies the nonlinear model: 
+%        This function specifies the nonlinear model:
 %        y = Y.y = IS(P,M,U) + X0*P0 + e
 %        were e ~ N(0,C).  For dynamic systems this would be an integration
 %        scheme (e.g. spm_int). spm_int expects the following:
@@ -51,8 +51,8 @@ function [Ep,Cp,Eh,F,k,MSE,MSE_HbR] = ioi_nlsi_GN(M,U,Y)
 %
 %__________________________________________________________________________
 % Returns the moments of the posterior p.d.f. of the parameters of a
-% nonlinear model specified by IS(P,M,U) under Gaussian assumptions. 
-% Usually, IS is an integrator of a dynamic MIMO input-state-output model 
+% nonlinear model specified by IS(P,M,U) under Gaussian assumptions.
+% Usually, IS is an integrator of a dynamic MIMO input-state-output model
 %
 %              dx/dt = f(x,u,P)
 %              y     = g(x,u,P)  + X0*P0 + e
@@ -76,29 +76,29 @@ function [Ep,Cp,Eh,F,k,MSE,MSE_HbR] = ioi_nlsi_GN(M,U,Y)
 % An optional feature selection can be specified with parameters M.FS.
 %
 % For generic aspects of the scheme see:
-% 
-% Friston K, Mattout J, Trujillo-Barreto N, Ashburner J, Penny W. 
-% Variational free energy and the Laplace approximation. 
+%
+% Friston K, Mattout J, Trujillo-Barreto N, Ashburner J, Penny W.
+% Variational free energy and the Laplace approximation.
 % NeuroImage. 2007 Jan 1;34(1):220-34.
-% 
+%
 % This scheme handels complex data along the lines originally described in:
-% 
-% Sehpard RJ, Lordan BP, and Grant EH. 
+%
+% Sehpard RJ, Lordan BP, and Grant EH.
 % Least squares analysis of complex data with applications to permittivity
 % measurements.
 % J. Phys. D. Appl. Phys 1970 3:1759-1764.
 %
 %__________________________________________________________________________
 % Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
- 
+
 % Karl Friston
 % $Id: spm_nlsi_GN.m 4261 2011-03-24 16:39:42Z karl $
- 
+
 % figure (unless disabled)
 %--------------------------------------------------------------------------
 try
     M.nograph;
-catch 
+catch
     M.nograph = 0;
 end
 if ~M.nograph
@@ -112,7 +112,7 @@ try
 catch
     M.IS = 'spm_int';
 end
- 
+
 % composition of feature selection and prediction (usually an integrator)
 %--------------------------------------------------------------------------
 try
@@ -123,8 +123,8 @@ try
         y  = feval(M.FS,Y.y,M);
         IS = inline([M.FS '(' M.IS '(P,M,U),M)'],'P','M','U');
         
-    % try FS(y)
-    %----------------------------------------------------------------------
+        % try FS(y)
+        %----------------------------------------------------------------------
     catch
         y  = feval(M.FS,Y.y);
         IS = inline([M.FS '(' M.IS '(P,M,U))'],'P','M','U');
@@ -137,7 +137,7 @@ catch
     y   = Y.y;
     IS  = inline([M.IS '(P,M,U)'],'P','M','U');
 end
- 
+
 % size of data (usually samples x channels)
 %--------------------------------------------------------------------------
 if iscell(y)
@@ -147,7 +147,7 @@ else
 end
 nr   = length(spm_vec(y))/ns;       % number of samples and responses
 M.ns = ns;                          % store in M.ns for integrator
- 
+
 % initial states
 %--------------------------------------------------------------------------
 try
@@ -156,7 +156,7 @@ catch
     if ~isfield(M,'n'), M.n = 0;    end
     M.x = sparse(M.n,1);
 end
- 
+
 % input
 %--------------------------------------------------------------------------
 try
@@ -164,16 +164,16 @@ try
 catch
     U = [];
 end
- 
+
 % initial parameters
 %--------------------------------------------------------------------------
 try
     spm_vec(M.P) - spm_vec(M.pE);
-    fprintf('\nParameter initialisation successful\n')
+    %fprintf('\nParameter initialisation successful\n')
 catch
     M.P = M.pE;
 end
- 
+
 % time-step
 %--------------------------------------------------------------------------
 try
@@ -181,7 +181,7 @@ try
 catch
     Y.dt = 1;
 end
- 
+
 % precision components Q
 %--------------------------------------------------------------------------
 try
@@ -194,12 +194,12 @@ nh    = length(Q);                  % number of precision components
 nt    = length(Q{1});               % number of time bins
 nq    = nr*ns/nt;                   % for compact Kronecker form of M-step
 h     = sparse(nh,1);                % initialise hyperparameters
- 
+
 % prior moments
 %--------------------------------------------------------------------------
 pE    = M.pE;
 pC    = M.pC;
- 
+
 % confounds (if specified)
 %--------------------------------------------------------------------------
 try
@@ -209,7 +209,7 @@ try
 catch
     dfdu = sparse(ns*nr,0);
 end
- 
+
 % hyperpriors - expectation
 %--------------------------------------------------------------------------
 try
@@ -221,7 +221,7 @@ catch
     hE = sparse(nh,1);
 end
 h      = hE;
- 
+
 % hyperpriors - covariance
 %--------------------------------------------------------------------------
 try
@@ -232,7 +232,7 @@ try
 catch
     ihC = speye(nh,nh);
 end
- 
+
 % unpack covariance
 %--------------------------------------------------------------------------
 if isstruct(pC);
@@ -246,13 +246,13 @@ nu    = size(dfdu,2);                 % number of parameters (confounds)
 np    = size(V,2);                    % number of parameters (effective)
 ip    = (1:np)';
 iu    = (1:nu)' + np;
- 
+
 % second-order moments (in reduced space)
 %--------------------------------------------------------------------------
 pC    = V'*pC*V;
 uC    = speye(nu)/1e-8;
 ipC   = inv(spm_cat(spm_diag({pC,uC})));
- 
+
 % initialize conditional density
 %--------------------------------------------------------------------------
 Eu    = spm_pinv(dfdu)*spm_vec(y);
@@ -260,7 +260,7 @@ p     = [V'*(spm_vec(M.P) - spm_vec(M.pE)); Eu];
 %p0 = p; %PP
 Ep    = spm_unvec(spm_vec(pE) + V*p(ip),pE);
 
- 
+
 % EM
 %==========================================================================
 criterion = [0 0 0 0];
@@ -274,28 +274,28 @@ M.EM.maxNorm_J = 32; %exp will be taken, was 32
 for k = 1:M.EM.Niterations %number of iterations
     
     % time
-    %----------------------------------------------------------------------  
+    %----------------------------------------------------------------------
     tStart = tic;
- 
+    
     % M-Step: ReML estimator of variance components:  h = max{F(p,h)}
     %======================================================================
- 
+    
     % prediction f, and gradients; dfdp
     %----------------------------------------------------------------------
     [dfdp f] = spm_diff(IS,Ep,M,U,1,{V});
     
-       
+    
     % prediction error and full gradients
     %----------------------------------------------------------------------
     e     =  spm_vec(y) - spm_vec(f) - dfdu*p(iu);
     dfdp  =  reshape(spm_vec(dfdp),ns*nr,np);
     J     = -[dfdp dfdu];
     
- 
+    
     % M-step; Fisher scoring scheme to find h = max{F(p,h)}
     %======================================================================
     for m = 1:M.EM.Mstep_iterations
- 
+        
         % check for stability
         %------------------------------------------------------------------
         if norm(J,'inf') > exp(M.EM.maxNorm_J), break, end
@@ -310,8 +310,8 @@ for k = 1:M.EM.Niterations %number of iterations
         iS    = kron(speye(nq),iS);
         Pp    = real(J)'*iS*real(J) + imag(J)'*iS*imag(J);
         Cp    = spm_inv(Pp + ipC);
-        if any(isnan(Cp(:))) || rcond(full(Cp)) < exp(-MEM..maxNorm_J), break, end
- 
+        if any(isnan(Cp(:))) || rcond(full(Cp)) < exp(-M.EM.maxNorm_J), break, end
+        
         % precision operators for M-Step
         %------------------------------------------------------------------
         for i = 1:nh
@@ -319,16 +319,16 @@ for k = 1:M.EM.Niterations %number of iterations
             PS{i}  = P{i}*S;
             P{i}   = kron(speye(nq),P{i});
             JPJ{i} = real(J)'*P{i}*real(J) + ...
-                     imag(J)'*P{i}*imag(J);
+                imag(J)'*P{i}*imag(J);
         end
-                    
+        
         % derivatives: dLdh = dL/dh,...
         %------------------------------------------------------------------
         for i = 1:nh
             dFdh(i,1)      =   trace(PS{i})*nq/2 ...
-                             - real(e)'*P{i}*real(e)/2 ...
-                             - imag(e)'*P{i}*imag(e)/2 ...
-                             - sum(sum(Cp.*JPJ{i}))/2;
+                - real(e)'*P{i}*real(e)/2 ...
+                - imag(e)'*P{i}*imag(e)/2 ...
+                - sum(sum(Cp.*JPJ{i}))/2;
             for j = i:nh
                 dFdhh(i,j) = - sum(sum(PS{i}.*PS{j}))*nq/2;
                 dFdhh(j,i) =   dFdhh(i,j);
@@ -340,25 +340,25 @@ for k = 1:M.EM.Niterations %number of iterations
         d     = h     - hE;
         dFdh  = dFdh  - ihC*d;
         dFdhh = dFdhh - ihC;
-        Ch    = spm_inv(-dFdhh); 
+        Ch    = spm_inv(-dFdhh);
         
         % update ReML estimate
         %------------------------------------------------------------------
         dh    = spm_dx(dFdhh,dFdh,{4});
         dh    = min(max(dh,-1),1);
         h     = h  + dh;
- 
+        
         % convergence
         %------------------------------------------------------------------
         dF    = dFdh'*dh;
-        if dF <  M.dFcriterion, break, end
- 
+        if dF <  M.EM.dFcriterion, break, end
+        
     end
-
+    
     
     % E-Step with Levenberg-Marquardt regularization
     %======================================================================
- 
+    
     % objective function: F(p) (= log evidence - divergence)
     %----------------------------------------------------------------------
     F = - real(e)'*iS*real(e)/2 ...
@@ -369,20 +369,20 @@ for k = 1:M.EM.Niterations %number of iterations
         - spm_logdet(S)*nq/2 ...
         + spm_logdet(ipC*Cp)/2 ...
         + spm_logdet(ihC*Ch)/2;
- 
+    
     % record increases and reference log-evidence for reporting
     %----------------------------------------------------------------------
     try
-        F0; 
+        F0;
         fprintf(' actual: %.3e (%.2f sec)\n',full(F - C.F),toc(tStart))
     catch
         F0 = F;
     end
- 
+    
     % if F has increased, update gradients and curvatures for E-Step
     %----------------------------------------------------------------------
     if F > C.F
- 
+        
         % accept current estimates
         %------------------------------------------------------------------
         C.p   = p;
@@ -393,9 +393,9 @@ for k = 1:M.EM.Niterations %number of iterations
         % E-Step: Conditional update of gradients and curvature
         %------------------------------------------------------------------
         dFdp  = -real(J)'*iS*real(e) ...
-                -imag(J)'*iS*imag(e) - ipC*p;
+            -imag(J)'*iS*imag(e) - ipC*p;
         dFdpp = -real(J)'*iS*real(J) ...
-                -imag(J)'*iS*imag(J) - ipC;
+            -imag(J)'*iS*imag(J) - ipC;
         
         % decrease regularization
         %------------------------------------------------------------------
@@ -403,34 +403,34 @@ for k = 1:M.EM.Niterations %number of iterations
         str   = 'EM:(+)';
         
     else
- 
+        
         % reset expansion point
         %------------------------------------------------------------------
         %try %PP added a catch, not sure if sensible thing to do
-            p     = C.p;
-            h     = C.h;
-            Cp    = C.Cp;
-        %catch 
+        p     = C.p;
+        h     = C.h;
+        Cp    = C.Cp;
+        %catch
         %    p = p0; %PP reset to initial conditions - only parameters, not their covariance or the hyperparameters
         %end
- 
+        
         % and increase regularization
         %------------------------------------------------------------------
         vLogAscentRate     = min(vLogAscentRate - 2,-4);
         str   = 'EM:(-)';
         
     end
- 
+    
     % E-Step: update
     %======================================================================
     dp    = spm_dx(dFdpp,dFdp,{vLogAscentRate});
     p     = p + dp;
     Ep    = spm_unvec(spm_vec(pE) + V*p(ip),pE);
- 
+    
     % graphics
     %----------------------------------------------------------------------
     try
- 
+        
         % reshape prediction if necessary
         %------------------------------------------------------------------
         f  = reshape(spm_vec(f),ns,nr);
@@ -507,49 +507,49 @@ for k = 1:M.EM.Niterations %number of iterations
         drawnow
         
     end
- 
+    
     % convergence
     %----------------------------------------------------------------------
     dF  = dFdp'*dp;
     fprintf('%-6s: %i %6s %-6.3e %6s %.3e ',str,k,'F:',full(C.F - F0),'dF predicted:',full(dF))
     %criterion = [(dF < 1e-2) criterion(1:end - 1)];
-    criterion = [(dF < M.dFcriterion) criterion(1:end - 1)];
+    criterion = [(dF < M.EM.dFcriterion) criterion(1:end - 1)];
     if all(criterion), fprintf(' convergence\n'), break, end
- 
+    
 end
- 
+
 % outputs
 %--------------------------------------------------------------------------
 Ep     = spm_unvec(spm_vec(pE) + V*C.p(ip),pE);
 Cp     = V*C.Cp(ip,ip)*V';
 Eh     = C.h;
 F      = full(C.F - F0); %C.F;
- 
+
 %k %: number of iterations used
 if isfield(M,'HDM_str')
-HDM_str = ['_' M.HDM_str];
-Ffit    = figure;
-header = get(Ffit,'Name');
-set(Ffit,'name','Hemodynamic Fit')
-plot(x,f,'-b'), hold on
-plot(x,f + spm_unvec(e,f),':k'), hold off
-xlabel(xLab)
-title('prediction (blue, solid) and filtered response (black, dotted)')
-if M.DO.show_mse
-legend(['MSE: '  sprintf('%2.3f',MSE) ', MSE HbR: ' sprintf('%2.3f',MSE_HbR) ...
-    ', MSE HbO: ' sprintf('%2.3f',MSE_HbO)]);
-else
-%     leg_str = {'Prediction'};
-%     for i0=2:size(f,2)
-%         leg_str = [leg_str; ''];
-%     end    
-%     leg_str = [leg_str;  'Filtered hemodynamic data'];
-%     legend(leg_str);
+    HDM_str = ['_' M.HDM_str];
+    Ffit    = figure;
+    header = get(Ffit,'Name');
+    set(Ffit,'name','Hemodynamic Fit')
+    plot(x,f,'-b'), hold on
+    plot(x,f + spm_unvec(e,f),':k'), hold off
+    xlabel(xLab)
+    title('prediction (blue, solid) and filtered response (black, dotted)')
+    if M.DO.show_mse
+        legend(['MSE: '  sprintf('%2.3f',MSE) ', MSE HbR: ' sprintf('%2.3f',MSE_HbR) ...
+            ', MSE HbO: ' sprintf('%2.3f',MSE_HbO)]);
+    else
+        %     leg_str = {'Prediction'};
+        %     for i0=2:size(f,2)
+        %         leg_str = [leg_str; ''];
+        %     end
+        %     leg_str = [leg_str;  'Filtered hemodynamic data'];
+        %     legend(leg_str);
+    end
+    
+    filen2 = fullfile(M.dir1,['HDM' HDM_str 'fit_large.fig']);
+    filen4 = fullfile(M.dir1,['HDM' HDM_str 'fit_large.tiff']);
+    saveas(Ffit,filen2,'fig');
+    print(Ffit, '-dtiffn', filen4);
+    close(Ffit)
 end
-
-filen2 = fullfile(M.dir1,['HDM' HDM_str 'fit_large.fig']);
-filen4 = fullfile(M.dir1,['HDM' HDM_str 'fit_large.tiff']);
-saveas(Ffit,filen2,'fig');
-print(Ffit, '-dtiffn', filen4);
-close(Ffit) 
-end  
