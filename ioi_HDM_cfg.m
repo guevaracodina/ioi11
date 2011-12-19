@@ -458,6 +458,94 @@ plot_algebraic_CMRO2.values = {1,0};
 plot_algebraic_CMRO2.val  = {1};
 plot_algebraic_CMRO2.help = {'Plot algebraic CMRO2.'}';
 
+simuA         = cfg_entry;
+simuA.tag     = 'simuA';
+simuA.name    = 'Signal Amplitude';
+simuA.help    = {'Enter signal amplitude, as a percentage of the BOLD signal (e.g. enter 1 for a 1% amplitude)'};
+simuA.strtype = 'e';
+simuA.num     = [1 1];
+simuA.val     = {1};
+
+simuS         = cfg_entry;
+simuS.tag     = 'simuS';
+simuS.name    = 'Stimuli to simulate';
+simuS.help    = {'Enter array of stimuli types to simulated.'
+    'Enter 0 to include all stimuli types.'}';
+simuS.strtype = 'e';
+simuS.num     = [1 Inf];
+simuS.val     = {0};
+
+simuP         = cfg_entry;
+simuP.tag     = 'simuP';
+simuP.name    = 'Parameters to randomize';
+simuP.help    = {'Enter array of parameters to be sampled.'
+    'Enter 0 to randomize all parameters.'}';
+simuP.strtype = 'e';
+simuP.num     = [1 Inf];
+simuP.val     = {1};
+
+simuR         = cfg_entry;
+simuR.tag     = 'simuR';
+simuR.name    = 'Parameter range';
+simuR.help    = {'For each parameter specified, enter range to be sampled as a percentage of the prior value.'
+    'Parameters will be sampled randomly uniformly between 0.75 and 1.25 times the prior value.'
+    'If only one number is specified, it will be applied to all parameters to be sampled.'}';
+simuR.strtype = 'e';
+simuR.num     = [1 Inf];
+simuR.val     = {25};
+
+simuPrior         = cfg_entry;
+simuPrior.tag     = 'simuPrior';
+simuPrior.name    = 'Prior values of parameters';
+simuPrior.help    = {'Enter array of prior values of the previously specified parameters to be sampled.'
+    'If nothing is entered, the default prior values will be used.'}';
+simuPrior.strtype = 'e';
+simuPrior.num     = [0 Inf];
+simuPrior.val     = {''};
+
+simuIt         = cfg_entry;
+simuIt.tag     = 'simuIt';
+simuIt.name    = 'Number of simulations';
+simuIt.help    = {'Enter number of simulations'};
+simuIt.strtype = 'e';
+simuIt.num     = [1 1];
+simuIt.val     = {1};
+
+simuNoise           = cfg_menu;
+simuNoise.name      = 'Include baseline noise';
+simuNoise.tag       = 'simuNoise';
+simuNoise.labels    = {'Yes' 'No'};
+simuNoise.values    = {1,0};
+simuNoise.val       = {1};
+simuNoise.help      = {'Include noise background scans; if No, the simulated data will be noiseless, i.e. on 0 background.'}';
+
+simuUpsample         = cfg_entry;
+simuUpsample.tag     = 'simuUpsample';
+simuUpsample.name    = 'Data upsampling factor';
+simuUpsample.help    = {'Enter an upsampling factor (max = 16)'};
+simuUpsample.strtype = 'e';
+simuUpsample.num     = [1 1];
+simuUpsample.val     = {1};
+
+simuYes         = cfg_branch;
+simuYes.tag     = 'simuYes';
+simuYes.name    = 'HDM on simulated data';
+simuYes.val     = {simuIt simuA simuS simuP simuPrior simuR simuUpsample simuNoise };
+simuYes.help    = {'Perform HDM on real data'}';
+
+simuNo         = cfg_branch;
+simuNo.tag     = 'simuNo';
+simuNo.name    = 'HDM on real data';
+simuNo.val     = {};
+simuNo.help    = {'No simulations; perform HDM on real data'}';
+
+simuOn         = cfg_choice;
+simuOn.tag     = 'simuOn';
+simuOn.name    = 'Perform simulations';
+simuOn.values  = {simuNo simuYes};
+simuOn.val     = {simuNo};
+simuOn.help    = {'Perform simulations'}';
+
 % Executable Branch
 hdm1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 hdm1.name = 'HDM on ROI';             % The display name
@@ -465,7 +553,7 @@ hdm1.tag  = 'hdm1'; %Very important: tag is used when calling for execution
 hdm1.val  = {IOImat ROImat redo1 only_display IOImatCopyChoice session_choice ROI_choice...
      PhysioModel_Choice use_onset_amplitudes includeHbR includeHbT includeFlow ... 
      hpf_butter lpf_choice baseline_choice EM_parameters show_normalized_parameters ...
-     generate_figures save_figures show_mse plot_algebraic_CMRO2};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+     generate_figures save_figures show_mse plot_algebraic_CMRO2 simuOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 hdm1.prog = @ioi_HDM_run;  % A function handle that will be called with the harvested job to run the computation
 hdm1.vout = @ioi_cfg_vout_HDM; % A function handle that will be called with the harvested job to determine virtual outputs
 hdm1.help = {'Run hemodynamic modelling (HDM) on average ROI time courses.'};
