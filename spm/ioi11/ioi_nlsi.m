@@ -101,17 +101,9 @@ function M = ioi_nlsi(M)
 
 % Volterra kernels
 %==========================================================================
-% time bins (if not specified)
-%--------------------------------------------------------------------------
-
-dt   = M.dt;
-N    = M.N;
-
-% get kernels
-%--------------------------------------------------------------------------
-[K0,K1,K2]   = spm_kernels(M0,M1,L1,L2,N,dt);
+[K0,K1,K2]   = spm_kernels(M0,M1,L1,L2,M.N,M.dt);
 [dummy,H1] = spm_kernels(M0,M1,M.N,M.dt);
-
+%Store results
 M.Ep = Ep;
 M.Cp = Cp;
 %M.Ce = Ce;
@@ -125,6 +117,6 @@ M.L1 = L1;
 M.L2 = L2;
 M.F = F;
 M.H1 = H1;
-M.k = k;
+M.k = k; %number of iterations used
 M.MSE = MSE;
 M.MSE_HbR = MSE_HbR;

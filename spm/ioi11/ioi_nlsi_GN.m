@@ -108,13 +108,11 @@ end
 % check integrator
 %--------------------------------------------------------------------------
 try
-    M.IS = M.spm_integrator;
+    M.IS = M.EM.spm_integrator;
 catch
     M.IS = 'spm_int';
 end
  
-
-
 % composition of feature selection and prediction (usually an integrator)
 %--------------------------------------------------------------------------
 try
@@ -268,12 +266,12 @@ Ep    = spm_unvec(spm_vec(pE) + V*p(ip),pE);
 criterion = [0 0 0 0];
 
 C.F   = -Inf;                                   % free energy
-vLogAscentRate     = M.LogAscentRate; %-2;                                     % log ascent rate
+vLogAscentRate     = M.EM.LogAscentRate; %-2;                                     % log ascent rate
 dFdh  = zeros(nh,1);
 dFdhh = zeros(nh,nh);
 
-M.maxNorm_J = 32; %exp will be taken, was 32
-for k = 1:M.Niterations %number of iterations
+M.EM.maxNorm_J = 32; %exp will be taken, was 32
+for k = 1:M.EM.Niterations %number of iterations
     
     % time
     %----------------------------------------------------------------------  
@@ -296,23 +294,23 @@ for k = 1:M.Niterations %number of iterations
  
     % M-step; Fisher scoring scheme to find h = max{F(p,h)}
     %======================================================================
-    for m = 1:M.Mstep_iterations
+    for m = 1:M.EM.Mstep_iterations
  
         % check for stability
         %------------------------------------------------------------------
-        if norm(J,'inf') > exp(M.maxNorm_J), break, end
+        if norm(J,'inf') > exp(M.EM.maxNorm_J), break, end
         
         % precision and conditional covariance
         %------------------------------------------------------------------
         iS    = sparse(0);
         for i = 1:nh
-            iS = iS + Q{i}*(exp(-M.maxNorm_J) + exp(h(i)));
+            iS = iS + Q{i}*(exp(-M.EM.maxNorm_J) + exp(h(i)));
         end
         S     = spm_inv(iS);
         iS    = kron(speye(nq),iS);
         Pp    = real(J)'*iS*real(J) + imag(J)'*iS*imag(J);
         Cp    = spm_inv(Pp + ipC);
-        if any(isnan(Cp(:))) || rcond(full(Cp)) < exp(-M.maxNorm_J), break, end
+        if any(isnan(Cp(:))) || rcond(full(Cp)) < exp(-MEM..maxNorm_J), break, end
  
         % precision operators for M-Step
         %------------------------------------------------------------------
@@ -480,26 +478,24 @@ for k = 1:M.Niterations %number of iterations
         end
         %Compute MSE
         x0 = spm_unvec(e,f);
-        if M.PS.xY.includeHbR
+        if M.O.includeHbR
             x0(:,1) = M.HbRnorm*x0(:,1);
         else
-            M.show_mse = 0;
+            M.DO.show_mse = 0;
         end
-        if M.PS.xY.includeHbT
+        if M.O.includeHbT
             x0(:,2) = M.HbTnorm*x0(:,2);
         else
-            M.show_mse = 0;
+            M.DO.show_mse = 0;
         end
-        if M.show_mse
+        if M.DO.show_mse
             MSE = sum(x0(:).^2)/length(x0(:));
             x0_HbR = x0(:,1);
             x0_HbO = x0(:,2)-x0(:,1);
             MSE_HbR = sum(x0_HbR.^2)/length(x0_HbR(:));
             MSE_HbO = sum(x0_HbO.^2)/length(x0_HbO(:));
-            if M.show_mse
-                legend(['MSE: ' sprintf('%2.3f',MSE)], ['(MSE HbR: ' sprintf('%2.3f',MSE_HbR) ...
-                    ', MSE HbO: ' sprintf('%2.3f',MSE_HbO) ')']);
-            end
+            legend(['MSE: ' sprintf('%2.3f',MSE)], ['(MSE HbR: ' sprintf('%2.3f',MSE_HbR) ...
+                ', MSE HbO: ' sprintf('%2.3f',MSE_HbO) ')']);
         end
         % subplot parameters
         %------------------------------------------------------------------
@@ -539,7 +535,7 @@ plot(x,f,'-b'), hold on
 plot(x,f + spm_unvec(e,f),':k'), hold off
 xlabel(xLab)
 title('prediction (blue, solid) and filtered response (black, dotted)')
-if M.show_mse
+if M.DO.show_mse
 legend(['MSE: '  sprintf('%2.3f',MSE) ', MSE HbR: ' sprintf('%2.3f',MSE_HbR) ...
     ', MSE HbO: ' sprintf('%2.3f',MSE_HbO)]);
 else
@@ -556,6 +552,4 @@ filen4 = fullfile(M.dir1,['HDM' HDM_str 'fit_large.tiff']);
 saveas(Ffit,filen2,'fig');
 print(Ffit, '-dtiffn', filen4);
 close(Ffit) 
-end
-     
-        
+end  

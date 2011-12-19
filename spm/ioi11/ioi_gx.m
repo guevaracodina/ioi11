@@ -19,7 +19,7 @@ function y = ioi_gx(x,u,P,M)
 % exponentiation of hemodynamic state variables
 %--------------------------------------------------------------------------
 x     = exp(x);
-switch M.PS.PhysioModel_Choice
+switch M.O.PhysioModel_Choice
     case 0 %Buxton, 
         v     = x(3,:);        
         q     = x(4,:);
@@ -38,7 +38,7 @@ switch M.PS.PhysioModel_Choice
         %out.HbO=(out.HbT*100e-6-out.HbR*40e-6)./60e-6;
         out.vascTone=x(5,:)-1;
     case 2 %Huppert1        
-        BH = M.PS.BH;
+        BH = M.BH;
         BH = ioi_fillBH(x,P,BH);
         %from dissociation curve
 % % %         out.SwO2=BH.S ;
@@ -84,7 +84,7 @@ end
 % %     %nothing is done %défault and not fitting correctly
 % % end
 y = [];
-if M.PS.xY.includeHbR, y = [y; out.HbR]; end
-if M.PS.xY.includeHbT, y = [y; out.HbT]; end   
-if M.PS.xY.includeFlow, y = [y; out.Flow]; end
+if M.O.includeHbR, y = [y; out.HbR]; end
+if M.O.includeHbT, y = [y; out.HbT]; end   
+if M.O.includeFlow, y = [y; out.Flow]; end
 %y = y(:);

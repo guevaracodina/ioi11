@@ -1,6 +1,6 @@
 function M=ioi_set_priors(M)
 %load priors
-switch M.PS.PhysioModel_Choice
+switch M.O.PhysioModel_Choice
     case 0 %Buxton-Friston
         [pE,pC] = ioi_SCKS_priors_base_case(M.m,5);
         pE(end)=0.025; % put a better approximation around effFlow to extract good estimate of covariance
@@ -76,10 +76,8 @@ switch M.PS.PhysioModel_Choice
                 pC(i1,i1)=.2^2*var(1)^2;
             end
         end
-        M.PS.BH = BH;
+        M.BH = BH;
     otherwise
 end
-M.PS.pE=pE;
-M.PS.pC=pC;
 M.pE = pE;
 M.pC = pC;

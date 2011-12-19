@@ -2,7 +2,7 @@ function M = ioi_set_physiomodel(M)
 % Physiological Model choice
 M.f     = 'ioi_fx';
 M.g     = 'ioi_gx';
-switch M.PS.PhysioModel_Choice
+switch M.O.PhysioModel_Choice
     case 0 %Buxton-Friston
         M.x     = zeros(4,1);
     case 1 %Zheng-Mayhew

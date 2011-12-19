@@ -28,7 +28,7 @@ function [f] = ioi_fx(x,u,P,M)
 
 % Karl Friston
 % $Id: spm_fx_hdm.m 2495 2008-11-27 12:18:33Z karl $
-switch M.PS.PhysioModel_Choice
+switch M.O.PhysioModel_Choice
     case 0 %B-F
         x(2:end,:) = exp(x(2:end,:));
         % Fout = f(v) - outflow
@@ -64,7 +64,7 @@ switch M.PS.PhysioModel_Choice
     case 2 %B-H
         x([2 3 5 6 7],:) = exp(x([2 3 5 6 7],:)); 
         
-        BH = M.PS.BH;
+        BH = M.BH;
         BH = ioi_fillBH(x,P,BH);
         
         %--------------------------------------------------------------------------

@@ -1,20 +1,16 @@
 function ioi_HDM_display(M)
-try
-plot_algebraic_CMRO2 =M.plot_algebraic_CMRO2;
-catch
-    plot_algebraic_CMRO2 = 1;
-end
-save_figures = M.save_figures;
-HDMdisplay = M.generate_figures;
+plot_algebraic_CMRO2 =M.O.plot_algebraic_CMRO2;
+save_figures = M.O.save_figures;
+HDMdisplay = M.O.generate_figures;
 dir1 = M.dir1;
 height_stems = 0.1; %for plotting inputs
 Ep = M.Ep;
 Cp = M.Cp;
-pE = M.PS.pE;
+pE = M.pE;
 if M.show_normalized_parameters
     Ep = Ep./pE;
     pE = ones(size(pE));
-    sd1 = diag(M.PS.pC).^0.5;
+    sd1 = diag(M.pC).^0.5;
     Cp = Cp./(sd1 * sd1');
     norm_str = '(Normalized) ';
 else
@@ -40,7 +36,7 @@ if HDMdisplay || save_figures
     % display input parameters
     %--------------------------------------------------------------------------
     subplot(2,2,1)
-    switch M.PS.PhysioModel_Choice
+    switch M.O.PhysioModel_Choice
         case 0 %Buxton-Friston
             Np = 6;
         case 1 %Zheng-Mayhew
@@ -58,7 +54,7 @@ if HDMdisplay || save_figures
     spm_barh(P,C)
     axis square
     title({'stimulus efficacy'; 'with 90% confidence intervals'},'FontSize',10)
-    switch M.PS.PhysioModel_Choice
+    switch M.O.PhysioModel_Choice
         case {0,1} %Buxton-Friston
             set(gca,'Ytick',[1:m],'YTickLabel',U.name,'FontSize',8)
             str = {};
@@ -85,7 +81,7 @@ if HDMdisplay || save_figures
         otherwise
     end
     xlabel(['relative efficacy per event/sec' norm_str])
-    
+    %Careful here! this could be confusing later...
     Np = Np -1;
     % display hemodynamic parameters
     %---------------------------------------------------------------------------
@@ -96,7 +92,7 @@ if HDMdisplay || save_figures
     spm_barh(P,C,pE)
     title({ [norm_str 'hemodynamic parameters']},'FontSize',10)
     set(gca,'Ytick',[1:3*Np]/3 + 1/2)
-    switch M.PS.PhysioModel_Choice
+    switch M.O.PhysioModel_Choice
         case 0 %Buxton-Friston
             set(gca,'YTickLabel',{  'Signal decay',...
                 sprintf('%0.2f per sec',P(1)),'',...
@@ -157,7 +153,7 @@ if HDMdisplay || save_figures
     
     subplot(3,2,2)
     leg_str = {'s';'f';'v';'q'};
-    switch M.PS.PhysioModel_Choice
+    switch M.O.PhysioModel_Choice
         case 0 %Buxton-Friston
         case 1 %Zheng-Mayhew
             leg_str = [leg_str; 'w'];
@@ -191,14 +187,13 @@ if HDMdisplay || save_figures
     plot(t,K1(:,:,j))
     axis square
     modalities = [];
-    xY = M.PS.xY;
-    if xY.includeHbR
+    if M.O.includeHbR
         modalities = [modalities 'HbR; '];
     end
-    if xY.includeHbT
+    if M.O.includeHbT
         modalities = [modalities 'HbT; '];
     end
-    if xY.includeFlow
+    if M.O.includeFlow
         modalities = [modalities 'Flow'];
     end
     title({ '1st order kernel';['output: ' modalities]},'FontSize',9)
@@ -217,7 +212,7 @@ if HDMdisplay || save_figures
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     h3 = figure;
     leg_str = {'s';'f';'v';'q'};
-    switch M.PS.PhysioModel_Choice
+    switch M.O.PhysioModel_Choice
         case 0 %Buxton-Friston
         case 1 %Zheng-Mayhew
             leg_str = [leg_str; 'w'];
@@ -253,7 +248,7 @@ if HDMdisplay || save_figures
     tY = K1(:,:,j);
     show_HbO = 1;
     if show_HbO
-        if xY.includeHbR && xY.includeHbT
+        if M.O.includeHbR && M.O.includeHbT
             tY = [tY(:,1:2) -tY(:,1)+tY(:,2) tY(:,3:end)];
         end
     end
@@ -262,22 +257,21 @@ if HDMdisplay || save_figures
     %axis square
     modalities = [];
     leg_str0 = {};
-    xY = M.PS.xY;
-    if xY.includeHbR
+    if M.O.includeHbR
         modalities = [modalities 'HbR; '];
         leg_str0 = [leg_str0 'HbR'];
     end
-    if xY.includeHbT
+    if M.O.includeHbT
         modalities = [modalities 'HbT; '];
         leg_str0 = [leg_str0 'HbT'];
     end 
     if show_HbO
-        if xY.includeHbR && xY.includeHbT
+        if M.O.includeHbR && M.O.includeHbT
             modalities = [modalities 'HbO; '];
             leg_str0 = [leg_str0 'HbO'];
         end
     end            
-    if xY.includeFlow
+    if M.O.includeFlow
         modalities = [modalities 'Flow'];
         leg_str0 = [leg_str0 'Flow'];
     end
