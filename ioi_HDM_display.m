@@ -7,7 +7,7 @@ height_stems = 0.1; %for plotting inputs
 Ep = M.Ep;
 Cp = M.Cp;
 pE = M.pE;
-if M.show_normalized_parameters
+if M.DO.show_normalized_parameters
     Ep = Ep./pE;
     pE = ones(size(pE));
     sd1 = diag(M.pC).^0.5;
