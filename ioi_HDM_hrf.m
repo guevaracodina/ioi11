@@ -6,11 +6,11 @@ if ~strcmp(color.eng(c1),'F') || include_flow
     H.U.dt = TR;
     H.Y.dt = TR;
     %various options (not used for ioi_HDM_hrf but required of ioi_nlsi_GN)
-    H.Niterations = 128;
-    H.spm_integrator = 'spm_int';
-    H.LogAscentRate = -2;
-    H.Mstep_iterations = 8;
-    H.dFcriterion = 0.1;
+    H.EM.Niterations = 128;
+    H.EM.spm_integrator = 'spm_int';
+    H.EM.LogAscentRate = -2;
+    H.EM.Mstep_iterations = 8;
+    H.EM.dFcriterion = 0.1;
     H.Y.y = d'/sum(d);
     u = zeros(1,length(x));
     u(1) = 1;

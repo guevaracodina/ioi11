@@ -210,9 +210,10 @@ for SubjIdx=1:length(job.IOImat)
                                             end
                                         end
                                         if ~S.simuOn
-                                            ioi_HDM_display(HDM0);
                                             HDM{r1,s1} = HDM0;
                                             save(HDMfname,'HDM');
+                                            ioi_HDM_display(HDM0);
+                                          
                                             %Store some of the information in IOI structure
                                             IOI.HDM{s1,r1}.Ep = HDM0.Ep;
                                             IOI.HDM{s1,r1}.Cp = HDM0.Cp;
