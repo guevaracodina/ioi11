@@ -1,7 +1,7 @@
 function ioi_HDM_display(M)
-plot_algebraic_CMRO2 =M.O.plot_algebraic_CMRO2;
-save_figures = M.O.save_figures;
-HDMdisplay = M.O.generate_figures;
+plot_algebraic_CMRO2 =M.DO.plot_algebraic_CMRO2;
+save_figures = M.DO.save_figures;
+HDMdisplay = M.DO.generate_figures;
 dir1 = M.dir1;
 height_stems = 0.1; %for plotting inputs
 Ep = M.Ep;
