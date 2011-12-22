@@ -45,7 +45,12 @@ for SubjIdx=1:length(job.IOImat)
             end
             %This function is hard-coded with wavelengths in the order Red,
             %Green, Yellow
-            eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichCurve);
+            if isfield(IOI,'sess_raw')
+                whichSystem = 0; %old
+            else
+                whichSystem = 1; %new
+            end
+            eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichSystem,whichCurve);
             %Loop over sessions
             if isfield(IOI,'sess_res')
                 for s1=1:length(IOI.sess_res)

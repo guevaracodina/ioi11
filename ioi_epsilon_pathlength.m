@@ -1,4 +1,4 @@
-function eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichCurve,debug)
+function eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichCurve,whichSystem,debug)
 
 %	This function estimates epsilon * D, it takes into account the camera
 %	response, the leds spectra and uses a pathlength factor either set from
@@ -9,7 +9,11 @@ function eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichCu
 %   we are still a bit dependent on the RGY but we could abstract this
 %   (however the lambdas would need to be registered to specific hardware
 %   still
-load hardware.mat;
+if whichSystem
+    load hardware_newsystem.mat;
+else
+    load hardware.mat;
+end
 
 % Rough baseline concentrations (in uM) : 100 uM (in the brain)
 c_tot = 100e-6;
