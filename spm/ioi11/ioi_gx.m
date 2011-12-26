@@ -87,4 +87,4 @@ y = [];
 if M.O.includeHbR, y = [y; out.HbR]; end
 if M.O.includeHbT, y = [y; out.HbT]; end   
 if M.O.includeFlow, y = [y; out.Flow]; end
-%y = y(:);
+y = y(:);

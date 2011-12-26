@@ -7,13 +7,22 @@ if isfield(job.session_choice,'select_sessions')
 else
     O.all_sessions = 1;
 end
-%select a subset of ROIs
-if isfield(job.ROI_choice,'select_ROIs')
-    O.all_ROIs = 0;
-    O.selected_ROIs = job.ROI_choice.select_ROIs.selected_ROIs;
+%find data selection mode
+if isfield(job.data_selection_choice,'ROI_mode')
+    O.image_mode = 0;
+    O.ROImat = job.data_selection_choice.ROI_mode.ROImat;
+    %select a subset of ROIs
+    if isfield(job.data_selection_choice.ROI_mode.ROI_choice,'select_ROIs')
+        O.all_ROIs = 0;
+        O.selected_ROIs = job.data_selection_choice.ROI_mode.ROI_choice.select_ROIs.selected_ROIs;
+    else
+        O.all_ROIs = 1;
+    end
+    DO.show_mse = job.data_selection_choice.ROI_mode.show_mse;
 else
-    O.all_ROIs = 1;
+    O.image_mode = 1;
 end
+
 %HPF
 if isfield(job.hpf_butter,'hpf_butter_On')
     HPF.hpf_butter_On = 1;
@@ -63,7 +72,6 @@ else
     end
 end
 %Display options
-DO.show_mse = job.show_mse;
 DO.plot_algebraic_CMRO2 = job.plot_algebraic_CMRO2;
 DO.save_figures = job.save_figures;
 DO.generate_figures = job.generate_figures;
@@ -92,20 +100,21 @@ for SubjIdx=1:length(job.IOImat)
         load(IOImat);
         %Loop over sessions and ROIs
         
-        if ~isfield(IOI.res,'ROIOK')
+        if ~isfield(IOI.res,'ROIOK') && ~O.image_mode
             disp(['No ROI available for subject ' int2str(SubjIdx) ' ... skipping HDM']);
         else
-            if ~isfield(IOI.res,'seriesOK')
+            if ~isfield(IOI.res,'seriesOK') && ~O.image_mode
                 disp(['Extracted series not available for subject ' int2str(SubjIdx) ' ... skipping HDM']);
             else
-                if ~isfield(IOI.res,'GLMOK')
-                    disp(['Onsets (from GLM module) not available for subject ' int2str(SubjIdx) ' ... skipping HDM']);
-                else
-                    if ~isfield(IOI.res,'HDMOK') || job.force_redo
-                        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
+                %if ~isfield(IOI.res,'OnsetsOK')
+                %    disp(['Onsets (from GLM module) not available for subject ' int2str(SubjIdx) ' ... skipping HDM']);
+                %else
+                if ~isfield(IOI.res,'HDMOK') || job.force_redo
+                    [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
+                    if ~O.image_mode
                         %load ROI
-                        if ~isempty(job.ROImat)
-                            load(job.ROImat{SubjIdx});
+                        if ~isempty(O.ROImat)
+                            load(O.ROImat{SubjIdx});
                         else
                             try
                                 load(IOI.ROI.ROIfname);
@@ -113,126 +122,232 @@ for SubjIdx=1:length(job.IOImat)
                                 load(fullfile(dir_ioimat,'ROI.mat'));
                             end
                         end
-                        if isfield(job.IOImatCopyChoice,'IOImatCopy')
-                            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-                            newDir = fullfile(dir_ioimat,newDir);
-                            if ~exist(newDir,'dir'),mkdir(newDir); end
-                            IOImat = fullfile(newDir,'IOI.mat');
-                        end
-                        [dir1 dummy] = fileparts(IOImat);
-                        
-                        O = ioi_get_PS(IOI,O);
-                        if O.all_sessions
-                            O.selected_sessions = 1:length(IOI.sess_res);
-                        end
                         if O.all_ROIs
                             O.selected_ROIs = 1:length(IOI.res.ROI);
                         end
-                        %loop over sessions
-                        for s1=1:length(IOI.sess_res)
-                            if O.all_sessions || sum(s1==O.selected_sessions)
-                                %loop over ROIs
-                                for r1=1:length(IOI.res.ROI)
-                                    if O.all_ROIs || sum(r1==O.selected_ROIs)
-                                        HDM_str = ['S' gen_num_str(s1,2) '_ROI' gen_num_str(r1,3)];
-                                        HDMfname = fullfile(dir1,['HDM_' HDM_str '.mat']);
-                                        IOI.HDM{s1,r1}.HDMfname = HDMfname;
-                                        if ~O.only_display
-                                            HDM0 = [];
-                                            %Various options
-                                            HDM0.O = O;
-                                            HDM0.DO = DO;
-                                            HDM0.EM = EM;
-                                            HDM0.dir1 = dir1;
-                                            HDM0.HDM_str = HDM_str;
-                                            %Simulation option
-                                            HDM0.S = S;
-                                            %onsets: they are now specified in the module create_onsets
-                                            name = IOI.sess_res{s1}.names{1};
-                                            ons = IOI.sess_res{s1}.onsets{1};
-                                            dur = IOI.sess_res{s1}.durations{1};
-                                            if O.use_onset_amplitudes
-                                                amp = IOI.sess_res{s1}.parameters{1};
-                                                %normalize -- but what if amp takes extreme values?
-                                                amp = amp/mean(amp);
-                                            else
-                                                amp = [];
-                                            end
-                                            bases.hrf.derivs = [0 0]; %not used
-                                            [dummyX U] = ioi_get_X(IOI,name,ons,dur,amp,s1,bases,1); %call only to get U                                           
-                                            U.u = U.u(33:end); %?
-                                            HDM0.U = U;
-                                            HDM0.dt = IOI.dev.TR; 
-                                            HDM0.N = 20/IOI.dev.TR; %too large?
-                                            %Filters
-                                            HDM0.HPF = HPF; %High pass filter on data
-                                            HDM0.LPF = LPF;
-                                            %data specification - which modalities to include:
-                                            HDM0=ioi_get_data(ROI,HDM0,r1,s1);
-                                            HDM0=ioi_set_physiomodel(HDM0);
-                                            %choose priors
-                                            HDM0=ioi_set_priors(HDM0);
-                                            %scaling factors on covariance ... do we need that?
-                                            %HDM0.pC = 10*HDM0.pC;
-                                            %HDM0.pC(end,end) = 10*HDM0.pC(end,end);
-                                            if S.simuOn
-                                                HDM0 = ioi_simu_gen_parameters(HDM0);
-                                                simuIt = HDM0.S.simuIt; 
-                                                HDM0.Y0 = HDM0.Y; %background
-                                                HDM0.HDM_str0 = HDM0.HDM_str; %save each figure of fit
-                                                SHDM = []; %simulation HDM structure
-                                            else                                              
-                                                simuIt = 1;
-                                            end
-                                            warning('off','MATLAB:nearlySingularMatrix');
-                                            warning('off','MATLAB:singularMatrix');
-                                            % big loop over simulation iterations
-                                            %--------------------------------------------------------------------------
-                                            for it1=1:simuIt
-                                                if S.simuOn
-                                                    HDM0 = ioi_set_simu(HDM0,it1);
-                                                end
-                                                % nonlinear system identification
-                                                %--------------------------------------------------------------------------                                               
-                                                HDM0 = ioi_nlsi(HDM0);
-                                                if S.simuOn
-                                                    SHDM{it1} = ioi_save_simu(HDM0,it1); 
-                                                end
-                                            end
-                                            warning('on','MATLAB:nearlySingularMatrix');
-                                            warning('on','MATLAB:singularMatrix');
-                                        else
-                                            try
-                                                load(HDMfname);
-                                                HDM0 = HDM{r1,s1};
-                                            catch
-                                                disp(['HDM.mat not found for Session ' int2str(s1) ' and ROI ' int2str(r1)]);
-                                            end
+                    end
+                    if isfield(job.IOImatCopyChoice,'IOImatCopy')
+                        newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
+                        newDir = fullfile(dir_ioimat,newDir);
+                        if ~exist(newDir,'dir'),mkdir(newDir); end
+                        IOImat = fullfile(newDir,'IOI.mat');
+                    end
+                    [dir1 dummy] = fileparts(IOImat);
+                    
+                    O = ioi_get_PS(IOI,O);
+                    if O.all_sessions
+                        O.selected_sessions = 1:length(IOI.sess_res);
+                    end
+                    
+                    %loop over sessions
+                    for s1=1:length(IOI.sess_res)
+                        if O.all_sessions || sum(s1==O.selected_sessions)
+                            if O.image_mode
+                                HDM_str = ['S' gen_num_str(s1,2)];
+                                HDMfname = fullfile(dir1,['HDM_' HDM_str '.mat']);
+                                IOI.HDM{s1}.HDMfname = HDMfname;
+                                if ~O.only_display
+                                    HDM0 = [];
+                                    %Various options
+                                    HDM0.O = O;
+                                    HDM0.DO = DO;
+                                    HDM0.EM = EM;
+                                    HDM0.dir1 = dir1;
+                                    HDM0.HDM_str = HDM_str;
+                                    %Simulation option
+                                    HDM0.S = S;
+                                    %onsets: they are now specified in the module create_onsets
+                                    name = IOI.sess_res{s1}.names{1};
+                                    ons = IOI.sess_res{s1}.onsets{1};
+                                    dur = IOI.sess_res{s1}.durations{1};
+                                    if O.use_onset_amplitudes
+                                        amp = IOI.sess_res{s1}.parameters{1};
+                                        %normalize -- but what if amp takes extreme values?
+                                        amp = amp/mean(amp);
+                                    else
+                                        amp = [];
+                                    end
+                                    bases.hrf.derivs = [0 0]; %not used
+                                    [dummyX U] = ioi_get_X(IOI,name,ons,dur,amp,s1,bases,1); %call only to get U
+                                    U.u = U.u(33:end); %?
+                                    HDM0.U = U;
+                                    HDM0.dt = IOI.dev.TR;
+                                    HDM0.N = 20/IOI.dev.TR; %too large?
+                                    %Filters
+                                    HDM0.HPF = HPF; %High pass filter on data
+                                    HDM0.LPF = LPF;
+                                    %data specification - which modalities to include:
+                                    HDM0=ioi_get_data(ROI,HDM0,r1,s1);
+                                    HDM0=ioi_set_physiomodel(HDM0);
+                                    %choose priors
+                                    HDM0=ioi_set_priors(HDM0);
+                                    %scaling factors on covariance ... do we need that?
+                                    %HDM0.pC = 10*HDM0.pC;
+                                    %HDM0.pC(end,end) = 10*HDM0.pC(end,end);
+                                    if S.simuOn
+                                        HDM0 = ioi_simu_gen_parameters(HDM0);
+                                        simuIt = HDM0.S.simuIt;
+                                        HDM0.Y0 = HDM0.Y; %background
+                                        HDM0.HDM_str0 = HDM0.HDM_str; %save each figure of fit
+                                        SHDM = []; %simulation HDM structure
+                                    else
+                                        simuIt = 1;
+                                    end
+                                    warning('off','MATLAB:nearlySingularMatrix');
+                                    warning('off','MATLAB:singularMatrix');
+                                    % big loop over simulation iterations
+                                    %--------------------------------------------------------------------------
+                                    for it1=1:simuIt
+                                        if S.simuOn
+                                            HDM0 = ioi_set_simu(HDM0,it1);
                                         end
-                                        if ~S.simuOn
-                                            HDM{r1,s1} = HDM0;
-                                            save(HDMfname,'HDM');
-                                            ioi_HDM_display(HDM0);
-                                          
-                                            %Store some of the information in IOI structure
-                                            IOI.HDM{s1,r1}.Ep = HDM0.Ep;
-                                            IOI.HDM{s1,r1}.Cp = HDM0.Cp;
-                                            IOI.HDM{s1,r1}.K1 = HDM0.K1;
-                                            IOI.HDM{s1,r1}.H1 = HDM0.H1;
-                                            
-                                            IOI.HDM{s1,r1}.F  = HDM0.F;
-                                        else
-                                            save(HDMfname,'SHDM');
+                                        % nonlinear system identification
+                                        %--------------------------------------------------------------------------
+                                        HDM0 = ioi_nlsi(HDM0);
+                                        if S.simuOn
+                                            SHDM{it1} = ioi_save_simu(HDM0,it1);
                                         end
                                     end
+                                    warning('on','MATLAB:nearlySingularMatrix');
+                                    warning('on','MATLAB:singularMatrix');
+                                else
+                                    try
+                                        load(HDMfname);
+                                        HDM0 = HDM{s1};
+                                    catch
+                                        disp(['HDM.mat not found for Session ' int2str(s1) ' and ROI ' int2str(r1)]);
+                                    end
                                 end
-                                disp(['HDM for session ' int2str(s1) ' completed']);
+                                if ~S.simuOn
+                                    HDM{s1} = HDM0;
+                                    save(HDMfname,'HDM');
+                                    ioi_HDM_display(HDM0);
+                                    
+                                    %Store some of the information in IOI structure
+                                    IOI.HDM{s1}.Ep = HDM0.Ep;
+                                    IOI.HDM{s1}.Cp = HDM0.Cp;
+                                    IOI.HDM{s1}.K1 = HDM0.K1;
+                                    IOI.HDM{s1}.H1 = HDM0.H1;
+                                    IOI.HDM{s1}.F  = HDM0.F;
+                                else
+                                    save(HDMfname,'SHDM');
+                                end
+                            else
+                                %On ROIs
+                                HDM_str = ['S' gen_num_str(s1,2)];
+                                HDMfname = fullfile(dir1,['HDM_' HDM_str '.mat']);
+                                IOI.HDM{s1}.HDMfname = HDMfname;
+                                if ~O.only_display
+                                    HDM0 = [];
+                                    %Various options
+                                    HDM0.O = O;
+                                    HDM0.DO = DO;
+                                    HDM0.EM = EM;
+                                    HDM0.dir1 = dir1;
+                                    HDM0.HDM_str = HDM_str;
+                                    %Simulation option
+                                    HDM0.S = S;
+                                    %onsets: they are now specified in the module create_onsets
+                                    name = IOI.sess_res{s1}.names{1};
+                                    ons = IOI.sess_res{s1}.onsets{1};
+                                    dur = IOI.sess_res{s1}.durations{1};
+                                    if O.use_onset_amplitudes
+                                        amp = IOI.sess_res{s1}.parameters{1};
+                                        %normalize -- but what if amp takes extreme values?
+                                        amp = amp/mean(amp);
+                                    else
+                                        amp = [];
+                                    end
+                                    bases.hrf.derivs = [0 0]; %not used
+                                    [dummyX U] = ioi_get_X(IOI,name,ons,dur,amp,s1,bases,1); %call only to get U
+                                    U.u = U.u(33:end); %?
+                                    HDM0.U = U;
+                                    HDM0.dt = IOI.dev.TR;
+                                    HDM0.N = 20/IOI.dev.TR; %too large?
+                                    %Filters
+                                    HDM0.HPF = HPF; %High pass filter on data
+                                    HDM0.LPF = LPF;
+                                    %data specification - which modalities to include:
+                                    %loop over ROIs
+                                    ct = 0;
+                                    for r1=1:length(IOI.res.ROI)
+                                        if O.all_ROIs || sum(r1==O.selected_ROIs)
+                                            ct = ct+1;
+                                            HDM0=ioi_get_data(ROI,HDM0,r1,s1);
+                                            Yt = HDM0.Y.y;
+                                            if ct == 1
+                                                Y = zeros(size(Yt,1),size(Yt,2),length(O.selected_ROIs));
+                                            end
+                                            Y(:,:,ct) = Yt;
+                                        end
+                                    end
+                                    Y = permute(Y,[1 3 2]);
+                                    Y = reshape(Y,size(Yt,1),size(Yt,2)*length(O.selected_ROIs));
+                                    HDM0.Y.y = Y;
+                                    HDM0=ioi_set_physiomodel(HDM0);
+                                    %include number of ROIs in number of outputs
+                                    HDM0.l = HDM0.l*length(O.selected_ROIs);
+                                    %choose priors
+                                    HDM0=ioi_set_priors(HDM0);
+                                    %scaling factors on covariance ... do we need that?
+                                    %HDM0.pC = 10*HDM0.pC;
+                                    %HDM0.pC(end,end) = 10*HDM0.pC(end,end);
+                                    if S.simuOn
+                                        HDM0 = ioi_simu_gen_parameters(HDM0);
+                                        simuIt = HDM0.S.simuIt;
+                                        HDM0.Y0 = HDM0.Y; %background
+                                        HDM0.HDM_str0 = HDM0.HDM_str; %save each figure of fit
+                                        SHDM = []; %simulation HDM structure
+                                    else
+                                        simuIt = 1;
+                                    end
+                                    warning('off','MATLAB:nearlySingularMatrix');
+                                    warning('off','MATLAB:singularMatrix');
+                                    % big loop over simulation iterations
+                                    %--------------------------------------------------------------------------
+                                    for it1=1:simuIt
+                                        if S.simuOn
+                                            HDM0 = ioi_set_simu(HDM0,it1);
+                                        end
+                                        % nonlinear system identification
+                                        %--------------------------------------------------------------------------
+                                        HDM0 = ioi_nlsi(HDM0);
+                                        if S.simuOn
+                                            SHDM{it1} = ioi_save_simu(HDM0,it1);
+                                        end
+                                    end
+                                    warning('on','MATLAB:nearlySingularMatrix');
+                                    warning('on','MATLAB:singularMatrix');
+                                else
+                                    try
+                                        load(HDMfname);
+                                        HDM0 = HDM{s1,r1};
+                                    catch
+                                        disp(['HDM.mat not found for Session ' int2str(s1) ' and ROI ' int2str(r1)]);
+                                    end
+                                end
+                                if ~S.simuOn
+                                    HDM{s1,r1} = HDM0;
+                                    save(HDMfname,'HDM');
+                                    ioi_HDM_display(HDM0);
+                                    
+                                    %Store some of the information in IOI structure
+                                    IOI.HDM{s1,r1}.Ep = HDM0.Ep;
+                                    IOI.HDM{s1,r1}.Cp = HDM0.Cp;
+                                    IOI.HDM{s1,r1}.K1 = HDM0.K1;
+                                    IOI.HDM{s1,r1}.H1 = HDM0.H1;
+                                    IOI.HDM{s1,r1}.F  = HDM0.F;
+                                else
+                                    save(HDMfname,'SHDM');
+                                end
+                                
                             end
+                            disp(['HDM for session ' int2str(s1) ' completed']);
                         end
-                        IOI.res.HDMOK = 1;
-                        save(IOImat,'IOI');
                     end
-                end
+                    IOI.res.HDMOK = 1;
+                    save(IOImat,'IOI');
+                end              
             end
         end
         toc

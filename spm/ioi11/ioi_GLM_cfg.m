@@ -117,7 +117,7 @@ ROI_choice        = cfg_choice;
 ROI_choice.name   = 'Choose ROI selection method';
 ROI_choice.tag    = 'ROI_choice';
 ROI_choice.values = {all_ROIs,select_ROIs};
-ROI_choice.val    = {all_ROIs figure_show_stim figure_rebase_to_zero_at_stim show_mse};
+ROI_choice.val    = {all_ROIs};
 ROI_choice.help   = {'Choose ROI selection method'}';
 
 image_mode         = cfg_branch;
@@ -129,7 +129,7 @@ image_mode.help    = {'Data will be images'};
 ROI_mode         = cfg_branch;
 ROI_mode.tag     = 'ROI_mode';
 ROI_mode.name    = 'ROI mode';
-ROI_mode.val     = {ROImat ROI_choice};
+ROI_mode.val     = {ROImat ROI_choice figure_show_stim figure_rebase_to_zero_at_stim show_mse};
 ROI_mode.help    = {'Data will be ROIs'};
 
 data_selection_choice        = cfg_choice;
