@@ -66,6 +66,33 @@ IOImatCopyChoice.help      = {'Choose whether to overwrite the IOI.mat structure
         
 %%%%%%%%%%%%%%%%%%%%%%
 
+figure_show_stim      = cfg_menu;
+figure_show_stim.tag  = 'figure_show_stim';
+figure_show_stim.name = 'Show stim timings';
+figure_show_stim.labels = {'Yes','No'};
+figure_show_stim.values = {1,0};
+figure_show_stim.val  = {1};
+figure_show_stim.help = {'Show timings of stimuli on figures.'}';
+
+figure_rebase_to_zero_at_stim      = cfg_menu;
+figure_rebase_to_zero_at_stim.tag  = 'figure_rebase_to_zero_at_stim';
+figure_rebase_to_zero_at_stim.name = 'Rebase series to zero at stimuli';
+figure_rebase_to_zero_at_stim.labels = {'Yes','No'};
+figure_rebase_to_zero_at_stim.values = {1,0};
+figure_rebase_to_zero_at_stim.val  = {0};
+figure_rebase_to_zero_at_stim.help = {'(Affects only the display of figures: rebase'
+    'the series to zero after each stimuli.'}';
+
+show_mse      = cfg_menu;
+show_mse.tag  = 'show_mse';
+show_mse.name = 'Show MSE';
+show_mse.labels = {'Yes','No'};
+show_mse.values = {1,0};
+show_mse.val  = {1};
+show_mse.help = {'Show mean square error on figures.'}';
+
+%%%%%%%%%%%%%%%%%%%%%%
+
 all_ROIs         = cfg_branch;
 all_ROIs.tag     = 'all_ROIs';
 all_ROIs.name    = 'All ROIs';
@@ -90,7 +117,7 @@ ROI_choice        = cfg_choice;
 ROI_choice.name   = 'Choose ROI selection method';
 ROI_choice.tag    = 'ROI_choice';
 ROI_choice.values = {all_ROIs,select_ROIs};
-ROI_choice.val    = {all_ROIs};
+ROI_choice.val    = {all_ROIs figure_show_stim figure_rebase_to_zero_at_stim show_mse};
 ROI_choice.help   = {'Choose ROI selection method'}';
 
 image_mode         = cfg_branch;
@@ -486,31 +513,6 @@ save_figures.values = {1,0};
 save_figures.val  = {1};
 save_figures.help = {'Save figures.'}';
 
-figure_show_stim      = cfg_menu;
-figure_show_stim.tag  = 'figure_show_stim';
-figure_show_stim.name = 'Show stim timings';
-figure_show_stim.labels = {'Yes','No'};
-figure_show_stim.values = {1,0};
-figure_show_stim.val  = {1};
-figure_show_stim.help = {'Show timings of stimuli on figures.'}';
-
-figure_rebase_to_zero_at_stim      = cfg_menu;
-figure_rebase_to_zero_at_stim.tag  = 'figure_rebase_to_zero_at_stim';
-figure_rebase_to_zero_at_stim.name = 'Rebase series to zero at stimuli';
-figure_rebase_to_zero_at_stim.labels = {'Yes','No'};
-figure_rebase_to_zero_at_stim.values = {1,0};
-figure_rebase_to_zero_at_stim.val  = {0};
-figure_rebase_to_zero_at_stim.help = {'(Affects only the display of figures: rebase'
-    'the series to zero after each stimuli.'}';
-
-show_mse      = cfg_menu;
-show_mse.tag  = 'show_mse';
-show_mse.name = 'Show MSE';
-show_mse.labels = {'Yes','No'};
-show_mse.values = {1,0};
-show_mse.val  = {1};
-show_mse.help = {'Show mean square error on figures.'}';
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Executable Branch
@@ -519,8 +521,7 @@ glm1.name = 'GLM (images or ROIs)';             % The display name
 glm1.tag  = 'glm1'; %Very important: tag is used when calling for execution
 glm1.val  = {IOImat data_selection_choice redo1 IOImatCopyChoice session_choice ...
      bases volt use_onset_amplitudes hpf_butter lpf_gauss include_flow...
-     generate_figures save_figures ...
-     figure_show_stim figure_rebase_to_zero_at_stim show_mse};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+     generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 glm1.prog = @ioi_GLM_run;  % A function handle that will be called with the harvested job to run the computation
 glm1.vout = @ioi_cfg_vout_glm; % A function handle that will be called with the harvested job to determine virtual outputs
 glm1.help = {'Run GLMs.'};

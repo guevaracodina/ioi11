@@ -29,21 +29,22 @@ if isfield(job.data_selection_choice,'ROI_mode')
     %select a subset of ROIs
     if isfield(job.data_selection_choice.ROI_mode.ROI_choice,'select_ROIs')
         all_ROIs = 0;
-        selected_ROIs = job.ROI_choice.select_ROIs.selected_ROIs;
+        selected_ROIs = job.data_selection_choice.ROI_mode.ROI_choice.select_ROIs.selected_ROIs;
     else
         all_ROIs = 1;
     end
+    show_mse = job.data_selection_choice.ROI_mode.show_mse;
+    figure_show_stim = job.data_selection_choice.ROI_mode.figure_show_stim;
+    figure_rebase_to_zero_at_stim = job.data_selection_choice.ROI_mode.figure_rebase_to_zero_at_stim;
 else
     image_mode = 1;
 end
 
 save_figures = job.save_figures;
 generate_figures = job.generate_figures;
-figure_show_stim = 0; %job.figure_show_stim;
-figure_rebase_to_zero_at_stim = job.figure_rebase_to_zero_at_stim;
 use_onset_amplitudes = job.use_onset_amplitudes;
 include_flow = job.include_flow;
-show_mse = job.show_mse;
+
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
