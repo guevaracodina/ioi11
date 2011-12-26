@@ -98,7 +98,7 @@ for SubjIdx=1:length(job.IOImat)
             if ~isfield(IOI.res,'seriesOK')
                 disp(['Extracted series not available for subject ' int2str(SubjIdx) ' ... skipping HDM']);
             else
-                if ~isfield(IOI.res,'GLMOK')
+                if ~isfield(IOI.res,'OnsetsOK')
                     disp(['Onsets (from GLM module) not available for subject ' int2str(SubjIdx) ' ... skipping HDM']);
                 else
                     if ~isfield(IOI.res,'HDMOK') || job.force_redo

@@ -25,6 +25,13 @@ ROImat.help    = {'Optional: Select ROImat. This allows working on ROI data even
     'If several subjects are run, and ROImat is explicitly specified, then'
     'it should be specified for all subjects, in the same order as the list of IOI.mat'}'; 
 
+show_mse      = cfg_menu;
+show_mse.tag  = 'show_mse';
+show_mse.name = 'Show MSE';
+show_mse.labels = {'Yes','No'};
+show_mse.values = {1,0};
+show_mse.val  = {1};
+show_mse.help = {'Show mean square error on figures.'}';
 
 redo1      = cfg_menu;
 redo1.tag  = 'force_redo';
@@ -53,6 +60,7 @@ IOImatOverwrite.name    = 'Overwrite IOI.mat structure';
 IOImatOverwrite.help    = {'Will not copy IOI structure.'
             'This will write over the previous NIRS.mat'}';
 
+        
 NewIOIdir         = cfg_entry;
 NewIOIdir.name    = 'New directory for IOI.mat';
 NewIOIdir.tag     = 'NewIOIdir';       
@@ -174,7 +182,7 @@ image_mode.help    = {'Data will be images'};
 ROI_mode         = cfg_branch;
 ROI_mode.tag     = 'ROI_mode';
 ROI_mode.name    = 'ROI mode';
-ROI_mode.val     = {ROImat ROI_choice};
+ROI_mode.val     = {ROImat ROI_choice show_mse};
 ROI_mode.help    = {'Data will be ROIs'};
 
 data_selection_choice        = cfg_choice;
@@ -462,14 +470,6 @@ save_figures.values = {1,0};
 save_figures.val  = {0};
 save_figures.help = {'Save figures.'}';
 
-show_mse      = cfg_menu;
-show_mse.tag  = 'show_mse';
-show_mse.name = 'Show MSE';
-show_mse.labels = {'Yes','No'};
-show_mse.values = {1,0};
-show_mse.val  = {1};
-show_mse.help = {'Show mean square error on figures.'}';
-
 plot_algebraic_CMRO2      = cfg_menu;
 plot_algebraic_CMRO2.tag  = 'plot_algebraic_CMRO2';
 plot_algebraic_CMRO2.name = 'Plot algebraic CMRO2';
@@ -573,7 +573,7 @@ hdm_all1.tag  = 'hdm_all1'; %Very important: tag is used when calling for execut
 hdm_all1.val  = {IOImat data_selection_choice redo1 only_display IOImatCopyChoice session_choice ...
      PhysioModel_Choice use_onset_amplitudes includeHbR includeHbT includeFlow ... 
      hpf_butter lpf_choice baseline_choice EM_parameters show_normalized_parameters ...
-     generate_figures save_figures show_mse plot_algebraic_CMRO2 simuOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+     generate_figures save_figures plot_algebraic_CMRO2 simuOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 hdm_all1.prog = @ioi_HDM_all_run;  % A function handle that will be called with the harvested job to run the computation
 hdm_all1.vout = @ioi_cfg_vout_HDM_all; % A function handle that will be called with the harvested job to determine virtual outputs
 hdm_all1.help = {'Run hemodynamic modelling (HDM) on images or on average ROI time courses.'};
