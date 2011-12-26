@@ -7,6 +7,7 @@ str_HbO = 'O'; %oxy
 str_HbR = 'D'; %deoxy
 tmp_str_HbO = ['_' str_HbO '_'];
 tmp_str_HbR = ['_' str_HbR '_'];
+%basehbt1 = job.basehbt1;
 try
     RemoveRGY = job.RemoveRGY;
 catch
