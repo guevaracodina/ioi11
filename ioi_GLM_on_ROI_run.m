@@ -225,7 +225,7 @@ for SubjIdx=1:length(job.IOImat)
                                     h(h1) = figure;
                                     legstr = {};
                                     %loop over available colors
-                                    for c1=1:length(IOI.sess_res{s1}.fname) %or ctotal
+                                    for c1=1:ctotal; %length(IOI.sess_res{s1}.fname) %or ctotal
                                         try
                                             if include_flow || ~(IOI.color.eng(c1)==IOI.color.flow)
                                                 if ~isempty(IOI.X{s1}.yf{r1,c1})
