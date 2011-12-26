@@ -1,4 +1,6 @@
 function ioi_save_figures(save_figures,generate_figures,h,tit,dir_fig)
+%figure(h);
+%title(tit);
 if save_figures
     filen = fullfile(dir_fig,[tit '.tiff']); %save as .tiff
     print(h, '-dtiffn', filen);
