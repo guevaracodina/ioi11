@@ -2,11 +2,12 @@ function ioi_save_masked_images(image, fname, voxel_size,Im,tit,sgn,thold)
 %also generate masked figures
 [nx ny] = size(image);
 image = image(:);
-if sgn > 0
-    image(image<thold) = 0;
-else
-    image(image>-thold) = 0;
-end
+% if sgn > 0
+%     image(image<thold) = 0;
+% else
+%     image(image>-thold) = 0;
+% end
+image(image>-thold & image<thold) = 0;
 image(isnan(image)) = 0;
 image = reshape(image,[nx ny]);
 fname = [fname 'masked'];
