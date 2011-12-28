@@ -19,24 +19,46 @@ try
     first_pass = 1;
     fmod_previous = 1;
     frames_loaded = 0;
+    image_block = 1;
     if ~any(frames < 1)
         for i=1:length(frames)
-            if i==1
-                %find number of frames per block
-                if length(IOI.sess_res{s1}.si) > 1
-                    fpb = IOI.sess_res{s1}.si{2}-IOI.sess_res{s1}.si{1};
+            %Loop through the values of ei to find the right block of images 
+            j0 = image_block;
+            while j0<length(IOI.sess_res{s1}.ei)
+                if frames(i) <= IOI.sess_res{s1}.ei{j0}
+                    %this is the right block
+                    break
                 else
-                    fpb = IOI.sess_res{s1}.ei{1}-IOI.sess_res{s1}.si{1}+1;
+                    j0 = j0+1;
                 end
             end
-            fmod = mod(frames(i),fpb);
-            if fmod == 0
-                fmod = fpb;
-            end
-            if fmod <= fmod_previous
+            if j0 > image_block
                 frames_loaded = 0;
             end
-            fct = ceil(frames(i)/fpb);
+            image_block = j0;
+%             if i==1
+%                 %find number of frames per block %careful, this can vary
+%                 if length(IOI.sess_res{s1}.si) > 1
+%                     fpb = IOI.sess_res{s1}.si{2}-IOI.sess_res{s1}.si{1};
+%                 else
+%                     fpb = IOI.sess_res{s1}.ei{1}-IOI.sess_res{s1}.si{1}+1;
+%                 end
+%             end
+%             fmod = mod(frames(i),fpb);
+            %find location of desired frame in this block
+            if image_block>1
+                fmod = frames(i)-IOI.sess_res{s1}.ei{image_block-1};
+            else
+                fmod = frames(i);
+            end
+%             if fmod == 0
+%                 fmod = fpb;
+%             end
+%             if fmod <= fmod_previous
+%                 frames_loaded = 0;
+%             end
+%            fct = ceil(frames(i)/fpb);
+            fct = image_block;
             if ~frames_loaded
                 try
                     if ~doHbT
@@ -94,6 +116,7 @@ try
             try
                 Ya(:,:,i) = squeeze(Y(:,:,1,fmod));
             catch
+                %There is one frame missing?
                 Ya = [];
                 return
             end
