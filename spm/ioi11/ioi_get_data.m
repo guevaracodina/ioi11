@@ -63,10 +63,10 @@ if LPF.lpf_gauss_On
     for i=1:size(Y,2)
         y = Y(:,i)';
         %forward
-        y = spm_filter_HPF_LPF_WMDL(K,y')';
+        y = ioi_filter_HPF_LPF_WMDL(K,y')';
         %backward
         y = y(end:-1:1);
-        y = spm_filter_HPF_LPF_WMDL(K,y')';
+        y = ioi_filter_HPF_LPF_WMDL(K,y')';
         y = y(end:-1:1);
         Y(:,i) = y;
     end

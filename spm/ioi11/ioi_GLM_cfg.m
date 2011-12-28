@@ -66,6 +66,39 @@ IOImatCopyChoice.help      = {'Choose whether to overwrite the IOI.mat structure
         
 %%%%%%%%%%%%%%%%%%%%%%
 
+
+spatial_LPF_radius         = cfg_entry;
+spatial_LPF_radius.name    = 'Spatial LPF radius';
+spatial_LPF_radius.tag     = 'spatial_LPF_radius';
+spatial_LPF_radius.strtype = 'r';
+spatial_LPF_radius.num     = [1 1];
+spatial_LPF_radius.val     = {1};
+spatial_LPF_radius.help    = {'Enter radius of spatial low pass filter in pixels.'
+    'In practice, a radius of 1 gives a weight of 0.4 to the central pixel, of 0.1 to the 4 nearest'
+    'and the remainder to the next 8 pixels.'}';
+
+spatial_LPF_On         = cfg_branch;
+spatial_LPF_On.tag     = 'spatial_LPF_On';
+spatial_LPF_On.name    = 'Spatial LP filter';
+spatial_LPF_On.val     = {spatial_LPF_radius};
+spatial_LPF_On.help    = {'Spatial low-pass filter.'};
+
+spatial_LPF_Off         = cfg_branch;
+spatial_LPF_Off.tag     = 'spatial_LPF_Off';
+spatial_LPF_Off.name    = 'Spatial filter off';
+spatial_LPF_Off.val     = {};
+spatial_LPF_Off.help    = {'Spatial low pass filter turned off.'};
+
+spatial_LPF      = cfg_choice;
+spatial_LPF.tag  = 'spatial_LPF';
+spatial_LPF.name = 'Spatial Low Pass Filter';
+spatial_LPF.values = {spatial_LPF_On spatial_LPF_Off};
+spatial_LPF.val = {spatial_LPF_Off};
+spatial_LPF.help = {'Choose whether to include a spatial Low Pass Filter'
+    'on the data prior to running the GLM.'}';
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 figure_show_stim      = cfg_menu;
 figure_show_stim.tag  = 'figure_show_stim';
 figure_show_stim.name = 'Show stim timings';
@@ -123,7 +156,7 @@ ROI_choice.help   = {'Choose ROI selection method'}';
 image_mode         = cfg_branch;
 image_mode.tag     = 'image_mode';
 image_mode.name    = 'Image mode';
-image_mode.val     = {};
+image_mode.val     = {spatial_LPF};
 image_mode.help    = {'Data will be images'};
 
 ROI_mode         = cfg_branch;
@@ -497,6 +530,15 @@ include_flow.values = {1,0};
 include_flow.val  = {0};
 include_flow.help = {'Include flow.'}';
 
+include_OD      = cfg_menu;
+include_OD.tag  = 'include_OD';
+include_OD.name = 'Include optical intensity';
+include_OD.labels = {'Yes','No'};
+include_OD.values = {1,0};
+include_OD.val  = {0};
+include_OD.help = {'If the optical intensity images (Green, Red, Yellow) have not been deleted'
+    'previously, choose whether to generate movies for these colors.'}';
+
 generate_figures      = cfg_menu;
 generate_figures.tag  = 'generate_figures';
 generate_figures.name = 'Show figures';
@@ -520,7 +562,7 @@ glm1      = cfg_exbranch;       % This is the branch that has information about 
 glm1.name = 'GLM (images or ROIs)';             % The display name
 glm1.tag  = 'glm1'; %Very important: tag is used when calling for execution
 glm1.val  = {IOImat data_selection_choice redo1 IOImatCopyChoice session_choice ...
-     bases volt use_onset_amplitudes hpf_butter lpf_gauss include_flow...
+     bases volt use_onset_amplitudes hpf_butter lpf_gauss include_flow include_OD ...
      generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 glm1.prog = @ioi_GLM_run;  % A function handle that will be called with the harvested job to run the computation
 glm1.vout = @ioi_cfg_vout_glm; % A function handle that will be called with the harvested job to determine virtual outputs

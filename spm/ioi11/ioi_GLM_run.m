@@ -38,13 +38,20 @@ if isfield(job.data_selection_choice,'ROI_mode')
     figure_rebase_to_zero_at_stim = job.data_selection_choice.ROI_mode.figure_rebase_to_zero_at_stim;
 else
     image_mode = 1;
+    %Gaussian spatial LPF
+    if isfield(job.data_selection_choice.image_mode.spatial_LPF,'spatial_LPF_On')
+        radius = job.data_selection_choice.image_mode.spatial_LPF.spatial_LPF_On.spatial_LPF_radius;
+        spatial_LPF = 1;
+    else
+        spatial_LPF = 0;
+    end
 end
 
 save_figures = job.save_figures;
 generate_figures = job.generate_figures;
 use_onset_amplitudes = job.use_onset_amplitudes;
 include_flow = job.include_flow;
-
+include_OD = job.include_OD;
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
@@ -96,183 +103,221 @@ for SubjIdx=1:length(job.IOImat)
                             
                             %loop over available colors
                             for c1=1:length(IOI.sess_res{s1}.fname)
-                                if ~iscell(Xtmp)
-                                    X = Xtmp;
-                                else
-                                    X = Xtmp{c1};
+                                doColor = 1;
+                                %potentially exclude various colors, to save time
+                                if ~include_OD
+                                    if IOI.color.eng(c1) == IOI.color.red || ...
+                                            IOI.color.eng(c1) == IOI.color.green || ...
+                                            IOI.color.eng(c1) == IOI.color.yellow
+                                        doColor = 0;
+                                    end
                                 end
-                                if ~isempty(X)
-                                    IOI.X{s1}.X0 = X;
-                                    %filter X - HPF
-                                    if hpf_butter_On
-                                        X = ButterHPF(1/IOI.dev.TR,hpf_butter_freq,hpf_butter_order,X);
+                                try
+                                    if IOI.color.eng(c1) == IOI.color.flow
+                                        if ~include_flow
+                                            doColor = 0;
+                                        end
                                     end
-                                    %add a constant
-                                    X = [X ones(size(X,1),1)];
-                                    %get K for low pass filtering:
-                                    K = get_K(1:size(X,1),fwhm,IOI.dev.TR);
-                                    %filter X - LPF
-                                    %calculate X inverse
-                                    %Xm = pinv(X);
-                                    %Xu = X(:,1);
-                                    %filter forward
-                                    X1 = spm_filter_HPF_LPF_WMDL(K,X);
-                                    %filter backward
-                                    X1 = X1(end:-1:1,:);
-                                    X1 = spm_filter_HPF_LPF_WMDL(K,X1);
-                                    X1 = X1(end:-1:1,:);
-                                    KX = spm_sp('Set', X1);
-                                    KX.X = full(KX.X); %Filtered X
-                                    Xm = spm_sp('x-',KX); % projector
-                                    %covariance
-                                    bcov = Xm * K.KL;
-                                    bcov = bcov * bcov';
-                                    %approximate calculation of effective degrees of freedom
-                                    [trRV trRVRV] = approx_trRV(KX.X,Xm,K.KL);
+                                end
+                                try
+                                    if IOI.color.eng(c1) == IOI.color.laser
+                                        doColor = 0;
+                                    end
+                                end
+                                try
+                                    if IOI.color.eng(c1) == IOI.color.contrast
+                                        doColor = 0;
+                                    end
+                                end
+                                if doColor
+                                    %select design matrix
                                     if ~iscell(Xtmp)
-                                        cX = c1;
+                                        X = Xtmp;
                                     else
-                                        cX = 1;
+                                        X = Xtmp{c1};
                                     end
-                                    IOI.X{s1}.X{cX} = X;
-                                    IOI.X{s1}.Xm{cX} = Xm;
-                                    IOI.X{s1}.bcov{cX} = bcov;
-                                    IOI.X{s1}.trRV{cX} = trRV;
-                                    IOI.X{s1}.trRVRV{cX} = trRVRV;
-                                    IOI.X{s1}.erdf{cX} = (trRV)^2/trRVRV;
-                                    
-                                    if image_mode
-                                        %put all the data for this color, and session, into memory
-                                        %Note that this takes several minutes to load per session
-                                        %Y is typically 3 GB or larger
-                                        Y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,dir_ioimat);
-                                        [nx ny nt] = size(Y);
-                                        
-                                        %reshape
-                                        y = reshape(Y,nx*ny,nt);
-                                        %GLM on whole images
+                                    if ~isempty(X)
+                                        IOI.X{s1}.X0 = X;
+                                        %filter X - HPF
                                         if hpf_butter_On
-                                            y =  ButterHPF(1/IOI.dev.TR,hpf_butter_freq,hpf_butter_order,y);
+                                            X = ButterHPF(1/IOI.dev.TR,hpf_butter_freq,hpf_butter_order,X);
                                         end
-                                        
-                                        %filtering of the data: LPF (Gaussian), forward
-                                        y = spm_filter_HPF_LPF_WMDL(K,y')'; %takes about 2 minutes
+                                        %add a constant
+                                        X = [X ones(size(X,1),1)];
+                                        %get K for low pass filtering:
+                                        K = get_K(1:size(X,1),fwhm,IOI.dev.TR);
+                                        %filter X - LPF
+                                        %calculate X inverse
+                                        %Xm = pinv(X);
+                                        %Xu = X(:,1);
+                                        %filter forward
+                                        X1 = ioi_filter_HPF_LPF_WMDL(K,X);
                                         %filter backward
-                                        y = y(:,end:-1:1);
-                                        y = spm_filter_HPF_LPF_WMDL(K,y')';
-                                        y = y(:,end:-1:1);
-                                        %GLM inversion: calculating beta and residuals - would be SPM.Vbeta,
-                                        b = Xm * y'; % beta : least square estimate
-                                        %Compute t stat
-                                        res = y'-X*b; %a few seconds
-                                        res2 = sum(res.^2);
-                                        mse = res2/length(res2);
-                                        t = b(1,:)./(res2*bcov(1,1)/trRV).^0.5;
-                                        if volt == 2
-                                             t2 = b(2,:)./(res2*bcov(2,2)/trRV).^0.5;
+                                        X1 = X1(end:-1:1,:);
+                                        X1 = ioi_filter_HPF_LPF_WMDL(K,X1);
+                                        X1 = X1(end:-1:1,:);
+                                        KX = spm_sp('Set', X1);
+                                        KX.X = full(KX.X); %Filtered X
+                                        Xm = spm_sp('x-',KX); % projector
+                                        %covariance
+                                        bcov = Xm * K.KL;
+                                        bcov = bcov * bcov';
+                                        %approximate calculation of effective degrees of freedom
+                                        [trRV trRVRV] = approx_trRV(KX.X,Xm,K.KL);
+                                        if ~iscell(Xtmp)
+                                            cX = c1;
+                                        else
+                                            cX = 1;
                                         end
-                                        %reshape
-                                        b = reshape(b,[size(b,1) nx ny]);
-                                        res2 = reshape(res2,[nx ny]);
-                                        mse = reshape(mse,[nx ny]);
-                                        t = reshape(t,[nx ny]);
-                                        if volt == 2
-                                            t2 = reshape(t2,[nx ny]);
-                                        end
-                                        Im.save_figures = save_figures;
-                                        Im.generate_figures = generate_figures;
-                                        %save as nifti and store path to data
-                                        name_str = ['S' gen_num_str(s1,2) '_' IOI.color.eng(c1)];
-                                        name_title = ['S' int2str(s1) ' ' IOI.color.eng(c1)];
-                                        for i0=1:size(b,1)
-                                            b_names{i0} = fullfile(newDir,['beta' int2str(i0) '_' name_str]);
-                                            b_title{i0} = ['beta' int2str(i0) ' ' name_title];
-                                        end
-                                        mse_name = fullfile(newDir,['mse_' name_str]);
-                                        mse_title = ['mse ' name_title];
-                                        t_name =  fullfile(newDir,['t_' name_str]);
-                                        t_title = ['t ' name_title];
-                                        if volt == 2
-                                             t2_name =  fullfile(newDir,['t2_' name_str]);
-                                             t2_title = ['t2 ' name_title];
-                                        end
-                                        vx = [1 1 1];
-                                        %sign for mask
-                                        try
-                                            if IOI.color.eng(c1) == IOI.color.red || IOI.color.eng(c1) == IOI.color.HbR
-                                                sgn = -1;
-                                            else
+                                        IOI.X{s1}.X{cX} = X;
+                                        IOI.X{s1}.Xm{cX} = Xm;
+                                        IOI.X{s1}.bcov{cX} = bcov;
+                                        IOI.X{s1}.trRV{cX} = trRV;
+                                        IOI.X{s1}.trRVRV{cX} = trRVRV;
+                                        IOI.X{s1}.erdf{cX} = (trRV)^2/trRVRV;
+                                        
+                                        if image_mode
+                                            %put all the data for this color, and session, into memory
+                                            %Note that this takes several minutes to load per session
+                                            %Y is typically 3 GB or larger
+                                            Y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,dir_ioimat);
+                                            [nx ny nt] = size(Y);
+                                            if spatial_LPF 
+                                                Ks.k1 = nx;
+                                                Ks.k2 = ny;
+                                                Ks.radius = radius;
+                                                Ks = ioi_spatial_LPF('set',Ks);
+                                                %Gaussian spatial low pass filter
+                                                for i1=1:nt
+                                                    Y(:,:,i1) = ioi_spatial_LPF('lpf',Ks,squeeze(Y(:,:,i1)));   
+                                                end
+                                            end
+                                            %reshape
+                                            y = reshape(Y,nx*ny,nt);
+                                            %GLM on whole images
+                                            if hpf_butter_On
+                                                y =  ButterHPF(1/IOI.dev.TR,hpf_butter_freq,hpf_butter_order,y);
+                                            end
+                                            
+                                            %filtering of the data: LPF (Gaussian), forward
+                                            y = ioi_filter_HPF_LPF_WMDL(K,y')'; %takes about 2 minutes
+                                            %filter backward
+                                            y = y(:,end:-1:1);
+                                            y = ioi_filter_HPF_LPF_WMDL(K,y')';
+                                            y = y(:,end:-1:1);
+                                            %GLM inversion: calculating beta and residuals - would be SPM.Vbeta,
+                                            b = Xm * y'; % beta : least square estimate
+                                            %Compute t stat
+                                            res = y'-X*b; %a few seconds
+                                            res2 = sum(res.^2);
+                                            mse = res2/length(res2);
+                                            t = b(1,:)./(res2*bcov(1,1)/trRV).^0.5;
+                                            if volt == 2
+                                                t2 = b(2,:)./(res2*bcov(2,2)/trRV).^0.5;
+                                            end
+                                            %reshape
+                                            b = reshape(b,[size(b,1) nx ny]);
+                                            res2 = reshape(res2,[nx ny]);
+                                            mse = reshape(mse,[nx ny]);
+                                            t = reshape(t,[nx ny]);
+                                            if volt == 2
+                                                t2 = reshape(t2,[nx ny]);
+                                            end
+                                            Im.save_figures = save_figures;
+                                            Im.generate_figures = generate_figures;
+                                            %save as nifti and store path to data
+                                            name_str = ['S' gen_num_str(s1,2) '_' IOI.color.eng(c1)];
+                                            name_title = ['S' int2str(s1) ' ' IOI.color.eng(c1)];
+                                            for i0=1:size(b,1)
+                                                b_names{i0} = fullfile(newDir,['beta' int2str(i0) '_' name_str]);
+                                                b_title{i0} = ['beta' int2str(i0) ' ' name_title];
+                                            end
+                                            mse_name = fullfile(newDir,['mse_' name_str]);
+                                            mse_title = ['mse ' name_title];
+                                            t_name =  fullfile(newDir,['t_' name_str]);
+                                            t_title = ['t ' name_title];
+                                            if volt == 2
+                                                t2_name =  fullfile(newDir,['t2_' name_str]);
+                                                t2_title = ['t2 ' name_title];
+                                            end
+                                            vx = [1 1 1];
+                                            %sign for mask -- no longer used
+                                            try
+                                                if IOI.color.eng(c1) == IOI.color.red || IOI.color.eng(c1) == IOI.color.HbR
+                                                    sgn = -1;
+                                                else
+                                                    sgn = 1;
+                                                end
+                                            catch
                                                 sgn = 1;
                                             end
-                                        catch
-                                            sgn = 1;
-                                        end
-                                        thold = 1.95; %threshold on t-stats
-                                        for i0=1:size(b,1)
-                                            ioi_save_images(squeeze(b(i0,:,:)),b_names{i0},vx,Im,b_title{i0});
-                                        end
-                                        ioi_save_images(mse,mse_name,vx,Im,mse_title);
-                                        ioi_save_images(t,t_name,vx,Im,t_title);
-                                        ioi_save_masked_images(t,t_name,vx,Im,t_title,sgn,thold);
-                                        if volt == 2
-                                            ioi_save_images(t2,t2_name,vx,Im,t2_title);
-                                            ioi_save_masked_images(t2,t2_name,vx,Im,t2_title,sgn,thold);
-                                        end
-                                        
-                                        IOI.X{s1}.b{c1} = b_names;
-                                        %IOI.X{s1}.r(c1) = res_name; % Residuals
-                                        IOI.X{s1}.mse{c1} = mse_name; %res2/length(y);
-                                        IOI.X{s1}.t{c1} = t_name;
-                                        if volt == 2
-                                            IOI.X{s1}.t2{c1} = t2_name;
-                                        end
-                                        %IOI.X{s1}.yf{c1} = y; %filtered data
-                                        %IOI.X{s1}.yu{r1,c1} = yu;
-                                        %IOI.X{s1}.yp{c1} = X * b;
-                                    else
-                                        %load ROI
-                                        if ~isempty(ROImat)
-                                            load(ROImat{SubjIdx});
-                                        else
-                                            try
-                                                load(IOI.ROI.ROIfname);
-                                            catch
-                                                load(fullfile(dir_ioimat,'ROI.mat'));
+                                            thold = 1.95; %threshold on t-stats
+                                            for i0=1:size(b,1)
+                                                ioi_save_images(squeeze(b(i0,:,:)),b_names{i0},vx,Im,b_title{i0});
                                             end
-                                        end
-                                        %GLM on ROIs
-                                        %Loop over ROIs
-                                        for r1=1:length(ROI)
-                                            if all_ROIs || sum(r1==selected_ROIs)
-                                                y = ROI{r1}{s1,c1};
-                                                if ~isempty(y)
-                                                    %yu = y; %unfiltered data
-                                                    %filtering of the data: HPF
-                                                    if hpf_butter_On
-                                                        y =  ButterHPF(1/IOI.dev.TR,hpf_butter_freq,hpf_butter_order,y);
+                                            ioi_save_images(mse,mse_name,vx,Im,mse_title);
+                                            ioi_save_images(t,t_name,vx,Im,t_title);
+                                            ioi_save_masked_images(t,t_name,vx,Im,t_title,sgn,thold);
+                                            if volt == 2
+                                                ioi_save_images(t2,t2_name,vx,Im,t2_title);
+                                                ioi_save_masked_images(t2,t2_name,vx,Im,t2_title,sgn,thold);
+                                            end
+                                            
+                                            IOI.X{s1}.b{c1} = b_names;
+                                            %IOI.X{s1}.r(c1) = res_name; % Residuals
+                                            IOI.X{s1}.mse{c1} = mse_name; %res2/length(y);
+                                            IOI.X{s1}.t{c1} = t_name;
+                                            if volt == 2
+                                                IOI.X{s1}.t2{c1} = t2_name;
+                                            end
+                                            %IOI.X{s1}.yf{c1} = y; %filtered data
+                                            %IOI.X{s1}.yu{r1,c1} = yu;
+                                            %IOI.X{s1}.yp{c1} = X * b;
+                                        else
+                                            %load ROI
+                                            if ~isempty(ROImat)
+                                                load(ROImat{SubjIdx});
+                                            else
+                                                try
+                                                    load(IOI.ROI.ROIfname);
+                                                catch
+                                                    load(fullfile(dir_ioimat,'ROI.mat'));
+                                                end
+                                            end
+                                            %GLM on ROIs
+                                            %Loop over ROIs
+                                            for r1=1:length(ROI)
+                                                if all_ROIs || sum(r1==selected_ROIs)
+                                                    y = ROI{r1}{s1,c1};
+                                                    if ~isempty(y)
+                                                        %yu = y; %unfiltered data
+                                                        %filtering of the data: HPF
+                                                        if hpf_butter_On
+                                                            y =  ButterHPF(1/IOI.dev.TR,hpf_butter_freq,hpf_butter_order,y);
+                                                        end
+                                                        %yu = y;
+                                                        %filtering of the data: LPF (Gaussian), forward
+                                                        y = ioi_filter_HPF_LPF_WMDL(K,y')';
+                                                        %filter backward
+                                                        y = y(end:-1:1);
+                                                        y = ioi_filter_HPF_LPF_WMDL(K,y')';
+                                                        y = y(end:-1:1);
+                                                        %GLM inversion: calculating beta and residuals - would be SPM.Vbeta,
+                                                        b = Xm * y'; % beta : least square estimate
+                                                        %Compute t stat
+                                                        res = y'-X*b;
+                                                        res2 = sum(res.^2);
+                                                        IOI.X{s1}.b{r1,c1} = b;
+                                                        IOI.X{s1}.r(r1,c1) = res2; % Residuals
+                                                        IOI.X{s1}.mse(r1,c1) = res2/length(y);
+                                                        IOI.X{s1}.t(r1,c1) = b(1)/(res2*bcov(1,1)/trRV)^0.5;
+                                                        if volt
+                                                            IOI.X{s1}.t2(r1,c1) = b(2)/(res2*bcov(2,2)/trRV)^0.5;
+                                                        end
+                                                        IOI.X{s1}.yf{r1,c1} = y; %filtered data
+                                                        %IOI.X{s1}.yu{r1,c1} = yu;
+                                                        IOI.X{s1}.yp{r1,c1} = X * b; %IOI.X{s1}.b{r1,c1}; %predicted
                                                     end
-                                                    %yu = y;
-                                                    %filtering of the data: LPF (Gaussian), forward
-                                                    y = spm_filter_HPF_LPF_WMDL(K,y')';
-                                                    %filter backward
-                                                    y = y(end:-1:1);
-                                                    y = spm_filter_HPF_LPF_WMDL(K,y')';
-                                                    y = y(end:-1:1);
-                                                    %GLM inversion: calculating beta and residuals - would be SPM.Vbeta,
-                                                    b = Xm * y'; % beta : least square estimate
-                                                    %Compute t stat
-                                                    res = y'-X*b;
-                                                    res2 = sum(res.^2);
-                                                    IOI.X{s1}.b{r1,c1} = b;
-                                                    IOI.X{s1}.r(r1,c1) = res2; % Residuals
-                                                    IOI.X{s1}.mse(r1,c1) = res2/length(y);
-                                                    IOI.X{s1}.t(r1,c1) = b(1)/(res2*bcov(1,1)/trRV)^0.5;
-                                                    if volt
-                                                        IOI.X{s1}.t2(r1,c1) = b(2)/(res2*bcov(2,2)/trRV)^0.5;
-                                                    end
-                                                    IOI.X{s1}.yf{r1,c1} = y; %filtered data
-                                                    %IOI.X{s1}.yu{r1,c1} = yu;
-                                                    IOI.X{s1}.yp{r1,c1} = X * b; %IOI.X{s1}.b{r1,c1}; %predicted
                                                 end
                                             end
                                         end

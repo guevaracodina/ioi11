@@ -217,10 +217,10 @@ for SubjIdx=1:length(job.IOImat)
                                                 K = get_K(1:length(tmp_d),LPF.fwhm1,IOI.dev.TR);
                                                 y = tmp_d;
                                                 %forward
-                                                y = spm_filter_HPF_LPF_WMDL(K,y')';
+                                                y = ioi_filter_HPF_LPF_WMDL(K,y')';
                                                 %backward
                                                 y = y(end:-1:1);
-                                                y = spm_filter_HPF_LPF_WMDL(K,y')';
+                                                y = ioi_filter_HPF_LPF_WMDL(K,y')';
                                                 y = y(end:-1:1);
                                                 tmp_d = y;
                                             end
