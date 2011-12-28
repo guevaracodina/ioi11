@@ -267,7 +267,8 @@ try
         %use first green colored image as the anatomy
         image_total=private_read_single_bin_image(sess_raw{1}.fnames{str_anat == str_color}{1,:});
         fname = fullfile(dir_subj_res, [subj_name '_' suffix_for_anat_file '.nii']);
-        ioi_save_nifti(image_total, fname, vx_anat);
+        ioi_save_images(image_total, fname, vx_anat,[],'Anatomical image')
+        %ioi_save_nifti(image_total, fname, vx_anat);
         IOI.res.file_anat=fname;
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -417,12 +418,24 @@ try
                                 [subj_name '_' OD_label '_change_' str1 '_' sess_str '.nii']);
                             sess.fname_change_90_10{c1} = fullfile(dir_subj_res,sess_str, ...
                                 [subj_name '_' OD_label '_change_90_10_' str1 '_' sess_str '.nii']);
-                            ioi_save_nifti(single(min_image),sess.fname_min{c1},vx);
-                            ioi_save_nifti(single(max_image),sess.fname_max{c1},vx);
-                            ioi_save_nifti(single(change),sess.fname_change{c1},vx);
-                            ioi_save_nifti(single(tenthpctle_image),sess.fname_10pctle{c1},vx);
-                            ioi_save_nifti(single(ninetiethpctle_image),sess.fname_90pctle{c1},vx);
-                            ioi_save_nifti(single(change_90_10),sess.fname_change_90_10{c1},vx);
+                             tit1 = [subj_name ' ' OD_label ' min ' str1 ' ' sess_str];
+                            tit2 = [subj_name ' ' OD_label ' max ' str1 ' ' sess_str];
+                            tit3 = [subj_name ' ' OD_label ' 10pctle ' str1 ' ' sess_str];
+                            tit4 = [subj_name ' ' OD_label ' 90pctle ' str1 ' ' sess_str];
+                            tit5 = [subj_name ' ' OD_label ' change min to max ' str1 ' ' sess_str];
+                            tit6 = [subj_name ' ' OD_label ' change 90 to 10 ' str1 ' ' sess_str];
+%                             ioi_save_nifti(single(min_image),sess.fname_min{c1},vx);
+%                             ioi_save_nifti(single(max_image),sess.fname_max{c1},vx);
+%                             ioi_save_nifti(single(change),sess.fname_change{c1},vx);
+%                             ioi_save_nifti(single(tenthpctle_image),sess.fname_10pctle{c1},vx);
+%                             ioi_save_nifti(single(ninetiethpctle_image),sess.fname_90pctle{c1},vx);
+%                             ioi_save_nifti(single(change_90_10),sess.fname_change_90_10{c1},vx);
+                            ioi_save_images(single(min_image),sess.fname_min{c1},vx,[],tit1);
+                            ioi_save_images(single(max_image),sess.fname_max{c1},vx,[],tit2);
+                            ioi_save_images(single(change),sess.fname_change{c1},vx,[],tit3);
+                            ioi_save_images(single(tenthpctle_image),sess.fname_10pctle{c1},vx,[],tit4);
+                            ioi_save_images(single(ninetiethpctle_image),sess.fname_90pctle{c1},vx,[],tit5);
+                            ioi_save_images(single(change_90_10),sess.fname_change_90_10{c1},vx,[],tit6);
                         end
                         %vx currently not used in ioi_save_nifti
                         %and ioi_write_nifti, despite apparent dependency
