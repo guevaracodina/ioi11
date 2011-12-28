@@ -63,30 +63,12 @@ function FileMenu_Callback(hObject, eventdata, handles)
 function OpenMenuItem_Callback(hObject, eventdata, handles)
 [file pathname] = uigetfile({'*.avi;*.mat','Select movies (.avi or .mat format)'});
 if ~isequal(file, 0)
-    file = fullfile(pathname,file);
-    [dir0 fil0 ext0] = fileparts(file);
-    switch ext0
-        case '.avi'
-            obj = VideoReader(file);
-            nF = obj.NumberOfFrames;
-            % Preallocate movie structure.
-            F(1:nF) = struct('cdata',...
-                zeros(obj.Height,obj.Width,3,'uint8'),'colormap',[]);
-            % Read one frame at a time.
-            for k=1:nF
-                F(k).cdata = read(obj,k);
-            end
-        case '.mat'
-            open(file);
-    end
-    %try data = guidata(handles.output); end
-    %Use data to store everything
+    [obj F Y] = ioi_open_movie(file,pathname);     
     handles.Movie.obj = obj;
     handles.Movie.F = F;
+    handles.Movie.Y = Y;
     handles.Movie.FrameRate = str2double(get(handles.movie_frequency,'String'));
     guidata(hObject, handles);
-    %Play movie
-    %ioi_play_movie(handles);
 end
 
 
@@ -123,19 +105,47 @@ set(hObject, 'String', {'Movie'});
 
 % --- Executes on button press in select_subject.
 function select_subject_Callback(hObject, eventdata, handles)
-[t sts] = spm_select(Inf,'dir','select the top level res directories for the subjects');
-if sts && ~isempty(t)
-    handles.Info.subjects = t;
-    handles.Info.subject_selected = 1; %?
+[subject_list sts] = spm_select(Inf,'dir','select the top level res directories for the subjects');
+if sts && ~isempty(subject_list)
+    handles.Info.subject_list = subject_list;
+    handles.Info.subject_selected = 1; %initially
     %write list to GUI
-    set(handles.subject_list,'String',t);
+    set(handles.subject_list,'String',subject_list);
     guidata(hObject, handles);
+    %Update the subject and movie lists
+    subject_list_Callback(handles.subject_list, eventdata, handles);
 end
 
 % --- Executes on selection change in subject_list.
 function subject_list_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns subject_list contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from subject_list
+subject_list = cellstr(get(hObject,'String'));
+subject_selected = subject_list{get(hObject,'Value')};
+handles.Info.subject_selected = subject_selected;
+%find available movies for this subject
+movie_list = ioi_find_movies(subject_selected);
+%write list to GUI
+if ~isempty(movie_list)
+    handles.Info.movie_list = movie_list;
+    handles.Info.movie_selected = 1; %initially
+    set(handles.message_box,'String','Ok');
+    set(handles.message_box,'BackgroundColor','White');
+    movie_list_OK = 1;
+else
+    handles.Info.movie_list = [];
+    handles.Info.movie_selected = []; %initially
+    %write error to message box
+    set(handles.message_box,'String','No movie found for this subject');
+    set(handles.message_box,'BackgroundColor','Red'); %[1 0 0]);
+    movie_list_OK = 0;
+end
+set(handles.movie_list,'String',movie_list);
+guidata(hObject, handles);
+if movie_list_OK
+movie_list_Callback(handles.movie_list, eventdata, handles);
+end
+
 
 
 % --- Executes during object creation, after setting all properties.
@@ -144,7 +154,35 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+% --- Executes on selection change in movie_list.
+function movie_list_Callback(hObject, eventdata, handles)
+movie_list = cellstr(get(hObject,'String'));
+movie_selected = movie_list{get(hObject,'Value')};
+%write selection to GUI
+handles.Info.movie_selected = movie_selected;
+guidata(hObject, handles);
+%check that there is a valid movie there
+try 
+    [pathname file ext1] = fileparts(movie_selected);
+    file = [file ext1]; 
+    [obj F Y] = ioi_open_movie(file,pathname);     
+    handles.Movie.obj = obj;
+    handles.Movie.F = F;
+    handles.Movie.Y = Y;
+    handles.Movie.FrameRate = str2double(get(handles.movie_frequency,'String'));
+    guidata(hObject, handles);
+    handles.Movie.FrameRate = 30; %play the movie quickly 
+    ioi_play_movie(handles);
+catch
+    set(handles.message_box,'String','Movie cannot be played');
+    set(handles.message_box,'BackgroundColor','Red');
+end
 
+
+function movie_list_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
 
 function movie_frequency_Callback(hObject, eventdata, handles)
 handles.Movie.FrameRate =  str2double(get(hObject,'String')); 
@@ -162,3 +200,4 @@ end
 
 function play_movie_Callback(hObject, eventdata, handles)
 ioi_play_movie(handles);
+

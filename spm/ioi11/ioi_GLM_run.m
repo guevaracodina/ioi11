@@ -52,6 +52,7 @@ generate_figures = job.generate_figures;
 use_onset_amplitudes = job.use_onset_amplitudes;
 include_flow = job.include_flow;
 include_OD = job.include_OD;
+include_HbT = job.include_HbT;
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
@@ -80,6 +81,12 @@ for SubjIdx=1:length(job.IOImat)
                     if save_figures
                         dir_fig = fullfile(newDir,'fig');
                         if ~exist(dir_fig,'dir'),mkdir(dir_fig);end
+                    end
+                    if include_HbT
+                        if ~isfield(IOI.color,'HbT')
+                            IOI.color.HbT = 'T';
+                            IOI.color.eng = [IOI.color.eng IOI.color.HbT];
+                        end
                     end
                     %loop over sessions
                     for s1=1:length(IOI.sess_res)
@@ -129,6 +136,14 @@ for SubjIdx=1:length(job.IOImat)
                                         doColor = 0;
                                     end
                                 end
+                                try
+                                    if ~include_HbT
+                                        if IOI.color.eng(c1) == IOI.color.HbT
+                                            doColor = 0;
+                                        end
+                                    end
+                                end
+                                        
                                 if doColor
                                     %select design matrix
                                     if ~iscell(Xtmp)
