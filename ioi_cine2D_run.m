@@ -152,6 +152,8 @@ for SubjIdx=1:length(job.IOImat)
                                 d = tmp_array_after/ka;
                                 m0 = min(d(:));
                                 M0 = max(d(:));
+                                %best is to save d
+                                save(fullfile(cineDir,['cine_S' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '.Mdat']),'d');
                                 dM = M0-m0;
                                 Nf = size(d,3);
                                 F(Nf) = struct('cdata',[],'colormap',[]);

@@ -530,6 +530,14 @@ include_flow.values = {1,0};
 include_flow.val  = {0};
 include_flow.help = {'Include flow.'}';
 
+include_HbT      = cfg_menu;
+include_HbT.tag  = 'include_HbT';
+include_HbT.name = 'Include HbT';
+include_HbT.labels = {'Yes','No'};
+include_HbT.values = {1,0};
+include_HbT.val  = {1};
+include_HbT.help = {'Include HbT.'}';
+
 include_OD      = cfg_menu;
 include_OD.tag  = 'include_OD';
 include_OD.name = 'Include optical intensity';
@@ -562,7 +570,8 @@ glm1      = cfg_exbranch;       % This is the branch that has information about 
 glm1.name = 'GLM (images or ROIs)';             % The display name
 glm1.tag  = 'glm1'; %Very important: tag is used when calling for execution
 glm1.val  = {IOImat data_selection_choice redo1 IOImatCopyChoice session_choice ...
-     bases volt use_onset_amplitudes hpf_butter lpf_gauss include_flow include_OD ...
+     bases volt use_onset_amplitudes hpf_butter lpf_gauss include_flow ...
+     include_HbT include_OD ...
      generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 glm1.prog = @ioi_GLM_run;  % A function handle that will be called with the harvested job to run the computation
 glm1.vout = @ioi_cfg_vout_glm; % A function handle that will be called with the harvested job to determine virtual outputs
