@@ -200,9 +200,11 @@ for SubjIdx=1:length(job.IOImat)
                                             
                                             [nx ny nt] = size(Y);
                                             indInf = isinf(Y(:));
+                                            indNaN = isnan(Y(:));
                                             Y(indInf) = 0;
                                             maxY = max(Y(:));
                                             Y(indInf) = maxY;
+                                            Y(indNaN) = maxY;
                                             if spatial_LPF 
                                                 Ks.k1 = nx;
                                                 Ks.k2 = ny;
@@ -226,6 +228,9 @@ for SubjIdx=1:length(job.IOImat)
                                             y = y(:,end:-1:1);
                                             y = ioi_filter_HPF_LPF_WMDL(K,y')';
                                             y = y(:,end:-1:1);
+%                                             if any(isnan(y(:))) || any(isinf(y(:)))
+%                                                 a0 =1;
+%                                             end
                                             %GLM inversion: calculating beta and residuals - would be SPM.Vbeta,
                                             b = Xm * y'; % beta : least square estimate
                                             %Compute t stat
@@ -233,6 +238,9 @@ for SubjIdx=1:length(job.IOImat)
                                             res2 = sum(res.^2);
                                             mse = res2/length(res2);
                                             t = b(1,:)./(res2*bcov(1,1)/trRV).^0.5;
+%                                             if any(isnan(t(:))) || any(isinf(t(:)))
+%                                                 a0 =1;
+%                                             end
                                             if volt == 2
                                                 t2 = b(2,:)./(res2*bcov(2,2)/trRV).^0.5;
                                             end

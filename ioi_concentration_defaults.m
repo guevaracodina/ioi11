@@ -12,4 +12,4 @@ global ioi11
 ioi11.conc1.pathlength = 'Dunn';
 ioi11.conc1.camera_correction = 1;
 ioi11.conc1.leds_spectra = 1;
-ioi11.conc1.baseline_hbt = 0.02;
+ioi11.conc1.baseline_hbt = 100;

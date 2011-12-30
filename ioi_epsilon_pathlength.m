@@ -1,4 +1,4 @@
-function eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichSystem,whichCurve,debug)
+function eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichSystem,whichCurve,baseline_hbt,debug)
 
 %	This function estimates epsilon * D, it takes into account the camera
 %	response, the leds spectra and uses a pathlength factor either set from
@@ -16,7 +16,7 @@ else
 end
 
 % Rough baseline concentrations (in uM) : 100 uM (in the brain)
-c_tot = 100e-6;
+c_tot = baseline_hbt*1e-6; %100e-6;
 
 lambda_vec= linspace(lambda1,lambda2,npoints);
 c_camera = private_reinterpolate_lambda(lambda1, lambda2, npoints, hardware.camera.lambda, hardware.camera.response);

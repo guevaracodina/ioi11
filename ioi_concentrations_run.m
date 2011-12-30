@@ -8,6 +8,7 @@ str_HbR = 'D'; %deoxy
 tmp_str_HbO = ['_' str_HbO '_'];
 tmp_str_HbR = ['_' str_HbR '_'];
 %basehbt1 = job.basehbt1;
+baseline_hbt = job.configuration.HbT0;
 try
     RemoveRGY = job.RemoveRGY;
 catch
@@ -51,7 +52,7 @@ for SubjIdx=1:length(job.IOImat)
             else
                 whichSystem = 1; %new
             end
-            eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichSystem,whichCurve);
+            eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichSystem,whichCurve,baseline_hbt);
             %Loop over sessions
             if isfield(IOI,'sess_res')
                 for s1=1:length(IOI.sess_res)
@@ -111,6 +112,28 @@ for SubjIdx=1:length(job.IOImat)
                                         image_hbo(:,:,1,i1)=slice(1,:,:);
                                         image_hbr(:,:,1,i1)=slice(2,:,:);
                                     end
+                                end
+                                oNaN = sum(isnan(image_hbo(:)));
+                                rNaN = sum(isnan(image_hbr(:)));
+                                oInf = sum(isinf(image_hbo(:)));
+                                rInf = sum(isinf(image_hbr(:)));
+                                omax = max(image_hbo(:));
+                                rmax = max(image_hbr(:));
+                                if oNaN
+                                    IOI = disp_msg(IOI,[int2str(oNaN) ' NaN in HbO in session ' int2str(s1)]);
+                                    image_hbo(isnan(image_hbo(:))) = omax;
+                                end
+                                if rNaN
+                                    IOI = disp_msg(IOI,[int2str(rNaN) ' NaN in HbR in session ' int2str(s1)]);
+                                    image_hbr(isnan(image_hbr(:))) = rmax;
+                                end
+                                if oInf
+                                    IOI = disp_msg(IOI,[int2str(oInf) ' Inf in HbO in session ' int2str(s1)]);
+                                    image_hbo(isinf(image_hbo(:))) = omax;
+                                end
+                                if rInf
+                                    IOI = disp_msg(IOI,[int2str(rInf) ' Inf in HbR in session ' int2str(s1)]);
+                                    image_hbr(isinf(image_hbr(:))) = rmax;
                                 end
                                 %save - substitute 'O' and 'D' in file name
                                 fname = IOI.sess_res{s1}.fname{hasRGY(1)}{f1};
