@@ -196,7 +196,13 @@ for SubjIdx=1:length(job.IOImat)
                                             %Note that this takes several minutes to load per session
                                             %Y is typically 3 GB or larger
                                             Y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,dir_ioimat);
+                                            %set possible Inf values of Y to max of non Inf values of Y
+                                            
                                             [nx ny nt] = size(Y);
+                                            indInf = isinf(Y(:));
+                                            Y(indInf) = 0;
+                                            maxY = max(Y(:));
+                                            Y(indInf) = maxY;
                                             if spatial_LPF 
                                                 Ks.k1 = nx;
                                                 Ks.k2 = ny;
