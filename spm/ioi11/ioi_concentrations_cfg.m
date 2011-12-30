@@ -52,7 +52,7 @@ basehbt1.name = 'HbT0';
 basehbt1.strtype  = 'r';
 basehbt1.num = [1 1];
 basehbt1.def  = @(val)ioi_get_defaults('conc1.baseline_hbt', val{:});
-basehbt1.help = {'Baseline total hemoglobin, in mM, default 0.02mM.'};
+basehbt1.help = {'Baseline total hemoglobin, in microM, default 100 microM.'};
 
 configuration         = cfg_branch;
 configuration.tag     = 'configuration';
