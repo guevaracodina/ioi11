@@ -109,7 +109,7 @@ for SubjIdx=1:length(job.IOImat)
                             IOI.Sess(s1).U = U; %store onsets for each session
                             
                             %loop over available colors
-                            for c1=1:length(IOI.sess_res{s1}.fname)
+                            for c1=1:length(IOI.color.eng) %(IOI.sess_res{s1}.fname)
                                 doColor = 1;
                                 %potentially exclude various colors, to save time
                                 if ~include_OD
@@ -263,15 +263,16 @@ for SubjIdx=1:length(job.IOImat)
                                             end
                                             vx = [1 1 1];
                                             %sign for mask -- no longer used
-                                            try
-                                                if IOI.color.eng(c1) == IOI.color.red || IOI.color.eng(c1) == IOI.color.HbR
-                                                    sgn = -1;
-                                                else
-                                                    sgn = 1;
-                                                end
-                                            catch
-                                                sgn = 1;
-                                            end
+%                                             try
+%                                                 if IOI.color.eng(c1) == IOI.color.red || IOI.color.eng(c1) == IOI.color.HbR
+%                                                     sgn = -1;
+%                                                 else
+%                                                     sgn = 1;
+%                                                 end
+%                                             catch
+%                                                 sgn = 1;
+%                                             end
+                                            sgn =1;
                                             thold = 1.95; %threshold on t-stats
                                             for i0=1:size(b,1)
                                                 ioi_save_images(squeeze(b(i0,:,:)),b_names{i0},vx,Im,b_title{i0});
