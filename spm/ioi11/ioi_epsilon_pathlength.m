@@ -1,4 +1,4 @@
-function eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichCurve,whichSystem,debug)
+function eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichSystem,whichCurve,debug)
 
 %	This function estimates epsilon * D, it takes into account the camera
 %	response, the leds spectra and uses a pathlength factor either set from
