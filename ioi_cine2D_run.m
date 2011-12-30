@@ -164,6 +164,7 @@ for SubjIdx=1:length(job.IOImat)
                                 clims = [m0+dM*low_limit M0+dM*high_limit];
                                 %end
                                 try
+                                try
                                     fname_movie = fullfile(cineDir,['cine_S' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '.avi']);
                                     vidObj = VideoWriter(fname_movie);
                                     open(vidObj);
@@ -174,7 +175,11 @@ for SubjIdx=1:length(job.IOImat)
                                 end
                                 %set(gca,'NextPlot','replacechildren');
                                 for i0=1:size(d,3); %20
-                                    imagesc(squeeze(d(:,:,i0)),clims);
+                                    try
+                                        imagesc(squeeze(d(:,:,i0)),clims);
+                                    catch %in case there are Inf in d
+                                        imagesc(squeeze(d(:,:,i0)));
+                                    end
                                     F(i0) = getframe;
                                     if VideoOK
                                         writeVideo(vidObj,F(i0));
@@ -188,6 +193,7 @@ for SubjIdx=1:length(job.IOImat)
                                 %movie(h0,F,1,1/IOI.dev.TR); %,[0 0 0 0]);
                                 try close(h0); end
                                 IOI.cine{s1,m1}{c1}.fname_movie = fname_movie;
+                                end
                             end
                             if (ka2>0 || kb2 > 0)
                                 disp(['Skipped ' int2str(ka2+kb2) ' segments']);

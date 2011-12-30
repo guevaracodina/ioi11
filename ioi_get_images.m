@@ -22,43 +22,48 @@ try
     image_block = 1;
     if ~any(frames < 1)
         for i=1:length(frames)
-            %Loop through the values of ei to find the right block of images 
+            %Loop through the values of ei to find the right block of images
             j0 = image_block;
-            while j0<length(IOI.sess_res{s1}.ei)
-                if frames(i) <= IOI.sess_res{s1}.ei{j0}
-                    %this is the right block
-                    break
-                else
-                    j0 = j0+1;
+            try %new format
+                while j0<length(IOI.sess_res{s1}.ei)
+                    if frames(i) <= IOI.sess_res{s1}.ei{j0}
+                        %this is the right block
+                        break
+                    else
+                        j0 = j0+1;
+                    end
                 end
+                if j0 > image_block
+                    frames_loaded = 0;
+                end
+                image_block = j0;
+                if image_block>1
+                    fmod = frames(i)-IOI.sess_res{s1}.ei{image_block-1};
+                else
+                    fmod = frames(i);
+                end
+                fct = image_block;
+            catch %old format
+                if i==1
+                    %find number of frames per block %careful, this can vary
+                    %if length(IOI.sess_res{s1}.si) > 1
+                        fpb = 500; %IOI.sess_res{s1}.si{2}-IOI.sess_res{s1}.si{1};
+                    %else
+                    %    fpb = IOI.sess_res{s1}.ei{1}-IOI.sess_res{s1}.si{1}+1;
+                    %end
+                end
+                fmod = mod(frames(i),fpb);
+                %find location of desired frame in this block
+                
+                if fmod == 0
+                    fmod = fpb;
+                end
+                if fmod <= fmod_previous
+                    frames_loaded = 0;
+                end
+                fct = ceil(frames(i)/fpb);
             end
-            if j0 > image_block
-                frames_loaded = 0;
-            end
-            image_block = j0;
-%             if i==1
-%                 %find number of frames per block %careful, this can vary
-%                 if length(IOI.sess_res{s1}.si) > 1
-%                     fpb = IOI.sess_res{s1}.si{2}-IOI.sess_res{s1}.si{1};
-%                 else
-%                     fpb = IOI.sess_res{s1}.ei{1}-IOI.sess_res{s1}.si{1}+1;
-%                 end
-%             end
-%             fmod = mod(frames(i),fpb);
-            %find location of desired frame in this block
-            if image_block>1
-                fmod = frames(i)-IOI.sess_res{s1}.ei{image_block-1};
-            else
-                fmod = frames(i);
-            end
-%             if fmod == 0
-%                 fmod = fpb;
-%             end
-%             if fmod <= fmod_previous
-%                 frames_loaded = 0;
-%             end
-%            fct = ceil(frames(i)/fpb);
-            fct = image_block;
+            
             if ~frames_loaded
                 try
                     if ~doHbT
