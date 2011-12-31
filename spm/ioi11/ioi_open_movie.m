@@ -1,24 +1,34 @@
-function [obj F Y] = ioi_open_movie(file,pathname)
-file = fullfile(pathname,file);
-[dir0 fil0 ext0] = fileparts(file);
-switch ext0
-    case '.avi'
-        obj = VideoReader(file);
-        nF = obj.NumberOfFrames;
-        % Preallocate movie structure.
-        F(1:nF) = struct('cdata',...
-            zeros(obj.Height,obj.Width,3,'uint8'),'colormap',[]);
-        % Read one frame at a time.
-        for k=1:nF
-            F(k).cdata = read(obj,k);
-        end
-    case '.mat'
-        open(file);
+function ioi_open_movie(hObject,handles)
+%check that there is a valid movie there
+try
+    movie_selected = handles.Info.movie_selected;
+    load(movie_selected,'-mat');
+    %store data
+    handles.Movie.Y = d;
+    Y = d; clear d
+    guidata(hObject, handles);
+    [clims lmin lmax] = ioi_get_clims(handles);   
+    Nf = size(Y,3);
+    F(Nf) = struct('cdata',[],'colormap',[]);
+    h0 = figure;
+    for i0=1:Nf
+        imagesc(squeeze(Y(:,:,i0)),clims);
+        F(i0) = getframe;
+    end
+    try close(h0); end
+    %store raw data (Y) and movie data (F)
+    handles.Movie.F = F;
+    set(handles.text_min,'String',sprintf('%4.3s',lmin));
+    set(handles.text_max,'String',sprintf('%4.3s',lmax));
+    guidata(hObject, handles);
+    handles.Movie.FrameRate = 90; %play the movie quickly
+    ioi_play_movie(handles);
+    %restore desired movie frequency
+    handles.Movie.FrameRate = str2double(get(handles.movie_frequency,'String'));
+    set(handles.message_box,'String','');
+    set(handles.message_box,'BackgroundColor','White');
+catch
+    set(handles.message_box,'String','Movie cannot be opened');
+    set(handles.message_box,'BackgroundColor','Red');
 end
-[X dummy] = frame2im(F(1));
-[nx ny] = size(X);
-Y = zeros(nx,ny,nF);
-for k=1:nF
-    y = frame2im(F(k));
-    Y(:,:,k) = y;
-end
+guidata(hObject, handles);
