@@ -61,15 +61,15 @@ function FileMenu_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function OpenMenuItem_Callback(hObject, eventdata, handles)
-[file pathname] = uigetfile({'*.avi;*.mat','Select movies (.avi or .mat format)'});
-if ~isequal(file, 0)
-    [obj F Y] = ioi_open_movie(file,pathname);     
-    handles.Movie.obj = obj;
-    handles.Movie.F = F;
-    handles.Movie.Y = Y;
-    handles.Movie.FrameRate = str2double(get(handles.movie_frequency,'String'));
-    guidata(hObject, handles);
-end
+% [file pathname] = uigetfile({'*.Mdat','Select movies (.Mdat format)'});
+% if ~isequal(file, 0)
+%     [F Y] = ioi_open_movie(file,pathname);     
+%     %handles.Movie.obj = obj;
+%     handles.Movie.F = F;
+%     handles.Movie.Y = Y;
+%     handles.Movie.FrameRate = str2double(get(handles.movie_frequency,'String'));
+%     guidata(hObject, handles);
+% end
 
 
 % --------------------------------------------------------------------
@@ -161,23 +161,7 @@ movie_selected = movie_list{get(hObject,'Value')};
 %write selection to GUI
 handles.Info.movie_selected = movie_selected;
 guidata(hObject, handles);
-%check that there is a valid movie there
-try 
-    [pathname file ext1] = fileparts(movie_selected);
-    file = [file ext1]; 
-    [obj F Y] = ioi_open_movie(file,pathname);     
-    handles.Movie.obj = obj;
-    handles.Movie.F = F;
-    handles.Movie.Y = Y;
-    handles.Movie.FrameRate = str2double(get(handles.movie_frequency,'String'));
-    guidata(hObject, handles);
-    handles.Movie.FrameRate = 30; %play the movie quickly 
-    ioi_play_movie(handles);
-catch
-    set(handles.message_box,'String','Movie cannot be played');
-    set(handles.message_box,'BackgroundColor','Red');
-end
-
+ioi_open_movie(hObject,handles);
 
 function movie_list_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
@@ -201,3 +185,26 @@ end
 function play_movie_Callback(hObject, eventdata, handles)
 ioi_play_movie(handles);
 
+function edit_pmin_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function edit_pmax_CreateFcn(hObject, eventdata, handles)
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function edit_pmin_Callback(hObject, eventdata, handles)
+pmin = get(hObject,'String');
+set(handles.edit_pmin,'value',str2double(pmin));
+guidata(hObject, handles);
+%this requires regenerating the frames
+ioi_open_movie(hObject,handles);
+
+function edit_pmax_Callback(hObject, eventdata, handles)
+pmax = get(hObject,'String');
+set(handles.edit_pmax,'value',str2double(pmax));
+guidata(hObject, handles);
+%this requires regenerating the frames
+ioi_open_movie(hObject,handles);
