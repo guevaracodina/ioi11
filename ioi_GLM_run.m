@@ -237,6 +237,7 @@ for SubjIdx=1:length(job.IOImat)
                                             %Compute t stat
                                             %res = ; %a few seconds
                                             res2 = sum((y'-X*b).^2);
+                                            clear y
                                             mse = res2/length(res2);
                                             t = b(1,:)./(res2*bcov(1,1)/trRV).^0.5;
 %                                             if any(isnan(t(:))) || any(isinf(t(:)))
