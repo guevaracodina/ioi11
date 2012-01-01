@@ -195,16 +195,17 @@ for SubjIdx=1:length(job.IOImat)
                                             %put all the data for this color, and session, into memory
                                             %Note that this takes several minutes to load per session
                                             %Y is typically 3 GB or larger
-                                            Y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,dir_ioimat);
+                                            y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,dir_ioimat);
                                             %set possible Inf values of Y to max of non Inf values of Y
                                             
-                                            [nx ny nt] = size(Y);
-                                            indInf = isinf(Y(:));
-                                            indNaN = isnan(Y(:));
-                                            Y(indInf) = 0;
-                                            maxY = max(Y(:));
-                                            Y(indInf) = maxY;
-                                            Y(indNaN) = maxY;
+                                            [nx ny nt] = size(y);
+                                            indInf = isinf(y(:));
+                                            indNaN = isnan(y(:));
+                                            y(indInf) = 0;
+                                            maxY = max(y(:));
+                                            y(indInf) = maxY;
+                                            y(indNaN) = maxY;
+                                            clear indNaN indInf
                                             if spatial_LPF 
                                                 Ks.k1 = nx;
                                                 Ks.k2 = ny;
@@ -212,11 +213,11 @@ for SubjIdx=1:length(job.IOImat)
                                                 Ks = ioi_spatial_LPF('set',Ks);
                                                 %Gaussian spatial low pass filter
                                                 for i1=1:nt
-                                                    Y(:,:,i1) = ioi_spatial_LPF('lpf',Ks,squeeze(Y(:,:,i1)));   
+                                                    y(:,:,i1) = ioi_spatial_LPF('lpf',Ks,squeeze(y(:,:,i1)));   
                                                 end
                                             end
                                             %reshape
-                                            y = reshape(Y,nx*ny,nt);
+                                            y = reshape(y,nx*ny,nt);
                                             %GLM on whole images
                                             if hpf_butter_On
                                                 y =  ButterHPF(1/IOI.dev.TR,hpf_butter_freq,hpf_butter_order,y);
@@ -234,8 +235,8 @@ for SubjIdx=1:length(job.IOImat)
                                             %GLM inversion: calculating beta and residuals - would be SPM.Vbeta,
                                             b = Xm * y'; % beta : least square estimate
                                             %Compute t stat
-                                            res = y'-X*b; %a few seconds
-                                            res2 = sum(res.^2);
+                                            %res = ; %a few seconds
+                                            res2 = sum((y'-X*b).^2);
                                             mse = res2/length(res2);
                                             t = b(1,:)./(res2*bcov(1,1)/trRV).^0.5;
 %                                             if any(isnan(t(:))) || any(isinf(t(:)))
