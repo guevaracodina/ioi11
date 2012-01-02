@@ -26,7 +26,7 @@ c_led(3,:) = private_reinterpolate_lambda(lambda1, lambda2, npoints, hardware.le
 c_pathlength = ioi_path_length_factor(lambda1, lambda2, npoints, c_tot*1000, whichCurve);
 [c_ext_hbo,c_ext_hbr] = ioi_get_extinctions(lambda1,lambda2,npoints);
 
-if nargin>4
+if nargin>6
     figure;
     subplot(2,2,1)
     plot(lambda_vec,c_led(1,:),'r')
