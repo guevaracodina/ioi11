@@ -13,4 +13,6 @@ frame = ioi_check_frame(frame,nF);
 imagesc(squeeze(Y(:,:,frame)),clims);  
 axis(handles.axes1, 'off')
 colorbar('location','WestOutside')
-end
+sf = handles.Movie.AcqSamplingFreq;
+title(['Frame at time ' num2str(frame/sf) ' s']) 
+end 

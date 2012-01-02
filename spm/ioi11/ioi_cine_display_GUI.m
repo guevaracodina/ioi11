@@ -34,6 +34,8 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+function FileMenu_Callback(hObject, eventdata, handles)
+
 % --- Outputs from this function are returned to the command line.
 function varargout = ioi_cine_display_GUI_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
@@ -42,14 +44,8 @@ varargout{1} = handles.output;
 
 % --- Executes on button press in pushbutton1.
 function pushbutton1_Callback(hObject, eventdata, handles)
-axes(handles.axes1);
-%cla;
-popup_sel_index = get(handles.popupmenu1, 'Value');
-switch popup_sel_index
-    case 1
-        %Play movie
-        ioi_play_movie(handles);
-end
+%reload movie
+ioi_open_movie(hObject,handles);
 
 % --------------------------------------------------------------------
 function CloseMenuItem_Callback(hObject, eventdata, handles)
@@ -182,16 +178,44 @@ end
 function edit_pmin_Callback(hObject, eventdata, handles)
 pmin = get(hObject,'String');
 set(handles.edit_pmin,'value',str2double(pmin));
+%update min also -- careful not to get into an infinite loop of updating
+%pmin and min in turn (same for pmax and max)
 guidata(hObject, handles);
-%this requires regenerating the frames
-ioi_open_movie(hObject,handles);
+ioi_update_min(hObject, handles);
 
 function edit_pmax_Callback(hObject, eventdata, handles)
 pmax = get(hObject,'String');
 set(handles.edit_pmax,'value',str2double(pmax));
 guidata(hObject, handles);
-%this requires regenerating the frames
-ioi_open_movie(hObject,handles);
+ioi_update_max(hObject, handles);
+
+function edit_min_CreateFcn(hObject, eventdata, handles)
+min = get(hObject,'String');
+set(hObject,'value',str2double(min));
+guidata(hObject, handles);
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function edit_max_CreateFcn(hObject, eventdata, handles)
+max = get(hObject,'String');
+set(hObject,'value',str2double(max));
+guidata(hObject, handles);
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+function edit_min_Callback(hObject, eventdata, handles)
+min = get(hObject,'String');
+set(handles.edit_min,'value',str2double(min));
+guidata(hObject, handles);
+ioi_update_pmin(hObject, handles);
+
+function edit_max_Callback(hObject, eventdata, handles)
+max = get(hObject,'String');
+set(handles.edit_max,'value',str2double(max));
+guidata(hObject, handles);
+ioi_update_pmax(hObject, handles);
 
 function edit_frame_Callback(hObject, eventdata, handles)
 frame = round(str2double(get(hObject,'String')));
@@ -208,8 +232,8 @@ guidata(hObject, handles);
 ioi_display_frame(handles);
 
 function edit_xpos_Callback(hObject, eventdata, handles)
-xpos = get(hObject,'String');
-set(handles.edit_xpos,'String',round(xpos));
+xpos = round(str2double(get(hObject,'String')));
+set(handles.edit_xpos,'String',xpos);
 set(handles.slider_xpos,'value',xpos);
 guidata(hObject, handles);
 ioi_show_time_plot(handles);
@@ -238,3 +262,25 @@ set(handles.slider_ypos,'value',ypos);
 guidata(hObject, handles);
 ioi_show_time_plot(handles);
 ioi_show_xy_profiles(handles);
+
+function edit_spatialLPF_Callback(hObject, eventdata, handles)
+radius = round(str2double(get(hObject,'String')));
+set(handles.edit_spatialLPF,'String',radius);
+set(handles.slider_spatialLPF,'value',radius);
+guidata(hObject, handles);
+ioi_spatialLPF_call(hObject,handles);
+ioi_display_frame(handles);
+ioi_show_xy_profiles(handles);
+ioi_show_time_plot(handles);
+ioi_show_stats(handles);
+
+function slider_spatialLPF_Callback(hObject, eventdata, handles)
+radius = round(get(hObject,'Value'));
+set(handles.edit_spatialLPF,'String',radius);
+set(handles.slider_spatialLPF,'value',radius);
+guidata(hObject, handles);
+ioi_spatialLPF_call(hObject,handles);
+ioi_display_frame(handles);
+ioi_show_xy_profiles(handles);
+ioi_show_time_plot(handles);
+ioi_show_stats(handles);

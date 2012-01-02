@@ -14,7 +14,9 @@ axis(handles.axes_cutx, 'off')
 colorbar('location','WestOutside')
 title(['x-cut at y=' int2str(ypos)])  
 %y-cut
-set(handles.axes_cuty,'Position',[4+100+500 12 scalex*nx scalex*ny]); %only to ensure no old axes are left behind
+%make it a little smaller
+scaley = scaley*0.95;
+set(handles.axes_cuty,'Position',[4+100+500 12 scalex*nx scaley*ny]); %only to ensure no old axes are left behind
 axes(handles.axes_cuty) %select movie axes
 imagesc(squeeze(Y(xpos,:,:)));
 axis(handles.axes_cuty, 'off')
