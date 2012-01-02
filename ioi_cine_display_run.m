@@ -1,4 +1,5 @@
 function out = ioi_cine_display_run(job)
+out = [];
 try
     %launch GUI
     ioi_cine_display_GUI;
