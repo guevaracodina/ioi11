@@ -45,10 +45,10 @@ switch stat_mode_selected
         half_peaks = values/2;
         ind_hp = Y<=repmat(half_peaks,[1 1 nF]);
         %find indices of first half-peaks found 
-        [dummy_values_hp ind_hp_first] = min(ind_hp,[],3);
+        [dummy_values_hp ind_hp_first] = max(ind_hp,[],3);
         %find indices of last half-peaks found
         ind_hp = ind_hp(:,:,end:-1:1);
-        [dummy_values_hp ind_hp_last] = min(ind_hp,[],3);
+        [dummy_values_hp ind_hp_last] = max(ind_hp,[],3);
         ind_hp_last = nF-ind_hp_last;
         %calculate FWHM
         pY = (ind_hp_last-ind_hp_first)/sf;    
