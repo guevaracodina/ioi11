@@ -13,5 +13,7 @@ lp = linspace(0,nF/handles.Movie.AcqSamplingFreq,nF);
 plot(lp,squeeze(Y(xpos,ypos,:)))
 %axis(handles.axes5, 'off')
 title(['Time series at (' int2str(xpos) ',' int2str(ypos) ')']) 
-xlabel('Time (s)')
+sf = handles.Movie.AcqSamplingFreq;
+set(handles.axes_plot,'xtick',0:nF/sf/5:nF/sf)
+%xlabel('Time (s)')
 end
