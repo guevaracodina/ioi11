@@ -15,7 +15,7 @@ set(handles.axes1,'FontSize',handles.Movie.CommonFontSize);
 colorbar('location','EastOutside')
 movie(handles.figure1, F, 1, handles.Movie.FrameRate,[S.XOffset S.YOffset+S.YShift 0 0]); 
 ioi_show_xy_profiles(handles);
-ioi_show_anatomical(handles);
+try ioi_show_anatomical(handles); end
 ioi_show_time_plot(handles);
 ioi_show_stats(handles);
 end
