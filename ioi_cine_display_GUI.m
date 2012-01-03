@@ -34,7 +34,7 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-function FileMenu_Callback(hObject, eventdata, handles)
+% function FileMenu_Callback(hObject, eventdata, handles)
 
 % --- Outputs from this function are returned to the command line.
 function varargout = ioi_cine_display_GUI_OutputFcn(hObject, eventdata, handles)
@@ -48,14 +48,14 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 ioi_open_movie(hObject,handles);
 
 % --------------------------------------------------------------------
-function CloseMenuItem_Callback(hObject, eventdata, handles)
-selection = questdlg(['Close ' get(handles.figure1,'Name') '?'],...
-                     ['Close ' get(handles.figure1,'Name') '...'],...
-                     'Yes','No','Yes');
-if strcmp(selection,'No')
-    return;
-end
-delete(handles.figure1)
+% function CloseMenuItem_Callback(hObject, eventdata, handles)
+% selection = questdlg(['Close ' get(handles.figure1,'Name') '?'],...
+%                      ['Close ' get(handles.figure1,'Name') '...'],...
+%                      'Yes','No','Yes');
+% if strcmp(selection,'No')
+%     return;
+% end
+% delete(handles.figure1)
 
 % --- Executes on selection change in popupmenu1.
 function popupmenu1_Callback(hObject, eventdata, handles)
@@ -258,9 +258,9 @@ radius = round(str2double(get(hObject,'String')));
 set(handles.edit_spatialLPF,'String',radius);
 set(handles.slider_spatialLPF,'value',radius);
 ioi_spatialLPF_call(hObject,handles);
+ioi_show_time_plot(handles);
 ioi_display_frame(handles);
 ioi_show_xy_profiles(handles);
-ioi_show_time_plot(handles);
 ioi_show_stats(handles);
 
 function slider_spatialLPF_Callback(hObject, eventdata, handles)
@@ -268,7 +268,7 @@ radius = round(get(hObject,'Value'));
 set(handles.edit_spatialLPF,'String',radius);
 set(handles.slider_spatialLPF,'value',radius);
 ioi_spatialLPF_call(hObject,handles);
+ioi_show_time_plot(handles);
 ioi_display_frame(handles);
 ioi_show_xy_profiles(handles);
-ioi_show_time_plot(handles);
 ioi_show_stats(handles);

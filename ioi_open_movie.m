@@ -25,6 +25,11 @@ try
     handles.Info.scalex = scalex;
     handles.Info.scaley = scaley;
     handles.Movie.F = F;
+    handles.Movie.CommonFontSize = 12;
+    handles.Movie.CommonXOffset = 40;
+    handles.Movie.CommonYOffset = 24;
+    handles.Movie.CommonXShift = 500;
+    handles.Movie.CommonYShift = 368;
     %initialize the min and max boxes 
 %     set(handles.text_min,'String',sprintf('%4.3s',lmin));
 %     set(handles.text_max,'String',sprintf('%4.3s',lmax));

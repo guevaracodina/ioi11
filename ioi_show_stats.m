@@ -1,8 +1,7 @@
 function ioi_show_stats(handles)
 Y = handles.Movie.Y;
 [nx ny nF] = size(Y);
-scalex = handles.Info.scalex;
-scaley = handles.Info.scaley;
+S = ioi_get_common_settings(handles);
 stat_mode_selected = handles.Info.stat_mode_selected;
 sf = handles.Movie.AcqSamplingFreq;
 switch stat_mode_selected
@@ -55,15 +54,16 @@ switch stat_mode_selected
         tit = stat_mode_selected;
 end
         
-set(handles.axes5,'Position',[4+100+1000 12+400 scalex*nx scaley*ny]); 
+set(handles.axes5,'Position',[S.XOffset+2*S.XShift S.YOffset+S.YShift S.scalex*nx S.scaley*ny]); 
 axes(handles.axes5) %select movie axes
 try 
     imagesc(pY,clims);
 catch
     imagesc(pY);
 end
-axis(handles.axes5, 'off')
-colorbar('location','WestOutside')
+%axis(handles.axes5, 'off')
+set(handles.axes5,'FontSize',handles.Movie.CommonFontSize);
+colorbar('location','EastOutside')
 title(tit)  
-
+drawnow
 end
