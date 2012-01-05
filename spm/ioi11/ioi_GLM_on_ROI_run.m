@@ -42,8 +42,21 @@ for SubjIdx=1:length(job.IOImat)
         tic
         clear IOI ROI SPM
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        load(IOImat);
+        IOImat = job.IOImat{SubjIdx};               
+        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
+        if isfield(job.IOImatCopyChoice,'IOImatCopy')
+            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
+            newDir = fullfile(dir_ioimat,newDir);
+            if ~exist(newDir,'dir'),mkdir(newDir); end
+            IOImat = fullfile(newDir,'IOI.mat');
+        else
+            newDir = dir_ioimat;
+        end
+        try
+            load(IOImat);
+        catch
+            load(job.IOImat{SubjIdx});
+        end
         if ~isfield(IOI.res,'ROIOK')
             disp(['No ROI available for subject ' int2str(SubjIdx) ' ... skipping series extraction']);
         else
@@ -52,15 +65,6 @@ for SubjIdx=1:length(job.IOImat)
             else
                 if ~isfield(IOI.res,'GLMOK') || job.force_redo
                     if isfield(IOI,'X'), IOI = rmfield(IOI,'X'); end
-                    [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-                    if isfield(job.IOImatCopyChoice,'IOImatCopy')
-                        newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-                        newDir = fullfile(dir_ioimat,newDir);
-                        if ~exist(newDir,'dir'),mkdir(newDir); end
-                        IOImat = fullfile(newDir,'IOI.mat');
-                    else
-                        newDir = dir_ioimat;
-                    end
                     if save_figures
                         dir_fig = fullfile(newDir,'fig');
                         if ~exist(dir_fig,'dir'),mkdir(dir_fig);end
