@@ -57,19 +57,22 @@ for SubjIdx=1:length(job.IOImat)
         tic
         clear IOI
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        load(IOImat);
+        IOImat = job.IOImat{SubjIdx};               
+        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
+        if isfield(job.IOImatCopyChoice,'IOImatCopy')
+            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
+            newDir = fullfile(dir_ioimat,newDir);
+            if ~exist(newDir,'dir'),mkdir(newDir); end
+            IOImat = fullfile(newDir,'IOI.mat');
+        else
+            newDir = dir_ioimat;
+        end
+        try
+            load(IOImat);
+        catch
+            load(job.IOImat{SubjIdx});
+        end
         if ~isfield(IOI.res,'OnsetsOK') || job.force_redo
-            [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-            if isfield(job.IOImatCopyChoice,'IOImatCopy')
-                newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-                newDir = fullfile(dir_ioimat,newDir);
-                if ~exist(newDir,'dir'),mkdir(newDir); end
-                IOImat = fullfile(newDir,'IOI.mat');
-            else
-                newDir = dir_ioimat;
-            end
-            
             %loop over sessions
             for s1=1:length(IOI.sess_res)
                 if all_sessions || sum(s1==selected_sessions)
@@ -245,7 +248,7 @@ try
     eSD = max(SD0,mbSD);
     %find onsets peaks: pkh: peak height; pk: onset time at sf sampling frequency
     [pkh pk] = findpeaks(el,'MINPEAKHEIGHT',MN+nSD*max(SD0,mbSD),'MINPEAKDISTANCE',rs);
-    if isempty(pk) 
+    if isempty(pk)
         disp(['No onsets detected initially. Chosen minimum SD too high, setting it to zero']);
         [pkh pk] = findpeaks(el,'MINPEAKHEIGHT',MN+nSD*SD0,'MINPEAKDISTANCE',rs);
     end
@@ -362,7 +365,7 @@ la = ceil(sf*ta);
 m = zeros(n,lb+la);
 lp = linspace(-tb,ta,(ta+tb)*sf);
 if E.use_epilepsy_convention
-el = -el;
+    el = -el;
 end
 for i=1:n
     st = ceil(ons(i)*sf);

@@ -100,8 +100,8 @@ for SubjIdx=1:length(job.IOImat)
                             if all_sessions || sum(s1==selected_sessions)
                                 for c1=1:length(IOI.color.eng)
                                     doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);
-                                    if doColor
-                                        fname0 = {};
+                                    fname0 = {};
+                                    if doColor                                        
                                         if IOI.color.eng(c1) == 'T'
                                             doHbT = 1;
                                             [cHbR cHbO] = ioi_find_HbRHbO(IOI,s1);
