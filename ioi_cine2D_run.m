@@ -148,6 +148,14 @@ for SubjIdx=1:length(job.IOImat)
                             end
                         end
                     end
+                    %count onsets
+                    cnt = [];
+                    for m1=1:length(onsets_list{s1})
+                        cnt = [cnt length(onsets_list{s1}{m1})];                        
+                    end
+                    disp(['Onset counts, session ' int2str(s1)]);
+                    disp(cnt)
+                    IOI.cine_onset_count{s1} = cnt;
                     IOI.cine_onsets_list{s1} = onsets_list{s1};
                     %loop over colors
                     for c1=1:length(IOI.color.eng);
