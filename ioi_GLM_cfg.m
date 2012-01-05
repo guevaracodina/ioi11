@@ -66,7 +66,42 @@ IOImatCopyChoice.help      = {'Choose whether to overwrite the IOI.mat structure
         
 %%%%%%%%%%%%%%%%%%%%%%
 
+shrink_x      = cfg_entry;
+shrink_x.tag  = 'shrink_x';
+shrink_x.name = 'Shrink factor for x dimension';
+shrink_x.strtype  = 'i';
+shrink_x.num = [1 1];
+shrink_x.val  = {2};
+shrink_x.help = {'Data reduction factor in x.'};
 
+shrink_y      = cfg_entry;
+shrink_y.tag  = 'shrink_y';
+shrink_y.name = 'Shrink factor for y dimension';
+shrink_y.strtype  = 'i';
+shrink_y.num = [1 1];
+shrink_y.val = {2};
+shrink_y.help = {'Data reduction factor in y.'};
+
+configuration_shrink         = cfg_branch;
+configuration_shrink.tag     = 'configuration_shrink';
+configuration_shrink.name    = 'Configuration shrinkage';
+configuration_shrink.val     = {shrink_x shrink_y};
+configuration_shrink.help    = {'Select values.'};
+
+no_shrinkage         = cfg_branch;
+no_shrinkage.tag     = 'no_shrinkage';
+no_shrinkage.name    = 'No shrinkage';
+no_shrinkage.val     = {};
+no_shrinkage.help    = {};
+
+shrinkage_choice        = cfg_choice;
+shrinkage_choice.name   = 'Choose shrinkage method';
+shrinkage_choice.tag    = 'shrinkage_choice';
+shrinkage_choice.values = {no_shrinkage,configuration_shrink};
+shrinkage_choice.val    = {configuration_shrink};
+shrinkage_choice.help   = {'Choose whether to shrink the data. Images will then be stored. And could be reused later.'}';
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
 spatial_LPF_radius         = cfg_entry;
 spatial_LPF_radius.name    = 'Spatial LPF radius';
 spatial_LPF_radius.tag     = 'spatial_LPF_radius';
@@ -569,7 +604,8 @@ save_figures.help = {'Save figures.'}';
 glm1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 glm1.name = 'GLM (images or ROIs)';             % The display name
 glm1.tag  = 'glm1'; %Very important: tag is used when calling for execution
-glm1.val  = {IOImat data_selection_choice redo1 IOImatCopyChoice session_choice ...
+glm1.val  = {IOImat data_selection_choice redo1 IOImatCopyChoice ...
+     shrinkage_choice session_choice ...
      bases volt use_onset_amplitudes hpf_butter lpf_gauss include_flow ...
      include_HbT include_OD ...
      generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs

@@ -46,7 +46,13 @@ else
         spatial_LPF = 0;
     end
 end
-
+if isfield(job.shrinkage_choice,'configuration_shrink')
+    shrink_x = job.shrinkage_choice.configuration_shrink.shrink_x;
+    shrink_y = job.shrinkage_choice.configuration_shrink.shrink_y;
+    shrinkage_choice = 1;
+else
+    shrinkage_choice = 0;
+end
 save_figures = job.save_figures;
 generate_figures = job.generate_figures;
 use_onset_amplitudes = job.use_onset_amplitudes;
@@ -88,6 +94,54 @@ for SubjIdx=1:length(job.IOImat)
                             IOI.color.eng = [IOI.color.eng IOI.color.HbT];
                         end
                     end
+                    %save shrunk images
+                    if shrinkage_choice
+                        for s1=1:length(IOI.sess_res)
+                            if all_sessions || sum(s1==selected_sessions)
+                                for c1=1:length(IOI.color.eng)
+                                    doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);
+                                    if doColor
+                                        fname0 = {};
+                                        if IOI.color.eng(c1) == 'T'
+                                            doHbT = 1;
+                                            [cHbR cHbO] = ioi_find_HbRHbO(IOI,s1);
+                                            fname = IOI.sess_res{s1}.fname{cHbR};
+                                            fname2 = IOI.sess_res{s1}.fname{cHbO};
+                                        else
+                                            doHbT = 0;
+                                            fname = IOI.sess_res{s1}.fname{c1};                                            
+                                        end
+                                        for f1=1:length(fname)
+                                            V = spm_vol(fname{f1});
+                                            Y = spm_read_vols(V);
+                                            if doHbT
+                                                V2 = spm_vol(fname2{f1});
+                                                Y2 = spm_read_vols(V2);
+                                                Y = Y+Y2;
+                                            end
+                                            %shrink by averaging
+                                            Y0 = zeros(size(Y(1:shrink_x:(end-shrink_x+1),1:shrink_y:(end-shrink_y+1),:)));
+                                            for i1=1:shrink_x
+                                                for i2=1:shrink_y
+                                                    Y0 = Y0 + Y(i1:shrink_x:(end-shrink_x+i1),i2:shrink_y:(end-shrink_y+i2),:);
+                                                end
+                                            end
+                                            %save images
+                                            [dir0 fil0 ext0] = fileparts(fname{f1});
+                                            if doHbT
+                                                fil0 = regexprep(fil0, ['_' IOI.color.HbR '_'],  ['_' IOI.color.HbT '_']);
+                                            end
+                                            tn = fullfile(dir0,[fil0 '_shrunk_' int2str(shrink_x) 'x' int2str(shrink_y) ext0]);
+                                            fname0 = [fname0; tn];    
+                                        end
+                                    end
+                                    IOI.sess_shrunk{s1}.fname{c1} = fname0;
+                                end
+                            end
+                        end
+                    end
+                    %Overwrite old IOI
+                    save(job.IOImat{SubjIdx},'IOI');
                     %loop over sessions
                     for s1=1:length(IOI.sess_res)
                         if all_sessions || sum(s1==selected_sessions)
@@ -110,40 +164,7 @@ for SubjIdx=1:length(job.IOImat)
                             
                             %loop over available colors
                             for c1=1:length(IOI.color.eng) %(IOI.sess_res{s1}.fname)
-                                doColor = 1;
-                                %potentially exclude various colors, to save time
-                                if ~include_OD
-                                    if IOI.color.eng(c1) == IOI.color.red || ...
-                                            IOI.color.eng(c1) == IOI.color.green || ...
-                                            IOI.color.eng(c1) == IOI.color.yellow
-                                        doColor = 0;
-                                    end
-                                end
-                                try
-                                    if IOI.color.eng(c1) == IOI.color.flow
-                                        if ~include_flow
-                                            doColor = 0;
-                                        end
-                                    end
-                                end
-                                try
-                                    if IOI.color.eng(c1) == IOI.color.laser
-                                        doColor = 0;
-                                    end
-                                end
-                                try
-                                    if IOI.color.eng(c1) == IOI.color.contrast
-                                        doColor = 0;
-                                    end
-                                end
-                                try
-                                    if ~include_HbT
-                                        if IOI.color.eng(c1) == IOI.color.HbT
-                                            doColor = 0;
-                                        end
-                                    end
-                                end
-                                        
+                                doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);                                       
                                 if doColor
                                     %select design matrix
                                     if ~iscell(Xtmp)
@@ -477,6 +498,42 @@ for SubjIdx=1:length(job.IOImat)
         disp(exception.identifier)
         disp(exception.stack(1))
         out.IOImat{SubjIdx} = job.IOImat{SubjIdx};
+    end
+end
+end
+
+function doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT)
+doColor = 1;
+%potentially exclude various colors, to save time
+if ~include_OD
+    if IOI.color.eng(c1) == IOI.color.red || ...
+            IOI.color.eng(c1) == IOI.color.green || ...
+            IOI.color.eng(c1) == IOI.color.yellow
+        doColor = 0;
+    end
+end
+try
+    if IOI.color.eng(c1) == IOI.color.flow
+        if ~include_flow
+            doColor = 0;
+        end
+    end
+end
+try
+    if IOI.color.eng(c1) == IOI.color.laser
+        doColor = 0;
+    end
+end
+try
+    if IOI.color.eng(c1) == IOI.color.contrast
+        doColor = 0;
+    end
+end
+try
+    if ~include_HbT
+        if IOI.color.eng(c1) == IOI.color.HbT
+            doColor = 0;
+        end
     end
 end
 end
