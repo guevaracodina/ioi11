@@ -133,7 +133,7 @@ for SubjIdx=1:length(job.IOImat)
                                             end
                                             tn = fullfile(dir0,[fil0 '_shrunk_' int2str(shrink_x) 'x' int2str(shrink_y) ext0]);
                                             fname0 = [fname0; tn]; 
-                                            ioi_save_nifti(Y0,fname0,[1 1 1]);
+                                            ioi_save_nifti(Y0,tn,[1 1 1]);
                                         end
                                     end
                                     IOI.sess_shrunk{s1}.fname{c1} = fname0;
