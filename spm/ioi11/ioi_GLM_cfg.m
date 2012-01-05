@@ -191,7 +191,7 @@ ROI_choice.help   = {'Choose ROI selection method'}';
 image_mode         = cfg_branch;
 image_mode.tag     = 'image_mode';
 image_mode.name    = 'Image mode';
-image_mode.val     = {spatial_LPF};
+image_mode.val     = {spatial_LPF shrinkage_choice};
 image_mode.help    = {'Data will be images'};
 
 ROI_mode         = cfg_branch;
@@ -605,7 +605,7 @@ glm1      = cfg_exbranch;       % This is the branch that has information about 
 glm1.name = 'GLM (images or ROIs)';             % The display name
 glm1.tag  = 'glm1'; %Very important: tag is used when calling for execution
 glm1.val  = {IOImat data_selection_choice redo1 IOImatCopyChoice ...
-     shrinkage_choice session_choice ...
+     session_choice ...
      bases volt use_onset_amplitudes hpf_butter lpf_gauss include_flow ...
      include_HbT include_OD ...
      generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs

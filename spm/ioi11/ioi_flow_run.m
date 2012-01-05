@@ -6,11 +6,7 @@ if isfield(job.session_choice,'select_sessions')
 else
     all_sessions = 1;
 end
-try
-    RemoveLC = job.RemoveLC;
-catch
-    RemoveLC = 1;
-end
+RemoveLC = job.RemoveLC;
 for SubjIdx=1:length(job.IOImat)
     try
         tic

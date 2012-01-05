@@ -1,4 +1,4 @@
-function Ya = ioi_get_images(IOI,frames,c1,s1,dir_ioimat)
+function Ya = ioi_get_images(IOI,frames,c1,s1,dir_ioimat,shrinkage_choice)
 try
     Ya = [];
     doHbT = 0;
@@ -39,7 +39,7 @@ try
                 if i==1
                     %find number of frames per block %careful, this can vary
                     %if length(IOI.sess_res{s1}.si) > 1
-                        fpb = 500; %IOI.sess_res{s1}.si{2}-IOI.sess_res{s1}.si{1};
+                    fpb = 500; %IOI.sess_res{s1}.si{2}-IOI.sess_res{s1}.si{1};
                     %else
                     %    fpb = IOI.sess_res{s1}.ei{1}-IOI.sess_res{s1}.si{1}+1;
                     %end
@@ -58,58 +58,58 @@ try
             
             if ~frames_loaded
                 try
-                    if ~isfield(IOI,'sess_shrunk')
-                    if ~doHbT
-                        V = spm_vol(IOI.sess_res{s1}.fname{c1}{fct});
-                        Y = spm_read_vols(V);
-                        frames_loaded = 1;
-                    else
-                        V1 = spm_vol(IOI.sess_res{s1}.fname{cHbO}{fct});
-                        V2 = spm_vol(IOI.sess_res{s1}.fname{cHbR}{fct});
-                        Y = spm_read_vols(V1)+spm_read_vols(V2);
-                        frames_loaded = 1;
-                    end
+                    if ~isfield(IOI,'sess_shrunk') || ~shrinkage_choice
+                        if ~doHbT
+                            V = spm_vol(IOI.sess_res{s1}.fname{c1}{fct});
+                            Y = spm_read_vols(V);
+                            frames_loaded = 1;
+                        else
+                            V1 = spm_vol(IOI.sess_res{s1}.fname{cHbO}{fct});
+                            V2 = spm_vol(IOI.sess_res{s1}.fname{cHbR}{fct});
+                            Y = spm_read_vols(V1)+spm_read_vols(V2);
+                            frames_loaded = 1;
+                        end
                     else
                         V = spm_vol(IOI.sess_shrunk{s1}.fname{c1}{fct});
                         Y = spm_read_vols(V);
                         frames_loaded = 1;
                     end
                 catch
-                    if ~isfield(IOI,'sess_shrunk')
-                    if ~doHbT
-                        [dir0 fil0 ext0] = fileparts(IOI.sess_res{s1}.fname{c1}{fct});
-                        fsep = strfind(dir0,filesep);
-                        res = strfind(dir0,'Res');
-                        fgr = fsep(fsep > res);
-                        tdir = dir0(1:fgr(2));
-                        tfname = fullfile(dir_ioimat,['S' gen_num_str(s1,2)],[fil0 ext0]);
-                        try
-                            V = spm_vol(tfname);
-                            Y = spm_read_vols(V);
-                            frames_loaded = 1;
-                        catch
-                            %file does not exist
-                            return
+                    if ~isfield(IOI,'sess_shrunk') || ~shrinkage_choice
+                        if ~doHbT
+                            [dir0 fil0 ext0] = fileparts(IOI.sess_res{s1}.fname{c1}{fct});
+                            fsep = strfind(dir0,filesep);
+                            res = strfind(dir0,'Res');
+                            fgr = fsep(fsep > res);
+                            tdir = dir0(1:fgr(2));
+                            tfname = fullfile(dir_ioimat,['S' gen_num_str(s1,2)],[fil0 ext0]);
+                            try
+                                V = spm_vol(tfname);
+                                Y = spm_read_vols(V);
+                                frames_loaded = 1;
+                            catch
+                                %file does not exist
+                                return
+                            end
+                        else
+                            [dir0 fil0 ext0] = fileparts(IOI.sess_res{s1}.fname{cHbO}{fct});
+                            [dir0 fil2 ext0] = fileparts(IOI.sess_res{s1}.fname{cHbR}{fct});
+                            fsep = strfind(dir0,filesep);
+                            res = strfind(dir0,'Res');
+                            fgr = fsep(fsep > res);
+                            tdir = dir0(1:fgr(2));
+                            tfname1 = fullfile(dir_ioimat,['S' gen_num_str(s1,2)],[fil0 ext0]);
+                            tfname2 = fullfile(dir_ioimat,['S' gen_num_str(s1,2)],[fil2 ext0]);
+                            try
+                                V1 = spm_vol(tfname1);
+                                V2 = spm_vol(tfname2);
+                                Y = spm_read_vols(V1)+spm_read_vols(V2);
+                                frames_loaded = 1;
+                            catch
+                                %file does not exist
+                                return
+                            end
                         end
-                    else
-                        [dir0 fil0 ext0] = fileparts(IOI.sess_res{s1}.fname{cHbO}{fct});
-                        [dir0 fil2 ext0] = fileparts(IOI.sess_res{s1}.fname{cHbR}{fct});
-                        fsep = strfind(dir0,filesep);
-                        res = strfind(dir0,'Res');
-                        fgr = fsep(fsep > res);
-                        tdir = dir0(1:fgr(2));
-                        tfname1 = fullfile(dir_ioimat,['S' gen_num_str(s1,2)],[fil0 ext0]);
-                        tfname2 = fullfile(dir_ioimat,['S' gen_num_str(s1,2)],[fil2 ext0]);
-                        try
-                            V1 = spm_vol(tfname1);
-                            V2 = spm_vol(tfname2);
-                            Y = spm_read_vols(V1)+spm_read_vols(V2);
-                            frames_loaded = 1;
-                        catch
-                            %file does not exist
-                            return
-                        end
-                    end
                     else
                         [dir0 fil0 ext0] = fileparts(IOI.sess_shrunk{s1}.fname{c1}{fct});
                         fsep = strfind(dir0,filesep);
