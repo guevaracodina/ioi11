@@ -87,11 +87,22 @@ for SubjIdx=1:length(job.IOImat)
     try
         tic
         clear IOI ROI HDM
-        %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        load(IOImat);
-        %Loop over sessions and ROIs
-        
+       %Load IOI.mat information
+        IOImat = job.IOImat{SubjIdx};               
+        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
+        if isfield(job.IOImatCopyChoice,'IOImatCopy')
+            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
+            newDir = fullfile(dir_ioimat,newDir);
+            if ~exist(newDir,'dir'),mkdir(newDir); end
+            IOImat = fullfile(newDir,'IOI.mat');
+        else
+            newDir = dir_ioimat;
+        end
+        try
+            load(IOImat);
+        catch
+            load(job.IOImat{SubjIdx});
+        end
         if ~isfield(IOI.res,'ROIOK')
             disp(['No ROI available for subject ' int2str(SubjIdx) ' ... skipping HDM']);
         else
@@ -102,8 +113,7 @@ for SubjIdx=1:length(job.IOImat)
                     disp(['Onsets (from GLM module) not available for subject ' int2str(SubjIdx) ' ... skipping HDM']);
                 else
                     if ~isfield(IOI.res,'HDMOK') || job.force_redo
-                        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-                        %load ROI
+                             %load ROI
                         if ~isempty(job.ROImat)
                             load(job.ROImat{SubjIdx});
                         else
@@ -112,12 +122,6 @@ for SubjIdx=1:length(job.IOImat)
                             catch
                                 load(fullfile(dir_ioimat,'ROI.mat'));
                             end
-                        end
-                        if isfield(job.IOImatCopyChoice,'IOImatCopy')
-                            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-                            newDir = fullfile(dir_ioimat,newDir);
-                            if ~exist(newDir,'dir'),mkdir(newDir); end
-                            IOImat = fullfile(newDir,'IOI.mat');
                         end
                         [dir1 dummy] = fileparts(IOImat);
                         

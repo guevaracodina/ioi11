@@ -18,9 +18,6 @@ for SubjIdx=1:length(job.IOImat)
     try
         tic
         clear IOI
-        %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        load(IOImat);
         %select a subset of sessions
         if isfield(job.session_choice,'select_sessions')
             all_sessions = 0;
@@ -28,9 +25,26 @@ for SubjIdx=1:length(job.IOImat)
         else
             all_sessions = 1;
         end
+        
+        %Load IOI.mat information
+        IOImat = job.IOImat{SubjIdx};               
+        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
+        if isfield(job.IOImatCopyChoice,'IOImatCopy')
+            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
+            newDir = fullfile(dir_ioimat,newDir);
+            if ~exist(newDir,'dir'),mkdir(newDir); end
+            IOImat = fullfile(newDir,'IOI.mat');
+        else
+            newDir = dir_ioimat;
+        end
+        try
+            load(IOImat);
+        catch
+            load(job.IOImat{SubjIdx});
+        end
+        
         if ~isfield(IOI.res,'concOK') || job.force_redo
             
-            [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
             IOI.color.HbO = str_HbO;
             IOI.color.HbR = str_HbR;
             if ~(IOI.color.eng==str_HbO)

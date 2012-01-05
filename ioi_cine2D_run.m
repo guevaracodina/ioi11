@@ -27,25 +27,31 @@ for SubjIdx=1:length(job.IOImat)
     try
         tic
         clear IOI onsets_list M
-        %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        load(IOImat);
+        
         if ~isfield(IOI,'dev')
             IOI.dev.TR = 0.2;
         end
         window_after = round(job.window_after/IOI.dev.TR);
         window_before = round(job.window_before/IOI.dev.TR);
         
-        if ~isfield(IOI.res,'cineOK') || job.force_redo
-            [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-            if isfield(job.IOImatCopyChoice,'IOImatCopy')
-                newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-                newDir = fullfile(dir_ioimat,newDir);
-                if ~exist(newDir,'dir'),mkdir(newDir); end
-                IOImat = fullfile(newDir,'IOI.mat');
-            else
-                newDir = dir_ioimat;
-            end
+        %Load IOI.mat information
+        IOImat = job.IOImat{SubjIdx};               
+        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
+        if isfield(job.IOImatCopyChoice,'IOImatCopy')
+            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
+            newDir = fullfile(dir_ioimat,newDir);
+            if ~exist(newDir,'dir'),mkdir(newDir); end
+            IOImat = fullfile(newDir,'IOI.mat');
+        else
+            newDir = dir_ioimat;
+        end
+        try
+            load(IOImat);
+        catch
+            load(job.IOImat{SubjIdx});
+        end
+        
+        if ~isfield(IOI.res,'cineOK') || job.force_redo           
             cineDir = fullfile(newDir,dir_cine);
             if ~exist(cineDir,'dir'), mkdir(cineDir); end
             %get stimulation information - Careful, here onset duration is ignored!

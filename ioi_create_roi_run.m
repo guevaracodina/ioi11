@@ -9,11 +9,22 @@ for SubjIdx=1:length(job.IOImat)
     try
         clear IOI
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        load(IOImat);
-        
+        IOImat = job.IOImat{SubjIdx};               
+        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
+        if isfield(job.IOImatCopyChoice,'IOImatCopy')
+            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
+            newDir = fullfile(dir_ioimat,newDir);
+            if ~exist(newDir,'dir'),mkdir(newDir); end
+            IOImat = fullfile(newDir,'IOI.mat');
+        else
+            newDir = dir_ioimat;
+        end
+        try
+            load(IOImat);
+        catch
+            load(job.IOImat{SubjIdx});
+        end
         if ~isfield(IOI.res,'ROIOK') || job.force_redo
-            [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
             if job.RemovePreviousROI
                 try
                     IOI.res = rmfield(IOI.res,'ROIOK');
