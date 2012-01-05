@@ -217,7 +217,7 @@ for SubjIdx=1:length(job.IOImat)
                                             %put all the data for this color, and session, into memory
                                             %Note that this takes several minutes to load per session
                                             %Y is typically 3 GB or larger
-                                            y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,dir_ioimat);
+                                            y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,dir_ioimat,shrinkage_choice);
                                             %set possible Inf values of Y to max of non Inf values of Y
                                             
                                             [nx ny nt] = size(y);
