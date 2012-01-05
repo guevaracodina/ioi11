@@ -5,15 +5,7 @@ try
     try
         if IOI.color.eng(c1) == IOI.color.HbT
             doHbT = 1;
-            %find colors for HbO and HbR
-            for c0=1:length(IOI.sess_res{s1}.fname)
-                if IOI.color.eng(c0) == IOI.color.HbO
-                    cHbO = c0;
-                end
-                if IOI.color.eng(c0) == IOI.color.HbR
-                    cHbR = c0;
-                end
-            end
+            [cHbR cHbO] = ioi_find_HbRHbO(IOI,s1);
         end
     end
     first_pass = 1;
@@ -66,6 +58,7 @@ try
             
             if ~frames_loaded
                 try
+                    if ~isfield(IOI,'sess_shrunk')
                     if ~doHbT
                         V = spm_vol(IOI.sess_res{s1}.fname{c1}{fct});
                         Y = spm_read_vols(V);
@@ -76,7 +69,13 @@ try
                         Y = spm_read_vols(V1)+spm_read_vols(V2);
                         frames_loaded = 1;
                     end
+                    else
+                        V = spm_vol(IOI.sess_shrunk{s1}.fname{c1}{fct});
+                        Y = spm_read_vols(V);
+                        frames_loaded = 1;
+                    end
                 catch
+                    if ~isfield(IOI,'sess_shrunk')
                     if ~doHbT
                         [dir0 fil0 ext0] = fileparts(IOI.sess_res{s1}.fname{c1}{fct});
                         fsep = strfind(dir0,filesep);
@@ -105,6 +104,22 @@ try
                             V1 = spm_vol(tfname1);
                             V2 = spm_vol(tfname2);
                             Y = spm_read_vols(V1)+spm_read_vols(V2);
+                            frames_loaded = 1;
+                        catch
+                            %file does not exist
+                            return
+                        end
+                    end
+                    else
+                        [dir0 fil0 ext0] = fileparts(IOI.sess_shrunk{s1}.fname{c1}{fct});
+                        fsep = strfind(dir0,filesep);
+                        res = strfind(dir0,'Res');
+                        fgr = fsep(fsep > res);
+                        tdir = dir0(1:fgr(2));
+                        tfname = fullfile(dir_ioimat,['S' gen_num_str(s1,2)],[fil0 ext0]);
+                        try
+                            V = spm_vol(tfname);
+                            Y = spm_read_vols(V);
                             frames_loaded = 1;
                         catch
                             %file does not exist
