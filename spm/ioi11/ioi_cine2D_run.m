@@ -109,6 +109,8 @@ for SubjIdx=1:length(job.IOImat)
                                     end
                                     tn = fullfile(dir0,[fil0 '_shrunk_' int2str(shrink_x) 'x' int2str(shrink_y) ext0]);
                                     fname0 = [fname0; tn];
+                                    Y0 = reshape(Y0,[size(Y0,1) size(Y0,2) 1 size(Y0,3)]);
+                                    ioi_save_nifti(Y0,tn,[1 1 1]);
                                 end
                             end
                             IOI.sess_shrunk{s1}.fname{c1} = fname0;
@@ -123,6 +125,7 @@ for SubjIdx=1:length(job.IOImat)
             for s1=1:length(IOI.sess_res);
                 if all_sessions || sum(s1==selected_sessions)
                     onsets_list{s1} = IOI.sess_res{s1}.onsets;
+                    skipped = 0;
                     if group_onset_types
                         tmp = [];
                         for m1=1:length(onsets_list{s1})
@@ -132,7 +135,7 @@ for SubjIdx=1:length(job.IOImat)
                         onsets_list{s1}{1} = sort(tmp);
                     end
                     %remove onsets that are too close together
-                    if skip_overlap
+                    if skip_overlap                        
                         %loop over onset types
                         for m1=1:length(onsets_list{s1})
                             if length(onsets_list{s1}{m1}) > 1
@@ -145,6 +148,8 @@ for SubjIdx=1:length(job.IOImat)
                                 %always keep the last one
                                 tmp = [tmp onsets_list{s1}{m1}(end)];
                                 onsets_list{s1}{m1} = tmp;
+                            else
+                                skipped = skipped + 1;
                             end
                         end
                     end
@@ -157,6 +162,8 @@ for SubjIdx=1:length(job.IOImat)
                     disp(cnt)
                     IOI.cine_onset_count{s1} = cnt;
                     IOI.cine_onsets_list{s1} = onsets_list{s1};
+                    IOI.cine_skipped{s1} = skipped;
+                    disp(['Skipped:' int2str(skipped)]);
                     %loop over colors
                     for c1=1:length(IOI.color.eng);
                         do_color = 0;
