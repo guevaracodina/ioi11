@@ -98,45 +98,49 @@ for SubjIdx=1:length(job.IOImat)
                     if shrinkage_choice
                         for s1=1:length(IOI.sess_res)
                             if all_sessions || sum(s1==selected_sessions)
-                                for c1=1:length(IOI.color.eng)
-                                    doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);
-                                    fname0 = {};
-                                    if doColor                                        
-                                        if IOI.color.eng(c1) == 'T'
-                                            doHbT = 1;
-                                            [cHbR cHbO] = ioi_find_HbRHbO(IOI,s1);
-                                            fname = IOI.sess_res{s1}.fname{cHbR};
-                                            fname2 = IOI.sess_res{s1}.fname{cHbO};
-                                        else
-                                            doHbT = 0;
-                                            fname = IOI.sess_res{s1}.fname{c1};                                            
-                                        end
-                                        for f1=1:length(fname)
-                                            V = spm_vol(fname{f1});
-                                            Y = spm_read_vols(V);
-                                            if doHbT
-                                                V2 = spm_vol(fname2{f1});
-                                                Y2 = spm_read_vols(V2);
-                                                Y = Y+Y2;
+                                try
+                                    IOI.sess_shrunk{s1}
+                                catch
+                                    for c1=1:length(IOI.color.eng)
+                                        doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);
+                                        fname0 = {};
+                                        if doColor
+                                            if IOI.color.eng(c1) == 'T'
+                                                doHbT = 1;
+                                                [cHbR cHbO] = ioi_find_HbRHbO(IOI,s1);
+                                                fname = IOI.sess_res{s1}.fname{cHbR};
+                                                fname2 = IOI.sess_res{s1}.fname{cHbO};
+                                            else
+                                                doHbT = 0;
+                                                fname = IOI.sess_res{s1}.fname{c1};
                                             end
-                                            %shrink by averaging
-                                            Y0 = zeros(size(Y(1:shrink_x:(end-shrink_x+1),1:shrink_y:(end-shrink_y+1),:)));
-                                            for i1=1:shrink_x
-                                                for i2=1:shrink_y
-                                                    Y0 = Y0 + Y(i1:shrink_x:(end-shrink_x+i1),i2:shrink_y:(end-shrink_y+i2),:);
+                                            for f1=1:length(fname)
+                                                V = spm_vol(fname{f1});
+                                                Y = spm_read_vols(V);
+                                                if doHbT
+                                                    V2 = spm_vol(fname2{f1});
+                                                    Y2 = spm_read_vols(V2);
+                                                    Y = Y+Y2;
                                                 end
+                                                %shrink by averaging
+                                                Y0 = zeros(size(Y(1:shrink_x:(end-shrink_x+1),1:shrink_y:(end-shrink_y+1),:)));
+                                                for i1=1:shrink_x
+                                                    for i2=1:shrink_y
+                                                        Y0 = Y0 + Y(i1:shrink_x:(end-shrink_x+i1),i2:shrink_y:(end-shrink_y+i2),:);
+                                                    end
+                                                end
+                                                %save images
+                                                [dir0 fil0 ext0] = fileparts(fname{f1});
+                                                if doHbT
+                                                    fil0 = regexprep(fil0, ['_' IOI.color.HbR '_'],  ['_' IOI.color.HbT '_']);
+                                                end
+                                                tn = fullfile(dir0,[fil0 '_shrunk_' int2str(shrink_x) 'x' int2str(shrink_y) ext0]);
+                                                fname0 = [fname0; tn];
+                                                ioi_save_nifti(Y0,tn,[1 1 1]);
                                             end
-                                            %save images
-                                            [dir0 fil0 ext0] = fileparts(fname{f1});
-                                            if doHbT
-                                                fil0 = regexprep(fil0, ['_' IOI.color.HbR '_'],  ['_' IOI.color.HbT '_']);
-                                            end
-                                            tn = fullfile(dir0,[fil0 '_shrunk_' int2str(shrink_x) 'x' int2str(shrink_y) ext0]);
-                                            fname0 = [fname0; tn]; 
-                                            ioi_save_nifti(Y0,tn,[1 1 1]);
                                         end
+                                        IOI.sess_shrunk{s1}.fname{c1} = fname0;
                                     end
-                                    IOI.sess_shrunk{s1}.fname{c1} = fname0;
                                 end
                             end
                         end
@@ -165,7 +169,7 @@ for SubjIdx=1:length(job.IOImat)
                             
                             %loop over available colors
                             for c1=1:length(IOI.color.eng) %(IOI.sess_res{s1}.fname)
-                                doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);                                       
+                                doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);
                                 if doColor
                                     %select design matrix
                                     if ~iscell(Xtmp)
@@ -228,14 +232,14 @@ for SubjIdx=1:length(job.IOImat)
                                             y(indInf) = maxY;
                                             y(indNaN) = maxY;
                                             clear indNaN indInf
-                                            if spatial_LPF 
+                                            if spatial_LPF
                                                 Ks.k1 = nx;
                                                 Ks.k2 = ny;
                                                 Ks.radius = radius;
                                                 Ks = ioi_spatial_LPF('set',Ks);
                                                 %Gaussian spatial low pass filter
                                                 for i1=1:nt
-                                                    y(:,:,i1) = ioi_spatial_LPF('lpf',Ks,squeeze(y(:,:,i1)));   
+                                                    y(:,:,i1) = ioi_spatial_LPF('lpf',Ks,squeeze(y(:,:,i1)));
                                                 end
                                             end
                                             %reshape
@@ -251,9 +255,9 @@ for SubjIdx=1:length(job.IOImat)
                                             y = y(:,end:-1:1);
                                             y = ioi_filter_HPF_LPF_WMDL(K,y')';
                                             y = y(:,end:-1:1);
-%                                             if any(isnan(y(:))) || any(isinf(y(:)))
-%                                                 a0 =1;
-%                                             end
+                                            %                                             if any(isnan(y(:))) || any(isinf(y(:)))
+                                            %                                                 a0 =1;
+                                            %                                             end
                                             %GLM inversion: calculating beta and residuals - would be SPM.Vbeta,
                                             b = Xm * y'; % beta : least square estimate
                                             %Compute t stat
