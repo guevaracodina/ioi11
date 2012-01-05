@@ -134,7 +134,11 @@ try
                 end
             end
             try
-                Ya(:,:,i) = squeeze(Y(:,:,1,fmod));
+                try
+                    Ya(:,:,i) = squeeze(Y(:,:,1,fmod));
+                catch
+                    Ya(:,:,i) = squeeze(Y(:,:,fmod));
+                end
             catch
                 %There is one frame missing?
                 Ya = [];

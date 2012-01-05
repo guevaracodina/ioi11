@@ -99,7 +99,7 @@ for SubjIdx=1:length(job.IOImat)
                         for s1=1:length(IOI.sess_res)
                             if all_sessions || sum(s1==selected_sessions)
                                 try
-                                    IOI.sess_shrunk{s1}
+                                    IOI.sess_shrunk{s1};
                                 catch
                                     for c1=1:length(IOI.color.eng)
                                         doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);
@@ -136,6 +136,7 @@ for SubjIdx=1:length(job.IOImat)
                                                 end
                                                 tn = fullfile(dir0,[fil0 '_shrunk_' int2str(shrink_x) 'x' int2str(shrink_y) ext0]);
                                                 fname0 = [fname0; tn];
+                                                Y0 = reshape(Y0,[size(Y0,1) size(Y0,2) 1 size(Y0,3)]);
                                                 ioi_save_nifti(Y0,tn,[1 1 1]);
                                             end
                                         end
