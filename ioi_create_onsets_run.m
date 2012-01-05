@@ -221,7 +221,7 @@ try
         cutoff = E.lpf_butter_freq; %in Hz
         order = E.lpf_butter_order;
         %forward
-        el = ButterLPF(sf,cutoff,order,el0);
+        el = ButterLPF(sf,cutoff,order,el);
         %backward
         el = el(end:-1:1);
         el = ButterLPF(sf,cutoff,order,el);
@@ -245,7 +245,11 @@ try
     eSD = max(SD0,mbSD);
     %find onsets peaks: pkh: peak height; pk: onset time at sf sampling frequency
     [pkh pk] = findpeaks(el,'MINPEAKHEIGHT',MN+nSD*max(SD0,mbSD),'MINPEAKDISTANCE',rs);
-    [pkh2 pk2] = findpeaks(-el,'MINPEAKHEIGHT',MN+nSD*max(SD0,mbSD),'MINPEAKDISTANCE',rs);
+    if isempty(pk) 
+        disp(['No onsets detected initially. Chosen minimum SD too high, setting it to zero']);
+        [pkh pk] = findpeaks(el,'MINPEAKHEIGHT',MN+nSD*SD0,'MINPEAKDISTANCE',rs);
+    end
+    %[pkh2 pk2] = findpeaks(-el,'MINPEAKHEIGHT',MN+nSD*max(SD0,mbSD),'MINPEAKDISTANCE',rs);
     if E.write_pictures
         h = figure; plot(lp,sgn*el(1:ds:end),'k'); hold on; stem(pk/sf,sgn*(MN+nSD*eSD)*ones(1,length(pk)),'r');
         xlabel('time (s)')
