@@ -36,6 +36,7 @@ if isfield(job.data_selection_choice,'ROI_mode')
     show_mse = job.data_selection_choice.ROI_mode.show_mse;
     figure_show_stim = job.data_selection_choice.ROI_mode.figure_show_stim;
     figure_rebase_to_zero_at_stim = job.data_selection_choice.ROI_mode.figure_rebase_to_zero_at_stim;
+    
 else
     image_mode = 1;
     %Gaussian spatial LPF
@@ -45,14 +46,15 @@ else
     else
         spatial_LPF = 0;
     end
+    if isfield(job.data_selection_choice.image_mode.shrinkage_choice,'configuration_shrink')
+        shrink_x = job.data_selection_choice.image_mode.shrinkage_choice.configuration_shrink.shrink_x;
+        shrink_y = job.data_selection_choice.image_mode.shrinkage_choice.configuration_shrink.shrink_y;
+        shrinkage_choice = 1;
+    else
+        shrinkage_choice = 0;
+    end
 end
-if isfield(job.shrinkage_choice,'configuration_shrink')
-    shrink_x = job.shrinkage_choice.configuration_shrink.shrink_x;
-    shrink_y = job.shrinkage_choice.configuration_shrink.shrink_y;
-    shrinkage_choice = 1;
-else
-    shrinkage_choice = 0;
-end
+
 save_figures = job.save_figures;
 generate_figures = job.generate_figures;
 use_onset_amplitudes = job.use_onset_amplitudes;
@@ -65,7 +67,7 @@ for SubjIdx=1:length(job.IOImat)
         tic
         clear IOI ROI SPM
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};               
+        IOImat = job.IOImat{SubjIdx};
         [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
         if isfield(job.IOImatCopyChoice,'IOImatCopy')
             newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
@@ -105,7 +107,7 @@ for SubjIdx=1:length(job.IOImat)
                                 for c1=1:length(IOI.color.eng)
                                     doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);
                                     fname0 = {};
-                                    if doColor                                        
+                                    if doColor
                                         if IOI.color.eng(c1) == 'T'
                                             doHbT = 1;
                                             [cHbR cHbO] = ioi_find_HbRHbO(IOI,s1);
@@ -113,7 +115,7 @@ for SubjIdx=1:length(job.IOImat)
                                             fname2 = IOI.sess_res{s1}.fname{cHbO};
                                         else
                                             doHbT = 0;
-                                            fname = IOI.sess_res{s1}.fname{c1};                                            
+                                            fname = IOI.sess_res{s1}.fname{c1};
                                         end
                                         for f1=1:length(fname)
                                             V = spm_vol(fname{f1});
@@ -136,7 +138,7 @@ for SubjIdx=1:length(job.IOImat)
                                                 fil0 = regexprep(fil0, ['_' IOI.color.HbR '_'],  ['_' IOI.color.HbT '_']);
                                             end
                                             tn = fullfile(dir0,[fil0 '_shrunk_' int2str(shrink_x) 'x' int2str(shrink_y) ext0]);
-                                            fname0 = [fname0; tn];    
+                                            fname0 = [fname0; tn];
                                         end
                                     end
                                     IOI.sess_shrunk{s1}.fname{c1} = fname0;
@@ -145,7 +147,7 @@ for SubjIdx=1:length(job.IOImat)
                         end
                     end
                     %Overwrite old IOI
-                    save(job.IOImat{SubjIdx},'IOI');
+                    save(IOImat,'IOI');
                     %loop over sessions
                     for s1=1:length(IOI.sess_res)
                         if all_sessions || sum(s1==selected_sessions)
@@ -168,7 +170,7 @@ for SubjIdx=1:length(job.IOImat)
                             
                             %loop over available colors
                             for c1=1:length(IOI.color.eng) %(IOI.sess_res{s1}.fname)
-                                doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);                                       
+                                doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);
                                 if doColor
                                     %select design matrix
                                     if ~iscell(Xtmp)
@@ -220,7 +222,7 @@ for SubjIdx=1:length(job.IOImat)
                                             %put all the data for this color, and session, into memory
                                             %Note that this takes several minutes to load per session
                                             %Y is typically 3 GB or larger
-                                            y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,dir_ioimat);
+                                            y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,dir_ioimat,shrinkage_choice);
                                             %set possible Inf values of Y to max of non Inf values of Y
                                             
                                             [nx ny nt] = size(y);
@@ -231,14 +233,14 @@ for SubjIdx=1:length(job.IOImat)
                                             y(indInf) = maxY;
                                             y(indNaN) = maxY;
                                             clear indNaN indInf
-                                            if spatial_LPF 
+                                            if spatial_LPF
                                                 Ks.k1 = nx;
                                                 Ks.k2 = ny;
                                                 Ks.radius = radius;
                                                 Ks = ioi_spatial_LPF('set',Ks);
                                                 %Gaussian spatial low pass filter
                                                 for i1=1:nt
-                                                    y(:,:,i1) = ioi_spatial_LPF('lpf',Ks,squeeze(y(:,:,i1)));   
+                                                    y(:,:,i1) = ioi_spatial_LPF('lpf',Ks,squeeze(y(:,:,i1)));
                                                 end
                                             end
                                             %reshape
@@ -254,9 +256,9 @@ for SubjIdx=1:length(job.IOImat)
                                             y = y(:,end:-1:1);
                                             y = ioi_filter_HPF_LPF_WMDL(K,y')';
                                             y = y(:,end:-1:1);
-%                                             if any(isnan(y(:))) || any(isinf(y(:)))
-%                                                 a0 =1;
-%                                             end
+                                            %                                             if any(isnan(y(:))) || any(isinf(y(:)))
+                                            %                                                 a0 =1;
+                                            %                                             end
                                             %GLM inversion: calculating beta and residuals - would be SPM.Vbeta,
                                             b = Xm * y'; % beta : least square estimate
                                             %Compute t stat
@@ -265,9 +267,9 @@ for SubjIdx=1:length(job.IOImat)
                                             clear y
                                             mse = res2/length(res2);
                                             t = b(1,:)./(res2*bcov(1,1)/trRV).^0.5;
-%                                             if any(isnan(t(:))) || any(isinf(t(:)))
-%                                                 a0 =1;
-%                                             end
+                                            %                                             if any(isnan(t(:))) || any(isinf(t(:)))
+                                            %                                                 a0 =1;
+                                            %                                             end
                                             if volt == 2
                                                 t2 = b(2,:)./(res2*bcov(2,2)/trRV).^0.5;
                                             end
@@ -298,15 +300,15 @@ for SubjIdx=1:length(job.IOImat)
                                             end
                                             vx = [1 1 1];
                                             %sign for mask -- no longer used
-%                                             try
-%                                                 if IOI.color.eng(c1) == IOI.color.red || IOI.color.eng(c1) == IOI.color.HbR
-%                                                     sgn = -1;
-%                                                 else
-%                                                     sgn = 1;
-%                                                 end
-%                                             catch
-%                                                 sgn = 1;
-%                                             end
+                                            %                                             try
+                                            %                                                 if IOI.color.eng(c1) == IOI.color.red || IOI.color.eng(c1) == IOI.color.HbR
+                                            %                                                     sgn = -1;
+                                            %                                                 else
+                                            %                                                     sgn = 1;
+                                            %                                                 end
+                                            %                                             catch
+                                            %                                                 sgn = 1;
+                                            %                                             end
                                             sgn =1;
                                             thold = 1.95; %threshold on t-stats
                                             for i0=1:size(b,1)

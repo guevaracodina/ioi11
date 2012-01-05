@@ -9,11 +9,8 @@ tmp_str_HbO = ['_' str_HbO '_'];
 tmp_str_HbR = ['_' str_HbR '_'];
 %basehbt1 = job.basehbt1;
 baseline_hbt = job.configuration.HbT0;
-try
-    RemoveRGY = job.RemoveRGY;
-catch
-    RemoveRGY = 1;
-end
+RemoveRGY = job.RemoveRGY;
+
 for SubjIdx=1:length(job.IOImat)
     try
         tic

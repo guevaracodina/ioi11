@@ -53,6 +53,45 @@ IOImatCopyChoice.help      = {'Choose whether to overwrite the IOI.mat structure
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%%%%%%%%%%%%%%%%%%%%%%
+
+shrink_x      = cfg_entry;
+shrink_x.tag  = 'shrink_x';
+shrink_x.name = 'Shrink factor for x dimension';
+shrink_x.strtype  = 'i';
+shrink_x.num = [1 1];
+shrink_x.val  = {2};
+shrink_x.help = {'Data reduction factor in x.'};
+
+shrink_y      = cfg_entry;
+shrink_y.tag  = 'shrink_y';
+shrink_y.name = 'Shrink factor for y dimension';
+shrink_y.strtype  = 'i';
+shrink_y.num = [1 1];
+shrink_y.val = {2};
+shrink_y.help = {'Data reduction factor in y.'};
+
+configuration_shrink         = cfg_branch;
+configuration_shrink.tag     = 'configuration_shrink';
+configuration_shrink.name    = 'Configuration shrinkage';
+configuration_shrink.val     = {shrink_x shrink_y};
+configuration_shrink.help    = {'Select values.'};
+
+no_shrinkage         = cfg_branch;
+no_shrinkage.tag     = 'no_shrinkage';
+no_shrinkage.name    = 'No shrinkage';
+no_shrinkage.val     = {};
+no_shrinkage.help    = {};
+
+shrinkage_choice        = cfg_choice;
+shrinkage_choice.name   = 'Choose shrinkage method';
+shrinkage_choice.tag    = 'shrinkage_choice';
+shrinkage_choice.values = {no_shrinkage,configuration_shrink};
+shrinkage_choice.val    = {configuration_shrink};
+shrinkage_choice.help   = {'Choose whether to shrink the data. Images will then be stored. And could be reused later.'}';
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 all_sessions         = cfg_branch;
 all_sessions.tag     = 'all_sessions';
 all_sessions.name    = 'All sessions';
@@ -159,6 +198,26 @@ include_OD.val  = {0};
 include_OD.help = {'If the optical intensity images (Green, Red, Yellow) have not been deleted'
     'previously, choose whether to generate movies for these colors.'}';
 
+skip_overlap      = cfg_menu;
+skip_overlap.tag  = 'skip_overlap';
+skip_overlap.name = 'Skip overlap';
+skip_overlap.labels = {'Yes','No'};
+skip_overlap.values = {1,0};
+skip_overlap.val  = {1};
+skip_overlap.help = {'For event-related onsets, such as spike. This option removes spikes'
+    'that are followed by another spike at an interval shorter than the sum of '
+    'window before + window after, as specified by the user'}';
+
+group_onset_types      = cfg_menu;
+group_onset_types.tag  = 'group_onset_types';
+group_onset_types.name = 'Group onset types into the same type';
+group_onset_types.labels = {'Yes','No'};
+group_onset_types.values = {1,0};
+group_onset_types.val  = {1};
+group_onset_types.help = {'If there are several types of onsets, '
+    'they will be grouped into the same type.'
+    'This option overrides the which_onset_type to use.'}';
+
 % ---------------------------------------------------------------------
 % lpf Low-pass filter
 % ---------------------------------------------------------------------
@@ -202,10 +261,10 @@ show_movie.help = {'Show movie. In either case, the movie will be saved.'}';
 cine2D1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 cine2D1.name = '2D Cine';             % The display name
 cine2D1.tag  = 'cine2D1'; %Very important: tag is used when calling for execution
-cine2D1.val  = {IOImat redo1 IOImatCopyChoice session_choice ...
-    window_after window_before normalize_choice which_onset_type ...
+cine2D1.val  = {IOImat redo1 IOImatCopyChoice session_choice shrinkage_choice ...
+    window_after window_before skip_overlap normalize_choice group_onset_types which_onset_type ...
     high_limit low_limit include_flow include_OD include_HbT ...
-    lpf_choice show_movie};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    lpf_choice show_movie };    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 cine2D1.prog = @ioi_cine2D_run;  % A function handle that will be called with the harvested job to run the computation
 cine2D1.vout = @ioi_cfg_vout_cine2D; % A function handle that will be called with the harvested job to determine virtual outputs
 cine2D1.help = {'Generate a 2D movie'

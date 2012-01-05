@@ -13,7 +13,15 @@ if isfield(job.lpf_choice,'lpf_gauss_On')
 else
     LPF.lpf_gauss_On = 0;
 end
+if isfield(job.shrinkage_choice,'configuration_shrink')
+    shrink_x = job.shrinkage_choice.configuration_shrink.shrink_x;
+    shrink_y = job.shrinkage_choice.configuration_shrink.shrink_y;
+    shrinkage_choice = 1;
+else
+    shrinkage_choice = 0;
+end
 which_onset_type = job.which_onset_type;
+group_onset_types = job.group_onset_types; %overrides which_onset_type
 include_OD = job.include_OD;
 include_flow = job.include_flow;
 include_HbT = job.include_HbT;
@@ -22,20 +30,14 @@ show_movie = job.show_movie;
 dir_cine = 'Cine_movies';
 high_limit = job.high_limit/100;
 low_limit = job.low_limit/100;
+skip_overlap = job.skip_overlap;
 %get size of windows before and after stimulation to average on, in data points
 for SubjIdx=1:length(job.IOImat)
     try
         tic
         clear IOI onsets_list M
-        
-        if ~isfield(IOI,'dev')
-            IOI.dev.TR = 0.2;
-        end
-        window_after = round(job.window_after/IOI.dev.TR);
-        window_before = round(job.window_before/IOI.dev.TR);
-        
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};               
+        IOImat = job.IOImat{SubjIdx};
         [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
         if isfield(job.IOImatCopyChoice,'IOImatCopy')
             newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
@@ -51,7 +53,7 @@ for SubjIdx=1:length(job.IOImat)
             load(job.IOImat{SubjIdx});
         end
         
-        if ~isfield(IOI.res,'cineOK') || job.force_redo           
+        if ~isfield(IOI.res,'cineOK') || job.force_redo
             cineDir = fullfile(newDir,dir_cine);
             if ~exist(cineDir,'dir'), mkdir(cineDir); end
             %get stimulation information - Careful, here onset duration is ignored!
@@ -61,10 +63,92 @@ for SubjIdx=1:length(job.IOImat)
                     IOI.color.eng = [IOI.color.eng IOI.color.HbT];
                 end
             end
+            if ~isfield(IOI,'dev')
+                IOI.dev.TR = 0.2;
+            end
+            %careful, this is now in data points, while job. is in seconds
+            window_after = round(job.window_after/IOI.dev.TR);
+            window_before = round(job.window_before/IOI.dev.TR);
+            
+            %save shrunk images
+            if shrinkage_choice
+                for s1=1:length(IOI.sess_res)
+                    if all_sessions || sum(s1==selected_sessions)
+                        for c1=1:length(IOI.color.eng)
+                            doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);
+                            fname0 = {};
+                            if doColor
+                                if IOI.color.eng(c1) == 'T'
+                                    doHbT = 1;
+                                    [cHbR cHbO] = ioi_find_HbRHbO(IOI,s1);
+                                    fname = IOI.sess_res{s1}.fname{cHbR};
+                                    fname2 = IOI.sess_res{s1}.fname{cHbO};
+                                else
+                                    doHbT = 0;
+                                    fname = IOI.sess_res{s1}.fname{c1};
+                                end
+                                for f1=1:length(fname)
+                                    V = spm_vol(fname{f1});
+                                    Y = spm_read_vols(V);
+                                    if doHbT
+                                        V2 = spm_vol(fname2{f1});
+                                        Y2 = spm_read_vols(V2);
+                                        Y = Y+Y2;
+                                    end
+                                    %shrink by averaging
+                                    Y0 = zeros(size(Y(1:shrink_x:(end-shrink_x+1),1:shrink_y:(end-shrink_y+1),:)));
+                                    for i1=1:shrink_x
+                                        for i2=1:shrink_y
+                                            Y0 = Y0 + Y(i1:shrink_x:(end-shrink_x+i1),i2:shrink_y:(end-shrink_y+i2),:);
+                                        end
+                                    end
+                                    %save images
+                                    [dir0 fil0 ext0] = fileparts(fname{f1});
+                                    if doHbT
+                                        fil0 = regexprep(fil0, ['_' IOI.color.HbR '_'],  ['_' IOI.color.HbT '_']);
+                                    end
+                                    tn = fullfile(dir0,[fil0 '_shrunk_' int2str(shrink_x) 'x' int2str(shrink_y) ext0]);
+                                    fname0 = [fname0; tn];
+                                end
+                            end
+                            IOI.sess_shrunk{s1}.fname{c1} = fname0;
+                        end
+                    end
+                end
+            end
+            %Overwrite IOI
+            save(IOImat,'IOI');
+            
             %loop over sessions
             for s1=1:length(IOI.sess_res);
                 if all_sessions || sum(s1==selected_sessions)
                     onsets_list{s1} = IOI.sess_res{s1}.onsets;
+                    if group_onset_types
+                        tmp = [];
+                        for m1=1:length(onsets_list{s1})
+                            tmp = [tmp onsets_list{s1}{m1}];
+                        end
+                        onsets_list{s1} = {};
+                        onsets_list{s1}{1} = sort(tmp);
+                    end
+                    %remove onsets that are too close together
+                    if skip_overlap
+                        %loop over onset types
+                        for m1=1:length(onsets_list{s1})
+                            if length(onsets_list{s1}{m1}) > 1
+                                tmp = [];
+                                for o1=1:(length(onsets_list{s1}{m1})-1)
+                                    if onsets_list{s1}{m1}(o1+1)-onsets_list{s1}{m1}(o1) > job.window_after+job.window_before %in seconds
+                                        tmp = [tmp onsets_list{s1}{m1}(o1)];
+                                    end
+                                end
+                                %always keep the last one
+                                tmp = [tmp onsets_list{s1}{m1}(end)];
+                                onsets_list{s1}{m1} = tmp;
+                            end
+                        end
+                    end
+                    IOI.cine_onsets_list{s1} = onsets_list{s1};
                     %loop over colors
                     for c1=1:length(IOI.color.eng);
                         do_color = 0;
@@ -109,8 +193,8 @@ for SubjIdx=1:length(job.IOImat)
                                         fr_before = U(u1)-window_before:U(u1)-1;
                                         fr_after = U(u1):U(u1)+window_after-1;
                                         %Load images before and after stimulus
-                                        Yb = ioi_get_images(IOI,fr_before,c1,s1,dir_ioimat);
-                                        Ya = ioi_get_images(IOI,fr_after,c1,s1,dir_ioimat);
+                                        Yb = ioi_get_images(IOI,fr_before,c1,s1,dir_ioimat,shrinkage_choice);
+                                        Ya = ioi_get_images(IOI,fr_after,c1,s1,dir_ioimat,shrinkage_choice);
                                         if ~isempty(Ya) && ~isempty(Yb)
                                             if ~arrays_assigned %assign arrays
                                                 tmp_array_before = zeros(size(Yb));
@@ -170,35 +254,35 @@ for SubjIdx=1:length(job.IOImat)
                                 clims = [m0+dM*low_limit M0+dM*high_limit];
                                 %end
                                 try
-                                try
-                                    fname_movie = fullfile(cineDir,['cine_S' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '.avi']);
-                                    vidObj = VideoWriter(fname_movie);
-                                    open(vidObj);
-                                    VideoOK = 1;
-                                catch
-                                    VideoOK = 0;
-                                    fname_movie = fullfile(cineDir,['cine_S' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '.mat']);
-                                end
-                                %set(gca,'NextPlot','replacechildren');
-                                for i0=1:size(d,3); %20
                                     try
-                                        imagesc(squeeze(d(:,:,i0)),clims);
-                                    catch %in case there are Inf in d
-                                        imagesc(squeeze(d(:,:,i0)));
+                                        fname_movie = fullfile(cineDir,['cine_S' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '.avi']);
+                                        vidObj = VideoWriter(fname_movie);
+                                        open(vidObj);
+                                        VideoOK = 1;
+                                    catch
+                                        VideoOK = 0;
+                                        fname_movie = fullfile(cineDir,['cine_S' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '.mat']);
                                     end
-                                    F(i0) = getframe;
+                                    %set(gca,'NextPlot','replacechildren');
+                                    for i0=1:size(d,3); %20
+                                        try
+                                            imagesc(squeeze(d(:,:,i0)),clims);
+                                        catch %in case there are Inf in d
+                                            imagesc(squeeze(d(:,:,i0)));
+                                        end
+                                        F(i0) = getframe;
+                                        if VideoOK
+                                            writeVideo(vidObj,F(i0));
+                                        end
+                                    end
                                     if VideoOK
-                                        writeVideo(vidObj,F(i0));
+                                        close(vidObj);
+                                    else
+                                        save(fname_movie,'F');
                                     end
-                                end
-                                if VideoOK
-                                    close(vidObj);
-                                else
-                                    save(fname_movie,'F');
-                                end
-                                %movie(h0,F,1,1/IOI.dev.TR); %,[0 0 0 0]);
-                                try close(h0); end
-                                IOI.cine{s1,m1}{c1}.fname_movie = fname_movie;
+                                    %movie(h0,F,1,1/IOI.dev.TR); %,[0 0 0 0]);
+                                    try close(h0); end
+                                    IOI.cine{s1,m1}{c1}.fname_movie = fname_movie;
                                 end
                             end
                             if (ka2>0 || kb2 > 0)
