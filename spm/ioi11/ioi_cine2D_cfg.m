@@ -71,10 +71,23 @@ shrink_y.num = [1 1];
 shrink_y.val = {2};
 shrink_y.help = {'Data reduction factor in y.'};
 
+force_shrink_recompute      = cfg_menu;
+force_shrink_recompute.tag  = 'force_shrink_recompute';
+force_shrink_recompute.name = 'Force shrink recompute';
+force_shrink_recompute.labels = {'Yes','No'};
+force_shrink_recompute.values = {1,0};
+force_shrink_recompute.val  = {0};
+force_shrink_recompute.help = {'This option is used when images of one shrunk size are present'
+    'But a different size is desired. This forces generating new shrunk images. The old ones'
+    'will be kept too, but will not be available from the new IOI.mat. Therefore, one should'
+    'usually select the option to place the new IOI.mat in a new folder, so that the old IOI.mat'
+    'can still be used to access the first set of shrunk images.'}';
+
+
 configuration_shrink         = cfg_branch;
 configuration_shrink.tag     = 'configuration_shrink';
 configuration_shrink.name    = 'Configuration shrinkage';
-configuration_shrink.val     = {shrink_x shrink_y};
+configuration_shrink.val     = {shrink_x shrink_y force_shrink_recompute};
 configuration_shrink.help    = {'Select values.'};
 
 no_shrinkage         = cfg_branch;
@@ -134,6 +147,17 @@ window_after.strtype  = 'r';
 window_after.num = [1 1];
 window_after.val  = {20};
 window_after.help = {'Size of window to keep after each stimulation onset, in seconds.'};
+
+window_offset      = cfg_entry;
+window_offset.tag  = 'window_offset';
+window_offset.name = 'Window offset';
+window_offset.strtype  = 'r';
+window_offset.num = [1 1];
+window_offset.val  = {0};
+window_offset.help = {'To look back in time, include an offset in seconds. '
+    'A positive number corresponds to a shift back in time. '
+    'This works in combination with variables window_after and window_before:'
+    'Time 0 will be negative window_offset, window_after starts at time 0, and window_before ends at time 0.'};
 
 normalize_choice      = cfg_menu;
 normalize_choice.tag  = 'normalize_choice';
@@ -262,7 +286,7 @@ cine2D1      = cfg_exbranch;       % This is the branch that has information abo
 cine2D1.name = '2D Cine';             % The display name
 cine2D1.tag  = 'cine2D1'; %Very important: tag is used when calling for execution
 cine2D1.val  = {IOImat redo1 IOImatCopyChoice session_choice shrinkage_choice ...
-    window_after window_before skip_overlap normalize_choice group_onset_types which_onset_type ...
+    window_after window_before window_offset skip_overlap normalize_choice group_onset_types which_onset_type ...
     high_limit low_limit include_flow include_OD include_HbT ...
     lpf_choice show_movie };    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 cine2D1.prog = @ioi_cine2D_run;  % A function handle that will be called with the harvested job to run the computation

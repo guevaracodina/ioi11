@@ -82,10 +82,23 @@ shrink_y.num = [1 1];
 shrink_y.val = {2};
 shrink_y.help = {'Data reduction factor in y.'};
 
+force_shrink_recompute      = cfg_menu;
+force_shrink_recompute.tag  = 'force_shrink_recompute';
+force_shrink_recompute.name = 'Force shrink recompute';
+force_shrink_recompute.labels = {'Yes','No'};
+force_shrink_recompute.values = {1,0};
+force_shrink_recompute.val  = {0};
+force_shrink_recompute.help = {'This option is used when images of one shrunk size are present'
+    'But a different size is desired. This forces generating new shrunk images. The old ones'
+    'will be kept too, but will not be available from the new IOI.mat. Therefore, one should'
+    'usually select the option to place the new IOI.mat in a new folder, so that the old IOI.mat'
+    'can still be used to access the first set of shrunk images.'}';
+
+
 configuration_shrink         = cfg_branch;
 configuration_shrink.tag     = 'configuration_shrink';
 configuration_shrink.name    = 'Configuration shrinkage';
-configuration_shrink.val     = {shrink_x shrink_y};
+configuration_shrink.val     = {shrink_x shrink_y force_shrink_recompute};
 configuration_shrink.help    = {'Select values.'};
 
 no_shrinkage         = cfg_branch;
