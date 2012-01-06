@@ -16,6 +16,11 @@ end
 if isfield(job.shrinkage_choice,'configuration_shrink')
     shrink_x = job.shrinkage_choice.configuration_shrink.shrink_x;
     shrink_y = job.shrinkage_choice.configuration_shrink.shrink_y;
+    try
+        force_shrink_recompute = job.shrinkage_choice.configuration_shrink.force_shrink_recompute;
+    catch
+        force_shrink_recompute = 0;
+    end
     shrinkage_choice = 1;
 else
     shrinkage_choice = 0;
@@ -69,51 +74,60 @@ for SubjIdx=1:length(job.IOImat)
             %careful, this is now in data points, while job. is in seconds
             window_after = round(job.window_after/IOI.dev.TR);
             window_before = round(job.window_before/IOI.dev.TR);
-            
+            window_offset = round(job.window_offset/IOI.dev.TR);
             %save shrunk images
             if shrinkage_choice
                 for s1=1:length(IOI.sess_res)
                     if all_sessions || sum(s1==selected_sessions)
-                        for c1=1:length(IOI.color.eng)
-                            doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);
-                            fname0 = {};
-                            if doColor
-                                if IOI.color.eng(c1) == 'T'
-                                    doHbT = 1;
-                                    [cHbR cHbO] = ioi_find_HbRHbO(IOI,s1);
-                                    fname = IOI.sess_res{s1}.fname{cHbR};
-                                    fname2 = IOI.sess_res{s1}.fname{cHbO};
-                                else
-                                    doHbT = 0;
-                                    fname = IOI.sess_res{s1}.fname{c1};
-                                end
-                                for f1=1:length(fname)
-                                    V = spm_vol(fname{f1});
-                                    Y = spm_read_vols(V);
-                                    if doHbT
-                                        V2 = spm_vol(fname2{f1});
-                                        Y2 = spm_read_vols(V2);
-                                        Y = Y+Y2;
-                                    end
-                                    %shrink by averaging
-                                    Y0 = zeros(size(Y(1:shrink_x:(end-shrink_x+1),1:shrink_y:(end-shrink_y+1),:)));
-                                    for i1=1:shrink_x
-                                        for i2=1:shrink_y
-                                            Y0 = Y0 + Y(i1:shrink_x:(end-shrink_x+i1),i2:shrink_y:(end-shrink_y+i2),:);
-                                        end
-                                    end
-                                    %save images
-                                    [dir0 fil0 ext0] = fileparts(fname{f1});
-                                    if doHbT
-                                        fil0 = regexprep(fil0, ['_' IOI.color.HbR '_'],  ['_' IOI.color.HbT '_']);
-                                    end
-                                    tn = fullfile(dir0,[fil0 '_shrunk_' int2str(shrink_x) 'x' int2str(shrink_y) ext0]);
-                                    fname0 = [fname0; tn];
-                                    Y0 = reshape(Y0,[size(Y0,1) size(Y0,2) 1 size(Y0,3)]);
-                                    ioi_save_nifti(Y0,tn,[1 1 1]);
-                                end
+                        try
+                            IOI.sess_shrunk{s1};
+                            %shrunk images
+                            if force_shrink_recompute
+                                %force recompute
+                                IOI.sess_shrunk{1000}; %will certainly break
                             end
-                            IOI.sess_shrunk{s1}.fname{c1} = fname0;
+                        catch
+                            for c1=1:length(IOI.color.eng)
+                                doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);
+                                fname0 = {};
+                                if doColor
+                                    if IOI.color.eng(c1) == 'T'
+                                        doHbT = 1;
+                                        [cHbR cHbO] = ioi_find_HbRHbO(IOI,s1);
+                                        fname = IOI.sess_res{s1}.fname{cHbR};
+                                        fname2 = IOI.sess_res{s1}.fname{cHbO};
+                                    else
+                                        doHbT = 0;
+                                        fname = IOI.sess_res{s1}.fname{c1};
+                                    end
+                                    for f1=1:length(fname)
+                                        V = spm_vol(fname{f1});
+                                        Y = spm_read_vols(V);
+                                        if doHbT
+                                            V2 = spm_vol(fname2{f1});
+                                            Y2 = spm_read_vols(V2);
+                                            Y = Y+Y2;
+                                        end
+                                        %shrink by averaging
+                                        Y0 = zeros(size(Y(1:shrink_x:(end-shrink_x+1),1:shrink_y:(end-shrink_y+1),:)));
+                                        for i1=1:shrink_x
+                                            for i2=1:shrink_y
+                                                Y0 = Y0 + Y(i1:shrink_x:(end-shrink_x+i1),i2:shrink_y:(end-shrink_y+i2),:);
+                                            end
+                                        end
+                                        %save images
+                                        [dir0 fil0 ext0] = fileparts(fname{f1});
+                                        if doHbT
+                                            fil0 = regexprep(fil0, ['_' IOI.color.HbR '_'],  ['_' IOI.color.HbT '_']);
+                                        end
+                                        tn = fullfile(dir0,[fil0 '_shrunk_' int2str(shrink_x) 'x' int2str(shrink_y) ext0]);
+                                        fname0 = [fname0; tn];
+                                        Y0 = reshape(Y0,[size(Y0,1) size(Y0,2) 1 size(Y0,3)]);
+                                        ioi_save_nifti(Y0,tn,[1 1 1]);
+                                    end
+                                end
+                                IOI.sess_shrunk{s1}.fname{c1} = fname0;
+                            end
                         end
                     end
                 end
@@ -135,29 +149,29 @@ for SubjIdx=1:length(job.IOImat)
                         onsets_list{s1}{1} = sort(tmp);
                     end
                     %remove onsets that are too close together
-                    if skip_overlap                        
+                    if skip_overlap
                         %loop over onset types
                         for m1=1:length(onsets_list{s1})
                             if length(onsets_list{s1}{m1}) > 1
                                 tmp = [];
                                 for o1=1:(length(onsets_list{s1}{m1})-1)
-                                    if onsets_list{s1}{m1}(o1+1)-onsets_list{s1}{m1}(o1) > job.window_after+job.window_before %in seconds
+                                    if onsets_list{s1}{m1}(o1+1)-onsets_list{s1}{m1}(o1) > job.window_after+job.window_before+job.window_offset %in seconds
                                         tmp = [tmp onsets_list{s1}{m1}(o1)];
-                                        else
-                                skipped = skipped + 1;
+                                    else
+                                        skipped = skipped + 1;
                                     end
                                 end
                                 %always keep the last one
                                 tmp = [tmp onsets_list{s1}{m1}(end)];
                                 onsets_list{s1}{m1} = tmp;
-                            
+                                
                             end
                         end
                     end
                     %count onsets
                     cnt = [];
                     for m1=1:length(onsets_list{s1})
-                        cnt = [cnt length(onsets_list{s1}{m1})];                        
+                        cnt = [cnt length(onsets_list{s1}{m1})];
                     end
                     disp(['Onset counts, session ' int2str(s1)]);
                     disp(cnt)
@@ -206,8 +220,8 @@ for SubjIdx=1:length(job.IOImat)
                                     U = round(onsets_list{s1}{m1}/IOI.dev.TR); %in data points
                                     for u1=1:length(U)
                                         %Frames to get:
-                                        fr_before = U(u1)-window_before:U(u1)-1;
-                                        fr_after = U(u1):U(u1)+window_after-1;
+                                        fr_before = U(u1)-window_before-window_offset:U(u1)-1-window_offset;
+                                        fr_after = U(u1)-window_offset:U(u1)+window_after-1-window_offset;
                                         %Load images before and after stimulus
                                         Yb = ioi_get_images(IOI,fr_before,c1,s1,dir_ioimat,shrinkage_choice);
                                         Ya = ioi_get_images(IOI,fr_after,c1,s1,dir_ioimat,shrinkage_choice);

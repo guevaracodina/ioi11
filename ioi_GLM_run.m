@@ -46,9 +46,14 @@ else
         spatial_LPF = 0;
     end
 end
-if isfield(job.shrinkage_choice,'configuration_shrink')
-    shrink_x = job.shrinkage_choice.configuration_shrink.shrink_x;
-    shrink_y = job.shrinkage_choice.configuration_shrink.shrink_y;
+if isfield(job.data_selection_choice.image_mode.shrinkage_choice,'configuration_shrink')
+    shrink_x = job.data_selection_choice.image_mode.shrinkage_choice.configuration_shrink.shrink_x;
+    shrink_y = job.data_selection_choice.image_mode.shrinkage_choice.configuration_shrink.shrink_y;
+    try
+        force_shrink_recompute = job.data_selection_choice.image_mode.shrinkage_choice.configuration_shrink.force_shrink_recompute;
+    catch
+        force_shrink_recompute = 0;
+    end
     shrinkage_choice = 1;
 else
     shrinkage_choice = 0;
@@ -100,6 +105,11 @@ for SubjIdx=1:length(job.IOImat)
                             if all_sessions || sum(s1==selected_sessions)
                                 try
                                     IOI.sess_shrunk{s1};
+                                    %shrunk images 
+                                    if force_shrink_recompute 
+                                        %force recompute
+                                        IOI.sess_shrunk{1000}; %will certainly break
+                                    end
                                 catch
                                     for c1=1:length(IOI.color.eng)
                                         doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);
