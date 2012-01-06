@@ -143,13 +143,14 @@ for SubjIdx=1:length(job.IOImat)
                                 for o1=1:(length(onsets_list{s1}{m1})-1)
                                     if onsets_list{s1}{m1}(o1+1)-onsets_list{s1}{m1}(o1) > job.window_after+job.window_before %in seconds
                                         tmp = [tmp onsets_list{s1}{m1}(o1)];
+                                        else
+                                skipped = skipped + 1;
                                     end
                                 end
                                 %always keep the last one
                                 tmp = [tmp onsets_list{s1}{m1}(end)];
                                 onsets_list{s1}{m1} = tmp;
-                            else
-                                skipped = skipped + 1;
+                            
                             end
                         end
                     end
