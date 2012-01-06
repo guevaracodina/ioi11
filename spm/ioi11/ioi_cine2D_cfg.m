@@ -105,6 +105,38 @@ shrinkage_choice.help   = {'Choose whether to shrink the data. Images will then 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+onset_time      = cfg_entry;
+onset_time.tag  = 'onset_time';
+onset_time.name = 'Onset times in seconds';
+onset_time.val = {1};
+onset_time.strtype = 'r';  
+onset_time.num     = [1 Inf]; 
+onset_time.help    = {'Onset times in seconds.'
+    'Note that the same values of window_after, _before and _offset will be used for each onset time specified. '}'; 
+
+manual_onsets         = cfg_branch;
+manual_onsets.tag     = 'manual_onsets';
+manual_onsets.name    = 'Manual onsets';
+manual_onsets.val     = {onset_time};
+manual_onsets.help    = {'Define onset times here '
+    'Note that the variables window_before, _after and _offset'
+    'will apply. However, the variables group_onsets and which_onsets will no longer be used.'}';
+
+available_onsets         = cfg_branch;
+available_onsets.tag     = 'available_onsets';
+available_onsets.name    = 'Available onsets';
+available_onsets.val     = {};
+available_onsets.help    = {'Use available onsets, as created earlier either in msioi or in create_onsets'};
+
+stim_choice        = cfg_choice;
+stim_choice.name   = 'Onset choice method';
+stim_choice.tag    = 'stim_choice';
+stim_choice.values = {available_onsets,manual_onsets};
+stim_choice.val    = {available_onsets};
+stim_choice.help   = {'Use available onsets or enter onsets.'}';
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 all_sessions         = cfg_branch;
 all_sessions.tag     = 'all_sessions';
 all_sessions.name    = 'All sessions';
@@ -286,7 +318,7 @@ cine2D1      = cfg_exbranch;       % This is the branch that has information abo
 cine2D1.name = '2D Cine';             % The display name
 cine2D1.tag  = 'cine2D1'; %Very important: tag is used when calling for execution
 cine2D1.val  = {IOImat redo1 IOImatCopyChoice session_choice shrinkage_choice ...
-    window_after window_before window_offset skip_overlap normalize_choice group_onset_types which_onset_type ...
+    stim_choice window_after window_before window_offset skip_overlap normalize_choice group_onset_types which_onset_type ...
     high_limit low_limit include_flow include_OD include_HbT ...
     lpf_choice show_movie };    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 cine2D1.prog = @ioi_cine2D_run;  % A function handle that will be called with the harvested job to run the computation
