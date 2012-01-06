@@ -143,7 +143,9 @@ for SubjIdx=1:length(job.IOImat)
                     if group_onset_types
                         tmp = [];
                         for m1=1:length(onsets_list{s1})
+                            if any(m1==which_onset_type)
                             tmp = [tmp onsets_list{s1}{m1}];
+                            end
                         end
                         onsets_list{s1} = {};
                         onsets_list{s1}{1} = sort(tmp);
@@ -152,6 +154,7 @@ for SubjIdx=1:length(job.IOImat)
                     if skip_overlap
                         %loop over onset types
                         for m1=1:length(onsets_list{s1})
+                            if any(m1==which_onset_type)
                             if length(onsets_list{s1}{m1}) > 1
                                 tmp = [];
                                 for o1=1:(length(onsets_list{s1}{m1})-1)
@@ -164,14 +167,16 @@ for SubjIdx=1:length(job.IOImat)
                                 %always keep the last one
                                 tmp = [tmp onsets_list{s1}{m1}(end)];
                                 onsets_list{s1}{m1} = tmp;
-                                
+                            end  
                             end
                         end
                     end
                     %count onsets
                     cnt = [];
                     for m1=1:length(onsets_list{s1})
+                        if any(m1==which_onset_type)
                         cnt = [cnt length(onsets_list{s1}{m1})];
+                        end
                     end
                     disp(['Onset counts, session ' int2str(s1)]);
                     disp(cnt)
