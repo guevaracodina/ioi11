@@ -25,6 +25,12 @@ if isfield(job.shrinkage_choice,'configuration_shrink')
 else
     shrinkage_choice = 0;
 end
+if isfield(job.stim_choice,'manual_onsets')
+    onset_time = job.stim_choice.manual_onsets.onset_time;
+    manual_stim_choice = 1;
+else
+    manual_stim_choice = 0; 
+end
 which_onset_type = job.which_onset_type;
 group_onset_types = job.group_onset_types; %overrides which_onset_type
 include_OD = job.include_OD;
@@ -138,7 +144,11 @@ for SubjIdx=1:length(job.IOImat)
             %loop over sessions
             for s1=1:length(IOI.sess_res);
                 if all_sessions || sum(s1==selected_sessions)
-                    onsets_list{s1} = IOI.sess_res{s1}.onsets;
+                    if manual_stim_choice
+                        onsets_list{s1} = {onset_time};
+                    else
+                        onsets_list{s1} = IOI.sess_res{s1}.onsets;
+                    end
                     skipped = 0;
                     if group_onset_types
                         tmp = [];
