@@ -194,8 +194,8 @@ window_offset.help = {'To look back in time, include an offset in seconds. '
 normalize_choice      = cfg_menu;
 normalize_choice.tag  = 'normalize_choice';
 normalize_choice.name = 'Normalization choice';
-normalize_choice.labels = {'Median over window before','Time zero'};
-normalize_choice.values = {1,2};
+normalize_choice.labels = {'Median over window before','Time zero','Mean','No normalization'};
+normalize_choice.values = {1,2,3,4};
 normalize_choice.val  = {1};
 normalize_choice.help = {'Normalization choice. In one test,'
     'The mean standard deviation was higher by 10% or more'

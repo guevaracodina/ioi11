@@ -252,6 +252,10 @@ for SubjIdx=1:length(job.IOImat)
                                                     tmp_median = median(Yb,3);
                                                 case 2
                                                     tmp_median = squeeze(Yb(:,:,end));
+                                                case 3
+                                                    tmp_median = mean(Yb,3);
+                                                case 4
+                                                    tmp_median = zeros(size(Yb,1),size(Yb,2));
                                             end
                                             tmp_median_b = repmat(tmp_median,[1 1 size(Yb,3)]);
                                             tmp_median_a = repmat(tmp_median,[1 1 size(Ya,3)]);
