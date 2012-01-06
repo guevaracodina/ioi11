@@ -272,7 +272,7 @@ for SubjIdx=1:length(job.IOImat)
                                         end
                                     end
                                     %divide by number of found segments (ka = kb always in this module)
-                                end
+                                
                                 %save movie
                                 d = tmp_array_after/ka;
                                 m0 = min(d(:));
@@ -318,6 +318,7 @@ for SubjIdx=1:length(job.IOImat)
                                     %movie(h0,F,1,1/IOI.dev.TR); %,[0 0 0 0]);
                                     try close(h0); end
                                     IOI.cine{s1,m1}{c1}.fname_movie = fname_movie;
+                                end
                                 end
                             end
                             if (ka2>0 || kb2 > 0)
