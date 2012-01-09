@@ -273,7 +273,7 @@ for SubjIdx=1:length(job.IOImat)
                                     m0 = min(d(:));
                                     M0 = max(d(:));
                                     %best is to save d
-                                    save(fullfile(cineDir,['cine_S' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '.Mdat']),'d');
+                                    save(fullfile(cineDir,['cine_S' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '.Mdat']),'d','-v7.3');
                                     dM = M0-m0;
                                     Nf = size(d,3);
                                     F(Nf) = struct('cdata',[],'colormap',[]);
@@ -308,7 +308,7 @@ for SubjIdx=1:length(job.IOImat)
                                         if VideoOK
                                             close(vidObj);
                                         else
-                                            save(fname_movie,'F');
+                                            save(fname_movie,'F','-v7.3');
                                         end
                                         %movie(h0,F,1,1/IOI.dev.TR); %,[0 0 0 0]);
                                         try close(h0); end
