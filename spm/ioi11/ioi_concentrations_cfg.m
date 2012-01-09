@@ -126,6 +126,41 @@ session_choice.values = {all_sessions,select_sessions};
 session_choice.val    = {all_sessions};
 session_choice.help   = {'Choose session selection method'}';
 
+%%%%%%%%%%%%%%%%%%%%
+% Normalization choice
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+current_sessions         = cfg_branch;
+current_sessions.tag     = 'current_sessions';
+current_sessions.name    = 'Current session';
+current_sessions.val     = {};
+current_sessions.help    = {'Use normalization calculated previously' 
+    'for this session'}';
+
+selected_norm_session      = cfg_entry;
+selected_norm_session.tag  = 'selected_norm_session';
+selected_norm_session.name = 'Enter session to use for normalization';
+selected_norm_session.strtype  = 'r';
+selected_norm_session.num = [1 1];
+selected_norm_session.val{1} = 1;
+selected_norm_session.help = {'Enter session to use for normalization.'
+    'The median for this session will be used for all the other sessions.'}';
+
+select_norm_session         = cfg_branch;
+select_norm_session.tag     = 'select_norm_session';
+select_norm_session.name    = 'Select session median to use for normalization';
+select_norm_session.val     = {selected_norm_session};
+select_norm_session.help    = {'Select session median to use for normalization'};
+
+normalization_choice        = cfg_choice;
+normalization_choice.name   = 'Choose session normalization method';
+normalization_choice.tag    = 'normalization_choice';
+normalization_choice.values = {current_sessions,select_norm_session};
+normalization_choice.val    = {current_sessions};
+normalization_choice.help   = {'Choose session selection method'}';
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 RemoveRGY      = cfg_menu;
 RemoveRGY.tag  = 'RemoveRGY';
 RemoveRGY.name = 'Remove RGY nifti images';
@@ -139,7 +174,7 @@ RemoveRGY.help = {'After concentration concentrations are obtained'
 conc1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 conc1.name = 'Compute Concentrations';             % The display name
 conc1.tag  = 'conc1'; %Very important: tag is used when calling for execution
-conc1.val  = {IOImat redo1 IOImatCopyChoice configuration ...
+conc1.val  = {IOImat redo1 IOImatCopyChoice normalization_choice configuration ...
     MemoryManagementMenu session_choice RemoveRGY};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 conc1.prog = @ioi_concentrations_run;  % A function handle that will be called with the harvested job to run the computation
 conc1.vout = @ioi_cfg_vout_concentrations; % A function handle that will be called with the harvested job to determine virtual outputs
