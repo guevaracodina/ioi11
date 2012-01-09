@@ -242,13 +242,14 @@ try
                 for c1=1:nColors
                     %skip laser
                     if ~(str_color(c1)==str_laser)
-                        median0{c1} = median(im_obj.Data.image_total(:,:,:,:,c1),4);
-                        
+                        median0{c1} = median(im_obj.Data.image_total(:,:,:,:,c1),4);                        
                         %Save the median
                         str1 = str_color(c1);
                         sess.fname_median{c1} = fullfile(dir_subj_res,sess_str, ...
                             [subj_name '_' OD_label '_median_' str1 '_' sess_str '.nii']);
-                        ioi_save_nifti(single(median0{c1}),sess.fname_median{c1},vx);
+                            %ioi_save_nifti(single(median0{c1}),sess.fname_median{c1},vx);
+                            tit0 = [subj_name ' ' OD_label ' median ' str1 ' ' sess_str];
+                            ioi_save_images(single(median0{c1}),sess.fname_median{c1},vx,[],tit0);
                         try
                             %min and max and relative change
                             min_image = min(im_obj.Data.image_total(:,:,:,:,c1),[],4);

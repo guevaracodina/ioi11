@@ -10,7 +10,16 @@ tmp_str_HbR = ['_' str_HbR '_'];
 %basehbt1 = job.basehbt1;
 baseline_hbt = job.configuration.HbT0;
 RemoveRGY = job.RemoveRGY;
-
+try
+    if isfield(job.normalization_choice,'select_norm_session')
+        normalization_choice = 1;
+        selected_norm_session = job.normalization_choice.select_norm_session.selected_norm_session;
+    else
+        normalization_choice = 0;
+    end
+catch
+    normalization_choice = 0;
+end
 for SubjIdx=1:length(job.IOImat)
     try
         tic
@@ -24,7 +33,7 @@ for SubjIdx=1:length(job.IOImat)
         end
         
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};               
+        IOImat = job.IOImat{SubjIdx};
         [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
         if isfield(job.IOImatCopyChoice,'IOImatCopy')
             newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
@@ -64,6 +73,7 @@ for SubjIdx=1:length(job.IOImat)
                 whichSystem = 1; %new
             end
             eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichSystem,whichCurve,baseline_hbt);
+            
             %Loop over sessions
             if isfield(IOI,'sess_res')
                 for s1=1:length(IOI.sess_res)
@@ -82,14 +92,23 @@ for SubjIdx=1:length(job.IOImat)
                             Ainv=rescaling_factor*pinv(A);
                         end
                         fname_new_HbO_list = {};
-                        fname_new_HbR_list = {};                                              
+                        fname_new_HbR_list = {};
                         fname_list = IOI.sess_res{s1}.fname{hasRGY(1)};
                         str_avail_color = tmp_hasRGY(1);
                         tmp_str_avail_color = ['_' str_avail_color '_'];
+                        if normalization_choice
+                            %get median images
+                            for i1=1:length(hasRGY)
+                                V0 = spm_vol(IOI.sess_res{selected_norm_session}.fname_median{hasRGY(i1)});
+                                V1 = spm_vol(IOI.sess_res{s1}.fname_median{hasRGY(i1)});
+                                med0(i1,:,:) = spm_read_vols(V0);
+                                med1(i1,:,:) = spm_read_vols(V1);
+                            end
+                        end
                         if ~isempty(fname_list)
                             for f1=1:length(fname_list)
                                 vols = {}; vi = 1;
-                                %get volume headers for each color 
+                                %get volume headers for each color
                                 [vols vi] = get_vols_each_color(IOI,vols,vi,IOI.color.red,f1,s1);
                                 [vols vi] = get_vols_each_color(IOI,vols,vi,IOI.color.green,f1,s1);
                                 [vols vi] = get_vols_each_color(IOI,vols,vi,IOI.color.yellow,f1,s1);
@@ -105,6 +124,10 @@ for SubjIdx=1:length(job.IOImat)
                                     for c1 = 1:length(vols) %for each color
                                         slice(c1,:,:,:) = squeeze(spm_read_vols(vols{c1}));
                                     end
+                                    %normalization_choice
+                                    if normalization_choice
+                                        slice = ioi_normalization_choice(slice,med0,med1);
+                                    end
                                     slice=reshape(slice,[length(vols),nx*ny*nt]);
                                     slice=Ainv*slice;
                                     % A this point we have HbO and HbR, reform image
@@ -115,6 +138,9 @@ for SubjIdx=1:length(job.IOImat)
                                     for i1=1:nt
                                         for c1 = 1:length(vols)
                                             slice(c1,:,:)=ioi_read_time_vol(vols{c1},i1);
+                                        end
+                                        if normalization_choice
+                                            slice = ioi_normalization_choice(slice,med0,med1);
                                         end
                                         slice=reshape(slice,[length(vols),nx*ny]);
                                         slice=Ainv*slice;
@@ -148,6 +174,13 @@ for SubjIdx=1:length(job.IOImat)
                                 end
                                 %save - substitute 'O' and 'D' in file name
                                 fname = IOI.sess_res{s1}.fname{hasRGY(1)}{f1};
+                                if isfield(job.IOImatCopyChoice,'IOImatCopy')
+                                    [dir0 fil0 ext0] = fileparts(fname);
+                                    fdir = fullfile(newDir,['S' gen_num_str(s1,2)]);
+                                    if ~exist(fdir,'dir'), mkdir(fdir); end
+                                    fname = fullfile(fdir,[fil0 ext0]);
+                                end
+                                
                                 fname_new_HbO = regexprep(fname,tmp_str_avail_color ,tmp_str_HbO);
                                 fname_new_HbO_list = [fname_new_HbO_list; fname_new_HbO];
                                 ioi_save_nifti(image_hbo, fname_new_HbO, vx);
@@ -165,12 +198,6 @@ for SubjIdx=1:length(job.IOImat)
             end
             
             IOI.res.concOK = 1;
-            if isfield(job.IOImatCopyChoice,'IOImatCopy')
-                newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-                newDir = fullfile(dir_ioimat,newDir);
-                if ~exist(newDir,'dir'),mkdir(newDir); end
-                IOImat = fullfile(newDir,'IOI.mat');
-            end
             save(IOImat,'IOI');
             
             %remove RGY images
@@ -191,7 +218,7 @@ for SubjIdx=1:length(job.IOImat)
         end
         out.IOImat{SubjIdx} = IOImat;
         toc
-        disp(['Subject ' int2str(SubjIdx) ' complete']);       
+        disp(['Subject ' int2str(SubjIdx) ' complete']);
     catch exception
         disp(exception.identifier)
         disp(exception.stack(1))
@@ -209,3 +236,10 @@ if length(IOI.sess_res{s1}.fname)>=c1
         vi = vi+1;
     end
 end
+
+function slice = ioi_normalization_choice(slice,med0,med1)
+if length(size(slice)) == 4
+    med0 = repmat(med0, [1 1 1 size(slice,4)]);
+    med1 = repmat(med1, [1 1 1 size(slice,4)]);
+end
+slice = slice - log(med1./med0);

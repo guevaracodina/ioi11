@@ -389,7 +389,9 @@ try
                         %Save the median
                         IOI.sess_res{s1}.fname_median{c1} = fullfile(dir_subj_res,sess_str, ...
                             [subj_name '_' OD_label '_median_' str1 '_' sess_str '.nii']);
-                        ioi_save_nifti(single(image_median),IOI.sess_res{s1}.fname_median{c1},vx);
+                            %ioi_save_nifti(single(image_median),IOI.sess_res{s1}.fname_median{c1},vx);
+                            tit0 = [subj_name ' ' OD_label ' median ' str1 ' ' sess_str];
+                            ioi_save_images(single(image_median),IOI.sess_res{s1}.fname_median{c1},vx,[],tit0);
                         try
                             if ~memmapfileOn
                                 %min and max and relative change
