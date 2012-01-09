@@ -75,7 +75,15 @@ for SubjIdx=1:length(job.IOImat)
             %careful, this is now in data points, while job. is in seconds
             window_after = round(job.window_after/IOI.dev.TR);
             window_before = round(job.window_before/IOI.dev.TR);
-            
+            window_offset = round(job.window_offset/IOI.dev.TR);
+            %checks 
+            if window_before == 0
+                window_before = 1;
+            end
+            %to allow at least one data point after window_before
+            if onset_time == 0
+                onset_time = 2*IOI.dev.TR;
+            end
             %save shrunk images
             if shrinkage_choice
                 for s1=1:length(IOI.sess_res)
@@ -213,7 +221,7 @@ for SubjIdx=1:length(job.IOImat)
                                     kb2 = 0; %counter of skipped segments before onsets
                                     ka2 = 0; %counter of skipped segments after onsets
                                     %loop over onsets for that session
-                                    U = round(onsets_list{s1}{m1}/IOI.dev.TR); %in data points
+                                    U = round(onsets_list{s1}{m1}/IOI.dev.TR)-window_offset; %in data points
                                     for u1=1:length(U)
                                         %Frames to get:
                                         fr_before = U(u1)-window_before:U(u1)-1;
