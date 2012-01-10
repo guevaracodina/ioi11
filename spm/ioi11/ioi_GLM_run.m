@@ -64,6 +64,13 @@ use_onset_amplitudes = job.use_onset_amplitudes;
 include_flow = job.include_flow;
 include_OD = job.include_OD;
 include_HbT = job.include_HbT;
+try 
+    include_HbR = job.include_HbR;
+    include_HbO = job.include_HbO;
+catch
+    include_HbR = 1;
+    include_HbO = 1;
+end
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
@@ -112,7 +119,7 @@ for SubjIdx=1:length(job.IOImat)
                                     end
                                 catch
                                     for c1=1:length(IOI.color.eng)
-                                        doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);
+                                        doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT,include_HbR,include_HbO);
                                         fname0 = {};
                                         if doColor
                                             if IOI.color.eng(c1) == 'T'
@@ -180,7 +187,7 @@ for SubjIdx=1:length(job.IOImat)
                             
                             %loop over available colors
                             for c1=1:length(IOI.color.eng) %(IOI.sess_res{s1}.fname)
-                                doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);
+                                doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT,include_HbR,include_HbO);
                                 if doColor
                                     %select design matrix
                                     if ~iscell(Xtmp)

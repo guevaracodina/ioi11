@@ -595,6 +595,22 @@ include_OD.val  = {0};
 include_OD.help = {'If the optical intensity images (Green, Red, Yellow) have not been deleted'
     'previously, choose whether to generate movies for these colors.'}';
 
+include_HbO      = cfg_menu;
+include_HbO.tag  = 'include_HbO';
+include_HbO.name = 'Include HbO';
+include_HbO.labels = {'Yes','No'};
+include_HbO.values = {1,0};
+include_HbO.val  = {1};
+include_HbO.help = {'Include HbO.'}';
+
+include_HbR      = cfg_menu;
+include_HbR.tag  = 'include_HbR';
+include_HbR.name = 'Include HbR';
+include_HbR.labels = {'Yes','No'};
+include_HbR.values = {1,0};
+include_HbR.val  = {1};
+include_HbR.help = {'Include HbR.'}';
+
 generate_figures      = cfg_menu;
 generate_figures.tag  = 'generate_figures';
 generate_figures.name = 'Show figures';
@@ -620,7 +636,7 @@ glm1.tag  = 'glm1'; %Very important: tag is used when calling for execution
 glm1.val  = {IOImat data_selection_choice redo1 IOImatCopyChoice ...
      session_choice ...
      bases volt use_onset_amplitudes hpf_butter lpf_gauss include_flow ...
-     include_HbT include_OD ...
+     include_HbT include_HbO include_HbR include_OD ...
      generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 glm1.prog = @ioi_GLM_run;  % A function handle that will be called with the harvested job to run the computation
 glm1.vout = @ioi_cfg_vout_glm; % A function handle that will be called with the harvested job to determine virtual outputs

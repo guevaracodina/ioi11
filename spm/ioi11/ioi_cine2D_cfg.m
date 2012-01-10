@@ -245,6 +245,22 @@ include_HbT.values = {1,0};
 include_HbT.val  = {1};
 include_HbT.help = {'Include HbT.'}';
 
+include_HbO      = cfg_menu;
+include_HbO.tag  = 'include_HbO';
+include_HbO.name = 'Include HbO';
+include_HbO.labels = {'Yes','No'};
+include_HbO.values = {1,0};
+include_HbO.val  = {1};
+include_HbO.help = {'Include HbO.'}';
+
+include_HbR      = cfg_menu;
+include_HbR.tag  = 'include_HbR';
+include_HbR.name = 'Include HbR';
+include_HbR.labels = {'Yes','No'};
+include_HbR.values = {1,0};
+include_HbR.val  = {1};
+include_HbR.help = {'Include HbR.'}';
+
 include_OD      = cfg_menu;
 include_OD.tag  = 'include_OD';
 include_OD.name = 'Include optical intensity';
@@ -319,7 +335,7 @@ cine2D1.name = '2D Cine';             % The display name
 cine2D1.tag  = 'cine2D1'; %Very important: tag is used when calling for execution
 cine2D1.val  = {IOImat redo1 IOImatCopyChoice session_choice shrinkage_choice ...
     stim_choice window_after window_before window_offset skip_overlap normalize_choice group_onset_types which_onset_type ...
-    high_limit low_limit include_flow include_OD include_HbT ...
+    high_limit low_limit include_flow include_OD include_HbT include_HbR include_HbO ...
     lpf_choice show_movie };    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 cine2D1.prog = @ioi_cine2D_run;  % A function handle that will be called with the harvested job to run the computation
 cine2D1.vout = @ioi_cfg_vout_cine2D; % A function handle that will be called with the harvested job to determine virtual outputs
