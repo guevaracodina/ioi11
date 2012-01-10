@@ -36,6 +36,14 @@ group_onset_types = job.group_onset_types; %overrides which_onset_type
 include_OD = job.include_OD;
 include_flow = job.include_flow;
 include_HbT = job.include_HbT;
+try 
+    include_HbR = job.include_HbR;
+    include_HbO = job.include_HbO;
+catch
+    include_HbR = 1;
+    include_HbO = 1;
+end
+
 normalize_choice = job.normalize_choice;
 show_movie = job.show_movie;
 dir_cine = 'Cine_movies';

@@ -1,4 +1,4 @@
-function doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT)
+function doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT,include_HbR,include_HbO)
 doColor = 1;
 %potentially exclude various colors, to save time
 if ~include_OD
@@ -32,4 +32,17 @@ try
         end
     end
 end
+try
+    if ~include_HbR
+        if IOI.color.eng(c1) == IOI.color.HbR
+            doColor = 0;
+        end
+    end
+end
+try
+    if ~include_HbO
+        if IOI.color.eng(c1) == IOI.color.HbO
+            doColor = 0;
+        end
+    end
 end
