@@ -26,6 +26,9 @@ catch
     include_flow =0;
     include_HbT = 1;
 end
+%just a one time bug
+error_in_mask_create_roi = 0;
+
 for SubjIdx=1:length(job.IOImat)
     try
         tic
@@ -57,6 +60,10 @@ for SubjIdx=1:length(job.IOImat)
                     if all_ROIs || sum(r1==selected_ROIs)
                         vol = spm_vol(IOI.res.ROI{r1}.fname);
                         tmp_mask = logical(spm_read_vols(vol));
+                        if error_in_mask_create_roi
+                            ones_mask = ones(size(tmp_mask));
+                            tmp_mask = logical(ones_mask - tmp_mask); 
+                        end
                         %shrink mask to voxel size
                         if IOI.res.shrinkageOn
                             sz = size(tmp_mask);
@@ -132,6 +139,7 @@ for SubjIdx=1:length(job.IOImat)
                                         %Loop over ROIs
                                         for r1=1:length(IOI.res.ROI)
                                             if all_ROIs || sum(r1==selected_ROIs)
+                                                tmp_mask_done = 0;
                                                 for i3=1:d3
                                                     for i4=1:d4
                                                         %extracted data
@@ -156,6 +164,7 @@ for SubjIdx=1:length(job.IOImat)
                                                                         %try to resize mask - but only attempt to do it once
                                                                         if ~tmp_mask_done
                                                                             tmp_mask = imresize(mask{r1},size(tmp_d));
+                                                                            tmp_mask_done = 1;
                                                                         end
                                                                         e = mean(tmp_d(tmp_mask));
                                                                     catch
