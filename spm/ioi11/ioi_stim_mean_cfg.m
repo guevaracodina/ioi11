@@ -138,6 +138,17 @@ window_after.num = [1 1];
 window_after.val  = {20};
 window_after.help = {'Size of window to keep after each stimulation onset, in seconds.'};
 
+window_offset      = cfg_entry;
+window_offset.tag  = 'window_offset';
+window_offset.name = 'Window offset';
+window_offset.strtype  = 'r';
+window_offset.num = [1 1];
+window_offset.val  = {0};
+window_offset.help = {'To look back in time, include an offset in seconds. '
+    'A positive number corresponds to a shift back in time. '
+    'This works in combination with variables window_after and window_before:'
+    'Time 0 will be negative window_offset, window_after starts at time 0, and window_before ends at time 0.'};
+
 normalize_choice      = cfg_menu;
 normalize_choice.tag  = 'normalize_choice';
 normalize_choice.name = 'Normalization choice';
@@ -316,7 +327,7 @@ stim_mean1      = cfg_exbranch;       % This is the branch that has information 
 stim_mean1.name = 'Average stimulations';             % The display name
 stim_mean1.tag  = 'stim_mean1'; %Very important: tag is used when calling for execution
 stim_mean1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ...
-    ROI_choice window_after window_before normalize_choice hpf_butter ...
+    ROI_choice window_after window_before window_offset normalize_choice hpf_butter ...
     lpf_choice include_flow include_HbT include_OD extract_HRF fit_3_gamma include_nlinfit ...
     generate_global generate_figures save_figures add_error_bars ...
     remove_segment_drift};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
