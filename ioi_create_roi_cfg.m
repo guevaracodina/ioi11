@@ -93,14 +93,20 @@ AutoROI.help    = {'Automatic ROI selection.'}';
         
 ManualROI         = cfg_branch;
 ManualROI.tag     = 'ManualROI';
-ManualROI.name    = 'Manual ROI selection'; 
+ManualROI.name    = 'Manual ROI selection: graphical tool'; 
 ManualROI.val     = {};
-ManualROI.help    = {'Manual ROI selection.'}';
-        
+ManualROI.help    = {'Manual ROI selection: graphical tool.'}';
+
+ManualEnterROI         = cfg_branch;
+ManualEnterROI.tag     = 'ManualEnterROI';
+ManualEnterROI.name    = 'Manual ROI selection: coordinate entry'; 
+ManualEnterROI.val     = {};
+ManualEnterROI.help    = {'Manual ROI selection: coordinate entry.'}';
+
 AutoROIchoice           = cfg_choice;
 AutoROIchoice.name      = 'Choose ROI generation method';
 AutoROIchoice.tag       = 'AutoROIchoice';
-AutoROIchoice.values    = {ManualROI AutoROI}; 
+AutoROIchoice.values    = {ManualROI ManualEnterROI AutoROI}; 
 AutoROIchoice.val       = {ManualROI}; 
 AutoROIchoice.help      = {'Choose whether to generate ROI manually or'
         'automatically'}'; 
