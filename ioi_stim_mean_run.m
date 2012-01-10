@@ -42,6 +42,11 @@ save_figures = job.save_figures;
 generate_figures = job.generate_figures;
 normalize_choice = job.normalize_choice;
 include_nlinfit = job.include_nlinfit;
+try 
+    window_offset = job.window_offset;
+catch
+    window_offset = 3;
+end
 %get size of windows before and after stimulation to average on, in data points
 
 add_error_bars = job.add_error_bars;
@@ -57,7 +62,7 @@ for SubjIdx=1:length(job.IOImat)
         end
         window_after = round(job.window_after/IOI.dev.TR);
         window_before = round(job.window_before/IOI.dev.TR);
-        
+        window_offset = round(window_offset/IOI.dev.TR);
         if ~isfield(IOI.res,'seriesOK')
             disp(['No extracted time series available for subject ' int2str(SubjIdx) ' ... skipping series extraction']);
         else
@@ -228,7 +233,7 @@ for SubjIdx=1:length(job.IOImat)
                                             Sb{r2,m1}{c1,s1} = [];
                                             Sa{r2,m1}{c1,s1} = [];
                                             %loop over onsets for that session
-                                            U = round(onsets_list{s1}{m1}/IOI.dev.TR); %in data points
+                                            U = round(onsets_list{s1}{m1}/IOI.dev.TR)-window_offset; %in data points
                                             U0{s1} = get_U(IOI,[],U,0,s1); %only for plotting stims
                                             
                                             for u1=1:length(U)
