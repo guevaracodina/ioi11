@@ -81,8 +81,10 @@ for SubjIdx=1:length(job.IOImat)
                 window_before = 1;
             end
             %to allow at least one data point after window_before
+            if isfield(job.stim_choice,'manual_onsets')
             if onset_time == 0
                 onset_time = 2*IOI.dev.TR;
+            end
             end
             %save shrunk images
             if shrinkage_choice
