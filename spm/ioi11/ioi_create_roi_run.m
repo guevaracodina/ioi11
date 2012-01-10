@@ -4,6 +4,11 @@ if isfield(job.AutoROIchoice,'AutoROI')
     autoROI = 1;
 else
     autoROI = 0;
+    if isfield(job.AutoROIchoice,'ManualROI')
+        graphicalROI = 1;
+    else
+        graphicalROI = 0;
+    end
 end
 for SubjIdx=1:length(job.IOImat)
     try
@@ -70,11 +75,30 @@ for SubjIdx=1:length(job.IOImat)
                     figure(h2);
                     p = spm_input('Add an ROI?',2*linecount+2,'y/n');
                     if p == 'y', p = 1; else p = 0; end
-                    if p
+                    if p                        
                         h1 = figure('Position',[20 50 3*size(im_anat,1) 3*size(im_anat,2)]);
                         colormap(gray); imagesc(im_anat.*full_mask);
-                        title('Make ROI polygon, then double click in it to create ROI.');
-                        mask = roipoly;
+                        if graphicalROI
+                            title('Make ROI polygon, then double click in it to create ROI.');
+                            mask = roipoly;                          
+                        else
+                            linecount = linecount + 1;
+                            rc = spm_input('Enter [row,column] of center',2*linecount+2,'e',[],2);
+                            linecount = linecount + 1;
+                            radius = spm_input('Enter radius in pixels',2*linecount+2,'e',[],1); 
+                            radius = round(radius);
+                            if radius < 0, radius = 0; end 
+                            mask = ones(size(im_anat));
+                            for x1=-radius:radius
+                                for y1=-radius:radius
+                                    if x1^2+y1^2 <= radius^2
+                                        try %will skip pixels outside the image 
+                                            mask(rc(1)+y1,rc(2)+x1) = 0;
+                                        end
+                                    end
+                                end
+                            end
+                        end
                         mask = single(mask);
                         full_mask = full_mask-mask;
                         index = index + 1; linecount = linecount + 1;
