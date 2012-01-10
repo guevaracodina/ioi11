@@ -189,7 +189,9 @@ try
         fil = fullfile(elDir,[fil0 ext0]);
         load(fil);
     end
-    
+    if mean(abs(el))>10
+        el = el/E.sf; %normalization
+    end
     %remove time stamps for actual or spurious stimulations
     %ind = el>2; ind2 = [ind(7:end) false false false false false false];
     %el(ind)=el(ind2);
@@ -377,7 +379,9 @@ for i=1:n
     end
 end
 h = figure; plot(lp,m','k')
-xlabel('seconds')
+xlabel('Time (s)')
+ylabel('LFP (mV)')
+title('Detected spikes, superposed')
 filen1 = fullfile(fdir,['Onset_profile_S' gen_num_str(s,2) '.fig']);
 saveas(h,filen1,'fig'); %save as .fig
 filen2 = fullfile(fdir,['Onset_profile_S' gen_num_str(s,2) '.tiff']);
@@ -385,7 +389,9 @@ print(h, '-dtiffn', filen2);
 close(h);
 
 h = figure; plot(lp,m') %with colors
-xlabel('seconds')
+xlabel('Time(s)')
+ylabel('LFP (mV)')
+title('Detected spikes, superposed')
 filen1 = fullfile(fdir,['Onset_profile_colors_S' gen_num_str(s,2) '.fig']);
 saveas(h,filen1,'fig'); %save as .fig
 filen2 = fullfile(fdir,['Onset_profile_colors_S' gen_num_str(s,2) '.tiff']);
