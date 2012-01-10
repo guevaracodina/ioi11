@@ -109,11 +109,58 @@ session_choice.values = {all_sessions,select_sessions};
 session_choice.val    = {all_sessions};
 session_choice.help   = {'Choose session selection method'}';
 
+%%%%%%%%%%%%%%%%%%
+% Colors to include
+%%%%%%%%%%%%%%%%%%%
+
+
+include_flow      = cfg_menu;
+include_flow.tag  = 'include_flow';
+include_flow.name = 'Include flow';
+include_flow.labels = {'Yes','No'};
+include_flow.values = {1,0};
+include_flow.val  = {0};
+include_flow.help = {'Include flow.'}';
+
+include_HbT      = cfg_menu;
+include_HbT.tag  = 'include_HbT';
+include_HbT.name = 'Include HbT';
+include_HbT.labels = {'Yes','No'};
+include_HbT.values = {1,0};
+include_HbT.val  = {1};
+include_HbT.help = {'Include HbT.'}';
+
+include_OD      = cfg_menu;
+include_OD.tag  = 'include_OD';
+include_OD.name = 'Include optical intensity';
+include_OD.labels = {'Yes','No'};
+include_OD.values = {1,0};
+include_OD.val  = {0};
+include_OD.help = {'If the optical intensity images (Green, Red, Yellow) have not been deleted'
+    'previously, choose whether to generate movies for these colors.'}';
+
+include_HbO      = cfg_menu;
+include_HbO.tag  = 'include_HbO';
+include_HbO.name = 'Include HbO';
+include_HbO.labels = {'Yes','No'};
+include_HbO.values = {1,0};
+include_HbO.val  = {1};
+include_HbO.help = {'Include HbO.'}';
+
+include_HbR      = cfg_menu;
+include_HbR.tag  = 'include_HbR';
+include_HbR.name = 'Include HbR';
+include_HbR.labels = {'Yes','No'};
+include_HbR.values = {1,0};
+include_HbR.val  = {1};
+include_HbR.help = {'Include HbR.'}';
+
 % Executable Branch
 extract_roi1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 extract_roi1.name = 'Extract ROI';             % The display name
 extract_roi1.tag  = 'extract_roi1'; %Very important: tag is used when calling for execution
-extract_roi1.val  = {IOImat redo1 IOImatCopyChoice session_choice ROI_choice};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+extract_roi1.val  = {IOImat redo1 IOImatCopyChoice session_choice ROI_choice ...
+    include_flow include_HbT include_HbO include_HbR include_OD};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 extract_roi1.prog = @ioi_extract_roi_time_series_run;  % A function handle that will be called with the harvested job to run the computation
 extract_roi1.vout = @ioi_cfg_vout_extract_roi; % A function handle that will be called with the harvested job to determine virtual outputs
 extract_roi1.help = {'Create regions of interest.'};

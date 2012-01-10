@@ -13,12 +13,25 @@ if isfield(job.ROI_choice,'select_ROIs')
 else
     all_ROIs = 1;
 end
+try
+    include_HbR = job.include_HbR;
+    include_HbO = job.include_HbO;
+    include_OD = job.include_OD;
+    include_flow = job.include_flow;
+    include_HbT = job.include_HbT;
+catch
+    include_HbR = 1;
+    include_HbO = 1;
+    include_OD = 0;
+    include_flow =0;
+    include_HbT = 1;
+end
 for SubjIdx=1:length(job.IOImat)
     try
         tic
         clear IOI ROI
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};               
+        IOImat = job.IOImat{SubjIdx};
         [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
         if isfield(job.IOImatCopyChoice,'IOImatCopy')
             newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
@@ -60,7 +73,7 @@ for SubjIdx=1:length(job.IOImat)
                                 s1 = 1;
                             else
                                 s1 = selected_sessions(1);
-                            end                          
+                            end
                             %find non-deleted file
                             foundfile = 0;
                             for c0=1:length(IOI.sess_res{s1}.fname)
@@ -73,13 +86,13 @@ for SubjIdx=1:length(job.IOImat)
                                         foundfile = 1;
                                     end
                                 end
-                            end                            
+                            end
                             [d1 d2 d3 d4] = size(d);
                             first_pass = 0;
                         end
                         if ~(d1 == size(mask{1},1) && d2 == size(mask{1},2))
-                            mask{r1} = imresize(mask{r1},[d1 d2]);                            
-                        end                                    
+                            mask{r1} = imresize(mask{r1},[d1 d2]);
+                        end
                     end
                 end
                 
@@ -88,83 +101,86 @@ for SubjIdx=1:length(job.IOImat)
                     if all_sessions || sum(s1==selected_sessions)
                         %loop over available colors
                         for c1=1:length(IOI.sess_res{s1}.fname)
-                            colorOK = 1; msg_ColorNotOK = 1; tmp_mask_done = 0;
-                            if ~(IOI.color.eng(c1)==IOI.color.laser)
-                                %skip laser - only extract for flow
-                                fname_list = IOI.sess_res{s1}.fname{c1};
-                                
-                                %initialize
-                                for r1=1:length(IOI.res.ROI)
-                                    if all_ROIs || sum(r1==selected_ROIs)
-                                        ROI{r1}{s1,c1} = [];
-                                    end
-                                end
-                                %loop over files
-                                for f1=1:length(fname_list)
-                                    try
-                                        fname = fname_list{f1};
-                                        vols = spm_vol(fname);
-                                        d = spm_read_vols(vols);
-                                        [d1 d2 d3 d4] = size(d);
-                                        if d1 <= 1 || d2 <= 1
-                                            colorOK = 0;
-                                        end
-                                    catch
-                                        colorOK = 0;
-                                    end
-                                    %time dimension in 3rd dimension for colors
-                                    %R, G, Y, but in 4th dimension for O, D, F
-                                    %Loop over ROIs
+                            doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT,include_HbR,include_HbO);
+                            if doColor
+                                colorOK = 1; msg_ColorNotOK = 1; tmp_mask_done = 0;
+                                if ~(IOI.color.eng(c1)==IOI.color.laser)
+                                    %skip laser - only extract for flow
+                                    fname_list = IOI.sess_res{s1}.fname{c1};
+                                    
+                                    %initialize
                                     for r1=1:length(IOI.res.ROI)
                                         if all_ROIs || sum(r1==selected_ROIs)
-                                            for i3=1:d3
-                                                for i4=1:d4
-                                                    %extracted data
-                                                    %tmp_d = squeeze(d(:,:,i3,i4));
-                                                    try tmp_d = d(:,:,i3,i4); end
-                                                    %just take mean over mask for now
-                                                   
-                                                    if ~isfield(IOI.color,'contrast') || (isfield(IOI.color,'contrast') && ~(IOI.color.eng(c1)==IOI.color.contrast))
-                                                        try
-                                                            e = mean(tmp_d(mask{r1}));
-                                                        catch
-                                                            if msg_ColorNotOK
-                                                                msg = ['Problem extracting for color ' int2str(c1) ', session ' int2str(s1) ...
-                                                                    ',region ' int2str(r1) ': size mask= ' int2str(size(mask{r1},1)) 'x' ...
-                                                                    int2str(size(mask{r1},2)) ', but size image= ' int2str(size(tmp_d,1)) 'x' ...
-                                                                    int2str(size(tmp_d,2))]; 
-                                                                IOI = disp_msg(IOI,msg);
-                                                                msg_ColorNotOK = 0;
-                                                            end
-                                                            if colorOK
-                                                                try
-                                                                    %try to resize mask - but only attempt to do it once 
-                                                                    if ~tmp_mask_done
-                                                                        tmp_mask = imresize(mask{r1},size(tmp_d));
-                                                                    end
-                                                                    e = mean(tmp_d(tmp_mask));
-                                                                catch
-                                                                    msg = ['Unable to extract color ' int2str(c1) ', session ' int2str(s1)]; 
+                                            ROI{r1}{s1,c1} = [];
+                                        end
+                                    end
+                                    %loop over files
+                                    for f1=1:length(fname_list)
+                                        try
+                                            fname = fname_list{f1};
+                                            vols = spm_vol(fname);
+                                            d = spm_read_vols(vols);
+                                            [d1 d2 d3 d4] = size(d);
+                                            if d1 <= 1 || d2 <= 1
+                                                colorOK = 0;
+                                            end
+                                        catch
+                                            colorOK = 0;
+                                        end
+                                        %time dimension in 3rd dimension for colors
+                                        %R, G, Y, but in 4th dimension for O, D, F
+                                        %Loop over ROIs
+                                        for r1=1:length(IOI.res.ROI)
+                                            if all_ROIs || sum(r1==selected_ROIs)
+                                                for i3=1:d3
+                                                    for i4=1:d4
+                                                        %extracted data
+                                                        %tmp_d = squeeze(d(:,:,i3,i4));
+                                                        try tmp_d = d(:,:,i3,i4); end
+                                                        %just take mean over mask for now
+                                                        
+                                                        if ~isfield(IOI.color,'contrast') || (isfield(IOI.color,'contrast') && ~(IOI.color.eng(c1)==IOI.color.contrast))
+                                                            try
+                                                                e = mean(tmp_d(mask{r1}));
+                                                            catch
+                                                                if msg_ColorNotOK
+                                                                    msg = ['Problem extracting for color ' int2str(c1) ', session ' int2str(s1) ...
+                                                                        ',region ' int2str(r1) ': size mask= ' int2str(size(mask{r1},1)) 'x' ...
+                                                                        int2str(size(mask{r1},2)) ', but size image= ' int2str(size(tmp_d,1)) 'x' ...
+                                                                        int2str(size(tmp_d,2))];
                                                                     IOI = disp_msg(IOI,msg);
-                                                                    colorOK = 0; 
+                                                                    msg_ColorNotOK = 0;
+                                                                end
+                                                                if colorOK
+                                                                    try
+                                                                        %try to resize mask - but only attempt to do it once
+                                                                        if ~tmp_mask_done
+                                                                            tmp_mask = imresize(mask{r1},size(tmp_d));
+                                                                        end
+                                                                        e = mean(tmp_d(tmp_mask));
+                                                                    catch
+                                                                        msg = ['Unable to extract color ' int2str(c1) ', session ' int2str(s1)];
+                                                                        IOI = disp_msg(IOI,msg);
+                                                                        colorOK = 0;
+                                                                    end
                                                                 end
                                                             end
+                                                        else
+                                                            %contrast images will be smaller and need to be resized
+                                                            tmask = imresize(mask{r1},[d1 d2]);
+                                                            e = mean(tmp_d(tmask));
                                                         end
-                                                    else
-                                                        %contrast images will be smaller and need to be resized
-                                                        tmask = imresize(mask{r1},[d1 d2]);
-                                                        e = mean(tmp_d(tmask));
-                                                    end
-                                                    if colorOK
-                                                        ROI{r1}{s1,c1} = [ROI{r1}{s1,c1} e];
+                                                        if colorOK
+                                                            ROI{r1}{s1,c1} = [ROI{r1}{s1,c1} e];
+                                                        end
                                                     end
                                                 end
                                             end
                                         end
                                     end
-                                end
-                                if colorOK
-                                    disp(['ROIs for session ' int2str(s1) ' and color ' IOI.color.eng(c1) ' completed']);
+                                    if colorOK
+                                        disp(['ROIs for session ' int2str(s1) ' and color ' IOI.color.eng(c1) ' completed']);
+                                    end
                                 end
                             end
                         end
