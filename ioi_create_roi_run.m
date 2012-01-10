@@ -83,17 +83,17 @@ for SubjIdx=1:length(job.IOImat)
                             mask = roipoly;                          
                         else
                             linecount = linecount + 1;
-                            rc = spm_input('Enter [row,column] of center',2*linecount+2,'e',[],2);
+                            rc = spm_input('Enter [row,column] of center',2*linecount+1,'e',[],2);
                             linecount = linecount + 1;
-                            radius = spm_input('Enter radius in pixels',2*linecount+2,'e',[],1); 
+                            radius = spm_input('Enter radius in pixels',2*linecount+1,'e',[],1); 
                             radius = round(radius);
                             if radius < 0, radius = 0; end 
-                            mask = ones(size(im_anat));
+                            mask = zeros(size(im_anat));
                             for x1=-radius:radius
                                 for y1=-radius:radius
                                     if x1^2+y1^2 <= radius^2
                                         try %will skip pixels outside the image 
-                                            mask(rc(1)+y1,rc(2)+x1) = 0;
+                                            mask(rc(1)+y1,rc(2)+x1) = 1;
                                         end
                                     end
                                 end

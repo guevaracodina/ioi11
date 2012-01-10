@@ -45,7 +45,8 @@ include_nlinfit = job.include_nlinfit;
 try 
     window_offset = job.window_offset;
 catch
-    window_offset = 3;
+    window_offset = 0;
+    job.window_offset = 0;
 end
 %get size of windows before and after stimulation to average on, in data points
 
@@ -430,7 +431,7 @@ for SubjIdx=1:length(job.IOImat)
                     end
                     %global figures, only for 1st onset
                     if exist('GMa','var')
-                        ls = linspace(0,job.window_after,window_after);
+                        ls = linspace(-job.window_offset,job.window_after-job.window_offset,window_after);
                         if length(GMa) <= length(lp1) %plot identifiable series
                             h1 = h1 + 1;
                             h(h1) = figure;
@@ -475,7 +476,7 @@ for SubjIdx=1:length(job.IOImat)
                     end
                     
                     %Figures by session and by stimulus type
-                    ls = linspace(0,job.window_after,window_after);
+                    ls = linspace(-job.window_offset,job.window_after-job.window_offset,window_after);
                     for s1=1:length(IOI.sess_res)
                         if all_sessions || sum(s1==selected_sessions)
                             %loop over onset type
@@ -529,7 +530,11 @@ for SubjIdx=1:length(job.IOImat)
                                                 else
                                                     errorbar(ls(2:end-1),Ma{r2,m1}{c1,s1}(2:end-1),Da{r2,m1}{c1,s1}(2:end-1),[lp1{r2} lp2{c1}]); hold on
                                                 end
+                                                try 
+                                                    leg = [leg; IOI.res.ROI{r1}.name];
+                                                catch
                                                 leg = [leg; ['ROI ' int2str(r1)]];
+                                                end
                                             end
                                         end
                                         legend(gca,leg);
