@@ -112,7 +112,7 @@ for SubjIdx=1:length(job.IOImat)
                             end
                         catch
                             for c1=1:length(IOI.color.eng)
-                                doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT);
+                                doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT,include_HbR,include_HbO);
                                 fname0 = {};
                                 if doColor
                                     if IOI.color.eng(c1) == 'T'
