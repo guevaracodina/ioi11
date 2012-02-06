@@ -82,7 +82,12 @@ try
                             res = strfind(dir0,'Res');
                             fgr = fsep(fsep > res);
                             tdir = dir0(1:fgr(2));
-                            tfname = fullfile(dir_ioimat,['S' gen_num_str(s1,2)],[fil0 ext0]);
+                            fsep = strfind(dir_ioimat,filesep);
+                            res = strfind(dir_ioimat,'Res');
+                            fgr = fsep(fsep > res);
+                            tdir = dir_ioimat(1:fgr(2));
+                            
+                            tfname = fullfile(tdir,['S' gen_num_str(s1,2)],[fil0 ext0]);
                             try
                                 V = spm_vol(tfname);
                                 Y = spm_read_vols(V);
@@ -98,8 +103,13 @@ try
                             res = strfind(dir0,'Res');
                             fgr = fsep(fsep > res);
                             tdir = dir0(1:fgr(2));
-                            tfname1 = fullfile(dir_ioimat,['S' gen_num_str(s1,2)],[fil0 ext0]);
-                            tfname2 = fullfile(dir_ioimat,['S' gen_num_str(s1,2)],[fil2 ext0]);
+                            fsep = strfind(dir_ioimat,filesep);
+                            res = strfind(dir_ioimat,'Res');
+                            fgr = fsep(fsep > res);
+                            tdir = dir_ioimat(1:fgr(2));
+                            
+                            tfname1 = fullfile(tdir,['S' gen_num_str(s1,2)],[fil0 ext0]);
+                            tfname2 = fullfile(tdir,['S' gen_num_str(s1,2)],[fil2 ext0]);
                             try
                                 V1 = spm_vol(tfname1);
                                 V2 = spm_vol(tfname2);
@@ -116,7 +126,12 @@ try
                         res = strfind(dir0,'Res');
                         fgr = fsep(fsep > res);
                         tdir = dir0(1:fgr(2));
-                        tfname = fullfile(dir_ioimat,['S' gen_num_str(s1,2)],[fil0 ext0]);
+                        
+                        fsep = strfind(dir_ioimat,filesep);
+                        res = strfind(dir_ioimat,'Res');
+                        fgr = fsep(fsep > res);
+                        tdir = dir_ioimat(1:fgr(2));
+                        tfname = fullfile(tdir,['S' gen_num_str(s1,2)],[fil0 ext0]);
                         try
                             V = spm_vol(tfname);
                             Y = spm_read_vols(V);
