@@ -127,11 +127,14 @@ for SubjIdx=1:length(job.IOImat)
                                                 [cHbR cHbO] = ioi_find_HbRHbO(IOI,s1);
                                                 fname = IOI.sess_res{s1}.fname{cHbR};
                                                 fname2 = IOI.sess_res{s1}.fname{cHbO};
+                                                fname2 = ioi_check_fname(fname2,dir_ioimat,s1);
                                             else
                                                 doHbT = 0;
                                                 fname = IOI.sess_res{s1}.fname{c1};
                                             end
+                                            fname = ioi_check_fname(fname,dir_ioimat,s1);
                                             for f1=1:length(fname)
+                                                
                                                 V = spm_vol(fname{f1});
                                                 Y = spm_read_vols(V);
                                                 if doHbT
@@ -139,6 +142,7 @@ for SubjIdx=1:length(job.IOImat)
                                                     Y2 = spm_read_vols(V2);
                                                     Y = Y+Y2;
                                                 end
+                                                
                                                 %shrink by averaging
                                                 Y0 = zeros(size(Y(1:shrink_x:(end-shrink_x+1),1:shrink_y:(end-shrink_y+1),:)));
                                                 for i1=1:shrink_x
