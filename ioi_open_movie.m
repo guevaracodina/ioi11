@@ -10,13 +10,20 @@ try
         handles.Movie = rmfield(handles.Movie,'Y0'); %clean up
     end
     guidata(hObject, handles);
-    [clims lmin lmax] = ioi_get_clims(handles);   
+    [clims lmin lmax] = ioi_get_clims(handles);
     [nx ny nF] = size(Y);
     F(nF) = struct('cdata',[],'colormap',[]);
     h0 = figure;
-    for i0=1:nF
-        imagesc(squeeze(Y(:,:,i0)),clims);
-        F(i0) = getframe;
+    try
+        for i0=1:nF
+            imagesc(squeeze(Y(:,:,i0)),clims);
+            F(i0) = getframe;
+        end
+    catch
+        for i0=1:nF
+            imagesc(squeeze(Y(:,:,i0)));
+            F(i0) = getframe;
+        end
     end
     try close(h0); end
     %store raw data (Y) and movie data (F)
@@ -30,9 +37,9 @@ try
     handles.Movie.CommonYOffset = 24;
     handles.Movie.CommonXShift = 500;
     handles.Movie.CommonYShift = 368;
-    %initialize the min and max boxes 
-%     set(handles.text_min,'String',sprintf('%4.3s',lmin));
-%     set(handles.text_max,'String',sprintf('%4.3s',lmax));
+    %initialize the min and max boxes
+    %     set(handles.text_min,'String',sprintf('%4.3s',lmin));
+    %     set(handles.text_max,'String',sprintf('%4.3s',lmax));
     set(handles.text_min,'String',num2str(lmin));
     set(handles.text_max,'String',num2str(lmax));
     guidata(hObject, handles);

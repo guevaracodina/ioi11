@@ -58,6 +58,11 @@ if isfield(job.data_selection_choice.image_mode.shrinkage_choice,'configuration_
 else
     shrinkage_choice = 0;
 end
+if isfield(job.vasomotion_choice,'vasomotion_on')
+    vasomotion_on = 1;
+else
+    vasomotion_on = 0;
+end
 save_figures = job.save_figures;
 generate_figures = job.generate_figures;
 use_onset_amplitudes = job.use_onset_amplitudes;
@@ -199,7 +204,20 @@ for SubjIdx=1:length(job.IOImat)
                                     else
                                         X = Xtmp{c1};
                                     end
+                                    
                                     if ~isempty(X)
+                                        if image_mode || vasomotion_on
+                                            %put all the data for this color, and session, into memory
+                                            %Note that this takes several minutes to load per session
+                                            %Y is typically 3 GB or larger
+                                            y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,dir_ioimat,shrinkage_choice);
+                                            %calculate vasomotion regressor
+                                            [nx ny nt] = size(y);
+                                            if vasomotion_on
+                                                vaso = squeeze(mean(mean(y,2),1));
+                                                X = [X vaso];
+                                            end
+                                        end
                                         IOI.X{s1}.X0 = X;
                                         %filter X - HPF
                                         if hpf_butter_On
@@ -239,14 +257,9 @@ for SubjIdx=1:length(job.IOImat)
                                         IOI.X{s1}.trRVRV{cX} = trRVRV;
                                         IOI.X{s1}.erdf{cX} = (trRV)^2/trRVRV;
                                         
-                                        if image_mode
-                                            %put all the data for this color, and session, into memory
-                                            %Note that this takes several minutes to load per session
-                                            %Y is typically 3 GB or larger
-                                            y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,dir_ioimat,shrinkage_choice);
-                                            %set possible Inf values of Y to max of non Inf values of Y
-                                            
-                                            [nx ny nt] = size(y);
+                                                        
+                                       if image_mode     
+                                           %set possible Inf values of Y to max of non Inf values of Y
                                             indInf = isinf(y(:));
                                             indNaN = isnan(y(:));
                                             y(indInf) = 0;
@@ -274,9 +287,9 @@ for SubjIdx=1:length(job.IOImat)
                                             %filtering of the data: LPF (Gaussian), forward
                                             y = ioi_filter_HPF_LPF_WMDL(K,y')'; %takes about 2 minutes
                                             %filter backward
-                                            y = y(:,end:-1:1);
-                                            y = ioi_filter_HPF_LPF_WMDL(K,y')';
-                                            y = y(:,end:-1:1);
+%                                             y = y(:,end:-1:1);
+%                                             y = ioi_filter_HPF_LPF_WMDL(K,y')';
+%                                             y = y(:,end:-1:1);
                                             %                                             if any(isnan(y(:))) || any(isinf(y(:)))
                                             %                                                 a0 =1;
                                             %                                             end
