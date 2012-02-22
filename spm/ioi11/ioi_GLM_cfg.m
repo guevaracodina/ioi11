@@ -114,6 +114,27 @@ shrinkage_choice.values = {no_shrinkage,configuration_shrink};
 shrinkage_choice.val    = {configuration_shrink};
 shrinkage_choice.help   = {'Choose whether to shrink the data. Images will then be stored. And could be reused later.'}';
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+vasomotion_on         = cfg_branch;
+vasomotion_on.tag     = 'vasomotion_on';
+vasomotion_on.name    = 'Include vasomotion regressor';
+vasomotion_on.val     = {};
+vasomotion_on.help    = {'Include vasomotion regressor.'};
+
+no_vasomotion         = cfg_branch;
+no_vasomotion.tag     = 'no_vasomotion';
+no_vasomotion.name    = 'No vasomotion regressor';
+no_vasomotion.val     = {};
+no_vasomotion.help    = {};
+
+vasomotion_choice        = cfg_choice;
+vasomotion_choice.name   = 'Choose vasomotion method';
+vasomotion_choice.tag    = 'vasomotion_choice';
+vasomotion_choice.values = {no_vasomotion,vasomotion_on};
+vasomotion_choice.val    = {vasomotion_on};
+vasomotion_choice.help   = {'Choose whether to include a vasomotion regressor in the GLM.'}';
+
 %%%%%%%%%%%%%%%%%%%%%%%%%
 spatial_LPF_radius         = cfg_entry;
 spatial_LPF_radius.name    = 'Spatial LPF radius';
@@ -635,7 +656,7 @@ glm1.name = 'GLM (images or ROIs)';             % The display name
 glm1.tag  = 'glm1'; %Very important: tag is used when calling for execution
 glm1.val  = {IOImat data_selection_choice redo1 IOImatCopyChoice ...
      session_choice ...
-     bases volt use_onset_amplitudes hpf_butter lpf_gauss include_flow ...
+     bases volt use_onset_amplitudes hpf_butter lpf_gauss vasomotion_choice include_flow ...
      include_HbT include_HbO include_HbR include_OD ...
      generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 glm1.prog = @ioi_GLM_run;  % A function handle that will be called with the harvested job to run the computation
