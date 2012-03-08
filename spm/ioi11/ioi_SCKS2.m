@@ -113,7 +113,7 @@ dt = dt/nD;        % integration step
 % =========================================================================
 % interpolate observation according to integration step
 %--------------------------------------------------------------------------
-y     = SCKS.Y;            % observations
+y     = SCKS.Y.y;            % observations
 if size(y,1)>size(y,2)     % check the dimensions
     y = y';
 end
@@ -288,11 +288,11 @@ for run = 1:RUN
         % propagation of cubature points through nonlinear function:
         %------------------------------------------------------------------
         %f             = M(1).f(Xi(xind,:),xPred(uind,:),PS);
-        f             = M(1).f(Xi(xind,:),xPred(uind,:),pE);
+        f             = M(1).f(Xi(xind,:),xPred(uind,:),pE,M(1));
         % integration by local-linearization scheme:
         %------------------------------------------------------------------
         %dfdx          = spm_diff_all(M(1).f,Xi(xind,:),xPred(uind,:),PS,1);
-        dfdx          = spm_diff_all(M(1).f,Xi(xind,:),xPred(uind,:),pE,1);
+        dfdx          = spm_diff_all(M(1).f,Xi(xind,:),xPred(uind,:),pE,M(1),1);
         dx            = expmall(dfdx,f,dt,EXPm)*xt;
         xPred(xind,:) = Xi(xind,:) + reshape(dx(~xt),nx,nPts);
         % mean prediction:
@@ -325,7 +325,7 @@ for run = 1:RUN
         %PS.pE = pE;
         % propagate cubature points through observation function:
         %yPred = M(1).g(Xi(xind,:),Xi(uind,:),PS);
-        yPred = M(1).g(Xi(xind,:),Xi(uind,:),pE);
+        yPred = M(1).g(Xi(xind,:),Xi(uind,:),pE,M(1));
         y1    = sum(yPred,2)/nPts;
         Y     = (yPred-y1(:,OnesNpts))/sqrt(nPts);
         
@@ -382,7 +382,7 @@ for run = 1:RUN
                 pE(ip,:) = Xi(wind,:);
                 %PS.pE = pE;
                 %yPred(:) = M(1).g(Xi(xind,:),Xi(uind,:),PS); % no additive noise here!
-                yPred(:) = M(1).g(Xi(xind,:),Xi(uind,:),pE); % no additive noise here!
+                yPred(:) = M(1).g(Xi(xind,:),Xi(uind,:),pE,M(1)); % no additive noise here!
                 D        = (y(:,t*OnesNpts)-yPred)/sqrt(nPts);
                 beta     = beta0 + D*D';
             end
@@ -558,7 +558,7 @@ for run = 1:RUN
             pE(ip,1) = mean(XXb(wind,:),2);
             %PS.pE = pE;
             %yy       = M(1).g(XXb(xind,:),XXb(uind,:),PS);
-            yy       = M(1).g(XXb(xind,:),XXb(uind,:),pE);
+            yy       = M(1).g(XXb(xind,:),XXb(uind,:),pE,M(1));
             res      = y - yy;
             
             try SCKS = rmfield(SCKS,'qU'); end

@@ -12,8 +12,12 @@ switch M.O.PhysioModel_Choice
 end
 M.n     = length(M.x);
 %Number of inputs of direct model
-M.m=1;
+M.m = 1;
 %Number of outputs
-M.l = M.O.includeHbR + M.O.includeHbT + M.O.includeFlow;
+st = M.O.includeHbR + M.O.includeHbT + M.O.includeHbO;
+if st > 1
+    st = 2;
+end
+M.l = st + M.O.includeFlow;
 
 

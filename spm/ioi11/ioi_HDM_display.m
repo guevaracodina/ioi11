@@ -190,6 +190,9 @@ if HDMdisplay || save_figures
     if M.O.includeHbR
         modalities = [modalities 'HbR; '];
     end
+    if M.O.includeHbO
+        modalities = [modalities 'HbO; '];
+    end
     if M.O.includeHbT
         modalities = [modalities 'HbT; '];
     end
@@ -246,7 +249,7 @@ if HDMdisplay || save_figures
     %--------------------------------------------------------------------------
     h4 = figure;
     tY = K1(:,:,j);
-    show_HbO = 1;
+    show_HbO = M.O.includeHbO;
     if show_HbO
         if M.O.includeHbR && M.O.includeHbT
             tY = [tY(:,1:2) -tY(:,1)+tY(:,2) tY(:,3:end)];
