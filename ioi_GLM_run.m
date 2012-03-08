@@ -234,9 +234,9 @@ for SubjIdx=1:length(job.IOImat)
                                         %filter forward
                                         X1 = ioi_filter_HPF_LPF_WMDL(K,X);
                                         %filter backward
-                                        X1 = X1(end:-1:1,:);
-                                        X1 = ioi_filter_HPF_LPF_WMDL(K,X1);
-                                        X1 = X1(end:-1:1,:);
+%                                         X1 = X1(end:-1:1,:);
+%                                         X1 = ioi_filter_HPF_LPF_WMDL(K,X1);
+%                                         X1 = X1(end:-1:1,:);
                                         KX = spm_sp('Set', X1);
                                         KX.X = full(KX.X); %Filtered X
                                         Xm = spm_sp('x-',KX); % projector
@@ -392,9 +392,9 @@ for SubjIdx=1:length(job.IOImat)
                                                         %filtering of the data: LPF (Gaussian), forward
                                                         y = ioi_filter_HPF_LPF_WMDL(K,y')';
                                                         %filter backward
-                                                        y = y(end:-1:1);
-                                                        y = ioi_filter_HPF_LPF_WMDL(K,y')';
-                                                        y = y(end:-1:1);
+%                                                         y = y(end:-1:1);
+%                                                         y = ioi_filter_HPF_LPF_WMDL(K,y')';
+%                                                         y = y(end:-1:1);
                                                         %GLM inversion: calculating beta and residuals - would be SPM.Vbeta,
                                                         b = Xm * y'; % beta : least square estimate
                                                         %Compute t stat

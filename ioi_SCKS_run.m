@@ -1,36 +1,7 @@
 function out = ioi_SCKS_run(job)
-%select a subset of sessions
-if isfield(job.session_choice,'select_sessions')
-    all_sessions = 0;
-    selected_sessions = job.session_choice.select_sessions.selected_sessions;
-else
-    all_sessions = 1;
-end
-%select a subset of ROIs
-if isfield(job.ROI_choice,'select_ROIs')
-    all_ROIs = 0;
-    selected_ROIs = job.ROI_choice.select_ROIs.selected_ROIs;
-else
-    all_ROIs = 1;
-end
-%HPF
-if isfield(job.hpf_butter,'hpf_butter_On')
-    HPF.hpf_butter_On = 1;
-    HPF.hpf_butter_freq = job.hpf_butter.hpf_butter_On.hpf_butter_freq;
-    HPF.hpf_butter_order = job.hpf_butter.hpf_butter_On.hpf_butter_order;
-else
-    HPF.hpf_butter_On = 0;
-end
-if isfield(job.lpf_choice,'lpf_gauss_On')
-    LPF.lpf_gauss_On = 1;
-    LPF.fwhm1 = job.lpf_choice.lpf_gauss_On.fwhm1;
-else
-    LPF.lpf_gauss_On = 0;
-end
-%modalities to include
-includeHbR = job.includeHbR;
-includeHbT = job.includeHbT;
-includeFlow = job.includeFlow;
+[O HPF LPF] = get_common_O_HDM_SCKS(job);
+O.only_display = job.only_display;
+show_figures = job.generate_figures;
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
@@ -67,43 +38,59 @@ for SubjIdx=1:length(job.IOImat)
                     end
                     [dir1 dummy] = fileparts(IOImat);
                     SCKSfname = fullfile(dir1,'SCKS.mat');
-                    PS0 = ioi_get_PS(IOI,includeHbR,includeHbT,includeFlow,job.PhysioModel_Choice);
-                    
+                    O = ioi_get_PS(IOI,O);
+                    if O.all_sessions
+                        O.selected_sessions = 1:length(IOI.sess_res);
+                    end
+                    if O.all_ROIs
+                        O.selected_ROIs = 1:length(IOI.res.ROI);
+                    end
+                    clear SCKS
                     %loop over sessions
                     for s1=1:length(IOI.sess_res)
-                        if all_sessions || sum(s1==selected_sessions)
+                        if O.all_sessions || sum(s1==O.selected_sessions)
                             %loop over ROIs
                             for r1=1:length(IOI.res.ROI)
-                                if all_ROIs || sum(r1==selected_ROIs)
-                                    %SCKS on ROI
-                                    SCKS0 = [];
-                                    SCKS0.SCKSparams = job.SCKSparams;
-                                    %Data repetition rate (inverse of
-                                    %sampling frequency)
-                                    SCKS0.TR = IOI.dev.TR;
-                                    %data specification - which modalities to include:
-                                    SCKS0.PS = PS0;
-                                    SCKS0.HPF = HPF; %High pass filter on data
-                                    SCKS0 = ioi_get_data(ROI,SCKS0,r1,s1);
-                                    SCKS0 = ioi_set_physiomodel(SCKS0);
-                                    SCKS0 = ioi_set_priors(SCKS0);
-                                    try %onsets may not be available, are optional
-                                        U = IOI.Sess(s1).U;
-                                    catch
-                                        U = [];
-                                    end
-                                    %set priors
-                                    SCKS0.pE = SCKS0.PS.pE;
-                                    SCKS0.pC = SCKS0.PS.pC;
-                                    SCKS0 = ioi_SCKS_set_SCKS(SCKS0,U);
-                                    if job.SCKSparams.SCKSnoise
-                                        SCKS0 = ioi_SCKS(SCKS0,0); %noise and parameters promoted to states
+                                if O.all_ROIs || sum(r1==O.selected_ROIs)
+                                    if ~O.only_display
+                                        %SCKS on ROI
+                                        SCKS0 = [];
+                                        SCKS0.O = O;
+                                        SCKS0.SCKSparams = job.SCKSparams;
+                                        %Data repetition rate (inverse of sampling frequency)
+                                        SCKS0.dt = IOI.dev.TR;
+                                        SCKS0.HPF = HPF; %High pass filter on data
+                                        SCKS0.LPF = LPF;
+                                        SCKS0 = ioi_get_data(ROI,SCKS0,r1,s1);
+                                        SCKS0 = ioi_set_physiomodel(SCKS0);
+                                        SCKS0 = ioi_set_priors(SCKS0);
+                                        try %onsets may not be available, are optional
+                                            U = IOI.Sess(s1).U;
+                                        catch
+                                            U = [];
+                                        end
+                                        SCKS0 = ioi_SCKS_set_SCKS(SCKS0,U);
+                                        if job.SCKSparams.SCKSnoise
+                                            SCKS0 = ioi_SCKS(SCKS0,0); %noise and parameters promoted to states
+                                        else
+                                            SCKS0 = ioi_SCKS2(SCKS0,0); %reduced version, noise and parameters are time independent
+                                        end
+                                        %Store and save results obtained so far
+                                        SCKS{r1,s1} = SCKS0;
+                                        save(SCKSfname,'SCKS');
                                     else
-                                        SCKS0 = ioi_SCKS2(SCKS0,0); %reduced version, noise and parameters are time independent
+                                        try 
+                                            if ~exist('SCKS','var')
+                                                load(SCKSfname);
+                                            end
+                                            SCKS0 = SCKS{r1,s1};
+                                        catch
+                                            disp(['SCKS.mat not found for Session ' int2str(s1) ' and ROI ' int2str(r1)]);
+                                        end
+                                    end 
+                                    %show results
+                                    if show_figures
                                     end
-                                    %Store and save results obtained so far
-                                    SCKS{r1,s1} = SCKS0;
-                                    save(SCKSfname,'SCKS');
                                 end
                             end
                             disp(['SCKS for session ' int2str(s1) ' completed']);

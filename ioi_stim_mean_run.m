@@ -225,9 +225,9 @@ for SubjIdx=1:length(job.IOImat)
                                                 %forward
                                                 y = ioi_filter_HPF_LPF_WMDL(K,y')';
                                                 %backward
-                                                y = y(end:-1:1);
-                                                y = ioi_filter_HPF_LPF_WMDL(K,y')';
-                                                y = y(end:-1:1);
+%                                                 y = y(end:-1:1);
+%                                                 y = ioi_filter_HPF_LPF_WMDL(K,y')';
+%                                                 y = y(end:-1:1);
                                                 tmp_d = y;
                                             end
                                             

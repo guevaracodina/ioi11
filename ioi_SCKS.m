@@ -296,11 +296,11 @@ for run = 1:RUN
         %------------------------------------------------------------------
         %PS.pE = pE;
         %f             = M(1).f(Xi(xind,:),Xi(uind,:),PS);
-        f             = M(1).f(Xi(xind,:),Xi(uind,:),pE);
+        f             = M(1).f(Xi(xind,:),Xi(uind,:),pE,M(1));
         % integration by local-linearization scheme:
         %------------------------------------------------------------------
         %dfdx          = spm_diff_all(M(1).f,Xi(xind,:),Xi(uind,:),PS,1);
-        dfdx          = spm_diff_all(M(1).f,Xi(xind,:),Xi(uind,:),pE,1);
+        dfdx          = spm_diff_all(M(1).f,Xi(xind,:),Xi(uind,:),pE,M(1),1);
         dx            = expmall(dfdx,f,dt,EXPm)*xt;
         xPred(xind,:) = Xi(xind,:) + reshape(dx(~xt),nx,nPts) + Xi(xind+nx+nu+nw,:) ;
         % input and parameters update
@@ -347,7 +347,7 @@ for run = 1:RUN
         pE(ip,:)   = xPred(wind,:);
         %PS.pE = pE;
         %yPred0     = M(1).g(xPred(xind,:),xPred(uind,:),PS);
-        yPred0     = M(1).g(xPred(xind,:),xPred(uind,:),pE);
+        yPred0     = M(1).g(xPred(xind,:),xPred(uind,:),pE,M(1));
         %------------------------------------------------------------------
         % UPDATE STEP:
         %------------------------------------------------------------------
@@ -471,9 +471,9 @@ for run = 1:RUN
         %PS.pE = pE;
         % propagate cubature points through nonlinear function:
         %f             = M(1).f(Xi(xind,:),Xi(uind,:),PS);
-        f             = M(1).f(Xi(xind,:),Xi(uind,:),pE);
+        f             = M(1).f(Xi(xind,:),Xi(uind,:),pE,M(1));
         %dfdx          = spm_diff_all(M(1).f,Xi(xind,:),Xi(uind,:),PS,1);
-        dfdx          = spm_diff_all(M(1).f,Xi(xind,:),Xi(uind,:),pE,1);
+        dfdx          = spm_diff_all(M(1).f,Xi(xind,:),Xi(uind,:),pE,M(1),1);
         dx            = expmall(dfdx,f,dt,EXPm)*xt;
         
         xPred(xind,:) = Xi(xind,:) + reshape(dx(~xt),nx,nPts) + Xi(xind+nx+nu+nw,:);
@@ -627,7 +627,7 @@ for run = 1:RUN
                 pE(ip,1) = mean(XXb(wind,:),2);
                 %PS.pE = pE;
                 %yy       = M(1).g(XXb(xind,:),XXb(uind,:),PS);
-                yy       = M(1).g(XXb(xind,:),XXb(uind,:),pE);
+                yy       = M(1).g(XXb(xind,:),XXb(uind,:),pE,M(1));
                 res      = y - yy;
                 
                 try SCKS = rmfield(SCKS,'qU'); end

@@ -4,6 +4,7 @@ cHbO = M.O.cHbO;
 cHbR = M.O.cHbR;
 cFlow = M.O.cFlow;
 includeHbR = M.O.includeHbR;
+%includeHbO = M.O.includeHbO;
 includeHbT = M.O.includeHbT;
 includeFlow = M.O.includeFlow;
 %number of modalities
@@ -65,9 +66,9 @@ if LPF.lpf_gauss_On
         %forward
         y = ioi_filter_HPF_LPF_WMDL(K,y')';
         %backward
-        y = y(end:-1:1);
-        y = ioi_filter_HPF_LPF_WMDL(K,y')';
-        y = y(end:-1:1);
+%         y = y(end:-1:1);
+%         y = ioi_filter_HPF_LPF_WMDL(K,y')';
+%         y = y(end:-1:1);
         Y(:,i) = y;
     end
 end
@@ -77,7 +78,6 @@ end
 
 M.Y.y = Y;
 M.Y.dt = M.dt;
-end
 
 function y = private_baseline_correction(M,y,modality,r1,s1)
 if ~isempty(M.O.baseline_correction)
@@ -97,5 +97,4 @@ if ~isempty(M.O.baseline_correction)
         case 2
             y = y-M.O.baseline_correction{modality}(s2,r2);
     end
-end
 end

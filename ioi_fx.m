@@ -79,7 +79,7 @@ switch M.O.PhysioModel_Choice
             (x(3,:)*((1-BH.S)^2*(3*x(7,:)^2+BH.B)/BH.A  + BH.Upsilon )*x(7,:));%        
 end
 
-f = f(:);
+%f = f(:);
 % adjust motion for DEM (that uses time-bins as units of time)
 %--------------------------------------------------------------------------
 %try, global dt, f  = f*dt; end

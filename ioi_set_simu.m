@@ -35,9 +35,9 @@ if M.LPF.lpf_gauss_On || M.S.simuUpsample > 1
      %filter forward
      Y.y = ioi_filter_HPF_LPF_WMDL(K,Y.y);
      %filter backward
-     Y.y = Y.y(end:-1:1,:);
-     Y.y = ioi_filter_HPF_LPF_WMDL(K,Y.y);
-     Y.y = Y.y(end:-1:1,:);
+%      Y.y = Y.y(end:-1:1,:);
+%      Y.y = ioi_filter_HPF_LPF_WMDL(K,Y.y);
+%      Y.y = Y.y(end:-1:1,:);
 end
 %Y.y = Y.y';
 M.Y = Y;
