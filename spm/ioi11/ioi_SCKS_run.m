@@ -2,6 +2,7 @@ function out = ioi_SCKS_run(job)
 [O HPF LPF] = get_common_O_HDM_SCKS(job);
 O.only_display = job.only_display;
 show_figures = job.generate_figures;
+save_figures = job.save_figures;
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
@@ -90,6 +91,17 @@ for SubjIdx=1:length(job.IOImat)
                                     end 
                                     %show results
                                     if show_figures
+                                        [f1 f2 f3 f4]=ioi_SCKS_display(SCKS0);
+                                        if save_figures
+                                            tit = ['State_S' int2str(s1) '_ROI' gen_num_str(r1,2)];  
+                                            ioi_save_figures(save_figures,show_figures,f1,tit,dir1);
+                                            tit = ['Input_S' int2str(s1) '_ROI' gen_num_str(r1,2)];  
+                                            ioi_save_figures(save_figures,show_figures,f2,tit,dir1);
+                                            tit = ['Response_S' int2str(s1) '_ROI' gen_num_str(r1,2)];  
+                                            ioi_save_figures(save_figures,show_figures,f3,tit,dir1);
+                                            tit = ['Residual_S' int2str(s1) '_ROI' gen_num_str(r1,2)];  
+                                            ioi_save_figures(save_figures,show_figures,f4,tit,dir1);
+                                        end
                                     end
                                 end
                             end
