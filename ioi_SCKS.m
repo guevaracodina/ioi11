@@ -98,7 +98,7 @@ nanInd=0;
 %PS = SCKS.PS; %Parameter structure
 M  = SCKS.M;
 %M  = ioi_SCKS_DEM_M_set(M);
-M  = spm_DEM_M_set(M);
+M  = ioi_spm_DEM_M_set(M);
 % get integration step dt:
 dt = M(1).E.dt;    % default 1
 nD = M(1).E.nD;

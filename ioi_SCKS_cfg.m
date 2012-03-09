@@ -4,7 +4,7 @@ function SCKS1 = ioi_SCKS_cfg
 %                    École Polytechnique de Montréal
 [IOImat ROImat redo1 IOImatCopyChoice includeHbR includeHbO ...
     includeHbT includeFlow PhysioModel_Choice ROI_choice session_choice baseline_choice ...
-    lpf_choice hpf_butter] = ioi_common_fields_SCKS_HDM;
+    lpf_choice hpf_butter] = ioi_common_fields_SCKS_HDM('SCKS');
 
 only_display      = cfg_menu;
 only_display.tag  = 'only_display';
