@@ -72,9 +72,9 @@ for SubjIdx=1:length(job.IOImat)
                                         end
                                         SCKS0 = ioi_SCKS_set_SCKS(SCKS0,U);
                                         if job.SCKSparams.SCKSnoise
-                                            SCKS0 = ioi_SCKS(SCKS0,0); %noise and parameters promoted to states
+                                            SCKS0 = ioi_SCKS(SCKS0,show_figures); %noise and parameters promoted to states
                                         else
-                                            SCKS0 = ioi_SCKS2(SCKS0,0); %reduced version, noise and parameters are time independent
+                                            SCKS0 = ioi_SCKS2(SCKS0,show_figures); %reduced version, noise and parameters are time independent
                                         end
                                         %Store and save results obtained so far
                                         SCKS{r1,s1} = SCKS0;

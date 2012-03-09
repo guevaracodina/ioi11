@@ -1,7 +1,7 @@
 function SCKS = ioi_SCKS_set_SCKS(SCKS,U)
 %data and onsets
 if ~isempty(U)
-    SCKS.pU.v{1} = U.ons; %?
+    SCKS.pU.v{1} = U.u(33:end); %U.ons; %?
 else
     SCKS.pU.v{1} = [];
 end

@@ -1,6 +1,6 @@
 function [IOImat ROImat redo1 IOImatCopyChoice includeHbR includeHbO ...
     includeHbT includeFlow PhysioModel_Choice ROI_choice session_choice baseline_choice ...
-    lpf_choice hpf_butter] = ioi_common_fields_SCKS_HDM
+    lpf_choice hpf_butter] = ioi_common_fields_SCKS_HDM(dir_name)
 
 IOImat         = cfg_files; %Select NIRS.mat for this subject 
 IOImat.name    = 'Select IOI.mat'; % The displayed name
@@ -44,7 +44,7 @@ NewIOIdir         = cfg_entry;
 NewIOIdir.name    = 'New directory for IOI.mat';
 NewIOIdir.tag     = 'NewIOIdir';       
 NewIOIdir.strtype = 's';
-NewIOIdir.val{1}  = 'HDM';
+NewIOIdir.val{1}  = dir_name;
 NewIOIdir.num     = [1 Inf];     
 NewIOIdir.help    = {'Directory for IOI.mat.'}'; 
 
@@ -59,7 +59,7 @@ IOImatCopyChoice           = cfg_choice;
 IOImatCopyChoice.name      = 'Choose IOI copy method';
 IOImatCopyChoice.tag       = 'IOImatCopyChoice';
 IOImatCopyChoice.values    = {IOImatOverwrite IOImatCopy}; 
-IOImatCopyChoice.val       = {IOImatOverwrite}; 
+IOImatCopyChoice.val       = {IOImatCopy}; 
 IOImatCopyChoice.help      = {'Choose whether to overwrite the IOI.mat structure'
             'or to create a new directory'
             'and copy the IOI.mat structure there'}'; 

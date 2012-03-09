@@ -1,7 +1,7 @@
 function hdm1 = ioi_HDM_cfg
 [IOImat ROImat redo1 IOImatCopyChoice includeHbR includeHbO ...
     includeHbT includeFlow PhysioModel_Choice ROI_choice session_choice baseline_choice ...
-    lpf_choice hpf_butter] = ioi_common_fields_SCKS_HDM;
+    lpf_choice hpf_butter] = ioi_common_fields_SCKS_HDM('HDM');
 %_______________________________________________________________________
 % Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
