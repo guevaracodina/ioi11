@@ -13,6 +13,8 @@ if isfield(job.ROI_choice,'select_ROIs')
 else
     all_ROIs = 1;
 end
+O.generate_figures = job.generate_figures;
+O.save_figures = job.save_figures;
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
@@ -24,16 +26,19 @@ for SubjIdx=1:length(job.IOImat)
         if ~isfield(IOI.res,'SCKSOK')
             disp(['No SCKS available for subject ' int2str(SubjIdx) ' ... skipping ROC']);
         else
-            if ~isfield(IOI.res,'ROC_OK') || job.force_redo
-                [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
+                  [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
                 if isfield(job.IOImatCopyChoice,'IOImatCopy')
                     newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
                     newDir = fullfile(dir_ioimat,newDir);
                     if ~exist(newDir,'dir'),mkdir(newDir); end
                     IOImat = fullfile(newDir,'IOI.mat');
+                    load(IOImat);
                 end
+                if ~isfield(IOI.res,'ROC_OK') || job.force_redo
+          
                 [dir1 dummy] = fileparts(IOImat);
                 ROCfname = fullfile(dir1,'ROC.mat');
+                O.dir = dir1;
                 load(IOI.SCKS.fname);
                 %loop over sessions
                 for s1=1:length(IOI.sess_res)
@@ -42,8 +47,11 @@ for SubjIdx=1:length(job.IOImat)
                         for r1=1:length(IOI.res.ROI)
                             if all_ROIs || sum(r1==selected_ROIs)
                                 if ~isempty(SCKS{r1,s1})
-                                    Options = [];
-                                    ROC0 = ioi_ROC(SCKS{r1,s1},Options);
+                                    O.tit = ['ROC S' int2str(s1) ' ROI ' gen_num_str(r1,2)]; 
+                                    O.fname = ['ROC_S' int2str(s1) '_ROI_' gen_num_str(r1,2)];
+                                    O.tit2 = ['Fit S' int2str(s1) ' ROI ' gen_num_str(r1,2)]; 
+                                    O.fname2 = ['Fit_S' int2str(s1) '_ROI_' gen_num_str(r1,2)];
+                                    ROC0 = ioi_ROC(SCKS{r1,s1},O);
                                     %Store and save results obtained so far
                                     ROC{r1,s1} = ROC0;
                                     save(ROCfname,'ROC');
