@@ -26,6 +26,7 @@ if ~strcmp(color.eng(c1),'F') || include_flow
     H.fit_3_gamma = fit_3_gamma;
     H.x     = 0;
     H.n     = 1;
+    H.l     = 1;
     %Number of inputs of direct model
     H.m=1;
     %choose priors

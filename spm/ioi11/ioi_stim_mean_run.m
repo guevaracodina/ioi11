@@ -29,6 +29,21 @@ if isfield(job.lpf_choice,'lpf_gauss_On')
 else
     LPF.lpf_gauss_On = 0;
 end
+if isfield(job,'remove_stims')
+    rmi = job.remove_stims;
+else
+    rmi = '';
+end
+if isfield(job,'use_stims')
+    ust = job.use_stims;
+else
+    ust = '';
+end
+if isfield(job,'remove_stims_SD')
+    remove_stims_SD = job.remove_stims_SD;
+else
+    remove_stims_SD = 1;
+end
 remove_segment_drift = job.remove_segment_drift;
 fit_3_gamma = job.fit_3_gamma;
 %Other options
@@ -42,7 +57,7 @@ save_figures = job.save_figures;
 generate_figures = job.generate_figures;
 normalize_choice = job.normalize_choice;
 include_nlinfit = job.include_nlinfit;
-try 
+try
     window_offset = job.window_offset;
 catch
     window_offset = 0;
@@ -104,9 +119,49 @@ for SubjIdx=1:length(job.IOImat)
                 %loop over sessions
                 for s1=1:Ns
                     if all_sessions || sum(s1==selected_sessions)
-                        onsets_list{s1} = IOI.sess_res{s1}.onsets;
+                        tmp_onsets = IOI.sess_res{s1}.onsets;
+                        %remove onsets
+                        if ~isempty(rmi)
+                            IOI.rmi = rmi;
+                            for k0=1:length(tmp_onsets)
+                                r_onsets = round(tmp_onsets{k0});
+                                k_onsets = [];
+                                rem_onsets = [];
+                                for u0=1:length(r_onsets)
+                                    if any(r_onsets(u0) == rmi) || any(r_onsets(u0) == rmi + 1) ||  any(r_onsets(u0) == rmi - 1)
+                                        %skip this onset
+                                        rem_onsets = [rem_onsets tmp_onsets{k0}(u0)];
+                                    else
+                                        k_onsets = [k_onsets tmp_onsets{k0}(u0)];
+                                    end
+                                end
+                                IOI.onsets_kept{s1}{k0} = k_onsets;
+                                IOI.onsets_removed{s1}{k0} = rem_onsets;
+                                tmp_onsets{k0} = k_onsets;
+                            end
+                        else
+                            IOI.onsets_kept{s1} = tmp_onsets;
+                            IOI.onsets_removed{s1} = '';
+                        end
+                        if ~isempty(ust)
+                            for k0=1:length(tmp_onsets)
+                                try
+                                    tmp_onsets{k0} = tmp_onsets{k0}(ust);
+                                catch
+                                    disp('Problem restricting number of onsets to user-specified -- probably not enough onsets');
+                                end
+                                try
+                                    if ~any(k0 == job.which_onset_type)
+                                        tmp_onsets{k0} = ''; %remove these onset types
+                                    end
+                                end
+                            end
+                        end
+                        onsets_list{s1} = tmp_onsets;
                     end
                 end
+                
+                
                 %Check whether there is the same number of onset types in
                 %each session; this is a
                 %check if averaging over all selected sessions is sensible
@@ -212,9 +267,28 @@ for SubjIdx=1:length(job.IOImat)
                                                     tmp_d = tmp_d/mean(tmp_d); %or median
                                                 end
                                             end
+                                            
+                                            %remove jumps options:
+                                            OP.Sb = 4; %number of standard deviations
+                                            OP.Nr = 1/IOI.dev.TR; %number of points removed before and after
+                                            OP.Mp = 10/IOI.dev.TR; %size of gaps to be filled
+                                            OP.sf = 1/IOI.dev.TR; %sampling frequency
+                                            OP.ubf = 1; %use Butterworth filter
+                                            OP.bf = 0.01; %Butterworth HPF cutoff
+                                            OP.bo = 2; %Butterworth order
+
+                                            %if ~isempty(rmi{i0})
+                                                if IOI.color.eng(c1) == IOI.color.flow
+                                                    OP.ubf = 0;
+                                                else
+                                                    OP.ubf = 1;
+                                                end
+                                                tmp_d = ioi_remove_jumps(tmp_d,OP);
+                                            %end
                                         catch
                                             tmp_d = [];
                                         end
+                                        
                                         if ~isempty(tmp_d)
                                             if HPF.hpf_butter_On
                                                 tmp_d = ButterHPF(1/IOI.dev.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,tmp_d);
@@ -225,94 +299,131 @@ for SubjIdx=1:length(job.IOImat)
                                                 %forward
                                                 y = ioi_filter_HPF_LPF_WMDL(K,y')';
                                                 %backward
-%                                                 y = y(end:-1:1);
-%                                                 y = ioi_filter_HPF_LPF_WMDL(K,y')';
-%                                                 y = y(end:-1:1);
+                                                %                                                 y = y(end:-1:1);
+                                                %                                                 y = ioi_filter_HPF_LPF_WMDL(K,y')';
+                                                %                                                 y = y(end:-1:1);
                                                 tmp_d = y;
                                             end
                                             
-                                            Sb{r2,m1}{c1,s1} = [];
-                                            Sa{r2,m1}{c1,s1} = [];
-                                            %loop over onsets for that session
-                                            U = round(onsets_list{s1}{m1}/IOI.dev.TR)-window_offset; %in data points
-                                            U0{s1} = get_U(IOI,[],U,0,s1); %only for plotting stims
-                                            
-                                            for u1=1:length(U)
-                                                clear tmp_median;
-                                                try
-                                                    tmp1 = tmp_d(U(u1)-window_before:U(u1)-1);
-                                                    switch normalize_choice
-                                                        case 1
-                                                            tmp_median = median(tmp1);
-                                                        case 2
-                                                            tmp_median = tmp1(end);
-                                                    end
-                                                    tmp_array_before = tmp_array_before + tmp1-tmp_median;
-                                                    Gtmp_array_before = Gtmp_array_before + tmp1-tmp_median;
-                                                    kb = kb+1;
-                                                    Gkb = Gkb+1;
-                                                    Sb{r2,m1}{c1,s1} = [Sb{r2,m1}{c1,s1};tmp1-tmp_median];
-                                                    if global_M && m1 <= possible_global_M
-                                                        GSb{r2,m1}{c1} = [GSb{r2,m1}{c1};tmp1-tmp_median];
-                                                    end
-                                                catch
-                                                    kb2 = kb2+1;
-                                                    if kb2 < 3 && r2 == 1
-                                                        disp(['Could not include segment before onset ' int2str(u1) ' at time ' num2str(U(u1)*IOI.dev.TR) ...
-                                                            ' for session ' int2str(s1) ' for ROI ' int2str(r1) ...
-                                                            ' for color ' int2str(c1) ' for onset type ' int2str(m1) ...
-                                                            ' in global average over all sessions... skipping ' int2str(kb2) ' so far']);
-                                                    end
-                                                end
-                                                try
-                                                    tmp1 = tmp_d(U(u1):U(u1)+window_after-1);
-                                                    if ~exist('tmp_median','var') || normalize_choice == 2
-                                                        tmp_median = tmp1(1);
-                                                    end
-                                                    if remove_segment_drift
-                                                        if normalize_choice == 1
-                                                            %use the same length as window before to estimate end value of segment
-                                                            tmp_end = mean(tmp1(end-window_before:end));
-                                                        else
-                                                            tmp_end = tmp1(end);
+                                            first_pass = 1;
+                                            second_pass = 0;
+                                            removeSeg = [];
+                                            while first_pass
+                                                
+                                                Sb{r2,m1}{c1,s1} = [];
+                                                Sa{r2,m1}{c1,s1} = [];
+                                                %loop over onsets for that session
+                                                if ~isempty(onsets_list{s1}{m1})
+                                                    U = round(onsets_list{s1}{m1}/IOI.dev.TR)-window_offset; %in data points
+                                                    U0{s1} = get_U(IOI,[],U,0,s1); %only for plotting stims
+                                                    
+                                                    for u1=1:length(U)
+                                                        if ~any(u1==removeSeg)
+                                                            clear tmp_median;
+                                                            try
+                                                                tmp1 = tmp_d(U(u1)-window_before:U(u1)-1);
+                                                                switch normalize_choice
+                                                                    case 1
+                                                                        tmp_median = median(tmp1);
+                                                                    case 2
+                                                                        tmp_median = tmp1(end);
+                                                                    case 3
+                                                                        tmp_median = mean(tmp1);
+                                                                end
+                                                                tmp_array_before = tmp_array_before + tmp1-tmp_median;
+                                                                Gtmp_array_before = Gtmp_array_before + tmp1-tmp_median;
+                                                                kb = kb+1;
+                                                                Gkb = Gkb+1;
+                                                                Sb{r2,m1}{c1,s1} = [Sb{r2,m1}{c1,s1};tmp1-tmp_median];
+                                                                if global_M && m1 <= possible_global_M
+                                                                    GSb{r2,m1}{c1} = [GSb{r2,m1}{c1};tmp1-tmp_median];
+                                                                end
+                                                            catch
+                                                                kb2 = kb2+1;
+                                                                if kb2 < 3 && r2 == 1
+                                                                    disp(['Could not include segment before onset ' int2str(u1) ' at time ' num2str(U(u1)*IOI.dev.TR) ...
+                                                                        ' for session ' int2str(s1) ' for ROI ' int2str(r1) ...
+                                                                        ' for color ' int2str(c1) ' for onset type ' int2str(m1) ...
+                                                                        ' in global average over all sessions... skipping ' int2str(kb2) ' so far']);
+                                                                end
+                                                            end
+                                                            try
+                                                                tmp1 = tmp_d(U(u1):U(u1)+window_after-1);
+                                                                if ~exist('tmp_median','var') || normalize_choice == 2
+                                                                    tmp_median = tmp1(1);
+                                                                end
+                                                                if remove_segment_drift
+                                                                    switch normalize_choice
+                                                                        case {1,3}
+                                                                            %use the same length as window before to estimate end value of segment
+                                                                            tmp_end = mean(tmp1(end-window_before:end));
+                                                                        case 2
+                                                                            tmp_end = tmp1(end);
+                                                                    end
+                                                                    slope = tmp_median + linspace(0,1,length(tmp1))*(tmp_end-tmp_median);
+                                                                    tmp1 = tmp1 - slope;
+                                                                else
+                                                                    tmp1 = tmp1-tmp_median;
+                                                                end
+                                                                tmp_array_after = tmp_array_after + tmp1;
+                                                                Gtmp_array_after = Gtmp_array_after + tmp1;
+                                                                ka = ka+1;
+                                                                Gka = Gka+1;
+                                                                Sa{r2,m1}{c1,s1} = [Sa{r2,m1}{c1,s1};tmp1];
+                                                                if global_M && m1 <= possible_global_M
+                                                                    GSa{r2,m1}{c1} = [GSa{r2,m1}{c1};tmp1];
+                                                                end
+                                                            catch
+                                                                ka2 = ka2+1;
+                                                                if ka2<3 && r2 == 1
+                                                                    disp(['Could not include segment after onset ' int2str(u1) ' at time ' num2str(U(u1)*IOI.dev.TR) ...
+                                                                        ' for session ' int2str(s1) ' for ROI ' int2str(r1) ...
+                                                                        ' for color ' int2str(c1) ' for onset type ' int2str(m1) ...
+                                                                        ' in global average over all sessions... skipping ' int2str(ka2) ' so far']);
+                                                                    
+                                                                end
+                                                            end
+                                                            %                                                     if any(isnan(tmp_array_after))
+                                                            %                                                         a=1;
+                                                            %                                                     end
                                                         end
-                                                        slope = tmp_median + linspace(0,1,length(tmp1))*(tmp_end-tmp_median);
-                                                        tmp1 = tmp1 - slope;
-                                                    else
-                                                        tmp1 = tmp1-tmp_median;
+                                                        %                                             else
+                                                        %                                                 if ~isfield(IOI.color,'contrast') || (isfield(IOI.color,'contrast') && ~(IOI.color.eng(c1)==IOI.color.contrast))
+                                                        %                                                     disp(['Skipped session ' int2str(s1) ' for color ' IOI.color.eng(c1) ' for ROI ' int2str(r1)]);
+                                                        %
                                                     end
-                                                    tmp_array_after = tmp_array_after + tmp1;
-                                                    Gtmp_array_after = Gtmp_array_after + tmp1;
-                                                    ka = ka+1;
-                                                    Gka = Gka+1;
-                                                    Sa{r2,m1}{c1,s1} = [Sa{r2,m1}{c1,s1};tmp1];
-                                                    if global_M && m1 <= possible_global_M
-                                                        GSa{r2,m1}{c1} = [GSa{r2,m1}{c1};tmp1];
+                                                    
+                                                    Mb{r2,m1}{c1,s1} = tmp_array_before/kb; %global mean before
+                                                    Ma{r2,m1}{c1,s1} = tmp_array_after/ka; %global mean after
+                                                    Da{r2,m1}{c1,s1} = std(Sa{r2,m1}{c1,s1},0,1)/sqrt(ka); %SEM
+                                                    Db{r2,m1}{c1,s1} = std(Sb{r2,m1}{c1,s1},0,1)/sqrt(kb); %SEM
+                                                    Dma{r2,m1}{c1,s1} = mean(Da{r2,m1}{c1,s1});
+                                                    Dmb{r2,m1}{c1,s1} = mean(Db{r2,m1}{c1,s1});
+                                                    Rs{r2,m1}{c1,s1} = removeSeg;
+                                                    
+                                                    if remove_stims_SD
+                                                        if second_pass
+                                                            first_pass = 0;
+                                                        else
+                                                            %removeSeg = [];
+                                                            if ~isempty(tmp_array_after)
+                                                                meanA = mean(Ma{r2,m1}{c1,s1});
+                                                                tmpSeg = Sa{r2,m1}{c1,s1};
+                                                                meanSeg = mean(tmpSeg,2);
+                                                                meanSd = std(tmpSeg(:));
+                                                                for a0=1:length(meanSeg)
+                                                                    if abs(meanSeg(a0)-meanA) > 1.5*meanSd %very strong criterion perhaps better to keep it at 2*meanSd
+                                                                        removeSeg = [removeSeg a0];
+                                                                    end
+                                                                end
+                                                            end
+                                                            second_pass = 1;
+                                                        end
                                                     end
-                                                catch
-                                                    ka2 = ka2+1;
-                                                    if ka2<3 && r2 == 1
-                                                        disp(['Could not include segment after onset ' int2str(u1) ' at time ' num2str(U(u1)*IOI.dev.TR) ...
-                                                            ' for session ' int2str(s1) ' for ROI ' int2str(r1) ...
-                                                            ' for color ' int2str(c1) ' for onset type ' int2str(m1) ...
-                                                            ' in global average over all sessions... skipping ' int2str(ka2) ' so far']);
-                                                        
-                                                    end
+                                                else
+                                                    first_pass = 0;
                                                 end
-                                                %                                                     if any(isnan(tmp_array_after))
-                                                %                                                         a=1;
-                                                %                                                     end
                                             end
-                                            %                                             else
-                                            %                                                 if ~isfield(IOI.color,'contrast') || (isfield(IOI.color,'contrast') && ~(IOI.color.eng(c1)==IOI.color.contrast))
-                                            %                                                     disp(['Skipped session ' int2str(s1) ' for color ' IOI.color.eng(c1) ' for ROI ' int2str(r1)]);
-                                            %                                                 end
-                                            Mb{r2,m1}{c1,s1} = tmp_array_before/kb; %global mean before
-                                            Ma{r2,m1}{c1,s1} = tmp_array_after/ka; %global mean after
-                                            Da{r2,m1}{c1,s1} = std(Sa{r2,m1}{c1,s1},0,1)/sqrt(ka); %SEM
-                                            Db{r2,m1}{c1,s1} = std(Sb{r2,m1}{c1,s1},0,1)/sqrt(kb); %SEM
-                                            Dma{r2,m1}{c1,s1} = mean(Da{r2,m1}{c1,s1});
-                                            Dmb{r2,m1}{c1,s1} = mean(Db{r2,m1}{c1,s1});
                                         end
                                     end
                                 end
@@ -356,6 +467,7 @@ for SubjIdx=1:length(job.IOImat)
                 IOI.res.Dmb = Dmb;
                 IOI.res.Sa = Sa; %each segment
                 IOI.res.Sb = Sb;
+                IOI.res.Rs = Rs;
                 save(IOImat,'IOI');
                 %Define M structure for Expectation-Maximization algorithm
                 %Fit difference of two gamma functions
@@ -449,7 +561,7 @@ for SubjIdx=1:length(job.IOImat)
                                 end
                             end
                             
-                            tit = 'Mean_ROI';
+                            tit = [IOI.subj_name ' Mean ROI'];
                             title(tit);
                             ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                         else %plot all series with random colors, skip error bars
@@ -467,7 +579,7 @@ for SubjIdx=1:length(job.IOImat)
                                 set(gcf, 'Colormap', ColorSet);
                                 
                                 if save_figures
-                                    tit = ['Mean_' IOI.color.eng(c1) '_allROI'];
+                                    tit = [IOI.subj_name ' Mean ' IOI.color.eng(c1) ' allROI'];
                                     title(tit);
                                     ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                                 end
@@ -481,87 +593,93 @@ for SubjIdx=1:length(job.IOImat)
                         if all_sessions || sum(s1==selected_sessions)
                             %loop over onset type
                             for m1=1:length(onsets_list{s1})
-                                %Figures with colors combined on same figure - one figure per ROI
-                                %loop over ROIs
-                                r2 = 0;
-                                for r1=1:length(ROI)
-                                    if all_ROIs || sum(r1==selected_ROIs)
-                                        r2 = r2+1;
-                                        h1 = h1 + 1;
-                                        h(h1) = figure;
-                                        leg_str = {};
-                                        for c1 = ctotal
-                                            if ~add_error_bars
-                                                plot(ls,Ma{r2,m1}{c1,s1},[lp1{1} lp2{c1}]); hold on
-                                            else
-                                                errorbar(ls(2:end-1),Ma{r2,m1}{c1,s1}(2:end-1),Da{r2,m1}{c1,s1}(2:end-1),[lp1{1} lp2{c1}]); hold on
-                                            end
-                                            leg_str = [leg_str; lp3{c1}];
-                                            if extract_HRF
-                                                if include_nlinfit
-                                                    plot(ls,F{r2,m1}{c1,s1}.yp,[lp1{2} lp2{c1}]); hold on
-                                                    leg_str = [leg_str; [lp3{c1} '-NL']];
-                                                end
-                                                plot(ls,H{r2,m1}{c1,s1}.yp,[lp1{3} lp2{c1}]); hold on
-                                                leg_str = [leg_str; [lp3{c1} '-EM']];
-                                            end
-                                        end
-                                        legend(leg_str);
-                                        if save_figures
-                                            tit = ['ROI ' int2str(r1) ' ' IOI.res.ROI{r1}.name ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
-                                            title(tit);
-                                            ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
-                                        end
-                                    end
-                                end
-                                
-                                %Figures with ROIs combined on same figure - one figure per color
-                                if size(Ma,1) <= length(lp1) %plot identifiable ROIs
-                                    for c1 = ctotal
-                                        h1 = h1 + 1;
-                                        h(h1) = figure;
-                                        r2 = 0;
-                                        leg = {};
-                                        for r1=1:length(ROI)
-                                            if all_ROIs || sum(r1==selected_ROIs)
-                                                r2 = r2+1;
+                                if any(m1==job.which_onset_type)
+                                    %Figures with colors combined on same figure - one figure per ROI
+                                    %loop over ROIs
+                                    r2 = 0;
+                                    for r1=1:length(ROI)
+                                        if all_ROIs || sum(r1==selected_ROIs)
+                                            r2 = r2+1;
+                                            h1 = h1 + 1;
+                                            h(h1) = figure;
+                                            leg_str = {};
+                                            for c1 = ctotal
                                                 if ~add_error_bars
-                                                    plot(ls,Ma{r2,m1}{c1,s1},[lp1{r2} lp2{c1}]); hold on
+                                                    plot(ls,Ma{r2,m1}{c1,s1},[lp1{1} lp2{c1}]); hold on
                                                 else
-                                                    errorbar(ls(2:end-1),Ma{r2,m1}{c1,s1}(2:end-1),Da{r2,m1}{c1,s1}(2:end-1),[lp1{r2} lp2{c1}]); hold on
+                                                    errorbar(ls(2:end-1),Ma{r2,m1}{c1,s1}(2:end-1),Da{r2,m1}{c1,s1}(2:end-1),[lp1{1} lp2{c1}]); hold on
                                                 end
-                                                try 
-                                                    leg = [leg; IOI.res.ROI{r1}.name];
-                                                catch
-                                                leg = [leg; ['ROI ' int2str(r1)]];
+                                                leg_str = [leg_str; lp3{c1}];
+                                                if extract_HRF
+                                                    if include_nlinfit
+                                                        plot(ls,F{r2,m1}{c1,s1}.yp,[lp1{2} lp2{c1}]); hold on
+                                                        leg_str = [leg_str; [lp3{c1} '-NL']];
+                                                    end
+                                                    plot(ls,H{r2,m1}{c1,s1}.yp,[lp1{3} lp2{c1}]); hold on
+                                                    leg_str = [leg_str; [lp3{c1} '-EM']];
                                                 end
                                             end
-                                        end
-                                        legend(gca,leg);
-                                        if save_figures
-                                            tit = ['Color ' IOI.color.eng(c1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
-                                            title(tit);
-                                            ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
+                                            legend(leg_str);
+                                            if save_figures
+                                                if isfield(IOI.res.ROI{r1},'name')
+                                                    tit = [IOI.subj_name ' ROI ' int2str(r1) ' ' IOI.res.ROI{r1}.name ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
+                                                else
+                                                    tit = [IOI.subj_name ' ROI ' int2str(r1) ' ' int2str(r1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
+                                                end
+                                                title(tit);
+                                                ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
+                                            end
                                         end
                                     end
-                                else
-                                    %plot all series with random colors, skip error bars
-                                    ColorSet = varycolor(size(Ma,1));
-                                    for c1 = ctotal
-                                        h1 = h1 + 1;
-                                        h(h1) = figure;
-                                        set(gca, 'ColorOrder', ColorSet);
-                                        hold all
-                                        for r1=1:size(Ma,1)
-                                            plot(ls,Ma{r1,m1}{c1,s1}); %hold on
+                                    
+                                    %Figures with ROIs combined on same figure - one figure per color
+                                    if size(Ma,1) <= length(lp1) %plot identifiable ROIs
+                                        for c1 = ctotal
+                                            h1 = h1 + 1;
+                                            h(h1) = figure;
+                                            r2 = 0;
+                                            leg = {};
+                                            for r1=1:length(ROI)
+                                                if all_ROIs || sum(r1==selected_ROIs)
+                                                    r2 = r2+1;
+                                                    if ~add_error_bars
+                                                        plot(ls,Ma{r2,m1}{c1,s1},[lp1{r2} lp2{c1}]); hold on
+                                                    else
+                                                        errorbar(ls(2:end-1),Ma{r2,m1}{c1,s1}(2:end-1),Da{r2,m1}{c1,s1}(2:end-1),[lp1{r2} lp2{c1}]); hold on
+                                                    end
+                                                    try
+                                                        leg = [leg; IOI.res.ROI{r1}.name];
+                                                    catch
+                                                        leg = [leg; ['ROI ' int2str(r1)]];
+                                                    end
+                                                end
+                                            end
+                                            legend(gca,leg);
+                                            if save_figures
+                                                tit = [IOI.subj_name ' Color ' IOI.color.eng(c1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
+                                                title(tit);
+                                                ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
+                                            end
                                         end
-                                        legend off
-                                        set(gcf, 'Colormap', ColorSet);
-                                        hc1 = set_colorbar(gcf,size(Ma,1));
-                                        if save_figures
-                                            tit = ['Color ' IOI.color.eng(c1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
-                                            title(tit);
-                                            ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
+                                    else
+                                        %plot all series with random colors, skip error bars
+                                        ColorSet = varycolor(size(Ma,1));
+                                        for c1 = ctotal
+                                            h1 = h1 + 1;
+                                            h(h1) = figure;
+                                            set(gca, 'ColorOrder', ColorSet);
+                                            hold all
+                                            for r1=1:size(Ma,1)
+                                                plot(ls,Ma{r1,m1}{c1,s1}); %hold on
+                                            end
+                                            legend off
+                                            set(gcf, 'Colormap', ColorSet);
+                                            hc1 = set_colorbar(gcf,size(Ma,1));
+                                            if save_figures
+                                                tit = [IOI.subj_name ' Color ' IOI.color.eng(c1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
+                                                title(tit);
+                                                ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
+                                            end
                                         end
                                     end
                                 end

@@ -14,7 +14,7 @@ for SubjIdx=1:length(job.IOImat)
     try
         clear IOI
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};               
+        IOImat = job.IOImat{SubjIdx};
         [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
         if isfield(job.IOImatCopyChoice,'IOImatCopy')
             newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
@@ -57,8 +57,8 @@ for SubjIdx=1:length(job.IOImat)
             [dir1 fil1] = fileparts(vol.fname);
             im_anat = spm_read_vols(vol);
             if ~autoROI
-                %Display images of changes from 10th to 90th percentile for all sessions 
-                try 
+                %Display images of changes from 10th to 90th percentile for all sessions
+                try
                     for i0=1:length(IOI.sess_res)
                         hs{i0} = figure;
                         V = spm_vol(IOI.sess_res{i0}.fname_change_90_10{1}); %color green
@@ -70,29 +70,29 @@ for SubjIdx=1:length(job.IOImat)
                 p = 1;
                 h2 = figure; spm_input(['Subject ' int2str(SubjIdx)],'-1','d');
                 full_mask = ones(size(im_anat));
-                 linecount = 0;
+                linecount = 0;
                 while p
                     figure(h2);
                     p = spm_input('Add an ROI?',2*linecount+2,'y/n');
                     if p == 'y', p = 1; else p = 0; end
-                    if p                        
+                    if p
                         h1 = figure('Position',[20 50 3*size(im_anat,1) 3*size(im_anat,2)]);
                         colormap(gray); imagesc(im_anat.*full_mask);
                         if graphicalROI
                             title('Make ROI polygon, then double click in it to create ROI.');
-                            mask = roipoly;                          
+                            mask = roipoly;
                         else
                             linecount = linecount + 1;
                             rc = spm_input('Enter [row,column] of center',2*linecount+1,'e',[],2);
                             linecount = linecount + 1;
-                            radius = spm_input('Enter radius in pixels',2*linecount+1,'e',[],1); 
+                            radius = spm_input('Enter radius in pixels',2*linecount+1,'e',[],1);
                             radius = round(radius);
-                            if radius < 0, radius = 0; end 
+                            if radius < 0, radius = 0; end
                             mask = zeros(size(im_anat));
                             for x1=-radius:radius
                                 for y1=-radius:radius
                                     if x1^2+y1^2 <= radius^2
-                                        try %will skip pixels outside the image 
+                                        try %will skip pixels outside the image
                                             mask(rc(1)+y1,rc(2)+x1) = 1;
                                         end
                                     end
@@ -134,7 +134,7 @@ for SubjIdx=1:length(job.IOImat)
                         % 1      2       3 ...   ROIsize(2)=M
                         % M+1   M+2     M+3 ...  2*M
                         %  .    .        .       .
-                        %  .    .        .       N*M                                                                    
+                        %  .    .        .       N*M
                         index = index+1;
                         %vertices in the order: UL, UR, LR, LL
                         mask = roipoly(im_anat,...
@@ -150,8 +150,12 @@ for SubjIdx=1:length(job.IOImat)
                 end
             end
             IOI.ROIname = {};
-            for i0=1:length(IOI.res.ROI), 
-                IOI.ROIname = [IOI.ROIname; IOI.res.ROI{i0}.name]; 
+            for i0=1:length(IOI.res.ROI)
+                if isfield(IOI.res.ROI{i0},'name')
+                    IOI.ROIname = [IOI.ROIname; IOI.res.ROI{i0}.name];
+                else
+                    IOI.ROIname = [IOI.ROIname; ['ROI' gen_num_str(i0,3)]];
+                end
             end
             IOI.res.ROIOK = 1;
             if isfield(job.IOImatCopyChoice,'IOImatCopy')

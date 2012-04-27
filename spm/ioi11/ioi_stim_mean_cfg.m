@@ -152,8 +152,8 @@ window_offset.help = {'To look back in time, include an offset in seconds. '
 normalize_choice      = cfg_menu;
 normalize_choice.tag  = 'normalize_choice';
 normalize_choice.name = 'Normalization choice';
-normalize_choice.labels = {'Median over window before','Time zero'};
-normalize_choice.values = {1,2};
+normalize_choice.labels = {'Median over window before','Time zero','Mean'};
+normalize_choice.values = {1,2,3};
 normalize_choice.val  = {1};
 normalize_choice.help = {'Normalization choice. In one test,'
     'The mean standard deviation was higher by 10% or more'
@@ -184,6 +184,38 @@ include_OD.values = {1,0};
 include_OD.val  = {0};
 include_OD.help = {'If the optical intensity images (Green, Red, Yellow) have not been deleted'
     'previously, choose whether to generate movies for these colors.'}';
+
+which_onset_type         = cfg_entry; 
+which_onset_type.name    = 'Enter onset type(s) to use';
+which_onset_type.tag     = 'which_onset_type';       
+which_onset_type.strtype = 'r';
+which_onset_type.num     = [1 Inf];     
+which_onset_type.val     = {1};
+which_onset_type.help    = {'Enter which onset type(s) (relevant if there are'
+    'several onset types.'
+    'Enter (a list of) ordinal number(s) indicating the desired onset type(s) in the onset type list.'}';
+
+remove_stims      = cfg_entry;
+remove_stims.tag  = 'remove_stims';
+remove_stims.name = 'Enter an array of time points (in seconds) from which to exclude onsets';
+remove_stims.strtype  = 'r';
+remove_stims.num = [0 Inf];
+remove_stims.val{1} = '';
+remove_stims.help = {'Onsets occuring within 1 second of any specified' 
+    'time point will be removed from the averaging.'
+    'The list of onsets kept will be written to IOI.mat'}';
+
+use_stims      = cfg_entry;
+use_stims.tag  = 'use_stims';
+use_stims.name = 'Enter an array of stim onset numbers to use';
+use_stims.strtype  = 'r';
+use_stims.num = [0 Inf];
+use_stims.val{1} = '';
+use_stims.help = {'Use this option to specify, for example,'
+    'that the first 10 onsets should be used, by entering the array 1:10.'
+    'These onset numbers will be used for each onset type.'
+    'Leave array empty in order to use all available onsets, except possibly '
+    'some that are excluded by other mechanisms.'}';
 
 extract_HRF      = cfg_menu;
 extract_HRF.tag  = 'extract_HRF';
@@ -322,15 +354,25 @@ remove_segment_drift.values = {1,0};
 remove_segment_drift.val  = {0};
 remove_segment_drift.help = {'Remove linear drift separately on each segment.'}';
 
+remove_stims_SD      = cfg_menu;
+remove_stims_SD.tag  = 'remove_stims_SD';
+remove_stims_SD.name = 'Remove stims on SD criterion';
+remove_stims_SD.labels = {'Yes','No'};
+remove_stims_SD.values = {1,0};
+remove_stims_SD.val  = {0};
+remove_stims_SD.help = {'Remove stims on SD criterion.'
+    'This works in addition to and after other stims having been removed.'}';
+
 % Executable Branch
 stim_mean1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 stim_mean1.name = 'Average stimulations';             % The display name
 stim_mean1.tag  = 'stim_mean1'; %Very important: tag is used when calling for execution
 stim_mean1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ...
     ROI_choice window_after window_before window_offset normalize_choice hpf_butter ...
-    lpf_choice include_flow include_HbT include_OD extract_HRF fit_3_gamma include_nlinfit ...
+    lpf_choice include_flow include_HbT include_OD which_onset_type ...
+    remove_stims use_stims remove_stims_SD extract_HRF fit_3_gamma include_nlinfit ...
     generate_global generate_figures save_figures add_error_bars ...
-    remove_segment_drift};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    remove_segment_drift };    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 stim_mean1.prog = @ioi_stim_mean_run;  % A function handle that will be called with the harvested job to run the computation
 stim_mean1.vout = @ioi_cfg_vout_stim_mean; % A function handle that will be called with the harvested job to determine virtual outputs
 stim_mean1.help = {'Calculate average over stimulations.'};
