@@ -99,7 +99,12 @@ for SubjIdx=1:length(job.IOImat)
                     try
                         load(IOI.ROI.ROIfname);
                     catch
-                        load(fullfile(dir_ioimat,'ROI.mat'));
+                        
+                        ts1 = strfind(dir_ioimat,'Res');
+                        ts2 = strfind(dir_ioimat,filesep);
+                        ts3 = ts2(ts2>ts1);
+                        tdir = dir_ioimat(1:ts3(2));
+                        load(fullfile(tdir,'ROI.mat'));
                     end
                 end
                 if save_figures
@@ -419,6 +424,8 @@ for SubjIdx=1:length(job.IOImat)
                                                             end
                                                             second_pass = 1;
                                                         end
+                                                    else
+                                                        first_pass = 0;
                                                     end
                                                 else
                                                     first_pass = 0;
