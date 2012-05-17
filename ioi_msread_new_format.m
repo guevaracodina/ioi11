@@ -1,12 +1,17 @@
 function IOI = ioi_msread_new_format(IOI,job)
-%select a subset of sessions
-if isfield(job.session_choice,'select_sessions')
-    all_sessions = 0;
-    selected_sessions = job.session_choice.select_sessions.selected_sessions;
-else
-    all_sessions = 1;
-end
 try
+    %select a subset of sessions
+    if isfield(job.session_choice,'select_sessions')
+        all_sessions = 0;
+        selected_sessions = job.session_choice.select_sessions.selected_sessions;
+    else
+        all_sessions = 1;
+    end
+    if isfield(job.treatment_mode,'expeditive_mode')
+        expedite = 1;
+    else
+        expedite = 0;
+    end
     %recall dir structure
     subj_name = IOI.subj_name;
     dir_subj_raw = IOI.dir.dir_subj_raw;
@@ -125,203 +130,210 @@ try
                 el = ConvertedData.Data.MeasuredData(5).Data;
                 save(elfile,'el');
                 IOI.res.electroOK = 1; %not by session...
-                %extract ttl
-                ttl=TDMS2ttl(ConvertedData);
-                %save(elfile,el(1,:)); %incorrect.
-                %loop over image files for this session
-                %[imfiles dummy] = cfg_getfile('FPList',dirs{s1},'image');
-                %read frame present
-                [Imout frameout frameReadOut fileNo] = LectureImageMultiFast(dirs{s1},'image',-1);
-                fileNo = sort(fileNo);
-                missing_frames = [];
-                n_frames = ceil(max(frameReadOut(:,1))/nColors);
-                sess.n_frames = n_frames;
-                for i0=1:(n_frames*nColors)
-                    tmp = find(i0==frameReadOut(:,1), 1);
-                    if isempty(tmp)
-                        missing_frames = [missing_frames i0];
-                    end
+                IOI.res.sfel = 10000;
+                if expedite
+                    ioi_plot_LFP(IOI,el,s1);
                 end
-                iC = 0; %counter for number of images so far
-                
-                for c1=1:nColors
-                    sess.fname{c1} = {};
-                end
-                sess.si = {};
-                sess.ei = {};
-                %Get image size
-                frames = frameReadOut(frameReadOut(1,3)==fileNo(1),:);
-                images=LectureImageMultiFast(dirs{s1},'image',frames);
-                %Check if images have duplicated pixels -- an early bug at
-                %acquisition, corrected for new acquisitions
-                [nx ny0] = size(images);
-                nxt = round(nx/2); nyt = round(ny0/2); %center of image
-                %two tests should be enough... -- weaker test now
-                if (images(nxt,nyt) == images(nxt,nyt+1)) || (images(nxt,nyt+1) == images(nxt,nyt+2))
-                    %(images(nxt,nyt) == images(nxt,nyt+1)) && (images(nxt+3,nyt+3) == images(nxt+3,nyt+4))
-                    %if mod(ny,2) == 0
-                    dupOn = 1;
-                    ny = length(images(1,1:2:end));
-                    %else %This happens sometimes, that's OK
-                    %    disp('Odd number of pixels in y direction, yet pixels are duplicated!')
-                    %end
-                else
-                    dupOn = 0;
-                    ny = ny0;
-                end
-                %create large memmapfile for all the images (several GB)
-                fmem_name = 'all_images.dat';
-                %                 if exist(fmem_name,'file')
-                %                     try
-                %                         delete(fmem_name);
-                %                     catch
-                %                         disp([fmem_name ' : File could not be closed']);
-                %                     end
-                %                 end
-                fid = fopen(fmem_name,'w');
-                fwrite(fid, zeros([nx ny 1 n_frames nColors]), 'int16');
-                fclose(fid);
-                im_obj = memmapfile(fmem_name,'format',...
-                    {'int16' [nx ny 1 n_frames nColors] 'image_total'},...
-                    'writable',true);
-                
-                for f1 = 1:length(fileNo)
-                    frames = frameReadOut(frameReadOut(:,3)==fileNo(f1),:);
-                    % extract certain frame
-                    images=LectureImageMultiFast(dirs{s1},'image',frames);
-                    if dupOn
-                        for g1=1:length(images) %remove the duplicated pixels
-                            images{g1} = images{g1}(:,1:2:end);
+                if ~expedite
+                    %extract ttl
+                    ttl=TDMS2ttl(ConvertedData);
+                    %save(elfile,el(1,:)); %incorrect.
+                    %loop over image files for this session
+                    %[imfiles dummy] = cfg_getfile('FPList',dirs{s1},'image');
+                    %read frame present
+                    [Imout frameout frameReadOut fileNo] = LectureImageMultiFast(dirs{s1},'image',-1);
+                    fileNo = sort(fileNo);
+                    missing_frames = [];
+                    n_frames = ceil(max(frameReadOut(:,1))/nColors);
+                    sess.n_frames = n_frames;
+                    for i0=1:(n_frames*nColors)
+                        tmp = find(i0==frameReadOut(:,1), 1);
+                        if isempty(tmp)
+                            missing_frames = [missing_frames i0];
                         end
                     end
-                    nImages = ceil(frames(end,1)/nColors)-iC;
-                    %image_total{c1} = zeros(nx,ny,nz,nImages);
-                    si = iC+1; %start index
-                    ei = iC+nImages; %end index
-                    sess.si = [sess.si si];
-                    sess.ei = [sess.ei ei];
-                    image_str_start = gen_num_str(si,nzero_padding);
-                    image_str_last = gen_num_str(ei,nzero_padding);
-                    image_str = [image_str_start 'to' image_str_last];
-                    %separate images of different colors
-                    for c1=1:nColors
-                        str1 = str_color(c1);
-                        fname{c1} = fullfile(dir_subj_res,sess_str, ...
-                            [subj_name '_' OD_label '_' str1 '_' sess_str '_' image_str '.nii']);
-                        sess.fname{c1} = [sess.fname{c1} fname{c1}];
-                    end
+                    iC = 0; %counter for number of images so far
                     
-                    for fr1=1:(nColors*nImages)
-                        tcol0 = mod(fr1,nColors); %which color for this image
-                        if tcol0 == 0
-                            tcol0 = nColors;
-                        end
-                        %which color tcol0 corresponds to:
-                        for i0=1:length(color_order)
-                            if strcmp(color_order(tcol0),str_color(i0))
-                                tcol = i0;
+                    for c1=1:nColors
+                        sess.fname{c1} = {};
+                    end
+                    sess.si = {};
+                    sess.ei = {};
+                    %Get image size
+                    frames = frameReadOut(frameReadOut(1,3)==fileNo(1),:);
+                    images=LectureImageMultiFast(dirs{s1},'image',frames);
+                    %Check if images have duplicated pixels -- an early bug at
+                    %acquisition, corrected for new acquisitions
+                    [nx ny0] = size(images);
+                    nxt = round(nx/2); nyt = round(ny0/2); %center of image
+                    %two tests should be enough... -- weaker test now
+                    if (images(nxt,nyt) == images(nxt,nyt+1)) || (images(nxt,nyt+1) == images(nxt,nyt+2))
+                        %(images(nxt,nyt) == images(nxt,nyt+1)) && (images(nxt+3,nyt+3) == images(nxt+3,nyt+4))
+                        %if mod(ny,2) == 0
+                        dupOn = 1;
+                        ny = length(images(1,1:2:end));
+                        %else %This happens sometimes, that's OK
+                        %    disp('Odd number of pixels in y direction, yet pixels are duplicated!')
+                        %end
+                    else
+                        dupOn = 0;
+                        ny = ny0;
+                    end
+                    %create large memmapfile for all the images (several GB)
+                    fmem_name = 'all_images.dat';
+                    %                 if exist(fmem_name,'file')
+                    %                     try
+                    %                         delete(fmem_name);
+                    %                     catch
+                    %                         disp([fmem_name ' : File could not be closed']);
+                    %                     end
+                    %                 end
+                    fid = fopen(fmem_name,'w');
+                    fwrite(fid, zeros([nx ny 1 n_frames nColors]), 'int16');
+                    fclose(fid);
+                    im_obj = memmapfile(fmem_name,'format',...
+                        {'int16' [nx ny 1 n_frames nColors] 'image_total'},...
+                        'writable',true);
+                    
+                    for f1 = 1:length(fileNo)
+                        frames = frameReadOut(frameReadOut(:,3)==fileNo(f1),:);
+                        % extract certain frame
+                        images=LectureImageMultiFast(dirs{s1},'image',frames);
+                        if dupOn
+                            for g1=1:length(images) %remove the duplicated pixels
+                                images{g1} = images{g1}(:,1:2:end);
                             end
                         end
-                        tframe = ceil(fr1/nColors); %which image for this frame
-                        if ~(any(fr1+iC*nColors == missing_frames))
-                            tmp_image{tcol} = images{frames(frames(:,1)==(fr1+iC*nColors),2)};
-                        else
-                            %missing frame: tmp_image{tcol} does not change, so the
-                            %previous image will be used
+                        nImages = ceil(frames(end,1)/nColors)-iC;
+                        %image_total{c1} = zeros(nx,ny,nz,nImages);
+                        si = iC+1; %start index
+                        ei = iC+nImages; %end index
+                        sess.si = [sess.si si];
+                        sess.ei = [sess.ei ei];
+                        image_str_start = gen_num_str(si,nzero_padding);
+                        image_str_last = gen_num_str(ei,nzero_padding);
+                        image_str = [image_str_start 'to' image_str_last];
+                        %separate images of different colors
+                        for c1=1:nColors
+                            str1 = str_color(c1);
+                            fname{c1} = fullfile(dir_subj_res,sess_str, ...
+                                [subj_name '_' OD_label '_' str1 '_' sess_str '_' image_str '.nii']);
+                            sess.fname{c1} = [sess.fname{c1} fname{c1}];
                         end
-                        im_obj.Data.image_total(:,:,:,tframe+iC,tcol) = tmp_image{tcol};
-                        %image_total{tcol}(:,:,:,tframe) = tmp_image{tcol};
-                        if s1==1 && f1==1 && (fr1 <= nColors) && strcmp(str_color(tcol),str_anat)
-                            image_anat = images{fr1};
+                        
+                        for fr1=1:(nColors*nImages)
+                            tcol0 = mod(fr1,nColors); %which color for this image
+                            if tcol0 == 0
+                                tcol0 = nColors;
+                            end
+                            %which color tcol0 corresponds to:
+                            for i0=1:length(color_order)
+                                if strcmp(color_order(tcol0),str_color(i0))
+                                    tcol = i0;
+                                end
+                            end
+                            tframe = ceil(fr1/nColors); %which image for this frame
+                            if ~(any(fr1+iC*nColors == missing_frames))
+                                tmp_image{tcol} = images{frames(frames(:,1)==(fr1+iC*nColors),2)};
+                            else
+                                %missing frame: tmp_image{tcol} does not change, so the
+                                %previous image will be used
+                            end
+                            im_obj.Data.image_total(:,:,:,tframe+iC,tcol) = tmp_image{tcol};
+                            %image_total{tcol}(:,:,:,tframe) = tmp_image{tcol};
+                            if s1==1 && f1==1 && (fr1 <= nColors) && strcmp(str_color(tcol),str_anat)
+                                image_anat = images{fr1};
+                            end
                         end
+                        iC = iC + nImages;
                     end
-                    iC = iC + nImages;
-                end
-                
-                %Compute median
-                for c1=1:nColors
-                    %skip laser
-                    if ~(str_color(c1)==str_laser)
-                        median0{c1} = median(im_obj.Data.image_total(:,:,:,:,c1),4);                        
-                        %Save the median
-                        str1 = str_color(c1);
-                        sess.fname_median{c1} = fullfile(dir_subj_res,sess_str, ...
-                            [subj_name '_' OD_label '_median_' str1 '_' sess_str '.nii']);
+                    
+                    %Compute median
+                    for c1=1:nColors
+                        %skip laser
+                        if ~(str_color(c1)==str_laser)
+                            median0{c1} = median(im_obj.Data.image_total(:,:,:,:,c1),4);
+                            %Save the median
+                            str1 = str_color(c1);
+                            sess.fname_median{c1} = fullfile(dir_subj_res,sess_str, ...
+                                [subj_name '_' OD_label '_median_' str1 '_' sess_str '.nii']);
                             %ioi_save_nifti(single(median0{c1}),sess.fname_median{c1},vx);
                             tit0 = [subj_name ' ' OD_label ' median ' str1 ' ' sess_str];
                             ioi_save_images(single(median0{c1}),sess.fname_median{c1},vx,[],tit0);
-                        try
-                            %min and max and relative change
-                            min_image = min(im_obj.Data.image_total(:,:,:,:,c1),[],4);
-                            max_image = max(im_obj.Data.image_total(:,:,:,:,c1),[],4);
-                            change = single(max_image) ./single(min_image);
-                            %10th and 90th percentiles and relative change
-                            tenthpctle_image = prctile(im_obj.Data.image_total(:,:,:,:,c1),10,4);
-                            ninetiethpctle_image = prctile(im_obj.Data.image_total(:,:,:,:,c1),90,4);
-                            change_90_10 = single(ninetiethpctle_image) ./ single(tenthpctle_image);
-                            sess.fname_min{c1} = fullfile(dir_subj_res,sess_str, ...
-                                [subj_name '_' OD_label '_min_' str1 '_' sess_str '.nii']);
-                            sess.fname_max{c1} = fullfile(dir_subj_res,sess_str, ...
-                                [subj_name '_' OD_label '_max_' str1 '_' sess_str '.nii']);
-                            sess.fname_10pctle{c1} = fullfile(dir_subj_res,sess_str, ...
-                                [subj_name '_' OD_label '_10pctle_' str1 '_' sess_str '.nii']);
-                            sess.fname_90pctle{c1} = fullfile(dir_subj_res,sess_str, ...
-                                [subj_name '_' OD_label '_90pctle_' str1 '_' sess_str '.nii']);
-                            sess.fname_change{c1} = fullfile(dir_subj_res,sess_str, ...
-                                [subj_name '_' OD_label '_change_' str1 '_' sess_str '.nii']);
-                            sess.fname_change_90_10{c1} = fullfile(dir_subj_res,sess_str, ...
-                                [subj_name '_' OD_label '_change_90_10_' str1 '_' sess_str '.nii']);
-                            tit1 = [subj_name ' ' OD_label ' min ' str1 ' ' sess_str];
-                            tit2 = [subj_name ' ' OD_label ' max ' str1 ' ' sess_str];
-                            tit3 = [subj_name ' ' OD_label ' 10pctle ' str1 ' ' sess_str];
-                            tit4 = [subj_name ' ' OD_label ' 90pctle ' str1 ' ' sess_str];
-                            tit5 = [subj_name ' ' OD_label ' change min to max ' str1 ' ' sess_str];
-                            tit6 = [subj_name ' ' OD_label ' change 90 to 10 ' str1 ' ' sess_str];
-%                             ioi_save_nifti(single(min_image),sess.fname_min{c1},vx);
-%                             ioi_save_nifti(single(max_image),sess.fname_max{c1},vx);
-%                             ioi_save_nifti(single(change),sess.fname_change{c1},vx);
-%                             ioi_save_nifti(single(tenthpctle_image),sess.fname_10pctle{c1},vx);
-%                             ioi_save_nifti(single(ninetiethpctle_image),sess.fname_90pctle{c1},vx);
-%                             ioi_save_nifti(single(change_90_10),sess.fname_change_90_10{c1},vx);
-                            ioi_save_images(single(min_image),sess.fname_min{c1},vx,[],tit1);
-                            ioi_save_images(single(max_image),sess.fname_max{c1},vx,[],tit2);
-                            ioi_save_images(single(change),sess.fname_change{c1},vx,[],tit3);
-                            ioi_save_images(single(tenthpctle_image),sess.fname_10pctle{c1},vx,[],tit4);
-                            ioi_save_images(single(ninetiethpctle_image),sess.fname_90pctle{c1},vx,[],tit5);
-                            ioi_save_images(single(change_90_10),sess.fname_change_90_10{c1},vx,[],tit6);
+                            try
+                                %min and max and relative change
+                                min_image = min(im_obj.Data.image_total(:,:,:,:,c1),[],4);
+                                max_image = max(im_obj.Data.image_total(:,:,:,:,c1),[],4);
+                                change = single(max_image) ./single(min_image);
+                                %10th and 90th percentiles and relative change
+                                tenthpctle_image = prctile(im_obj.Data.image_total(:,:,:,:,c1),10,4);
+                                ninetiethpctle_image = prctile(im_obj.Data.image_total(:,:,:,:,c1),90,4);
+                                change_90_10 = single(ninetiethpctle_image) ./ single(tenthpctle_image);
+                                sess.fname_min{c1} = fullfile(dir_subj_res,sess_str, ...
+                                    [subj_name '_' OD_label '_min_' str1 '_' sess_str '.nii']);
+                                sess.fname_max{c1} = fullfile(dir_subj_res,sess_str, ...
+                                    [subj_name '_' OD_label '_max_' str1 '_' sess_str '.nii']);
+                                sess.fname_10pctle{c1} = fullfile(dir_subj_res,sess_str, ...
+                                    [subj_name '_' OD_label '_10pctle_' str1 '_' sess_str '.nii']);
+                                sess.fname_90pctle{c1} = fullfile(dir_subj_res,sess_str, ...
+                                    [subj_name '_' OD_label '_90pctle_' str1 '_' sess_str '.nii']);
+                                sess.fname_change{c1} = fullfile(dir_subj_res,sess_str, ...
+                                    [subj_name '_' OD_label '_change_' str1 '_' sess_str '.nii']);
+                                sess.fname_change_90_10{c1} = fullfile(dir_subj_res,sess_str, ...
+                                    [subj_name '_' OD_label '_change_90_10_' str1 '_' sess_str '.nii']);
+                                tit1 = [subj_name ' ' OD_label ' min ' str1 ' ' sess_str];
+                                tit2 = [subj_name ' ' OD_label ' max ' str1 ' ' sess_str];
+                                tit3 = [subj_name ' ' OD_label ' 10pctle ' str1 ' ' sess_str];
+                                tit4 = [subj_name ' ' OD_label ' 90pctle ' str1 ' ' sess_str];
+                                tit5 = [subj_name ' ' OD_label ' change min to max ' str1 ' ' sess_str];
+                                tit6 = [subj_name ' ' OD_label ' change 90 to 10 ' str1 ' ' sess_str];
+                                %                             ioi_save_nifti(single(min_image),sess.fname_min{c1},vx);
+                                %                             ioi_save_nifti(single(max_image),sess.fname_max{c1},vx);
+                                %                             ioi_save_nifti(single(change),sess.fname_change{c1},vx);
+                                %                             ioi_save_nifti(single(tenthpctle_image),sess.fname_10pctle{c1},vx);
+                                %                             ioi_save_nifti(single(ninetiethpctle_image),sess.fname_90pctle{c1},vx);
+                                %                             ioi_save_nifti(single(change_90_10),sess.fname_change_90_10{c1},vx);
+                                ioi_save_images(single(min_image),sess.fname_min{c1},vx,[],tit1);
+                                ioi_save_images(single(max_image),sess.fname_max{c1},vx,[],tit2);
+                                ioi_save_images(single(change),sess.fname_change{c1},vx,[],tit3);
+                                ioi_save_images(single(tenthpctle_image),sess.fname_10pctle{c1},vx,[],tit4);
+                                ioi_save_images(single(ninetiethpctle_image),sess.fname_90pctle{c1},vx,[],tit5);
+                                ioi_save_images(single(change_90_10),sess.fname_change_90_10{c1},vx,[],tit6);
+                            end
                         end
                     end
-                end
-                for f1 = 1:length(fileNo)
-                    ind0 = sess.si{f1}:sess.ei{f1};
-                    %save images in nifti format
-                    for c1=1:nColors
-                        if ~(str_color(c1)==str_laser)
-                            ioi_save_nifti(-log(single(im_obj.Data.image_total(:,:,:,ind0,c1))./repmat(single(median0{c1}),[1 1 1 length(ind0)])),sess.fname{c1}{f1},vx);
-                        else
-                            ioi_save_nifti(single(im_obj.Data.image_total(:,:,:,ind0,c1)),sess.fname{c1}{f1},vx);
+                    for f1 = 1:length(fileNo)
+                        ind0 = sess.si{f1}:sess.ei{f1};
+                        %save images in nifti format
+                        for c1=1:nColors
+                            if ~(str_color(c1)==str_laser)
+                                ioi_save_nifti(-log(single(im_obj.Data.image_total(:,:,:,ind0,c1))./repmat(single(median0{c1}),[1 1 1 length(ind0)])),sess.fname{c1}{f1},vx);
+                            else
+                                ioi_save_nifti(single(im_obj.Data.image_total(:,:,:,ind0,c1)),sess.fname{c1}{f1},vx);
+                            end
                         end
                     end
+                    %disp(['Done processing session: ' int2str(s1) ', color: ' str1]);
+                    IOI.sess_res{sC} = sess;
+                    IOI.sess_res{sC}.hasRGY = hasRGY;
+                    %sess_res =[sess_res sess];
+                    disp(['Done processing session ' int2str(s1) ' images (' int2str(iC) 'images)']);
+                    clear im_obj;
+                    delete('all_images.dat');
                 end
-                %disp(['Done processing session: ' int2str(s1) ', color: ' str1]);
-                IOI.sess_res{sC} = sess;
-                IOI.sess_res{sC}.hasRGY = hasRGY;
-                %sess_res =[sess_res sess];
-                disp(['Done processing session ' int2str(s1) ' images (' int2str(iC) 'images)']);
-                clear im_obj;
-                delete('all_images.dat');
             end %for s1
-            end
-            %IOI.sess_res = sess_res;
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %4- Anatomical image
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %use first green colored image as the anatomy
+        end
+        %IOI.sess_res = sess_res;
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %4- Anatomical image
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %use first green colored image as the anatomy
+        if ~expedite
             fname = fullfile(dir_subj_res, [subj_name '_' suffix_for_anat_file '.nii']);
             ioi_save_images(image_anat, fname, vx_anat,[],'Anatomical image')
             %ioi_save_nifti(image_anat, fname, vx_anat);
             IOI.res.file_anat=fname;
-        
+        end
     end
 catch exception
     disp(exception.identifier)

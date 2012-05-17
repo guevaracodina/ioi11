@@ -1,5 +1,10 @@
 function IOI = ioi_msread_old_format(IOI,job)
 try
+    if isfield(job.treatment_mode,'expeditive_mode')
+        expedite = 1;
+    else
+        expedite = 0;
+    end
     %recall dir structure
     subj_name = IOI.subj_name;
     dir_subj_raw = IOI.dir.dir_subj_raw;
@@ -77,7 +82,7 @@ try
         IOI.color.green = str_green;
         IOI.color.yellow = str_yellow;
         IOI.color.contrast = str_contrast;
-     end
+    end
     %resume files - subject level
     [files_txt,dummy] = cfg_getfile('FPList',dir_subj_raw,'.txt');
     if length(files_txt) == 2 %Must have exactly two text files
@@ -265,12 +270,13 @@ try
         %3- Anatomical image
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %use first green colored image as the anatomy
-        image_total=private_read_single_bin_image(sess_raw{1}.fnames{str_anat == str_color}{1,:});
-        fname = fullfile(dir_subj_res, [subj_name '_' suffix_for_anat_file '.nii']);
-        ioi_save_images(image_total, fname, vx_anat,[],'Anatomical image')
-        %ioi_save_nifti(image_total, fname, vx_anat);
-        IOI.res.file_anat=fname;
-        
+        if ~expedite
+            image_total=private_read_single_bin_image(sess_raw{1}.fnames{str_anat == str_color}{1,:});
+            fname = fullfile(dir_subj_res, [subj_name '_' suffix_for_anat_file '.nii']);
+            ioi_save_images(image_total, fname, vx_anat,[],'Anatomical image')
+            %ioi_save_nifti(image_total, fname, vx_anat);
+            IOI.res.file_anat=fname;
+        end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %4- Functional images and electrophysiology
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -281,226 +287,236 @@ try
         for s1=1:length(sess_raw)
             if ~PartialRedo2 || all_sessions || sum(s1==selected_sessions)
                 %tic
-                %create dir for this session
-                if s1<10, str_s1 = '0'; else str_s1 = ''; end
-                str_s1 = [str_s1 int2str(s1)];
-                sess_str = [sess_label str_s1];
-                dir_sess_res = fullfile(dir_subj_res,sess_str);
-                if ~exist(dir_sess_res,'dir'),mkdir(dir_sess_res); end
-                n_frames = sess_res{s1}.n_frames;
-                %list (to be constructed) of colors available
-                hasRGY = [];
-                %loop over colors
-                for c1=1:length(str_color)
-                    need_resize_message = 1;
-                    str1 = str_color(c1);
-                    if ~(str1==str_contrast && isempty(sess_raw{s1}.fnames{c1})) %exclude when contrast images are absent
-                        fcount=0; %image counter (of actual frames recorded)
-                        im_count = 0; %true frame counter (all images including interpolated ones)
-                        %loop over image files for this session
-                        image_total = [];
-                        %Do NOT shrink laser speckle! - this will
-                        %be done later, in the flow calculation module
-                        vx = [1 1 1];
-                        if ~(str1 == str_laser) %OK to shrink contrast images though
-                            if shrinkageOn
-                                %Keep same whatever value of PartialRedo2
-                                IOI.res.shrink_x=shrink_x;
-                                IOI.res.shrink_y=shrink_y;
-                                vx=[shrink_x shrink_y 1];
-                            end
-                        end
-                        %loop over binary files for this session and color
-                        for f1=1:length(sess_raw{s1}.fnames{c1})
-                            %need to keep track of special cases when missing
-                            %indices are the first index of the first file or the
-                            %last index of the last file
-                            if f1 == 1
-                                first_file = 1;
-                            else
-                                first_file = 0;
-                            end
-                            if f1 == length(sess_raw{s1}.fnames{c1})
-                                last_file = 1;
-                            else
-                                last_file = 0;
-                            end
-                            %Index for color to use in case of contrast
-                            if (str1 == str_contrast)
-                                tc1 = find(str_color==str_laser);
-                            else
-                                tc1 = c1;
-                            end
-                            %Read one binary file at a time (typically contains about 80 images)
-                            [image_part fcount]=private_read_bin_image(sess_raw{s1}.fnames{c1}{f1,:}, ...
-                                fcount,ceil(sess_res{s1}.camera{tc1}/frames_per_cycle),vx,n_frames,first_file,last_file,im_count);
-                            %image_part is of shape [nx, ny, 1, time] and has been
-                            %interpolated for missing frames
-                            [nx ny nz nt] = size(image_part); %Here nz = 1, always
-                            im_count = im_count+nt;
-                            if f1==1
-                                nx0 = nx;
-                                ny0 = ny;
-                            end
-                            if f1==1 && memmapfileOn
-                                %create temporary file
-                                fid = fopen('tmp_file.dat','w');
-                                fwrite(fid, zeros([nx ny 1 n_frames]), 'single');
-                                fclose(fid);
-                                im_obj = memmapfile('tmp_file.dat','format',...
-                                    {'single' [nx ny 1 n_frames] 'image_total'},...
-                                    'writable',true);
-                            end
-                            %catch case when there is a resizing of the images during acquisition
-                            %Ideally, this should never happen, but it has
-                            if f1>1
-                                if ~(nx==nx0 && ny==ny0)
-                                    if need_resize_message %Boolean, to avoid repeating warning message
-                                        need_resize_message = 0; %first pass
-                                        warning_message = ['Image resizing required for session ' ...
-                                            int2str(s1) ' file ' int2str(f1) ' color ' int2str(c1)];
-                                        IOI = disp_msg(IOI,warning_message);
-                                    end
-                                    image_part = ioi_imresize(image_part,1,nx0,ny0,1,1);
+                if ~expedite
+                    %create dir for this session
+                    if s1<10, str_s1 = '0'; else str_s1 = ''; end
+                    str_s1 = [str_s1 int2str(s1)];
+                    sess_str = [sess_label str_s1];
+                    dir_sess_res = fullfile(dir_subj_res,sess_str);
+                    if ~exist(dir_sess_res,'dir'),mkdir(dir_sess_res); end
+                    n_frames = sess_res{s1}.n_frames;
+                    %list (to be constructed) of colors available
+                    hasRGY = [];
+                    %loop over colors
+                    for c1=1:length(str_color)
+                        need_resize_message = 1;
+                        str1 = str_color(c1);
+                        if ~(str1==str_contrast && isempty(sess_raw{s1}.fnames{c1})) %exclude when contrast images are absent
+                            fcount=0; %image counter (of actual frames recorded)
+                            im_count = 0; %true frame counter (all images including interpolated ones)
+                            %loop over image files for this session
+                            image_total = [];
+                            %Do NOT shrink laser speckle! - this will
+                            %be done later, in the flow calculation module
+                            vx = [1 1 1];
+                            if ~(str1 == str_laser) %OK to shrink contrast images though
+                                if shrinkageOn
+                                    %Keep same whatever value of PartialRedo2
+                                    IOI.res.shrink_x=shrink_x;
+                                    IOI.res.shrink_y=shrink_y;
+                                    vx=[shrink_x shrink_y 1];
                                 end
                             end
-                            %Build large image_total array, for later calculating the median
-                            if ~memmapfileOn
-                                image_total = cat(4,image_total,image_part);
-                            else
-                                im_obj.Data.image_total(:,:,:,im_count-nt+1:im_count) = image_part;
+                            %loop over binary files for this session and color
+                            for f1=1:length(sess_raw{s1}.fnames{c1})
+                                %need to keep track of special cases when missing
+                                %indices are the first index of the first file or the
+                                %last index of the last file
+                                if f1 == 1
+                                    first_file = 1;
+                                else
+                                    first_file = 0;
+                                end
+                                if f1 == length(sess_raw{s1}.fnames{c1})
+                                    last_file = 1;
+                                else
+                                    last_file = 0;
+                                end
+                                %Index for color to use in case of contrast
+                                if (str1 == str_contrast)
+                                    tc1 = find(str_color==str_laser);
+                                else
+                                    tc1 = c1;
+                                end
+                                %Read one binary file at a time (typically contains about 80 images)
+                                [image_part fcount]=private_read_bin_image(sess_raw{s1}.fnames{c1}{f1,:}, ...
+                                    fcount,ceil(sess_res{s1}.camera{tc1}/frames_per_cycle),vx,n_frames,first_file,last_file,im_count);
+                                %image_part is of shape [nx, ny, 1, time] and has been
+                                %interpolated for missing frames
+                                [nx ny nz nt] = size(image_part); %Here nz = 1, always
+                                im_count = im_count+nt;
+                                if f1==1
+                                    nx0 = nx;
+                                    ny0 = ny;
+                                end
+                                if f1==1 && memmapfileOn
+                                    %create temporary file
+                                    fid = fopen('tmp_file.dat','w');
+                                    fwrite(fid, zeros([nx ny 1 n_frames]), 'single');
+                                    fclose(fid);
+                                    im_obj = memmapfile('tmp_file.dat','format',...
+                                        {'single' [nx ny 1 n_frames] 'image_total'},...
+                                        'writable',true);
+                                end
+                                %catch case when there is a resizing of the images during acquisition
+                                %Ideally, this should never happen, but it has
+                                if f1>1
+                                    if ~(nx==nx0 && ny==ny0)
+                                        if need_resize_message %Boolean, to avoid repeating warning message
+                                            need_resize_message = 0; %first pass
+                                            warning_message = ['Image resizing required for session ' ...
+                                                int2str(s1) ' file ' int2str(f1) ' color ' int2str(c1)];
+                                            IOI = disp_msg(IOI,warning_message);
+                                        end
+                                        image_part = ioi_imresize(image_part,1,nx0,ny0,1,1);
+                                    end
+                                end
+                                %Build large image_total array, for later calculating the median
+                                if ~memmapfileOn
+                                    image_total = cat(4,image_total,image_part);
+                                else
+                                    im_obj.Data.image_total(:,:,:,im_count-nt+1:im_count) = image_part;
+                                end
+                            end %end of loop over binary files
+                            if ~(im_count==n_frames)
+                                disp('Problem with image interpolation - wrong final number');
+                                IOI = disp_msg(IOI,['Session ' int2str(s1) ',color ' str1 ...
+                                    'n_frames = ' int2str(n_frames) '; final number images = ' int2str(im_count)]);
                             end
-                        end %end of loop over binary files
-                        if ~(im_count==n_frames)
-                            disp('Problem with image interpolation - wrong final number');
-                            IOI = disp_msg(IOI,['Session ' int2str(s1) ',color ' str1 ...
-                                'n_frames = ' int2str(n_frames) '; final number images = ' int2str(im_count)]);
-                        end
-                        %calculate median for whole image in time direction
-                        if ~(str1 == str_laser || str1 == str_contrast) %not laser speckle nor contrast
-                            if ~memmapfileOn
-                                image_median = median(image_total,4);
-                                image_total = -log(image_total./repmat(image_median,[1 1 1 n_frames]));
-                            else
-                                image_median = median(im_obj.Data.image_total,4);
-                                im_obj.Data.image_total = -log(im_obj.Data.image_total./repmat(image_median,[1 1 1 n_frames]));
+                            %calculate median for whole image in time direction
+                            if ~(str1 == str_laser || str1 == str_contrast) %not laser speckle nor contrast
+                                if ~memmapfileOn
+                                    image_median = median(image_total,4);
+                                    image_total = -log(image_total./repmat(image_median,[1 1 1 n_frames]));
+                                else
+                                    image_median = median(im_obj.Data.image_total,4);
+                                    im_obj.Data.image_total = -log(im_obj.Data.image_total./repmat(image_median,[1 1 1 n_frames]));
+                                end
                             end
-                        end
-                        %Save the median
-                        IOI.sess_res{s1}.fname_median{c1} = fullfile(dir_subj_res,sess_str, ...
-                            [subj_name '_' OD_label '_median_' str1 '_' sess_str '.nii']);
+                            %Save the median
+                            IOI.sess_res{s1}.fname_median{c1} = fullfile(dir_subj_res,sess_str, ...
+                                [subj_name '_' OD_label '_median_' str1 '_' sess_str '.nii']);
                             %ioi_save_nifti(single(image_median),IOI.sess_res{s1}.fname_median{c1},vx);
                             tit0 = [subj_name ' ' OD_label ' median ' str1 ' ' sess_str];
                             ioi_save_images(single(image_median),IOI.sess_res{s1}.fname_median{c1},vx,[],tit0);
-                        try
-                            if ~memmapfileOn
-                                %min and max and relative change
-                                min_image = min(image_total,[],4);
-                                max_image = max(image_total,[],4);
-                                %10th and 90th percentiles and relative change
-                                tenthpctle_image = prctile(image_total,10,4);
-                                ninetiethpctle_image = prctile(image_total,90,4);
-                            else
-                                min_image = min(im_obj.Data.image_total,[],4);
-                                max_image = max(im_obj.Data.image_total,[],4);
-                                tenthpctle_image = prctile(im_obj.Data.image_total,10,4);
-                                ninetiethpctle_image = prctile(im_obj.Data.image_total,90,4);
-                            end
-                            change = single(max_image) ./single(min_image);
-                            change_90_10 = single(ninetiethpctle_image) ./ single(tenthpctle_image);
-                            sess.fname_min{c1} = fullfile(dir_subj_res,sess_str, ...
-                                [subj_name '_' OD_label '_min_' str1 '_' sess_str '.nii']);
-                            sess.fname_max{c1} = fullfile(dir_subj_res,sess_str, ...
-                                [subj_name '_' OD_label '_max_' str1 '_' sess_str '.nii']);
-                            sess.fname_10pctle{c1} = fullfile(dir_subj_res,sess_str, ...
-                                [subj_name '_' OD_label '_10pctle_' str1 '_' sess_str '.nii']);
-                            sess.fname_90pctle{c1} = fullfile(dir_subj_res,sess_str, ...
-                                [subj_name '_' OD_label '_90pctle_' str1 '_' sess_str '.nii']);
-                            sess.fname_change{c1} = fullfile(dir_subj_res,sess_str, ...
-                                [subj_name '_' OD_label '_change_' str1 '_' sess_str '.nii']);
-                            sess.fname_change_90_10{c1} = fullfile(dir_subj_res,sess_str, ...
-                                [subj_name '_' OD_label '_change_90_10_' str1 '_' sess_str '.nii']);
-                             tit1 = [subj_name ' ' OD_label ' min ' str1 ' ' sess_str];
-                            tit2 = [subj_name ' ' OD_label ' max ' str1 ' ' sess_str];
-                            tit3 = [subj_name ' ' OD_label ' 10pctle ' str1 ' ' sess_str];
-                            tit4 = [subj_name ' ' OD_label ' 90pctle ' str1 ' ' sess_str];
-                            tit5 = [subj_name ' ' OD_label ' change min to max ' str1 ' ' sess_str];
-                            tit6 = [subj_name ' ' OD_label ' change 90 to 10 ' str1 ' ' sess_str];
-%                             ioi_save_nifti(single(min_image),sess.fname_min{c1},vx);
-%                             ioi_save_nifti(single(max_image),sess.fname_max{c1},vx);
-%                             ioi_save_nifti(single(change),sess.fname_change{c1},vx);
-%                             ioi_save_nifti(single(tenthpctle_image),sess.fname_10pctle{c1},vx);
-%                             ioi_save_nifti(single(ninetiethpctle_image),sess.fname_90pctle{c1},vx);
-%                             ioi_save_nifti(single(change_90_10),sess.fname_change_90_10{c1},vx);
-                            ioi_save_images(single(min_image),sess.fname_min{c1},vx,[],tit1);
-                            ioi_save_images(single(max_image),sess.fname_max{c1},vx,[],tit2);
-                            ioi_save_images(single(change),sess.fname_change{c1},vx,[],tit3);
-                            ioi_save_images(single(tenthpctle_image),sess.fname_10pctle{c1},vx,[],tit4);
-                            ioi_save_images(single(ninetiethpctle_image),sess.fname_90pctle{c1},vx,[],tit5);
-                            ioi_save_images(single(change_90_10),sess.fname_change_90_10{c1},vx,[],tit6);
-                        end
-                        %vx currently not used in ioi_save_nifti
-                        %and ioi_write_nifti, despite apparent dependency
-                        switch save_choice
-                            case 1
-                                fname = fullfile(dir_subj_res,sess_str, [subj_name '_' OD_label '_' str1 '_S' str_s1 '.nii']);
-                                IOI.sess_res{s1}.fname{c1} = [IOI.sess_res{s1}.fname{c1}; fname];
+                            try
                                 if ~memmapfileOn
-                                    ioi_save_nifti(image_total,fname,vx);
+                                    %min and max and relative change
+                                    min_image = min(image_total,[],4);
+                                    max_image = max(image_total,[],4);
+                                    %10th and 90th percentiles and relative change
+                                    tenthpctle_image = prctile(image_total,10,4);
+                                    ninetiethpctle_image = prctile(image_total,90,4);
                                 else
-                                    ioi_save_nifti(im_obj.Data.image_total,fname,vx);
+                                    min_image = min(im_obj.Data.image_total,[],4);
+                                    max_image = max(im_obj.Data.image_total,[],4);
+                                    tenthpctle_image = prctile(im_obj.Data.image_total,10,4);
+                                    ninetiethpctle_image = prctile(im_obj.Data.image_total,90,4);
                                 end
-                            case 2
-                                %save per block of size size_block
-                                for j1=1:block_size:n_frames
-                                    if j1 <= n_frames-block_size
-                                        last_index = j1+block_size-1;
-                                    else
-                                        last_index = n_frames;
-                                    end
-                                    first_image_str = gen_num_str(j1,nzero_padding);
-                                    last_image_str = gen_num_str(last_index,nzero_padding);
-                                    fname = fullfile(dir_subj_res,sess_str, [subj_name '_' OD_label '_' str1 '_S' str_s1 '_' first_image_str '_to_' last_image_str  '.nii']);
+                                change = single(max_image) ./single(min_image);
+                                change_90_10 = single(ninetiethpctle_image) ./ single(tenthpctle_image);
+                                sess.fname_min{c1} = fullfile(dir_subj_res,sess_str, ...
+                                    [subj_name '_' OD_label '_min_' str1 '_' sess_str '.nii']);
+                                sess.fname_max{c1} = fullfile(dir_subj_res,sess_str, ...
+                                    [subj_name '_' OD_label '_max_' str1 '_' sess_str '.nii']);
+                                sess.fname_10pctle{c1} = fullfile(dir_subj_res,sess_str, ...
+                                    [subj_name '_' OD_label '_10pctle_' str1 '_' sess_str '.nii']);
+                                sess.fname_90pctle{c1} = fullfile(dir_subj_res,sess_str, ...
+                                    [subj_name '_' OD_label '_90pctle_' str1 '_' sess_str '.nii']);
+                                sess.fname_change{c1} = fullfile(dir_subj_res,sess_str, ...
+                                    [subj_name '_' OD_label '_change_' str1 '_' sess_str '.nii']);
+                                sess.fname_change_90_10{c1} = fullfile(dir_subj_res,sess_str, ...
+                                    [subj_name '_' OD_label '_change_90_10_' str1 '_' sess_str '.nii']);
+                                tit1 = [subj_name ' ' OD_label ' min ' str1 ' ' sess_str];
+                                tit2 = [subj_name ' ' OD_label ' max ' str1 ' ' sess_str];
+                                tit3 = [subj_name ' ' OD_label ' 10pctle ' str1 ' ' sess_str];
+                                tit4 = [subj_name ' ' OD_label ' 90pctle ' str1 ' ' sess_str];
+                                tit5 = [subj_name ' ' OD_label ' change min to max ' str1 ' ' sess_str];
+                                tit6 = [subj_name ' ' OD_label ' change 90 to 10 ' str1 ' ' sess_str];
+                                %                             ioi_save_nifti(single(min_image),sess.fname_min{c1},vx);
+                                %                             ioi_save_nifti(single(max_image),sess.fname_max{c1},vx);
+                                %                             ioi_save_nifti(single(change),sess.fname_change{c1},vx);
+                                %                             ioi_save_nifti(single(tenthpctle_image),sess.fname_10pctle{c1},vx);
+                                %                             ioi_save_nifti(single(ninetiethpctle_image),sess.fname_90pctle{c1},vx);
+                                %                             ioi_save_nifti(single(change_90_10),sess.fname_change_90_10{c1},vx);
+                                ioi_save_images(single(min_image),sess.fname_min{c1},vx,[],tit1);
+                                ioi_save_images(single(max_image),sess.fname_max{c1},vx,[],tit2);
+                                ioi_save_images(single(change),sess.fname_change{c1},vx,[],tit3);
+                                ioi_save_images(single(tenthpctle_image),sess.fname_10pctle{c1},vx,[],tit4);
+                                ioi_save_images(single(ninetiethpctle_image),sess.fname_90pctle{c1},vx,[],tit5);
+                                ioi_save_images(single(change_90_10),sess.fname_change_90_10{c1},vx,[],tit6);
+                            end
+                            %vx currently not used in ioi_save_nifti
+                            %and ioi_write_nifti, despite apparent dependency
+                            switch save_choice
+                                case 1
+                                    fname = fullfile(dir_subj_res,sess_str, [subj_name '_' OD_label '_' str1 '_S' str_s1 '.nii']);
                                     IOI.sess_res{s1}.fname{c1} = [IOI.sess_res{s1}.fname{c1}; fname];
                                     if ~memmapfileOn
-                                        ioi_save_nifti(image_total(:,:,:,j1:last_index), fname, vx);
+                                        ioi_save_nifti(image_total,fname,vx);
                                     else
-                                        ioi_save_nifti(im_obj.Data.image_total(:,:,:,j1:last_index), fname, vx);
+                                        ioi_save_nifti(im_obj.Data.image_total,fname,vx);
                                     end
-                                end
-                            case 3
-                                %save each frame separately
-                                for j1=1:n_frames
-                                    image_str = gen_num_str(j1,nzero_padding);
-                                    fname = fullfile(dir_subj_res,sess_str, [subj_name '_' OD_label '_' str1 '_S' str_s1 '_' image_str '.nii']);
-                                    IOI.sess_res{s1}.fname{c1} = [IOI.sess_res{s1}.fname{c1}; fname];
-                                    if ~memmapfileOn
-                                        ioi_save_nifti(image_total(:,:,:,j1),fname,vx);
-                                    else
-                                        ioi_save_nifti(im_obj.Data.image_total(:,:,:,j1),fname,vx);
+                                case 2
+                                    %save per block of size size_block
+                                    for j1=1:block_size:n_frames
+                                        if j1 <= n_frames-block_size
+                                            last_index = j1+block_size-1;
+                                        else
+                                            last_index = n_frames;
+                                        end
+                                        first_image_str = gen_num_str(j1,nzero_padding);
+                                        last_image_str = gen_num_str(last_index,nzero_padding);
+                                        fname = fullfile(dir_subj_res,sess_str, [subj_name '_' OD_label '_' str1 '_S' str_s1 '_' first_image_str '_to_' last_image_str  '.nii']);
+                                        IOI.sess_res{s1}.fname{c1} = [IOI.sess_res{s1}.fname{c1}; fname];
+                                        if ~memmapfileOn
+                                            ioi_save_nifti(image_total(:,:,:,j1:last_index), fname, vx);
+                                        else
+                                            ioi_save_nifti(im_obj.Data.image_total(:,:,:,j1:last_index), fname, vx);
+                                        end
                                     end
-                                end
+                                case 3
+                                    %save each frame separately
+                                    for j1=1:n_frames
+                                        image_str = gen_num_str(j1,nzero_padding);
+                                        fname = fullfile(dir_subj_res,sess_str, [subj_name '_' OD_label '_' str1 '_S' str_s1 '_' image_str '.nii']);
+                                        IOI.sess_res{s1}.fname{c1} = [IOI.sess_res{s1}.fname{c1}; fname];
+                                        if ~memmapfileOn
+                                            ioi_save_nifti(image_total(:,:,:,j1),fname,vx);
+                                        else
+                                            ioi_save_nifti(im_obj.Data.image_total(:,:,:,j1),fname,vx);
+                                        end
+                                    end
+                            end
+                            if memmapfileOn %clean up
+                                clear im_obj;
+                                delete('tmp_file.dat');
+                            end
+                            %Add found color - used later in concentration calculation module
+                            if ~(str1 == str_laser || str1 == str_contrast)
+                                hasRGY = [hasRGY str1];
+                            end
+                            disp(['Done processing session: ' int2str(s1) ', color: ' str1]);
                         end
-                        if memmapfileOn %clean up
-                            clear im_obj;
-                            delete('tmp_file.dat');
-                        end
-                        %Add found color - used later in concentration calculation module
-                        if ~(str1 == str_laser || str1 == str_contrast)
-                            hasRGY = [hasRGY str1];
-                        end
-                        disp(['Done processing session: ' int2str(s1) ', color: ' str1]);
-                    end
-                end %for c1
-                IOI.sess_res{s1}.hasRGY = hasRGY;
+                    end %for c1
+                    IOI.sess_res{s1}.hasRGY = hasRGY;
+                end
                 %electrophysiology
                 if isfield(IOI.sess_raw{s1},'electroOK')
                     IOI = extract_electro(IOI,s1,IOI.sess_raw{s1}.electro{1});
                     IOI.res.electroOK = 1; %a bit early, but should be OK
-                    disp(['Done processing session: ' int2str(s1) ', electrophysiology']);
+                    disp(['Done processing session: ' int2str(s1) ', electrophysiology']);                    
+                    if expedite
+                        el = load(IOI.res.el{s1});
+                        ioi_plot_LFP(IOI,el,s1);  
+                        %or
+                        %ioi_plot_LFP(IOI,el.el,s1);
+                    end
                 end
                 %toc
-                disp(['Done processing session ' int2str(s1) ' images (' int2str(n_frames) 'images)']);
+                if ~expedite
+                    disp(['Done processing session ' int2str(s1) ' images (' int2str(n_frames) 'images)']);
+                end
             end
         end %for s1
     end
