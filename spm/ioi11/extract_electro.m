@@ -22,7 +22,7 @@ fname_el = fullfile(IOI.dir.dir_subj_res,['el_S' str0 int2str(s1) '.mat']);
 save(fname_el,'el');
 fclose (fid);
 IOI.res.el{s1} = fname_el;
-
+IOI.res.sfel = sf;
 if Z.filtreFFT==1  %filtrage dans fourier pour enlever 60 et 5 Hz
     el=filtrageElectro33(el,sf);
 end

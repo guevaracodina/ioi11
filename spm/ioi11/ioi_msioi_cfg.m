@@ -15,6 +15,26 @@ top_bin_dir.num     = [1 Inf];
 top_bin_dir.help    = {'For each subject, select the top level directory'
     'containing folders of .bin image files and folders of recording information'}';
 
+expeditive_mode         = cfg_branch;
+expeditive_mode.tag     = 'expeditive_mode';
+expeditive_mode.name    = 'Expeditive mode';
+expeditive_mode.val     = {};
+expeditive_mode.help    = {'Expeditive mode of data processing: '
+    'only the electrophysiology will be processed'}';
+
+standard_mode         = cfg_branch;
+standard_mode.tag     = 'standard_mode';
+standard_mode.name    = 'Standard mode';
+standard_mode.val     = {};
+standard_mode.help    = {'Standard mode of data processing: all images will be processed'};
+
+treatment_mode = cfg_choice;
+treatment_mode.name   = 'Choose treatment method';
+treatment_mode.tag    = 'treatment_mode';
+treatment_mode.values = {standard_mode,expeditive_mode};
+treatment_mode.val    = {standard_mode};
+treatment_mode.help   = {'Choose treatment method: standard, or expeditive processing'}';
+
 redo1      = cfg_entry;
 redo1.tag  = 'force_redo';
 redo1.name = 'Force processing';
@@ -179,7 +199,7 @@ forceProcessingOn.help   = {'Force processing of bad sessions: attempt will be'
 msioi1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 msioi1.name = 'Read Multi-Spectral IOI';             % The display name
 msioi1.tag  = 'msioi1'; %Very important: tag is used when calling for execution
-msioi1.val  = {top_bin_dir redo1 configuration_choice output_path_choice ...
+msioi1.val  = {top_bin_dir treatment_mode redo1 configuration_choice output_path_choice ...
     session_choice save_choice memmapfileOn sess_min_image_files forceProcessingOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 msioi1.prog = @ioi_msioi_run;  % A function handle that will be called with the harvested job to run the computation
 msioi1.vout = @ioi_cfg_vout_msioi; % A function handle that will be called with the harvested job to determine virtual outputs
