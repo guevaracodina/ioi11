@@ -22,6 +22,16 @@ if isfield(job.session_choice,'select_sessions')
 else
     all_sessions = 1;
 end
+if isfield(job,'remove_stims')
+    rmi = job.remove_stims;
+else
+    rmi = '';
+end
+if isfield(job,'use_stims')
+    ust = job.use_stims;
+else
+    ust = '';
+end
 %find data selection mode
 if isfield(job.data_selection_choice,'ROI_mode')
     image_mode = 0;
@@ -179,9 +189,8 @@ for SubjIdx=1:length(job.IOImat)
                         if all_sessions || sum(s1==selected_sessions)
                             %Electrophysiology, for each subject and session
                             
-                            %TO-DO: generalize to more than 1 onset
-                            %type
-                            ot = 1;
+                            %TO-DO: generalize to more than 1 onset type
+                            ot = job.which_onset_type;
                             ons = IOI.sess_res{s1}.onsets{ot}; %already in seconds *IOI.dev.TR;
                             dur = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
                             name = IOI.sess_res{s1}.names{ot};
@@ -190,6 +199,8 @@ for SubjIdx=1:length(job.IOImat)
                             else
                                 amp = [];
                             end
+                            %remove onsets
+                            [ons amp IOI] = ioi_remove_onsets(ons, amp, rmi, ust,IOI,s1,ot);
                             %convolve with hemodynamic response function
                             [Xtmp U] = ioi_get_X(IOI,name,ons,dur,amp,s1,bases,volt);
                             IOI.Sess(s1).U = U; %store onsets for each session
