@@ -73,13 +73,23 @@ if isfield(job.vasomotion_choice,'vasomotion_on')
 else
     vasomotion_on = 0;
 end
+%Colorbar - to allow specifying common min and max on all charts
+if isfield(job.override_colorbar,'colorbar_override')
+    Im.cbar.c_min = job.override_colorbar.colorbar_override.colorbar_min;
+    Im.cbar.c_max = job.override_colorbar.colorbar_override.colorbar_max;
+    Im.cbar.colorbar_override = 1;
+else
+    Im.cbar.colorbar_override = 0;
+end
 save_figures = job.save_figures;
 generate_figures = job.generate_figures;
+save_beta_mse = job.save_beta_mse;
 use_onset_amplitudes = job.use_onset_amplitudes;
 include_flow = job.include_flow;
 include_OD = job.include_OD;
 include_HbT = job.include_HbT;
-try 
+
+try
     include_HbR = job.include_HbR;
     include_HbO = job.include_HbO;
 catch
@@ -127,8 +137,8 @@ for SubjIdx=1:length(job.IOImat)
                             if all_sessions || sum(s1==selected_sessions)
                                 try
                                     IOI.sess_shrunk{s1};
-                                    %shrunk images 
-                                    if force_shrink_recompute 
+                                    %shrunk images
+                                    if force_shrink_recompute
                                         %force recompute
                                         IOI.sess_shrunk{1000}; %will certainly break
                                     end
@@ -200,6 +210,10 @@ for SubjIdx=1:length(job.IOImat)
                                 amp = [];
                             end
                             %remove onsets
+                            %Alternative to this ioi_remove_onsets: create
+                            %a function from similar code in
+                            %ioi_stim_mean_run and call this function
+                            %before line just above that defines ons, dur,
                             [ons amp IOI] = ioi_remove_onsets(ons, amp, rmi, ust,IOI,s1,ot);
                             %convolve with hemodynamic response function
                             [Xtmp U] = ioi_get_X(IOI,name,ons,dur,amp,s1,bases,volt);
@@ -245,9 +259,9 @@ for SubjIdx=1:length(job.IOImat)
                                         %filter forward
                                         X1 = ioi_filter_HPF_LPF_WMDL(K,X);
                                         %filter backward
-%                                         X1 = X1(end:-1:1,:);
-%                                         X1 = ioi_filter_HPF_LPF_WMDL(K,X1);
-%                                         X1 = X1(end:-1:1,:);
+                                        %                                         X1 = X1(end:-1:1,:);
+                                        %                                         X1 = ioi_filter_HPF_LPF_WMDL(K,X1);
+                                        %                                         X1 = X1(end:-1:1,:);
                                         KX = spm_sp('Set', X1);
                                         KX.X = full(KX.X); %Filtered X
                                         Xm = spm_sp('x-',KX); % projector
@@ -268,9 +282,9 @@ for SubjIdx=1:length(job.IOImat)
                                         IOI.X{s1}.trRVRV{cX} = trRVRV;
                                         IOI.X{s1}.erdf{cX} = (trRV)^2/trRVRV;
                                         
-                                                        
-                                       if image_mode     
-                                           %set possible Inf values of Y to max of non Inf values of Y
+                                        
+                                        if image_mode
+                                            %set possible Inf values of Y to max of non Inf values of Y
                                             indInf = isinf(y(:));
                                             indNaN = isnan(y(:));
                                             y(indInf) = 0;
@@ -298,9 +312,9 @@ for SubjIdx=1:length(job.IOImat)
                                             %filtering of the data: LPF (Gaussian), forward
                                             y = ioi_filter_HPF_LPF_WMDL(K,y')'; %takes about 2 minutes
                                             %filter backward
-%                                             y = y(:,end:-1:1);
-%                                             y = ioi_filter_HPF_LPF_WMDL(K,y')';
-%                                             y = y(:,end:-1:1);
+                                            %                                             y = y(:,end:-1:1);
+                                            %                                             y = ioi_filter_HPF_LPF_WMDL(K,y')';
+                                            %                                             y = y(:,end:-1:1);
                                             %                                             if any(isnan(y(:))) || any(isinf(y(:)))
                                             %                                                 a0 =1;
                                             %                                             end
@@ -328,6 +342,8 @@ for SubjIdx=1:length(job.IOImat)
                                             end
                                             Im.save_figures = save_figures;
                                             Im.generate_figures = generate_figures;
+                                            Im0 = Im; %for images other than t-stats
+                                            Im0.cbar.colorbar_override = 0;
                                             %save as nifti and store path to data
                                             name_str = ['S' gen_num_str(s1,2) '_' IOI.color.eng(c1)];
                                             name_title = ['S' int2str(s1) ' ' IOI.color.eng(c1)];
@@ -356,15 +372,21 @@ for SubjIdx=1:length(job.IOImat)
                                             %                                             end
                                             sgn =1;
                                             thold = 1.95; %threshold on t-stats
-                                            for i0=1:size(b,1)
-                                                ioi_save_images(squeeze(b(i0,:,:)),b_names{i0},vx,Im,b_title{i0});
+                                            if save_beta_mse
+                                                for i0=1:size(b,1)
+                                                    ioi_save_images(squeeze(b(i0,:,:)),b_names{i0},vx,Im0,b_title{i0});
+                                                end
+                                                ioi_save_images(mse,mse_name,vx,Im0,mse_title);
                                             end
-                                            ioi_save_images(mse,mse_name,vx,Im,mse_title);
                                             ioi_save_images(t,t_name,vx,Im,t_title);
-                                            ioi_save_masked_images(t,t_name,vx,Im,t_title,sgn,thold);
+                                            if save_beta_mse
+                                                ioi_save_masked_images(t,t_name,vx,Im0,t_title,sgn,thold);
+                                            end
                                             if volt == 2
                                                 ioi_save_images(t2,t2_name,vx,Im,t2_title);
-                                                ioi_save_masked_images(t2,t2_name,vx,Im,t2_title,sgn,thold);
+                                                if save_beta_mse
+                                                    ioi_save_masked_images(t2,t2_name,vx,Im0,t2_title,sgn,thold);
+                                                end
                                             end
                                             
                                             IOI.X{s1}.b{c1} = b_names;
@@ -403,9 +425,9 @@ for SubjIdx=1:length(job.IOImat)
                                                         %filtering of the data: LPF (Gaussian), forward
                                                         y = ioi_filter_HPF_LPF_WMDL(K,y')';
                                                         %filter backward
-%                                                         y = y(end:-1:1);
-%                                                         y = ioi_filter_HPF_LPF_WMDL(K,y')';
-%                                                         y = y(end:-1:1);
+                                                        %                                                         y = y(end:-1:1);
+                                                        %                                                         y = ioi_filter_HPF_LPF_WMDL(K,y')';
+                                                        %                                                         y = y(end:-1:1);
                                                         %GLM inversion: calculating beta and residuals - would be SPM.Vbeta,
                                                         b = Xm * y'; % beta : least square estimate
                                                         %Compute t stat
@@ -551,5 +573,3 @@ for SubjIdx=1:length(job.IOImat)
         out.IOImat{SubjIdx} = job.IOImat{SubjIdx};
     end
 end
-end
-

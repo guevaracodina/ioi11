@@ -63,7 +63,45 @@ IOImatCopyChoice.val       = {IOImatOverwrite};
 IOImatCopyChoice.help      = {'Choose whether to overwrite the IOI.mat structure'
             'or to create a new directory'
             'and copy the IOI.mat structure there'}'; 
-        
+ 
+%%%%%%%%%%%%%%%%%%%%
+
+colorbar_max         = cfg_entry;
+colorbar_max.name    = 'Colorbar maximum value';
+colorbar_max.tag     = 'colorbar_max';
+colorbar_max.strtype = 'r';
+colorbar_max.num     = [1 1];
+colorbar_max.val     = {3};
+colorbar_max.help    = {'Enter maximum value for colorbar'};
+
+colorbar_min         = cfg_entry;
+colorbar_min.name    = 'Colorbar minimum value';
+colorbar_min.tag     = 'colorbar_min';
+colorbar_min.strtype = 'r';
+colorbar_min.num     = [1 1];
+colorbar_min.val     = {-3};
+colorbar_min.help    = {'Enter minimum value for colorbar'};
+
+colorbar_override      = cfg_branch;
+colorbar_override.name      = 'Override colorbar';
+colorbar_override.tag       = 'colorbar_override';
+colorbar_override.val       = {colorbar_min colorbar_max};
+colorbar_override.help      = {'Override colorbar.'};
+
+colorbar_default      = cfg_branch;
+colorbar_default.name      = 'Default colorbar';
+colorbar_default.tag       = 'colorbar_default';
+colorbar_default.val       = {};
+colorbar_default.help      = {'Default colorbar.'};
+
+override_colorbar           = cfg_choice;
+override_colorbar.name      = 'Override colorbar';
+override_colorbar.tag       = 'override_colorbar';
+override_colorbar.values    = {colorbar_default colorbar_override};
+override_colorbar.val       = {colorbar_default};
+override_colorbar.help      = {'Override default treatment of colorbar.'
+    'User can then specify maximum and minimum values for the colorbar.'}';
+
 %%%%%%%%%%%%%%%%%%%%%%
 
 shrink_x      = cfg_entry;
@@ -192,6 +230,14 @@ show_mse.labels = {'Yes','No'};
 show_mse.values = {1,0};
 show_mse.val  = {1};
 show_mse.help = {'Show mean square error on figures.'}';
+
+save_beta_mse      = cfg_menu;
+save_beta_mse.tag  = 'save_beta_mse';
+save_beta_mse.name = 'Save betas, MSE';
+save_beta_mse.labels = {'Yes','No'};
+save_beta_mse.values = {1,0};
+save_beta_mse.val  = {0};
+save_beta_mse.help = {'Save detailed output as maps, such as betas, MSE.'}';
 
 %%%%%%%%%%%%%%%%%%%%%%
 
@@ -691,7 +737,8 @@ glm1.tag  = 'glm1'; %Very important: tag is used when calling for execution
 glm1.val  = {IOImat data_selection_choice redo1 IOImatCopyChoice ...
      session_choice ...
      bases volt use_onset_amplitudes hpf_butter lpf_gauss vasomotion_choice include_flow ...
-     include_HbT include_HbO include_HbR include_OD which_onset_type remove_stims use_stims ...
+     include_HbT include_HbO include_HbR include_OD which_onset_type ...
+     remove_stims use_stims override_colorbar save_beta_mse ...
      generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 glm1.prog = @ioi_GLM_run;  % A function handle that will be called with the harvested job to run the computation
 glm1.vout = @ioi_cfg_vout_glm; % A function handle that will be called with the harvested job to determine virtual outputs

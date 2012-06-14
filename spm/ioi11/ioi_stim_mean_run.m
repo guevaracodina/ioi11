@@ -164,8 +164,7 @@ for SubjIdx=1:length(job.IOImat)
                         end
                         onsets_list{s1} = tmp_onsets;
                     end
-                end
-                
+                end              
                 
                 %Check whether there is the same number of onset types in
                 %each session; this is a
@@ -320,7 +319,7 @@ for SubjIdx=1:length(job.IOImat)
                                                 %loop over onsets for that session
                                                 if ~isempty(onsets_list{s1}{m1})
                                                     U = round(onsets_list{s1}{m1}/IOI.dev.TR)-window_offset; %in data points
-                                                    U0{s1} = get_U(IOI,[],U,0,s1); %only for plotting stims
+                                                    U0{s1} = ioi_get_U(IOI,[],U,0,s1); %only for plotting stims
                                                     
                                                     for u1=1:length(U)
                                                         if ~any(u1==removeSeg)
@@ -581,7 +580,7 @@ for SubjIdx=1:length(job.IOImat)
                                 for r1=1:size(GMa,1)
                                     plot(ls,GMa{r1,1,c1}); %hold on
                                 end
-                                hc1 = set_colorbar(gcf,size(GMa,1));
+                                hc1 = ioi_set_colorbar(gcf,size(GMa,1));
                                 legend off
                                 set(gcf, 'Colormap', ColorSet);
                                 
@@ -681,7 +680,7 @@ for SubjIdx=1:length(job.IOImat)
                                             end
                                             legend off
                                             set(gcf, 'Colormap', ColorSet);
-                                            hc1 = set_colorbar(gcf,size(Ma,1));
+                                            hc1 = ioi_set_colorbar(gcf,size(Ma,1));
                                             if save_figures
                                                 tit = [IOI.subj_name ' Color ' IOI.color.eng(c1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
                                                 title(tit);
@@ -704,39 +703,4 @@ for SubjIdx=1:length(job.IOImat)
         disp(exception.stack(1))
         out.IOImat{SubjIdx} = job.IOImat{SubjIdx};
     end
-end
-end
-
-function hc1 = set_colorbar(gcf,len)
-figure(gcf)
-hc1 = colorbar;
-set(hc1, 'YLim', [1 len+1]);
-y_tick = linspace(1, len, len)'+0.49;
-set(hc1, 'YTick', y_tick);
-%set(hc1, 'YTickMode', 'Manual');
-set(hc1, 'FontSize', 12);
-%Customize here number of decimals
-set(hc1,'YTickLabel',sprintf('%.0f |',get(hc1,'YTick')'));
-end
-
-function U = get_U(IOI,name,ons,dur,s1)
-SPM = [];
-SPM.xBF.dt = IOI.dev.TR;
-SPM.xBF.T = 1;
-SPM.xBF.T0 = 1;
-SPM.xBF.UNITS = 'secs';
-% Get inputs, neuronal causes or stimulus functions U
-%------------------------------------------------------------------
-SPM.nscan = IOI.sess_res{s1}.n_frames;
-P.name = 'none';
-P.h    = 0;
-if isempty(name)
-    SPM.Sess.U.name = {'Spk'};
-else
-    SPM.Sess.U.name = {name};
-end
-SPM.Sess.U.ons = ons;
-SPM.Sess.U.dur = dur;
-SPM.Sess.U.P = P;
-U = spm_get_ons(SPM,1);
 end
