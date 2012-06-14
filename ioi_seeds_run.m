@@ -1,13 +1,20 @@
 function out = ioi_seeds_run(job)
-if isfield(job.AutoROIchoice,'AutoROI')
-    ROIsize = job.AutoROIchoice.AutoROI.ArrayROI;
-    autoROI = 1;
+% Lets the user choose seeds on the anatomical image either manually or in
+% automatic fashion.
+%_______________________________________________________________________
+% Copyright (C) 2010 LIOM Laboratoire d'Imagerie Optique et Moléculaire
+%                    École Polytechnique de Montréal
+%______________________________________________________________________
+
+if isfield(job.AutoSeedChoice,'AutoSeed')
+    seedSize = job.AutoSeedChoice.AutoSeed.ArraySeed;
+    AutoSeed = 1;
 else
-    autoROI = 0;
-    if isfield(job.AutoROIchoice,'ManualROI')
-        graphicalROI = 1;
+    AutoSeed = 0;
+    if isfield(job.AutoSeedChoice,'ManualSeed')
+        graphicalSeed = true;
     else
-        graphicalROI = 0;
+        graphicalSeed = false;
     end
 end
 for SubjIdx=1:length(job.IOImat)
@@ -15,7 +22,8 @@ for SubjIdx=1:length(job.IOImat)
         clear IOI
         %Load IOI.mat information
         IOImat = job.IOImat{SubjIdx};
-        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
+        load(IOImat);   % load missing? EGC
+        [dir_ioimat ~] = fileparts(job.IOImat{SubjIdx});
         if isfield(job.IOImatCopyChoice,'IOImatCopy')
             newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
             newDir = fullfile(dir_ioimat,newDir);
@@ -26,27 +34,29 @@ for SubjIdx=1:length(job.IOImat)
         end
         try
             load(IOImat);
-        catch
+        catch exception % returns the contents of the MException object
+            disp(exception.identifier)
+            disp(exception.stack(1))
             load(job.IOImat{SubjIdx});
         end
-        if ~isfield(IOI.res,'ROIOK') || job.force_redo
-            if job.RemovePreviousROI
+        if ~isfield(IOI.fcIOS,'seedsOK') || job.force_redo
+            if job.RemovePreviousSeed
                 try
-                    IOI.res = rmfield(IOI.res,'ROIOK');
+                    IOI.fcIOS = rmfield(IOI.fcIOS,'seedsOK');
                 end
                 try
-                    for i1=1:length(IOI.res.IOI)
-                        %clean up: delete ROI mask files
-                        delete(IOI.res.ROI{i1}.fname);
+                    for i1=1:length(IOI.fcIOS.seeds)
+                        %clean up: delete seeds mask files
+                        delete(IOI.fcIOS.seeds{i1}.fname);
                     end
                 end
                 try
-                    IOI.res = rmfield(IOI.res,'ROI');
+                    IOI.fcIOS = rmfield(IOI.fcIOS,'seeds');
                 end
                 index = 0;
             else
-                if isfield(IOI.res,'ROI')
-                    index = length(IOI.res.ROI);
+                if isfield(IOI.fcIOS,'seeds')
+                    index = length(IOI.fcIOS.seeds);
                 else
                     index = 0;
                 end
@@ -56,7 +66,7 @@ for SubjIdx=1:length(job.IOImat)
             vx = [1 1 1];
             [dir1 fil1] = fileparts(vol.fname);
             im_anat = spm_read_vols(vol);
-            if ~autoROI
+            if ~AutoSeed
                 %Display images of changes from 10th to 90th percentile for all sessions
                 try
                     for i0=1:length(IOI.sess_res)
@@ -67,19 +77,26 @@ for SubjIdx=1:length(job.IOImat)
                         title(['Session ' int2str(i0) ': ratio of 90th to 10th percentile']);
                     end
                 end
-                p = 1;
-                h2 = figure; spm_input(['Subject ' int2str(SubjIdx)],'-1','d');
+                oneMoreSeed = true;
+                % h2 = figure; 
+                h2 = spm_figure('GetWin', 'Interactive');
+                spm_figure('Clear', 'Interactive');
+                spm_input(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ],'-1','d');
                 full_mask = ones(size(im_anat));
                 linecount = 0;
-                while p
+                while oneMoreSeed
                     figure(h2);
-                    p = spm_input('Add an ROI?',2*linecount+2,'y/n');
-                    if p == 'y', p = 1; else p = 0; end
-                    if p
-                        h1 = figure('Position',[20 50 3*size(im_anat,1) 3*size(im_anat,2)]);
-                        colormap(gray); imagesc(im_anat.*full_mask);
-                        if graphicalROI
-                            title('Make ROI polygon, then double click in it to create ROI.');
+                    oneMoreSeed = spm_input('Add another seed?',2*linecount+2,'y/n');
+                    if oneMoreSeed == 'y', oneMoreSeed = true; else oneMoreSeed = false; end
+                    if oneMoreSeed
+%                         h1 = figure('Position',[20 50 3*size(im_anat,1) 3*size(im_anat,2)]);
+                        h1 = spm_figure('GetWin', 'Graphics');
+                        spm_figure('Clear' 'Graphics');
+                        cmap = contrast(im_anat .* full_mask);
+                        imagesc(im_anat .* full_mask);
+                        colormap(cmap); 
+                        if graphicalSeed
+                            title('Make ROI polygon, then double click in it to create seed.');
                             mask = roipoly;
                         else
                             linecount = linecount + 1;
@@ -105,33 +122,33 @@ for SubjIdx=1:length(job.IOImat)
                         %imagesc(mask);
                         if job.select_names
                             figure(h2);
-                            name = spm_input(['Enter name of ROI' int2str(index)],2*linecount+1,'s');
+                            name = spm_input(['Enter name of seed' int2str(index)],2*linecount+1,'s');
                         else
                             name = int2str(index);
                         end
-                        IOI.res.ROI{index}.name = name;
+                        IOI.fcIOS.seeds{index}.name = name;
                         if index < 10, str0 = '0'; else str0 = ''; end
                         str = [str0 int2str(index)];
-                        fname_mask = fullfile(dir1,[fil1 '_ROI_' str '.nii']);
-                        IOI.res.ROI{index}.fname = fname_mask;
+                        fname_mask = fullfile(dir1,[fil1 '_seed_' str '.nii']);
+                        IOI.fcIOS.seeds{index}.fname = fname_mask;
                         ioi_save_nifti(mask, fname_mask, vx);
                     end
                 end
-                try close(h1); end
-                try close(h2); end
+%                 try close(h1); end
+%                 try close(h2); end
                 for i0=1:length(IOI.sess_res)
                     try close(hs{i0}); end
                 end
             else
-                %automatic ROIs
+                %automatic seeds
                 %h1 = figure('Position',[20 50 3*size(im_anat,1) 3*size(im_anat,2)]);
                 sz = size(im_anat);
                 sz = sz(1:2); %remove 3rd component, which is one
-                sz = floor(sz./ROIsize);
-                for i1 = 1:ROIsize(1) %N
-                    for i2 = 1:ROIsize(2) %M
+                sz = floor(sz./seedSize);
+                for i1 = 1:seedSize(1) %N
+                    for i2 = 1:seedSize(2) %M
                         %ROI created in following order
-                        % 1      2       3 ...   ROIsize(2)=M
+                        % 1      2       3 ...   seedSize(2)=M
                         % M+1   M+2     M+3 ...  2*M
                         %  .    .        .       .
                         %  .    .        .       N*M
@@ -143,21 +160,21 @@ for SubjIdx=1:length(job.IOImat)
                         mask = single(mask);
                         if index < 10, str0 = '0'; else str0 = ''; end
                         str = [str0 int2str(index)];
-                        fname_mask = fullfile(dir1,[fil1 '_ROI_' str '_' int2str(i1) 'x' int2str(i2) '.nii']);
-                        IOI.res.ROI{index}.fname = fname_mask;
+                        fname_mask = fullfile(dir1,[fil1 '_seed_' str '_' int2str(i1) 'x' int2str(i2) '.nii']);
+                        IOI.fcIOS.seeds{index}.fname = fname_mask;
                         ioi_save_nifti(mask, fname_mask, vx);
                     end
                 end
             end
-            IOI.ROIname = {};
-            for i0=1:length(IOI.res.ROI)
-                if isfield(IOI.res.ROI{i0},'name')
-                    IOI.ROIname = [IOI.ROIname; IOI.res.ROI{i0}.name];
+            IOI.seedName = {};
+            for i0=1:length(IOI.fcIOS.seeds)
+                if isfield(IOI.fcIOS.seeds{i0},'name')
+                    IOI.seedName = [IOI.seedName; IOI.fcIOS.seeds{i0}.name];
                 else
-                    IOI.ROIname = [IOI.ROIname; ['ROI' gen_num_str(i0,3)]];
+                    IOI.seedName = [IOI.seedName; ['seed' gen_num_str(i0,3)]];
                 end
             end
-            IOI.res.ROIOK = 1;
+            IOI.fcIOS.seedsOK = true;
             if isfield(job.IOImatCopyChoice,'IOImatCopy')
                 newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
                 newDir = fullfile(dir_ioimat,newDir);
@@ -166,7 +183,8 @@ for SubjIdx=1:length(job.IOImat)
             end
             save(IOImat,'IOI');
         end
-        disp(['Subject ' int2str(SubjIdx) ' complete']);
+         
+        disp(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ' complete']);
         out.IOImat{SubjIdx} = IOImat;
     catch exception
         disp(exception.identifier)
