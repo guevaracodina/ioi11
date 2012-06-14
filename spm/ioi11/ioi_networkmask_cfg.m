@@ -6,7 +6,7 @@ function mask1 = ioi_networkmask_cfg
 %______________________________________________________________________
 
 
-IOImat          = cfg_files; %Select NIRS.mat for this subject 
+IOImat          = cfg_files; %Select IOI.mat for this subject 
 IOImat.name     = 'Select IOI.mat'; % The displayed name
 IOImat.tag      = 'IOImat';       %file names
 IOImat.filter   = 'mat';
