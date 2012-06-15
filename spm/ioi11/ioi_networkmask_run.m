@@ -1,4 +1,4 @@
-function out = ioi_networkmask_run(job)
+function [out, BW_mask] = ioi_networkmask_run(job)
 % Manual segmentation of the brain to provide a mask for resting-state
 % functional connectivity mapping with optical intrinsic signal imaging (fcOIS)
 % analysis. User should only select those pixels belonging to the brain.
@@ -7,7 +7,8 @@ function out = ioi_networkmask_run(job)
 % INPUTS:
 % job
 % OUTPUTS:
-% out       
+% out       Structure containing the names of IOI matrices
+% BW_mask   Binary mask that contains brain pixels
 %_______________________________________________________________________
 % Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
@@ -24,10 +25,8 @@ for SubjIdx=1:length(job.IOImat)
         if ~isfield(IOI, 'fcIOS')
             % Create fcIOS field to contain the whole structure of fcIOS
             % utilities
-            IOI.fcIOS = struct([]);
+            IOI.fcIOS = struct('mask', [], 'filtNdown', []);
             IOI.fcIOS.mask = struct([]);
-            IOI.fcIOS.seeds =[];
-            IOI.fcIOS.filtNdown = struct([]);
             IOI.fcIOS.filtNdown = struct([]);
         end
         if ~isfield(IOI.fcIOS.mask,'maskOK') || job.force_redo
@@ -48,23 +47,24 @@ for SubjIdx=1:length(job.IOImat)
             spm_figure('Clear', 'Graphics');
             
             % Grayscale colormap for contrast enhancement
-            cmap = contrast(im_anat);
-            h_im = imagesc(im_anat); colormap(cmap);
-            axis image
-            title('Choose a mask containing only brain pixels','FontSize',13)
-            
-            % Start interactive ROI tool to choose brain mask
-            h_ROI = impoly(gca);
-            
-            % Set color of ROI brain mask
-            setColor(h_ROI, 'y')
-            
+            % cmap = contrast(im_anat);
+            % h_im = imagesc(im_anat); colormap(cmap);
+            % axis image
+           
+            % Start interactive ROI tool to choose polygonal brain mask
+            % ------------------------------------------------------------------
+            % h_ROI = impoly(gca);
             % Keep the polygon inside the original dimensions
-            fcn = makeConstrainToRectFcn('impoly',get(gca,'XLim'), get(gca,'YLim'));
-            setPositionConstraintFcn(h_ROI,fcn)
-            
+            % fcn = makeConstrainToRectFcn('impoly',get(gca,'XLim'), get(gca,'YLim'));
+            % setPositionConstraintFcn(h_ROI,fcn);
             % Create a mask
-            BW_mask = createMask(h_ROI,h_im);
+            % BW_mask = createMask(h_ROI,h_im);
+            % ------------------------------------------------------------------
+            
+            % Start interactive ROI tool to choose spline brain mask
+            % ------------------------------------------------------------------
+            BW_mask = ioi_roi_spline(im_anat);
+            % ------------------------------------------------------------------
             
             % Display masked image on SPM graphics window
             imagesc(im_anat .* BW_mask);
@@ -75,16 +75,22 @@ for SubjIdx=1:length(job.IOImat)
             % vaut 1 dans le cerveau et 0 en dehors.
             
             % Create filename according the existing nomenclature at subject level
-            maskName = [IOI.subj_name '_anat_brainmask.nii'];
+            brainMaskName = [IOI.subj_name '_anat_brainmask.nii'];
             
             % Create and write a NIFTI file in the subject folder
             hdr = spm_vol(fullfile(dirName,fileName));
-            ioi_create_vol(fullfile(dirName, maskName), ...
+            ioi_create_vol(fullfile(dirName, brainMaskName), ...
                 hdr.dim, hdr.dt, hdr.pinfo, hdr.mat, hdr.n, BW_mask);
             
+            if ~isfield(IOI.fcIOS.mask, 'fname') || isempty(IOI.fcIOS.mask, 'fname')
+                IOI.fcIOS.mask = struct('fname', []);
+            end
             % Identifier dans IOI le nom du fichier masque
-            IOI.fcIOS.mask.fname = fullfile(dirName, maskName);
+            IOI.fcIOS.mask.fname = fullfile(dirName, brainMaskName);
             
+            if ~isfield(IOI.fcIOS.mask, 'maskOK') || isempty(IOI.fcIOS.mask, 'maskOK')
+                IOI.fcIOS.mask = struct('maskOK', []);
+            end
             % Mask created succesfully!
             IOI.fcIOS.mask.maskOK = true;
             save(IOImat,'IOI');

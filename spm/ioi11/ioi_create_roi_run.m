@@ -51,11 +51,15 @@ for SubjIdx=1:length(job.IOImat)
                     index = 0;
                 end
             end
+            % Prompt user to choose brain mask
+            [out, full_mask] = ioi_networkmask_run(job);
             %display anatomical image
             vol = spm_vol(IOI.res.file_anat);
             vx = [1 1 1];
             [dir1 fil1] = fileparts(vol.fname);
             im_anat = spm_read_vols(vol);
+            % Colormap to enhance contrast
+            cmap = contrast(im_anat);
             if ~autoROI
                 %Display images of changes from 10th to 90th percentile for all sessions
                 try
@@ -69,15 +73,20 @@ for SubjIdx=1:length(job.IOImat)
                 end
                 p = 1;
                 h2 = figure; spm_input(['Subject ' int2str(SubjIdx)],'-1','d');
-                full_mask = ones(size(im_anat));
+                
+                % full_mask = ones(size(im_anat)); % Is it still necessary? //EGC
+                
                 linecount = 0;
                 while p
                     figure(h2);
                     p = spm_input('Add an ROI?',2*linecount+2,'y/n');
                     if p == 'y', p = 1; else p = 0; end
                     if p
-                        h1 = figure('Position',[20 50 3*size(im_anat,1) 3*size(im_anat,2)]);
-                        colormap(gray); imagesc(im_anat.*full_mask);
+                        % h1 = figure('Position',[20 50 3*size(im_anat,1) 3*size(im_anat,2)]);
+                        % Display anatomical image on SPM graphics window
+                        spm_figure('GetWin', 'Graphics');
+                        spm_figure('Clear', 'Graphics');
+                        imagesc(im_anat .* full_mask); colormap(cmap); axis image;
                         if graphicalROI
                             title('Make ROI polygon, then double click in it to create ROI.');
                             mask = roipoly;
@@ -100,9 +109,9 @@ for SubjIdx=1:length(job.IOImat)
                             end
                         end
                         mask = single(mask);
-                        full_mask = full_mask-mask;
+                        % Update ROI's display
+                        full_mask = full_mask - mask;
                         index = index + 1; linecount = linecount + 1;
-                        %imagesc(mask);
                         if job.select_names
                             figure(h2);
                             name = spm_input(['Enter name of ROI' int2str(index)],2*linecount+1,'s');
@@ -117,7 +126,7 @@ for SubjIdx=1:length(job.IOImat)
                         ioi_save_nifti(mask, fname_mask, vx);
                     end
                 end
-                try close(h1); end
+                % try close(h1); end
                 try close(h2); end
                 for i0=1:length(IOI.sess_res)
                     try close(hs{i0}); end
