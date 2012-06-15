@@ -1,4 +1,4 @@
-function which_onset_type = ioi_cfg_which_onset_type
+function which_onset_type = ioi_dfg_which_onset_type
 which_onset_type         = cfg_entry; 
 which_onset_type.name    = 'Enter onset type(s) to use';
 which_onset_type.tag     = 'which_onset_type';       

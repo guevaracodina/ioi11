@@ -1,4 +1,4 @@
-function ROI_choice = ioi_cfg_ROI_choice
+function ROI_choice = ioi_dfg_ROI_choice
 all_ROIs         = cfg_branch;
 all_ROIs.tag     = 'all_ROIs';
 all_ROIs.name    = 'All ROIs';

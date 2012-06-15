@@ -51,7 +51,7 @@ SCKSparams.name    = 'SCKS parameters';
 SCKSparams.val     = {SCKSnoise State_annealing Parameter_annealing}; 
 SCKSparams.help    = {'User-controlled SCKS parameters.'};
 
-[generate_figures save_figures] = ioi_cfg_generate_figures;
+[generate_figures save_figures] = ioi_dfg_generate_figures;
 
 % Executable Branch
 SCKS1      = cfg_exbranch;       % This is the branch that has information about how to run this module

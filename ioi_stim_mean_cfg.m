@@ -7,8 +7,8 @@ IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
 ROImat = ioi_dfg_ROImat(1);
 IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('Mean');
-ROI_choice = ioi_cfg_ROI_choice;
-session_choice = ioi_cfg_session_choice;
+ROI_choice = ioi_dfg_ROI_choice;
+session_choice = ioi_dfg_session_choice;
 [window_before window_after window_offset] = ioi_dfg_window(3,20,0);
 
 normalize_choice      = cfg_menu;
@@ -22,10 +22,10 @@ normalize_choice.help = {'Normalization choice. In one test,'
     'when using time zero as the baseline, compared to taking '
     'an average (median) over the window before.'}';
 
-which_onset_type = ioi_cfg_which_onset_type;
-remove_stims = ioi_cfg_remove_stims;
-use_stims = ioi_cfg_use_stims;
-[generate_figures save_figures] = ioi_cfg_generate_figures;
+which_onset_type = ioi_dfg_which_onset_type;
+remove_stims = ioi_dfg_remove_stims;
+use_stims = ioi_dfg_use_stims;
+[generate_figures save_figures] = ioi_dfg_generate_figures;
 
 extract_HRF      = cfg_menu;
 extract_HRF.tag  = 'extract_HRF';

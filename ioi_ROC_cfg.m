@@ -7,9 +7,9 @@ IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
 ROImat = ioi_dfg_ROImat(1);
 IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('ROC');
-ROI_choice = ioi_cfg_ROI_choice;
-session_choice = ioi_cfg_session_choice;
-[generate_figures save_figures] = ioi_cfg_generate_figures;
+ROI_choice = ioi_dfg_ROI_choice;
+session_choice = ioi_dfg_session_choice;
+[generate_figures save_figures] = ioi_dfg_generate_figures;
 
 % Executable Branch
 ROC1      = cfg_exbranch;       % This is the branch that has information about how to run this module

@@ -16,8 +16,8 @@ PhysioModel_Choice.values = {0,1,2};
 PhysioModel_Choice.val    = {0};
 PhysioModel_Choice.help   = {'Choose hemodynamic model'}';
 
-ROI_choice = ioi_cfg_ROI_choice;
-session_choice = ioi_cfg_session_choice;
+ROI_choice = ioi_dfg_ROI_choice;
+session_choice = ioi_dfg_session_choice;
 
 hpf_butter = ioi_dfg_hpf_butter(1,0.01,3);
 

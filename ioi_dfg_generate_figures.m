@@ -1,4 +1,4 @@
-function [generate_figures save_figures] = ioi_cfg_generate_figures
+function [generate_figures save_figures] = ioi_dfg_generate_figures
 generate_figures      = cfg_menu;
 generate_figures.tag  = 'generate_figures';
 generate_figures.name = 'Show figures';

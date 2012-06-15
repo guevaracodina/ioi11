@@ -38,7 +38,7 @@ PhysioModel_Choice.values = {0,1,2};
 PhysioModel_Choice.val    = {0};
 PhysioModel_Choice.help   = {'Choose hemodynamic model'}';
 
-ROI_choice = ioi_cfg_ROI_choice;
+ROI_choice = ioi_dfg_ROI_choice;
 
 image_mode         = cfg_branch;
 image_mode.tag     = 'image_mode';
@@ -60,7 +60,7 @@ data_selection_choice.val    = {image_mode};
 data_selection_choice.help   = {'Choose data selection method'}';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-session_choice = ioi_cfg_session_choice;
+session_choice = ioi_dfg_session_choice;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -260,7 +260,7 @@ show_normalized_parameters.values = {1,0};
 show_normalized_parameters.val  = {0};
 show_normalized_parameters.help = {'Show normalized values parameters.'}';
 
-[generate_figures save_figures] = ioi_cfg_generate_figures;
+[generate_figures save_figures] = ioi_dfg_generate_figures;
 
 plot_algebraic_CMRO2      = cfg_menu;
 plot_algebraic_CMRO2.tag  = 'plot_algebraic_CMRO2';

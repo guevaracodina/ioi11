@@ -81,8 +81,8 @@ output_path_choice.values = {output_path_default,output_path_select};
 output_path_choice.val    = {output_path_default};
 output_path_choice.help   = {'Choose output_path_choice'}';
 
-shrinkage_choice = ioi_cfg_shrinkage_choice;
-session_choice = ioi_cfg_session_choice;
+shrinkage_choice = ioi_dfg_shrinkage_choice;
+session_choice = ioi_dfg_session_choice;
 
 sess_min_image_files         = cfg_entry; 
 sess_min_image_files.name    = 'Minimum length of each session in seconds';

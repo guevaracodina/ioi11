@@ -5,9 +5,9 @@ function extract_roi1 = ioi_extract_roi_time_series_cfg
 IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
 IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('Series');
-ROI_choice = ioi_cfg_ROI_choice;
+ROI_choice = ioi_dfg_ROI_choice;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-session_choice = ioi_cfg_session_choice;
+session_choice = ioi_dfg_session_choice;
 
 % Colors to include
 IC = ioi_dfg_include_colors(0,1,1,1,1);

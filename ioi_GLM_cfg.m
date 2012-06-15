@@ -104,11 +104,11 @@ save_beta_mse.val  = {0};
 save_beta_mse.help = {'Save detailed output as maps, such as betas, MSE.'}';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-ROI_choice = ioi_cfg_ROI_choice;
+ROI_choice = ioi_dfg_ROI_choice;
 %%%%%%%%%%%%%%%%%%%%%%
-shrinkage_choice = ioi_cfg_shrinkage_choice;
+shrinkage_choice = ioi_dfg_shrinkage_choice;
 %%%%%%%%%%%%%%%%%%%%%%%%%
-spatial_LPF = ioi_cfg_spatial_LPF;
+spatial_LPF = ioi_dfg_spatial_LPF;
 
 image_mode         = cfg_branch;
 image_mode.tag     = 'image_mode';
@@ -131,7 +131,7 @@ data_selection_choice.help   = {'Choose data selection method'}';
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-session_choice = ioi_cfg_session_choice;
+session_choice = ioi_dfg_session_choice;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---------------------------------------------------------------------
@@ -422,10 +422,10 @@ lpf_gauss.help    = {'Specify properties of Gaussian filter'};
 
 IC = ioi_dfg_include_colors(0,1,1,1,0);
 
-which_onset_type = ioi_cfg_which_onset_type;
-remove_stims = ioi_cfg_remove_stims;
-use_stims = ioi_cfg_use_stims;
-[generate_figures save_figures] = ioi_cfg_generate_figures;
+which_onset_type = ioi_dfg_which_onset_type;
+remove_stims = ioi_dfg_remove_stims;
+use_stims = ioi_dfg_use_stims;
+[generate_figures save_figures] = ioi_dfg_generate_figures;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

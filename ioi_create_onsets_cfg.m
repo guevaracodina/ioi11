@@ -21,7 +21,7 @@ elDir.help    = {'Optional: Select directory where processed electrophysiology f
 
 IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('Onsets');        
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-session_choice = ioi_cfg_session_choice;
+session_choice = ioi_dfg_session_choice;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Electrophysiology detection options
