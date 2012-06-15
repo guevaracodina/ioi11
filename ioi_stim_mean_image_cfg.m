@@ -3,13 +3,13 @@ function stim_mean_image1 = ioi_stim_mean_image_cfg
 % Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
-IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('IMean');
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('IMean');
 
 %%%%%%%%%%%%%%%%%%%%%%%
 session_choice = ioi_cfg_session_choice;
-[window_before window_after window_offset] = ioi_cfg_window(3,20,0);
+[window_before window_after window_offset] = ioi_dfg_window(3,20,0);
 
 normalize_choice      = cfg_menu;
 normalize_choice.tag  = 'normalize_choice';
@@ -29,7 +29,7 @@ use_stims = ioi_cfg_use_stims;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-hpf_butter = ioi_cfg_hpf_butter(1,0.01,3);
+hpf_butter = ioi_dfg_hpf_butter(1,0.01,3);
 
 % ---------------------------------------------------------------------
 % lpf Low-pass filter
@@ -96,7 +96,7 @@ shrinkage_choice = ioi_cfg_shrinkage_choice;
 %%%%%%%%%%%%%%%%%%%%%%%%%
 spatial_LPF = ioi_cfg_spatial_LPF;
 %%%%%%%%%%%%%%%%%%%%%%
-IC = ioi_cfg_include_colors(0,1,1,1,1);
+IC = ioi_dfg_include_colors(0,1,1,1,1);
 
 % Executable Branch
 stim_mean_image1      = cfg_exbranch;       % This is the branch that has information about how to run this module

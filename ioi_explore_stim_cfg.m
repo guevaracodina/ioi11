@@ -3,9 +3,9 @@ function explore_stim1 = ioi_explore_stim_cfg
 % Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
-IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('Mean');
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('Mean');
 
 %%%%%%%%%%%
 
@@ -31,7 +31,7 @@ stim_choice.val    = {default_stims};
 stim_choice.help   = {'Choose stimulation selection method'}';
 
 session_choice = ioi_cfg_session_choice;
-[window_before window_after] = ioi_cfg_window(3,20,0);
+[window_before window_after] = ioi_dfg_window(3,20,0);
 
 normalize_choice      = cfg_menu;
 normalize_choice.tag  = 'normalize_choice';

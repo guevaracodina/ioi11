@@ -6,9 +6,9 @@ function create_roi1 = ioi_create_roi_cfg
 % Read IOI Multispectral files
 % ---------------------------------------------------------------------
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
-ROImat = ioi_cfg_ROImat(1); %oops needs to be done for this unit
+ROImat = ioi_dfg_ROImat(1); %oops needs to be done for this unit
 %(specifically: allow user to specify a new location for ROIs)
 
 RemovePreviousROI      = cfg_menu;
@@ -29,7 +29,7 @@ select_names.val  = {1};
 select_names.help = {'Option for user to manually enter names of ROIs.'
     'If No is selected, ROI names will be a number (enumeration).'}';
 
-IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('ROI');
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('ROI');
         
 ArrayROI         = cfg_entry;
 ArrayROI.name    = 'Size of array of ROIs';

@@ -6,7 +6,7 @@ function filtdown1 = ioi_filtdown_cfg
 %______________________________________________________________________
 
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
 % Select mask file
 maskFile            = cfg_files;

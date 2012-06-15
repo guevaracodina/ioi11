@@ -5,7 +5,7 @@ function mask1 = ioi_fcmap1_cfg
 %                    École Polytechnique de Montréal
 %______________________________________________________________________
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
 
 % Executable Branch

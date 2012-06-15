@@ -3,13 +3,13 @@ function stim_mean1 = ioi_stim_mean_cfg
 % Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
-ROImat = ioi_cfg_ROImat(1);
-IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('Mean');
+ROImat = ioi_dfg_ROImat(1);
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('Mean');
 ROI_choice = ioi_cfg_ROI_choice;
 session_choice = ioi_cfg_session_choice;
-[window_before window_after window_offset] = ioi_cfg_window(3,20,0);
+[window_before window_after window_offset] = ioi_dfg_window(3,20,0);
 
 normalize_choice      = cfg_menu;
 normalize_choice.tag  = 'normalize_choice';
@@ -71,7 +71,7 @@ add_error_bars.val  = {0};
 add_error_bars.help = {'Add error bars.'}';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-hpf_butter = ioi_cfg_hpf_butter(1,0.01,3);
+hpf_butter = ioi_dfg_hpf_butter(1,0.01,3);
 
 % ---------------------------------------------------------------------
 % lpf Low-pass filter
@@ -122,7 +122,7 @@ remove_stims_SD.val  = {0};
 remove_stims_SD.help = {'Remove stims on SD criterion.'
     'This works in addition to and after other stims having been removed.'}';
 
-IC = ioi_cfg_include_colors(0,1,1,1,0);
+IC = ioi_dfg_include_colors(0,1,1,1,0);
 
 % Executable Branch
 stim_mean1      = cfg_exbranch;       % This is the branch that has information about how to run this module

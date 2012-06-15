@@ -3,7 +3,7 @@ function create_onsets1 = ioi_create_onsets_cfg
 % Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
 
 elDir         = cfg_files;
@@ -19,7 +19,7 @@ elDir.help    = {'Optional: Select directory where processed electrophysiology f
     'If several subjects are run, and elDir is explicitly specified, then'
     'it should be specified for all subjects, in the same order as the list of IOI.mat'}';
 
-IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('Onsets');        
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('Onsets');        
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 session_choice = ioi_cfg_session_choice;
 
@@ -89,7 +89,7 @@ ta.val{1}  = 0.5;
 ta.help    = {'Specify the time window after onset to use for display (in seconds).'}';
 
 %HPF
-electro_hpf_butter = ioi_cfg_hpf_butter(1,0.2,3);
+electro_hpf_butter = ioi_dfg_hpf_butter(1,0.2,3);
 
 %LPF
 electro_lpf_butter_freq         = cfg_entry; 

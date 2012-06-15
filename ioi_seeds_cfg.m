@@ -6,9 +6,9 @@ function seeds1 = ioi_seeds_cfg
 %______________________________________________________________________
 
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
-IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('Seeds');
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('Seeds');
 
 RemovePreviousSeed.tag      = 'RemovePreviousSeed';
 RemovePreviousSeed.name     = 'Treatment of previous seeds';

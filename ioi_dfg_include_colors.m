@@ -1,4 +1,4 @@
-function IC = ioi_cfg_include_colors(OD,HbO,HbR,HbT,Flow)
+function IC = ioi_dfg_include_colors(OD,HbO,HbR,HbT,Flow)
 include_flow      = cfg_menu;
 include_flow.tag  = 'include_flow';
 include_flow.name = 'Include flow';

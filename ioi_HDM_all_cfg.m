@@ -3,9 +3,9 @@ function hdm_all1 = ioi_HDM_all_cfg
 % Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
-ROImat = ioi_cfg_ROImat(1);
+ROImat = ioi_dfg_ROImat(1);
 
 show_mse      = cfg_menu;
 show_mse.tag  = 'show_mse';
@@ -27,8 +27,8 @@ only_display.help = {'Only display:'
     'It will overwrite figures, so if you want to keep the old figures, you should rename'
     'the old figure directory, but not the location where the HDM.mat structure is located.'}';
 
-IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('HDM');
-IC = ioi_cfg_include_colors(0,1,1,1,0);
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('HDM');
+IC = ioi_dfg_include_colors(0,1,1,1,0);
 
 PhysioModel_Choice        = cfg_menu;
 PhysioModel_Choice.name   = 'Choose hemodynamic model';
@@ -72,7 +72,7 @@ use_onset_amplitudes.values = {1,0};
 use_onset_amplitudes.val  = {0};
 use_onset_amplitudes.help = {'Use onset amplitudes as parameters to weigh the hemodynamic response.'}';
 
-hpf_butter = ioi_cfg_hpf_butter(1,0.01,3);
+hpf_butter = ioi_dfg_hpf_butter(1,0.01,3);
 
 % ---------------------------------------------------------------------
 % lpf Low-pass filter
