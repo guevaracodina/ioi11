@@ -6,21 +6,8 @@ function mask1 = ioi_fcmap1_cfg
 %______________________________________________________________________
 
 
-IOImat          = cfg_files; %Select NIRS.mat for this subject 
-IOImat.name     = 'Select IOI.mat'; % The displayed name
-IOImat.tag      = 'IOImat';       %file names
-IOImat.filter   = 'mat';
-IOImat.ufilter  = '^IOI.mat$';    
-IOImat.num      = [1 Inf];     % Number of inputs required 
-IOImat.help     = {'Select IOI.mat for this subject.'}; % help text displayed
-
-redo1           = cfg_menu;
-redo1.tag       = 'force_redo';
-redo1.name      = 'Force processing';
-redo1.labels    = {'False','True'};
-redo1.values    = {0,1};
-redo1.val       = {0};
-redo1.help      = {'Force redoing this processing even when it has been done already'};
+IOImat = ioi_cfg_IOImat(1);
+redo1 = ioi_cfg_redo(0);
 
 % Executable Branch
 mask1      = cfg_exbranch;       % This is the branch that has information about how to run this module

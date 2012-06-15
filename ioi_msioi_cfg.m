@@ -35,6 +35,7 @@ treatment_mode.values = {standard_mode,expeditive_mode};
 treatment_mode.val    = {standard_mode};
 treatment_mode.help   = {'Choose treatment method: standard, or expeditive processing'}';
 
+%Special redo
 redo1      = cfg_entry;
 redo1.tag  = 'force_redo';
 redo1.name = 'Force processing';
@@ -80,68 +81,8 @@ output_path_choice.values = {output_path_default,output_path_select};
 output_path_choice.val    = {output_path_default};
 output_path_choice.help   = {'Choose output_path_choice'}';
 
-shrink_x      = cfg_entry;
-shrink_x.tag  = 'shrink_x';
-shrink_x.name = 'Shrink factor for x dimension';
-shrink_x.strtype  = 'i';
-shrink_x.num = [1 1];
-shrink_x.def  = @(val)ioi_get_defaults('msioi1.shrink_x', val{:});
-shrink_x.help = {'Data reduction factor in x.'};
-
-shrink_y      = cfg_entry;
-shrink_y.tag  = 'shrink_y';
-shrink_y.name = 'Shrink factor for y dimension';
-shrink_y.strtype  = 'i';
-shrink_y.num = [1 1];
-shrink_y.def  = @(val)ioi_get_defaults('msioi1.shrink_y', val{:});
-shrink_y.help = {'Data reduction factor in y.'};
-
-configuration_shrink         = cfg_branch;
-configuration_shrink.tag     = 'configuration_shrink';
-configuration_shrink.name    = 'Configuration shrinkage';
-configuration_shrink.val     = {shrink_x shrink_y};
-configuration_shrink.help    = {'Select values.'};
-
-no_shrinkage         = cfg_branch;
-no_shrinkage.tag     = 'no_shrinkage';
-no_shrinkage.name    = 'No shrinkage';
-no_shrinkage.val     = {};
-no_shrinkage.help    = {};
-
-configuration_choice        = cfg_choice;
-configuration_choice.name   = 'Choose configuration method';
-configuration_choice.tag    = 'configuration_choice';
-configuration_choice.values = {no_shrinkage,configuration_shrink};
-configuration_choice.val    = {no_shrinkage};
-configuration_choice.help   = {'Choose output_path_choice'}';
-
-all_sessions         = cfg_branch;
-all_sessions.tag     = 'all_sessions';
-all_sessions.name    = 'All sessions';
-all_sessions.val     = {};
-all_sessions.help    = {'All good enough sessions will be processed'};
-
-selected_sessions      = cfg_entry;
-selected_sessions.tag  = 'selected_sessions';
-selected_sessions.name = 'Enter list of sessions';
-selected_sessions.strtype  = 'r';
-selected_sessions.num = [1 Inf];
-selected_sessions.val{1} = 1;
-selected_sessions.help = {'Enter list of sessions to process.'};
-
-select_sessions         = cfg_branch;
-select_sessions.tag     = 'select_sessions';
-select_sessions.name    = 'Select sessions';
-select_sessions.val     = {selected_sessions};
-select_sessions.help    = {'Choose some sessions to be processed'};
-
-session_choice        = cfg_choice;
-session_choice.name   = 'Choose session selection method';
-session_choice.tag    = 'session_choice';
-session_choice.values = {all_sessions,select_sessions};
-session_choice.val    = {all_sessions};
-session_choice.help   = {'Choose session selection method'
-    'Applies to old data format only'}';
+shrinkage_choice = ioi_cfg_shrinkage_choice;
+session_choice = ioi_cfg_session_choice;
 
 sess_min_image_files         = cfg_entry; 
 sess_min_image_files.name    = 'Minimum length of each session in seconds';
@@ -158,13 +99,6 @@ sess_min_image_files.help    = {'Minimum length of each session in seconds'
     'Another assumption is made that there are approximately 80 images per'
     'raw binary file. If that is not the case, change temp_ImNum in ioi_msioi_run'
     'Applies to old data format only'};   
-
-% save_choice        = cfg_choice;
-% save_choice.name   = 'Choose saving method';
-% save_choice.tag    = 'save_choice';
-% save_choice.values = {one_file_per_session,one_file_per_block,one_file_per_image};
-% save_choice.val    = {one_file_per_session};
-% save_choice.help   = {'Choose saving method'}';
 
 save_choice        = cfg_menu;
 save_choice.name   = 'Choose saving method';
@@ -199,7 +133,7 @@ forceProcessingOn.help   = {'Force processing of bad sessions: attempt will be'
 msioi1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 msioi1.name = 'Read Multi-Spectral IOI';             % The display name
 msioi1.tag  = 'msioi1'; %Very important: tag is used when calling for execution
-msioi1.val  = {top_bin_dir treatment_mode redo1 configuration_choice output_path_choice ...
+msioi1.val  = {top_bin_dir treatment_mode redo1 shrinkage_choice output_path_choice ...
     session_choice save_choice memmapfileOn sess_min_image_files forceProcessingOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 msioi1.prog = @ioi_msioi_run;  % A function handle that will be called with the harvested job to run the computation
 msioi1.vout = @ioi_cfg_vout_msioi; % A function handle that will be called with the harvested job to determine virtual outputs

@@ -6,23 +6,10 @@ function create_roi1 = ioi_create_roi_cfg
 % Read IOI Multispectral files
 % ---------------------------------------------------------------------
 
-IOImat         = cfg_files; %Select NIRS.mat for this subject 
-IOImat.name    = 'Select IOI.mat'; % The displayed name
-IOImat.tag     = 'IOImat';       %file names
-IOImat.filter = 'mat';
-IOImat.ufilter = '^IOI.mat$';    
-IOImat.num     = [1 Inf];     % Number of inputs required 
-IOImat.help    = {'Select IOImat dependency if available. '
-    'Otherwise, for each subject, select IOI.mat.'}'; % help text displayed
-
-redo1      = cfg_menu;
-redo1.tag  = 'force_redo';
-redo1.name = 'Force processing';
-redo1.labels = {'False','True'};
-redo1.values = {0,1};
-redo1.val  = {0};
-redo1.help = {'Force redoing this processing even when it has been done already.'
-    'Use option below for treatment of previous ROIs.'}';
+IOImat = ioi_cfg_IOImat(1);
+redo1 = ioi_cfg_redo(0);
+ROImat = ioi_cfg_ROImat(1); %oops needs to be done for this unit
+%(specifically: allow user to specify a new location for ROIs)
 
 RemovePreviousROI      = cfg_menu;
 RemovePreviousROI.tag  = 'RemovePreviousROI';
@@ -42,35 +29,7 @@ select_names.val  = {1};
 select_names.help = {'Option for user to manually enter names of ROIs.'
     'If No is selected, ROI names will be a number (enumeration).'}';
 
-IOImatOverwrite         = cfg_branch;
-IOImatOverwrite.tag     = 'IOImatOverwrite';
-IOImatOverwrite.name    = 'Overwrite IOI.mat structure'; 
-IOImatOverwrite.help    = {'Will not copy IOI structure.'
-            'This will write over the previous NIRS.mat'}';
-
-NewIOIdir         = cfg_entry;
-NewIOIdir.name    = 'New directory for IOI.mat';
-NewIOIdir.tag     = 'NewIOIdir';       
-NewIOIdir.strtype = 's';
-NewIOIdir.val{1}    = 'ROI';
-NewIOIdir.num     = [1 Inf];     
-NewIOIdir.help    = {'Directory for IOI.mat.'}'; 
-
-IOImatCopy         = cfg_branch;
-IOImatCopy.tag     = 'IOImatCopy';
-IOImatCopy.name    = 'Create new directory and copy IOI structure there'; 
-IOImatCopy.val     = {NewIOIdir};
-IOImatCopy.help    = {'Create new directory and copy IOI structure there.'}';
-  
-%Common to most modules: for creating a new directory and copying IOI.mat
-IOImatCopyChoice           = cfg_choice;
-IOImatCopyChoice.name      = 'Choose IOI copy method';
-IOImatCopyChoice.tag       = 'IOImatCopyChoice';
-IOImatCopyChoice.values    = {IOImatOverwrite IOImatCopy}; 
-IOImatCopyChoice.val       = {IOImatOverwrite}; 
-IOImatCopyChoice.help      = {'Choose whether to overwrite the IOI.mat structure'
-            'or to create a new directory'
-            'and copy the IOI.mat structure there'}'; 
+IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('ROI');
         
 ArrayROI         = cfg_entry;
 ArrayROI.name    = 'Size of array of ROIs';

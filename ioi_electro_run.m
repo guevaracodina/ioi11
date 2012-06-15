@@ -7,12 +7,7 @@ try
         IOImat = job.IOImat{SubjIdx};
         load(IOImat);
         %select a subset of sessions
-        if isfield(job.session_choice,'select_sessions')
-            all_sessions = 0;
-            selected_sessions = job.session_choice.select_sessions.selected_sessions;
-        else
-            all_sessions = 1;
-        end
+        [all_sessions selected_sessions] = ioi_get_sessions(job);
         
         if ~isfield(IOI.res,'electroOK') || job.force_redo
             [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});

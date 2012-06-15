@@ -51,21 +51,7 @@ SCKSparams.name    = 'SCKS parameters';
 SCKSparams.val     = {SCKSnoise State_annealing Parameter_annealing}; 
 SCKSparams.help    = {'User-controlled SCKS parameters.'};
 
-generate_figures      = cfg_menu;
-generate_figures.tag  = 'generate_figures';
-generate_figures.name = 'Show figures';
-generate_figures.labels = {'Yes','No'};
-generate_figures.values = {1,0};
-generate_figures.val  = {0};
-generate_figures.help = {'Show figures. When selecting this option, the figures will stay opened after the code has completed.'}';
-
-save_figures      = cfg_menu;
-save_figures.tag  = 'save_figures';
-save_figures.name = 'Save figures';
-save_figures.labels = {'Yes','No'};
-save_figures.values = {1,0};
-save_figures.val  = {0};
-save_figures.help = {'Save figures.'}';
+[generate_figures save_figures] = ioi_cfg_generate_figures;
 
 % Executable Branch
 SCKS1      = cfg_exbranch;       % This is the branch that has information about how to run this module

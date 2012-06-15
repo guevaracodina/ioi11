@@ -1,3 +1,4 @@
+function mask1 = ioi_filtdown_cfg
 function filtdown1 = ioi_filtdown_cfg
 % Graphical interface configuration function for ioi_filtdown_cfg
 %_______________________________________________________________________
@@ -6,22 +7,16 @@ function filtdown1 = ioi_filtdown_cfg
 %______________________________________________________________________
 
 
-IOImat          = cfg_files; %Select IOI.mat for this subject 
+<<<<<<< .mineIOImat = ioi_cfg_IOImat(1);
+redo1 = ioi_cfg_redo(0);
+=======IOImat          = cfg_files; %Select IOI.mat for this subject 
 IOImat.name     = 'Select IOI.mat'; % The displayed name
 IOImat.tag      = 'IOImat';       %file names
 IOImat.filter   = 'mat';
 IOImat.ufilter  = '^IOI.mat$';    
 IOImat.num      = [1 Inf];     % Number of inputs required 
 IOImat.help     = {'Select IOI.mat for this subject.'}; % help text displayed
-
-redo1           = cfg_menu;
-redo1.tag       = 'force_redo';
-redo1.name      = 'Force processing';
-redo1.labels    = {'False','True'};
-redo1.values    = {0,1};
-redo1.val       = {0};
-redo1.help      = {'Force redoing this processing even when it has been done already'};
-
+>>>>>>> .theirs
 % Select mask file
 maskFile            = cfg_files;
 maskFile.tag        = 'maskFile';

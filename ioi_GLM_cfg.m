@@ -3,67 +3,11 @@ function glm1 = ioi_GLM_cfg
 % Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
 
-IOImat         = cfg_files; %Select NIRS.mat for this subject 
-IOImat.name    = 'Select IOI.mat'; % The displayed name
-IOImat.tag     = 'IOImat';       %file names
-IOImat.filter = 'mat';
-IOImat.ufilter = '^IOI.mat$';    
-IOImat.num     = [1 Inf];     % Number of inputs required 
-IOImat.help    = {'Select IOImat dependency if available. '
-    'Otherwise, for each subject, select IOI.mat.'}'; % help text displayed
+IOImat = ioi_cfg_IOImat(1);
+redo1 = ioi_cfg_redo(0);
+ROImat = ioi_cfg_ROImat(1);
+IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('IGLM');
 
-ROImat         = cfg_files; 
-ROImat.name    = 'Select ROI.mat'; 
-ROImat.tag     = 'ROImat';      
-ROImat.filter = 'mat';
-ROImat.ufilter = '^ROI.mat$';
-ROImat.val     = {''};
-ROImat.num     = [1 Inf];    
-ROImat.help    = {'Optional: Select ROImat. This allows working on ROI data even'
-    'if the paths are not correct in IOI.mat. If not specified, the ROI.mat '
-    'specified in IOI.mat will be used.'
-    'If several subjects are run, and ROImat is explicitly specified, then'
-    'it should be specified for all subjects, in the same order as the list of IOI.mat'}'; 
-
-redo1      = cfg_menu;
-redo1.tag  = 'force_redo';
-redo1.name = 'Force processing';
-redo1.labels = {'False','True'};
-redo1.values = {0,1};
-redo1.val  = {0};
-redo1.help = {'Force redoing this processing even when it has been done already.'
-    'Use option below for treatment of previous ROIs.'}';
-
-IOImatOverwrite         = cfg_branch;
-IOImatOverwrite.tag     = 'IOImatOverwrite';
-IOImatOverwrite.name    = 'Overwrite IOI.mat structure'; 
-IOImatOverwrite.help    = {'Will not copy IOI structure.'
-            'This will write over the previous NIRS.mat'}';
-
-NewIOIdir         = cfg_entry;
-NewIOIdir.name    = 'New directory for IOI.mat';
-NewIOIdir.tag     = 'NewIOIdir';       
-NewIOIdir.strtype = 's';
-NewIOIdir.val{1}    = 'GLM';
-NewIOIdir.num     = [1 Inf];     
-NewIOIdir.help    = {'Directory for IOI.mat.'}'; 
-
-IOImatCopy         = cfg_branch;
-IOImatCopy.tag     = 'IOImatCopy';
-IOImatCopy.name    = 'Create new directory and copy IOI structure there'; 
-IOImatCopy.val     = {NewIOIdir};
-IOImatCopy.help    = {'Create new directory and copy IOI structure there.'}';
-        
-%Common to most modules: for creating a new directory and copying IOI.mat
-IOImatCopyChoice           = cfg_choice;
-IOImatCopyChoice.name      = 'Choose IOI copy method';
-IOImatCopyChoice.tag       = 'IOImatCopyChoice';
-IOImatCopyChoice.values    = {IOImatOverwrite IOImatCopy}; 
-IOImatCopyChoice.val       = {IOImatOverwrite}; 
-IOImatCopyChoice.help      = {'Choose whether to overwrite the IOI.mat structure'
-            'or to create a new directory'
-            'and copy the IOI.mat structure there'}'; 
- 
 %%%%%%%%%%%%%%%%%%%%
 
 colorbar_max         = cfg_entry;
@@ -159,59 +103,8 @@ save_beta_mse.values = {1,0};
 save_beta_mse.val  = {0};
 save_beta_mse.help = {'Save detailed output as maps, such as betas, MSE.'}';
 
-%%%%%%%%%%%%%%%%%%%%%%
-
-remove_stims      = cfg_entry;
-remove_stims.tag  = 'remove_stims';
-remove_stims.name = 'Enter an array of time points (in seconds) from which to exclude onsets';
-remove_stims.strtype  = 'r';
-remove_stims.num = [0 Inf];
-remove_stims.val{1} = '';
-remove_stims.help = {'Onsets occuring within 1 second of any specified' 
-    'time point will be removed from the averaging.'
-    'The list of onsets kept will be written to IOI.mat'}';
-
-use_stims      = cfg_entry;
-use_stims.tag  = 'use_stims';
-use_stims.name = 'Enter an array of stim onset numbers to use';
-use_stims.strtype  = 'r';
-use_stims.num = [0 Inf];
-use_stims.val{1} = '';
-use_stims.help = {'Use this option to specify, for example,'
-    'that the first 10 onsets should be used, by entering the array 1:10.'
-    'These onset numbers will be used for each onset type.'
-    'Leave array empty in order to use all available onsets, except possibly '
-    'some that are excluded by other mechanisms.'}';
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-all_ROIs         = cfg_branch;
-all_ROIs.tag     = 'all_ROIs';
-all_ROIs.name    = 'All ROIs';
-all_ROIs.val     = {};
-all_ROIs.help    = {'All ROIs will be processed'};
-
-selected_ROIs      = cfg_entry;
-selected_ROIs.tag  = 'selected_ROIs';
-selected_ROIs.name = 'Enter list of ROIs';
-selected_ROIs.strtype  = 'r';
-selected_ROIs.num = [1 Inf];
-selected_ROIs.val{1} = 1;
-selected_ROIs.help = {'Enter list of ROIs to process.'};
-
-select_ROIs         = cfg_branch;
-select_ROIs.tag     = 'select_ROIs';
-select_ROIs.name    = 'Select ROIs';
-select_ROIs.val     = {selected_ROIs};
-select_ROIs.help    = {'Choose some ROIs to be processed'};
-
-ROI_choice        = cfg_choice;
-ROI_choice.name   = 'Choose ROI selection method';
-ROI_choice.tag    = 'ROI_choice';
-ROI_choice.values = {all_ROIs,select_ROIs};
-ROI_choice.val    = {all_ROIs};
-ROI_choice.help   = {'Choose ROI selection method'}';
-
+ROI_choice = ioi_cfg_ROI_choice;
 %%%%%%%%%%%%%%%%%%%%%%
 shrinkage_choice = ioi_cfg_shrinkage_choice;
 %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -238,33 +131,7 @@ data_selection_choice.help   = {'Choose data selection method'}';
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-all_sessions         = cfg_branch;
-all_sessions.tag     = 'all_sessions';
-all_sessions.name    = 'All sessions';
-all_sessions.val     = {};
-all_sessions.help    = {'All good enough sessions will be processed'};
-
-selected_sessions      = cfg_entry;
-selected_sessions.tag  = 'selected_sessions';
-selected_sessions.name = 'Enter list of sessions';
-selected_sessions.strtype  = 'r';
-selected_sessions.num = [1 Inf];
-selected_sessions.val{1} = 1;
-selected_sessions.help = {'Enter list of sessions to process.'};
-
-select_sessions         = cfg_branch;
-select_sessions.tag     = 'select_sessions';
-select_sessions.name    = 'Select sessions';
-select_sessions.val     = {selected_sessions};
-select_sessions.help    = {'Choose some sessions to be processed'};
-
-session_choice        = cfg_choice;
-session_choice.name   = 'Choose session selection method';
-session_choice.tag    = 'session_choice';
-session_choice.values = {all_sessions,select_sessions};
-session_choice.val    = {all_sessions};
-session_choice.help   = {'Choose session selection method'}';
+session_choice = ioi_cfg_session_choice;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---------------------------------------------------------------------
@@ -531,42 +398,9 @@ volt.labels = {
 volt.values = {1 2};
 volt.val    = {1};
 
-hpf_butter_freq         = cfg_entry; 
-hpf_butter_freq.name    = 'Cutoff frequency for HPF';
-hpf_butter_freq.tag     = 'hpf_butter_freq';       
-hpf_butter_freq.strtype = 'r';
-hpf_butter_freq.num     = [1 1];     
-hpf_butter_freq.val     = {0.01};
-hpf_butter_freq.help    = {'Enter cutoff frequency in Hz for Butterworth HPF.'};
+hpf_butter = ioi_cfg_hpf_butter(1,0.01,3);
 
-hpf_butter_order         = cfg_entry; 
-hpf_butter_order.name    = 'Order of Butterworth HPF';
-hpf_butter_order.tag     = 'hpf_butter_order';       
-hpf_butter_order.strtype = 'r';
-hpf_butter_order.num     = [1 1];     
-hpf_butter_order.val     = {3};
-hpf_butter_order.help    = {'Enter order of Butterworth HPF (preferred value = 3).'};
 
-hpf_butter_On         = cfg_branch;
-hpf_butter_On.tag     = 'hpf_butter_On';
-hpf_butter_On.name    = 'Butterworth HP filter';
-hpf_butter_On.val     = {hpf_butter_freq hpf_butter_order}; 
-hpf_butter_On.help    = {'Butterworth high-pass filter.'};
-
-hpf_butter_Off         = cfg_branch;
-hpf_butter_Off.tag     = 'hpf_butter_Off';
-hpf_butter_Off.name    = 'HP filter off';
-hpf_butter_Off.val     = {}; 
-hpf_butter_Off.help    = {'High pass filter turned off.'};
-
-hpf_butter      = cfg_choice;
-hpf_butter.tag  = 'hpf_butter';
-hpf_butter.name = 'Butterworth High Pass Filter';
-hpf_butter.values = {hpf_butter_On hpf_butter_Off};
-hpf_butter.val = {hpf_butter_On};
-hpf_butter.help = {'Choose whether to include a Butterworth High Pass Filter.'
-        'Parameters are: order (e.g. 3) and frequency (e.g. 0.01 Hz)'}';
- 
 % ---------------------------------------------------------------------
 % lpf Low-pass filter
 % ---------------------------------------------------------------------
@@ -586,72 +420,12 @@ lpf_gauss.help    = {'Specify properties of Gaussian filter'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-include_flow      = cfg_menu;
-include_flow.tag  = 'include_flow';
-include_flow.name = 'Include flow';
-include_flow.labels = {'Yes','No'};
-include_flow.values = {1,0};
-include_flow.val  = {0};
-include_flow.help = {'Include flow.'}';
+IC = ioi_cfg_include_colors(0,1,1,1,0);
 
-include_HbT      = cfg_menu;
-include_HbT.tag  = 'include_HbT';
-include_HbT.name = 'Include HbT';
-include_HbT.labels = {'Yes','No'};
-include_HbT.values = {1,0};
-include_HbT.val  = {1};
-include_HbT.help = {'Include HbT.'}';
-
-include_OD      = cfg_menu;
-include_OD.tag  = 'include_OD';
-include_OD.name = 'Include optical intensity';
-include_OD.labels = {'Yes','No'};
-include_OD.values = {1,0};
-include_OD.val  = {0};
-include_OD.help = {'If the optical intensity images (Green, Red, Yellow) have not been deleted'
-    'previously, choose whether to generate movies for these colors.'}';
-
-include_HbO      = cfg_menu;
-include_HbO.tag  = 'include_HbO';
-include_HbO.name = 'Include HbO';
-include_HbO.labels = {'Yes','No'};
-include_HbO.values = {1,0};
-include_HbO.val  = {1};
-include_HbO.help = {'Include HbO.'}';
-
-include_HbR      = cfg_menu;
-include_HbR.tag  = 'include_HbR';
-include_HbR.name = 'Include HbR';
-include_HbR.labels = {'Yes','No'};
-include_HbR.values = {1,0};
-include_HbR.val  = {1};
-include_HbR.help = {'Include HbR.'}';
-
-generate_figures      = cfg_menu;
-generate_figures.tag  = 'generate_figures';
-generate_figures.name = 'Show figures';
-generate_figures.labels = {'Yes','No'};
-generate_figures.values = {1,0};
-generate_figures.val  = {0};
-generate_figures.help = {'Show figures. When selecting this option, the figures will stay opened after the code has completed.'}';
-
-save_figures      = cfg_menu;
-save_figures.tag  = 'save_figures';
-save_figures.name = 'Save figures';
-save_figures.labels = {'Yes','No'};
-save_figures.values = {1,0};
-save_figures.val  = {1};
-save_figures.help = {'Save figures.'}';
-
-which_onset_type         = cfg_entry; 
-which_onset_type.name    = 'Enter onset type(s) to use';
-which_onset_type.tag     = 'which_onset_type';       
-which_onset_type.strtype = 'r';
-which_onset_type.num     = [1 Inf];     
-which_onset_type.val     = {1};
-which_onset_type.help    = {'Enter which onset type(s) (relevant if there are'
-    'several onset types.'
-    'Enter (a list of) ordinal number(s) indicating the desired onset type(s) in the onset type list.'}';
+which_onset_type = ioi_cfg_which_onset_type;
+remove_stims = ioi_cfg_remove_stims;
+use_stims = ioi_cfg_use_stims;
+[generate_figures save_figures] = ioi_cfg_generate_figures;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -661,8 +435,9 @@ glm1.name = 'GLM (images or ROIs)';             % The display name
 glm1.tag  = 'glm1'; %Very important: tag is used when calling for execution
 glm1.val  = {IOImat data_selection_choice redo1 IOImatCopyChoice ...
      session_choice ...
-     bases volt use_onset_amplitudes hpf_butter lpf_gauss vasomotion_choice include_flow ...
-     include_HbT include_HbO include_HbR include_OD which_onset_type ...
+     bases volt use_onset_amplitudes hpf_butter lpf_gauss vasomotion_choice ...
+     IC.include_flow IC.include_HbT IC.include_HbO IC.include_HbR IC.include_OD ...
+     which_onset_type ...
      remove_stims use_stims override_colorbar save_beta_mse ...
      generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 glm1.prog = @ioi_GLM_run;  % A function handle that will be called with the harvested job to run the computation

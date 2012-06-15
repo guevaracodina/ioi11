@@ -1,30 +1,10 @@
 function out = ioi_cine2D_run(job)
-%select a subset of sessions
-if isfield(job.session_choice,'select_sessions')
-    all_sessions = 0;
-    selected_sessions = job.session_choice.select_sessions.selected_sessions;
-else
-    all_sessions = 1;
-end
-%LPF
-if isfield(job.lpf_choice,'lpf_gauss_On')
-    LPF.lpf_gauss_On = 1;
-    LPF.fwhm1 = job.lpf_choice.lpf_gauss_On.fwhm1;
-else
-    LPF.lpf_gauss_On = 0;
-end
-if isfield(job.shrinkage_choice,'configuration_shrink')
-    shrink_x = job.shrinkage_choice.configuration_shrink.shrink_x;
-    shrink_y = job.shrinkage_choice.configuration_shrink.shrink_y;
-    try
-        force_shrink_recompute = job.shrinkage_choice.configuration_shrink.force_shrink_recompute;
-    catch
-        force_shrink_recompute = 0;
-    end
-    shrinkage_choice = 1;
-else
-    shrinkage_choice = 0;
-end
+[all_sessions selected_sessions] = ioi_get_sessions(job);
+%filters
+HPF = ioi_get_HPF(job);
+LPF = ioi_get_LPF(job);
+[shrinkage_choice SH] = ioi_get_shrinkage_choice(job);
+
 if isfield(job.stim_choice,'manual_onsets')
     onset_time = job.stim_choice.manual_onsets.onset_time;
     manual_stim_choice = 1;
@@ -33,16 +13,7 @@ else
 end
 which_onset_type = job.which_onset_type;
 group_onset_types = job.group_onset_types; %overrides which_onset_type
-include_OD = job.include_OD;
-include_flow = job.include_flow;
-include_HbT = job.include_HbT;
-try 
-    include_HbR = job.include_HbR;
-    include_HbO = job.include_HbO;
-catch
-    include_HbR = 1;
-    include_HbO = 1;
-end
+IC = job.IC;
 
 normalize_choice = job.normalize_choice;
 show_movie = job.show_movie;
@@ -76,7 +47,7 @@ for SubjIdx=1:length(job.IOImat)
             cineDir = fullfile(newDir,dir_cine);
             if ~exist(cineDir,'dir'), mkdir(cineDir); end
             %get stimulation information - Careful, here onset duration is ignored!
-            if include_HbT
+            if IC.include_HbT
                 if ~isfield(IOI.color,'HbT')
                     IOI.color.HbT = 'T';
                     IOI.color.eng = [IOI.color.eng IOI.color.HbT];
@@ -99,64 +70,10 @@ for SubjIdx=1:length(job.IOImat)
                     onset_time = 2*IOI.dev.TR;
                 end
             end
+            
             %save shrunk images
             if shrinkage_choice
-                for s1=1:length(IOI.sess_res)
-                    if all_sessions || sum(s1==selected_sessions)
-                        try
-                            IOI.sess_shrunk{s1};
-                            %shrunk images
-                            if force_shrink_recompute
-                                %force recompute
-                                IOI.sess_shrunk{1000}; %will certainly break
-                            end
-                        catch
-                            for c1=1:length(IOI.color.eng)
-                                doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT,include_HbR,include_HbO);
-                                fname0 = {};
-                                if doColor
-                                    if IOI.color.eng(c1) == 'T'
-                                        doHbT = 1;
-                                        [cHbR cHbO] = ioi_find_HbRHbO(IOI,s1);
-                                        fname = IOI.sess_res{s1}.fname{cHbR};
-                                        fname2 = IOI.sess_res{s1}.fname{cHbO};
-                                        fname2 = ioi_check_fname(fname2,dir_ioimat,s1);
-                                    else
-                                        doHbT = 0;
-                                        fname = IOI.sess_res{s1}.fname{c1};
-                                    end
-                                    fname = ioi_check_fname(fname,dir_ioimat,s1);
-                                    for f1=1:length(fname)
-                                        V = spm_vol(fname{f1});
-                                        Y = spm_read_vols(V);
-                                        if doHbT
-                                            V2 = spm_vol(fname2{f1});
-                                            Y2 = spm_read_vols(V2);
-                                            Y = Y+Y2;
-                                        end
-                                        %shrink by averaging
-                                        Y0 = zeros(size(Y(1:shrink_x:(end-shrink_x+1),1:shrink_y:(end-shrink_y+1),:)));
-                                        for i1=1:shrink_x
-                                            for i2=1:shrink_y
-                                                Y0 = Y0 + Y(i1:shrink_x:(end-shrink_x+i1),i2:shrink_y:(end-shrink_y+i2),:);
-                                            end
-                                        end
-                                        %save images
-                                        [dir0 fil0 ext0] = fileparts(fname{f1});
-                                        if doHbT
-                                            fil0 = regexprep(fil0, ['_' IOI.color.HbR '_'],  ['_' IOI.color.HbT '_']);
-                                        end
-                                        tn = fullfile(dir0,[fil0 '_shrunk_' int2str(shrink_x) 'x' int2str(shrink_y) ext0]);
-                                        fname0 = [fname0; tn];
-                                        Y0 = reshape(Y0,[size(Y0,1) size(Y0,2) 1 size(Y0,3)]);
-                                        ioi_save_nifti(Y0,tn,[1 1 1]);
-                                    end
-                                end
-                                IOI.sess_shrunk{s1}.fname{c1} = fname0;
-                            end
-                        end
-                    end
-                end
+                IOI = ioi_save_shrunk_images(IOI,job,SH,dir_ioimat);
             end
             %Overwrite IOI
             save(IOImat,'IOI');
@@ -217,20 +134,20 @@ for SubjIdx=1:length(job.IOImat)
                     %loop over colors
                     for c1=1:length(IOI.color.eng);
                         do_color = 0;
-                        if include_flow
+                        if IC.include_flow
                             if isfield(IOI.color,'flow')
                                 if IOI.color.eng(c1)==IOI.color.flow
                                     do_color = 1;
                                 end
                             end
                         end
-                        if include_OD
+                        if IC.include_OD
                             if any(IOI.color.eng(c1)==[IOI.color.green IOI.color.red IOI.color.yellow])
                                 do_color = 1;
                             end
                         end
                         if isfield(IOI.color,'HbO')
-                            if include_HbT
+                            if IC.include_HbT
                                 HbColors = [IOI.color.HbO IOI.color.HbR IOI.color.HbT];
                             else
                                 HbColors = [IOI.color.HbO IOI.color.HbR];

@@ -1,12 +1,8 @@
 function IOI = ioi_msread_new_format(IOI,job)
 try
     %select a subset of sessions
-    if isfield(job.session_choice,'select_sessions')
-        all_sessions = 0;
-        selected_sessions = job.session_choice.select_sessions.selected_sessions;
-    else
-        all_sessions = 1;
-    end
+    [all_sessions selected_sessions] = ioi_get_sessions(job);
+
     if isfield(job.treatment_mode,'expeditive_mode')
         expedite = 1;
     else

@@ -1,32 +1,8 @@
 function out = ioi_extract_roi_time_series_run(job)
 %select a subset of sessions
-if isfield(job.session_choice,'select_sessions')
-    all_sessions = 0;
-    selected_sessions = job.session_choice.select_sessions.selected_sessions;
-else
-    all_sessions = 1;
-end
-%select a subset of ROIs
-if isfield(job.ROI_choice,'select_ROIs')
-    all_ROIs = 0;
-    selected_ROIs = job.ROI_choice.select_ROIs.selected_ROIs;
-else
-    all_ROIs = 1;
-end
-try
-    include_HbR = job.include_HbR;
-    include_HbO = job.include_HbO;
-    include_OD = job.include_OD;
-    include_flow = job.include_flow;
-    include_HbT = job.include_HbT;
-catch
-    include_HbR = 1;
-    include_HbO = 1;
-    include_OD = 0;
-    include_flow =0;
-    include_HbT = 1;
-end
-    
+[all_sessions selected_sessions] = ioi_get_sessions(job);
+[all_ROIs selected_ROIs] = ioi_get_ROIs(job);
+IC = job.IC;
 %just a one time bug
 error_in_mask_create_roi = 0;
 
@@ -109,7 +85,7 @@ for SubjIdx=1:length(job.IOImat)
                     if all_sessions || sum(s1==selected_sessions)
                         %loop over available colors
                         for c1=1:length(IOI.sess_res{s1}.fname)
-                            doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT,include_HbR,include_HbO);
+                            doColor = ioi_doColor(IOI,c1,IC);
                             if doColor
                                 colorOK = 1; msg_ColorNotOK = 1; tmp_mask_done = 0;
                                 if ~(IOI.color.eng(c1)==IOI.color.laser)
