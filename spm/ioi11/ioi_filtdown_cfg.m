@@ -1,4 +1,3 @@
-function mask1 = ioi_filtdown_cfg
 function filtdown1 = ioi_filtdown_cfg
 % Graphical interface configuration function for ioi_filtdown_cfg
 %_______________________________________________________________________
@@ -7,16 +6,8 @@ function filtdown1 = ioi_filtdown_cfg
 %______________________________________________________________________
 
 
-<<<<<<< .mineIOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_cfg_IOImat(1);
 redo1 = ioi_cfg_redo(0);
-=======IOImat          = cfg_files; %Select IOI.mat for this subject 
-IOImat.name     = 'Select IOI.mat'; % The displayed name
-IOImat.tag      = 'IOImat';       %file names
-IOImat.filter   = 'mat';
-IOImat.ufilter  = '^IOI.mat$';    
-IOImat.num      = [1 Inf];     % Number of inputs required 
-IOImat.help     = {'Select IOI.mat for this subject.'}; % help text displayed
->>>>>>> .theirs
 % Select mask file
 maskFile            = cfg_files;
 maskFile.tag        = 'maskFile';
