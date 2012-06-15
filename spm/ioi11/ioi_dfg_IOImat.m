@@ -1,4 +1,4 @@
-function IOImat = ioi_cfg_IOImat(minIOI)
+function IOImat = ioi_dfg_IOImat(minIOI)
 IOImat         = cfg_files; %Select NIRS.mat for this subject 
 IOImat.name    = 'Select IOI.mat'; % The displayed name
 IOImat.tag     = 'IOImat';       %file names

@@ -3,7 +3,7 @@ function [IOImat ROImat redo1 IOImatCopyChoice IC ...
     lpf_choice hpf_butter] = ioi_common_fields_SCKS_HDM(dir_name)
 
 IOImat = ioi_cfg_IOImat(1);
-redo1 = ioi_cfg_redo(0);
+redo1 = ioi_dfg_redo(0);
 ROImat = ioi_cfg_ROImat(1);
 IOImatCopyChoice = ioi_cfg_IOImatCopyChoice(dir_name);
 IC = ioi_cfg_include_colors(0,1,1,1,1);

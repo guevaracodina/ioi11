@@ -1,4 +1,4 @@
-function hpf_butter = ioi_cfg_hpf_butter(choose_on,freq,order)
+function hpf_butter = ioi_dfg_hpf_butter(choose_on,freq,order)
 hpf_butter_freq         = cfg_entry; 
 hpf_butter_freq.name    = 'Cutoff frequency for HPF';
 hpf_butter_freq.tag     = 'hpf_butter_freq';       

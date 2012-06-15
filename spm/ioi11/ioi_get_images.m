@@ -1,4 +1,10 @@
 function Ya = ioi_get_images(IOI,frames,c1,s1,dir_ioimat,shrinkage_choice)
+%IOI: the IOI structure
+%frames: the frames to be loaded
+%c1: the color desired
+%s1: the session number
+%dir_ioimat: directory for the IOI.mat of interest
+%shrinkage_choice: whether the images should be shrunk for faster speed
 try
     Ya = [];
     doHbT = 0;
@@ -164,5 +170,4 @@ try
 catch exception
     disp(exception.identifier)
     disp(exception.stack(1))
-end
 end

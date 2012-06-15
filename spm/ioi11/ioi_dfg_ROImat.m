@@ -1,4 +1,4 @@
-function ROImat = ioi_cfg_ROImat(minROI)
+function ROImat = ioi_dfg_ROImat(minROI)
 ROImat         = cfg_files; 
 ROImat.name    = 'Select ROI.mat'; 
 ROImat.tag     = 'ROImat';      

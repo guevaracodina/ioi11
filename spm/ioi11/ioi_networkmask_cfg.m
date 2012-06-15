@@ -7,7 +7,7 @@ function mask1 = ioi_networkmask_cfg
 
 
 IOImat = ioi_cfg_IOImat(1);
-redo1 = ioi_cfg_redo(0);
+redo1 = ioi_dfg_redo(0);
 
 % Executable Branch
 mask1      = cfg_exbranch;       % This is the branch that has information about how to run this module

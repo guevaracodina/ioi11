@@ -7,7 +7,7 @@ function conc1 = ioi_concentrations_cfg
 % ---------------------------------------------------------------------
 
 IOImat = ioi_cfg_IOImat(1);
-redo1 = ioi_cfg_redo(0);
+redo1 = ioi_dfg_redo(0);
 
 pathlength1      = cfg_menu;
 pathlength1.tag  = 'pathlength';
