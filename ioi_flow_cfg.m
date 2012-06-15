@@ -7,7 +7,7 @@ function flow1 = ioi_flow_cfg
 % ---------------------------------------------------------------------
 
 IOImat = ioi_cfg_IOImat(1);
-redo1 = ioi_cfg_redo(0);
+redo1 = ioi_dfg_redo(0);
 
 inttime1      = cfg_entry;
 inttime1.tag  = 'integ_time';

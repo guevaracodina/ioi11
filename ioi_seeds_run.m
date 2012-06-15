@@ -91,7 +91,7 @@ for SubjIdx=1:length(job.IOImat)
                     if oneMoreSeed
 %                         h1 = figure('Position',[20 50 3*size(im_anat,1) 3*size(im_anat,2)]);
                         h1 = spm_figure('GetWin', 'Graphics');
-                        spm_figure('Clear' 'Graphics');
+                        spm_figure('Clear', 'Graphics');
                         cmap = contrast(im_anat .* full_mask);
                         imagesc(im_anat .* full_mask);
                         colormap(cmap); 

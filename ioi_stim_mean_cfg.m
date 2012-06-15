@@ -4,7 +4,7 @@ function stim_mean1 = ioi_stim_mean_cfg
 %                    École Polytechnique de Montréal
 
 IOImat = ioi_cfg_IOImat(1);
-redo1 = ioi_cfg_redo(0);
+redo1 = ioi_dfg_redo(0);
 ROImat = ioi_cfg_ROImat(1);
 IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('Mean');
 ROI_choice = ioi_cfg_ROI_choice;

@@ -1,4 +1,4 @@
-function [window_before window_after window_offset] = ioi_cfg_window(bef,aft,ofst)
+function [window_before window_after window_offset] = ioi_dfg_window(bef,aft,ofst)
 window_before      = cfg_entry;
 window_before.tag  = 'window_before';
 window_before.name = 'Window before';

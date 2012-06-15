@@ -1,4 +1,4 @@
-function redo1 = ioi_cfg_redo(deflt)
+function redo1 = ioi_dfg_redo(deflt)
 redo1      = cfg_menu;
 redo1.tag  = 'force_redo';
 redo1.name = 'Force processing';

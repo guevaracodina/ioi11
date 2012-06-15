@@ -7,7 +7,7 @@ function filtdown1 = ioi_filtdown_cfg
 
 
 IOImat = ioi_cfg_IOImat(1);
-redo1 = ioi_cfg_redo(0);
+redo1 = ioi_dfg_redo(0);
 % Select mask file
 maskFile            = cfg_files;
 maskFile.tag        = 'maskFile';

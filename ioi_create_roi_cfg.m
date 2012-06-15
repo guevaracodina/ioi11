@@ -7,7 +7,7 @@ function create_roi1 = ioi_create_roi_cfg
 % ---------------------------------------------------------------------
 
 IOImat = ioi_cfg_IOImat(1);
-redo1 = ioi_cfg_redo(0);
+redo1 = ioi_dfg_redo(0);
 ROImat = ioi_cfg_ROImat(1); %oops needs to be done for this unit
 %(specifically: allow user to specify a new location for ROIs)
 

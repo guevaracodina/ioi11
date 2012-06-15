@@ -3,7 +3,7 @@ function extract_roi1 = ioi_extract_roi_time_series_cfg
 % Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
 IOImat = ioi_cfg_IOImat(1);
-redo1 = ioi_cfg_redo(0);
+redo1 = ioi_dfg_redo(0);
 IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('Series');
 ROI_choice = ioi_cfg_ROI_choice;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
