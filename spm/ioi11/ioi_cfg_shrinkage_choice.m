@@ -28,7 +28,6 @@ force_shrink_recompute.help = {'This option is used when images of one shrunk si
     'usually select the option to place the new IOI.mat in a new folder, so that the old IOI.mat'
     'can still be used to access the first set of shrunk images.'}';
 
-
 configuration_shrink         = cfg_branch;
 configuration_shrink.tag     = 'configuration_shrink';
 configuration_shrink.name    = 'Configuration shrinkage';

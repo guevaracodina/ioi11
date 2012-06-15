@@ -1,23 +1,9 @@
 function IOI = ioi_save_shrunk_images(IOI,job,SH,dir_ioimat)
 shrink_x = SH.shrink_x;
 shrink_y = SH.shrink_y;
-include_flow = job.include_flow;
-include_OD = job.include_OD;
-include_HbT = job.include_HbT;
+IC = job.IC;
 %select a subset of sessions
-if isfield(job.session_choice,'select_sessions')
-    all_sessions = 0;
-    selected_sessions = job.session_choice.select_sessions.selected_sessions;
-else
-    all_sessions = 1;
-end
-try
-    include_HbR = job.include_HbR;
-    include_HbO = job.include_HbO;
-catch
-    include_HbR = 1;
-    include_HbO = 1;
-end
+[all_sessions selected_sessions] = ioi_get_sessions(job);
 
 for s1=1:length(IOI.sess_res)
     if all_sessions || sum(s1==selected_sessions)
@@ -30,7 +16,7 @@ for s1=1:length(IOI.sess_res)
             end
         catch
             for c1=1:length(IOI.color.eng)
-                doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT,include_HbR,include_HbO);
+                doColor = ioi_doColor(IOI,c1,IC);
                 fname0 = {};
                 if doColor
                     if IOI.color.eng(c1) == 'T'

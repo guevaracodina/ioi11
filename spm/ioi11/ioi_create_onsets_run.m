@@ -43,12 +43,7 @@ if isfield(job.stim_choice,'manual_stims')
 end
 
 %select a subset of sessions
-if isfield(job.session_choice,'select_sessions')
-    all_sessions = 0;
-    selected_sessions = job.session_choice.select_sessions.selected_sessions;
-else
-    all_sessions = 1;
-end
+[all_sessions selected_sessions] = ioi_get_sessions(job);
 
 elDir = job.elDir;
 %Big loop over subjects

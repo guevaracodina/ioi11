@@ -4,37 +4,19 @@ function out = ioi_GLM_on_ROI_run(job)
 volt = job.volt;
 %bases
 bases = job.bases;
-%HPF filter
-if isfield(job.hpf_butter,'hpf_butter_On')
-    hpf_butter_On = 1;
-    hpf_butter_freq = job.hpf_butter.hpf_butter_On.hpf_butter_freq;
-    hpf_butter_order = job.hpf_butter.hpf_butter_On.hpf_butter_order;
-else
-    hpf_butter_On = 0;
-end
-%LPF filter
-fwhm = job.lpf_gauss.fwhm1;
 
-%select a subset of sessions
-if isfield(job.session_choice,'select_sessions')
-    all_sessions = 0;
-    selected_sessions = job.session_choice.select_sessions.selected_sessions;
-else
-    all_sessions = 1;
-end
-%select a subset of ROIs
-if isfield(job.ROI_choice,'select_ROIs')
-    all_ROIs = 0;
-    selected_ROIs = job.ROI_choice.select_ROIs.selected_ROIs;
-else
-    all_ROIs = 1;
-end
+[all_sessions selected_sessions] = ioi_get_sessions(job);
+[all_ROIs selected_ROIs] = ioi_get_ROIs(job);
+%filters
+HPF = ioi_get_HPF(job);
+LPF = ioi_get_LPF(job);
+
 save_figures = job.save_figures;
 generate_figures = job.generate_figures;
 figure_show_stim = 0; %job.figure_show_stim;
 figure_rebase_to_zero_at_stim = job.figure_rebase_to_zero_at_stim;
 use_onset_amplitudes = job.use_onset_amplitudes;
-include_flow = job.include_flow;
+include_flow = job.IC.include_flow; %other colors not yet supported
 show_mse = job.show_mse;
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
@@ -99,13 +81,13 @@ for SubjIdx=1:length(job.IOImat)
                                 if ~isempty(X)
                                     IOI.X{s1}.X0 = X;
                                     %filter X - HPF
-                                    if hpf_butter_On
-                                        X = ButterHPF(1/IOI.dev.TR,hpf_butter_freq,hpf_butter_order,X);
+                                    if HPF.hpf_butter_On
+                                        X = ButterHPF(1/IOI.dev.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,X);
                                     end
                                     %add a constant
                                     X = [X ones(size(X,1),1)];
                                     %get K for low pass filtering:
-                                    K = get_K(1:size(X,1),fwhm,IOI.dev.TR);
+                                    K = get_K(1:size(X,1),LPF.fwhm1,IOI.dev.TR);
                                     %filter X - LPF
                                     %calculate X inverse
                                     %Xm = pinv(X);
@@ -153,8 +135,8 @@ for SubjIdx=1:length(job.IOImat)
                                             if ~isempty(y)
                                                 %yu = y; %unfiltered data
                                                 %filtering of the data: HPF
-                                                if hpf_butter_On
-                                                    y =  ButterHPF(1/IOI.dev.TR,hpf_butter_freq,hpf_butter_order,y);
+                                                if HPF.hpf_butter_On
+                                                    y =  ButterHPF(1/IOI.dev.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,y);
                                                 end
                                                 %yu = y;
                                                 %filtering of the data: LPF (Gaussian), forward

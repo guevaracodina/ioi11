@@ -1,11 +1,6 @@
 function out = ioi_explore_stim_run(job)
 %select a subset of sessions
-if isfield(job.session_choice,'select_sessions')
-    all_sessions = 0;
-    selected_sessions = job.session_choice.select_sessions.selected_sessions;
-else
-    all_sessions = 1;
-end
+[all_sessions selected_sessions] = ioi_get_sessions(job);
 %select onsets
 if isfield(job.stim_choice,'electro_stims')
     electro_stims = 1;
@@ -13,13 +8,6 @@ else
     %default stims
     electro_stims = 0;
 end
-% %select nature of stimulation data to be used for averaging
-% if isfield(job.ROI_choice,'select_ROIs')
-%     all_ROIs = 0;
-%     selected_ROIs = job.ROI_choice.select_ROIs.selected_ROIs;
-% else
-%     all_ROIs = 1;
-% end
 %save_figures
 save_figures = job.save_figures;
 normalize_choice = job.normalize_choice;
@@ -38,14 +26,7 @@ for SubjIdx=1:length(job.IOImat)
         window_after = round(job.window_after/IOI.dev.TR);
         window_before = round(job.window_before/IOI.dev.TR);
         
-        %         if ~isfield(IOI.res,'seriesOK')
-        %             disp(['No extracted time series available for subject ' int2str(SubjIdx) ' ... skipping series extraction']);
-        %         else
-        %if ~isfield(IOI.res,'meanOK') || job.force_redo
-            [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-%             if isfield(IOI.ROI,'ROIfname')
-%                 load(IOI.ROI.ROIfname)
-%             end
+             [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
             if save_figures
                 dir_fig = fullfile(dir_ioimat,'fig');
                 if ~exist(dir_fig,'dir'),mkdir(dir_fig);end

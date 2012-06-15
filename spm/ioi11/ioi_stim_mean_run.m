@@ -1,34 +1,10 @@
 function out = ioi_stim_mean_run(job)
-%select a subset of sessions
-if isfield(job.session_choice,'select_sessions')
-    all_sessions = 0;
-    selected_sessions = job.session_choice.select_sessions.selected_sessions;
-else
-    all_sessions = 1;
-end
+[all_sessions selected_sessions] = ioi_get_sessions(job);
+[all_ROIs selected_ROIs] = ioi_get_ROIs(job);
+%filters
+HPF = ioi_get_HPF(job);
+LPF = ioi_get_LPF(job);
 
-%select nature of stimulation data to be used for averaging
-if isfield(job.ROI_choice,'select_ROIs')
-    all_ROIs = 0;
-    selected_ROIs = job.ROI_choice.select_ROIs.selected_ROIs;
-else
-    all_ROIs = 1;
-end
-%HPF
-if isfield(job.hpf_butter,'hpf_butter_On')
-    HPF.hpf_butter_On = 1;
-    HPF.hpf_butter_freq = job.hpf_butter.hpf_butter_On.hpf_butter_freq;
-    HPF.hpf_butter_order = job.hpf_butter.hpf_butter_On.hpf_butter_order;
-else
-    HPF.hpf_butter_On = 0;
-end
-%LPF
-if isfield(job.lpf_choice,'lpf_gauss_On')
-    LPF.lpf_gauss_On = 1;
-    LPF.fwhm1 = job.lpf_choice.lpf_gauss_On.fwhm1;
-else
-    LPF.lpf_gauss_On = 0;
-end
 if isfield(job,'remove_stims')
     rmi = job.remove_stims;
 else
@@ -48,24 +24,16 @@ remove_segment_drift = job.remove_segment_drift;
 fit_3_gamma = job.fit_3_gamma;
 %Other options
 generate_global = job.generate_global;
-include_OD = job.include_OD;
-include_flow = job.include_flow;
-include_HbT = job.include_HbT;
-extract_HRF = job.extract_HRF;
+IC = job.IC; %colors to include
+
 %save_figures
 save_figures = job.save_figures;
 generate_figures = job.generate_figures;
 normalize_choice = job.normalize_choice;
 include_nlinfit = job.include_nlinfit;
-try
-    window_offset = job.window_offset;
-catch
-    window_offset = 0;
-    job.window_offset = 0;
-end
-%get size of windows before and after stimulation to average on, in data points
-
+window_offset = job.window_offset;
 add_error_bars = job.add_error_bars;
+
 for SubjIdx=1:length(job.IOImat)
     try
         tic
@@ -114,57 +82,14 @@ for SubjIdx=1:length(job.IOImat)
                 
                 %get stimulation information - Careful, here onset duration is ignored!
                 Ns = length(IOI.sess_res);
-                if include_HbT
+                if IC.include_HbT
                     if ~isfield(IOI.color,'HbT')
                         IOI.color.HbT = 'T';
                         IOI.color.eng = [IOI.color.eng IOI.color.HbT];
                     end
                 end
-                Nc = length(IOI.color.eng);
-                %loop over sessions
-                for s1=1:Ns
-                    if all_sessions || sum(s1==selected_sessions)
-                        tmp_onsets = IOI.sess_res{s1}.onsets;
-                        %remove onsets
-                        if ~isempty(rmi)
-                            IOI.rmi = rmi;
-                            for k0=1:length(tmp_onsets)
-                                r_onsets = round(tmp_onsets{k0});
-                                k_onsets = [];
-                                rem_onsets = [];
-                                for u0=1:length(r_onsets)
-                                    if any(r_onsets(u0) == rmi) || any(r_onsets(u0) == rmi + 1) ||  any(r_onsets(u0) == rmi - 1)
-                                        %skip this onset
-                                        rem_onsets = [rem_onsets tmp_onsets{k0}(u0)];
-                                    else
-                                        k_onsets = [k_onsets tmp_onsets{k0}(u0)];
-                                    end
-                                end
-                                IOI.onsets_kept{s1}{k0} = k_onsets;
-                                IOI.onsets_removed{s1}{k0} = rem_onsets;
-                                tmp_onsets{k0} = k_onsets;
-                            end
-                        else
-                            IOI.onsets_kept{s1} = tmp_onsets;
-                            IOI.onsets_removed{s1} = '';
-                        end
-                        if ~isempty(ust)
-                            for k0=1:length(tmp_onsets)
-                                try
-                                    tmp_onsets{k0} = tmp_onsets{k0}(ust);
-                                catch
-                                    disp('Problem restricting number of onsets to user-specified -- probably not enough onsets');
-                                end
-                                try
-                                    if ~any(k0 == job.which_onset_type)
-                                        tmp_onsets{k0} = ''; %remove these onset types
-                                    end
-                                end
-                            end
-                        end
-                        onsets_list{s1} = tmp_onsets;
-                    end
-                end              
+                %restric onsets
+                [IOI onsets_list] = ioi_restrict_onsets(IOI,job,rmi,ust);             
                 
                 %Check whether there is the same number of onset types in
                 %each session; this is a
@@ -208,7 +133,7 @@ for SubjIdx=1:length(job.IOImat)
                 %Keep track later (for GLM) of which ROIs were selected
                 IOI.res.mean.selected_ROIs = selected_ROIs;
                 Nroi = length(selected_ROIs);
-                Nc = length(IOI.color.eng);
+                %Nc = length(IOI.color.eng);
                 
                 if global_M
                     GSa = cell(Nroi,PGM);
@@ -255,7 +180,7 @@ for SubjIdx=1:length(job.IOImat)
                                         ka2 = 0; %counter of skipped segments after onsets
                                         %loop over sessions
                                         try
-                                            if include_HbT
+                                            if IC.include_HbT
                                                 if IOI.color.eng(c1) == IOI.color.HbT
                                                     tmp_d = ROI{r1}{s1,IOI.color.eng == IOI.color.HbO}+...
                                                         ROI{r1}{s1,IOI.color.eng == IOI.color.HbR};
@@ -493,16 +418,16 @@ for SubjIdx=1:length(job.IOImat)
                                         if all_sessions || sum(s1==selected_sessions)
                                             d = Ma{r2,m1}{c1,s1};
                                             if ~isempty(d)
-                                                F{r2,m1}{c1,s1} = ioi_nlinfit(x,d,IOI.color,c1,include_flow);
-                                                H{r2,m1}{c1,s1} = ioi_HDM_hrf(IOI.dev.TR,x,d,IOI.color,c1,include_flow,fit_3_gamma);
+                                                F{r2,m1}{c1,s1} = ioi_nlinfit(x,d,IOI.color,c1,IC.include_flow);
+                                                H{r2,m1}{c1,s1} = ioi_HDM_hrf(IOI.dev.TR,x,d,IOI.color,c1,IC.include_flow,fit_3_gamma);
                                             end
                                         end
                                     end
                                     if global_M
                                         d = GMa{r2,m1}{c1};
                                         if ~isempty(d)
-                                            GF{r2,m1}{c1} = ioi_nlinfit(x,d,IOI.color,c1,include_flow);
-                                            GH{r2,m1}{c1,s1} = ioi_HDM_hrf(IOI.dev.TR,x,d,IOI.color,c1,include_flow,fit_3_gamma);
+                                            GF{r2,m1}{c1} = ioi_nlinfit(x,d,IOI.color,c1,IC.include_flow);
+                                            GH{r2,m1}{c1,s1} = ioi_HDM_hrf(IOI.dev.TR,x,d,IOI.color,c1,IC.include_flow,fit_3_gamma);
                                         end
                                     end
                                 end
@@ -531,20 +456,20 @@ for SubjIdx=1:length(job.IOImat)
                         lp3{IOI.color.eng==IOI.color.HbR} = 'HbR'; %HbR
                         ctotal = [ctotal find(IOI.color.eng==IOI.color.HbO) ...
                             find(IOI.color.eng==IOI.color.HbR)];
-                        if include_HbT
+                        if IC.include_HbT
                             lp2{IOI.color.eng==IOI.color.HbT} = 'g';
                             lp3{IOI.color.eng==IOI.color.HbT} = 'HbT'; %HbT
                             ctotal = [ctotal find(IOI.color.eng==IOI.color.HbT)];
                         end
                     end
-                    if include_flow
+                    if IC.include_flow
                         if isfield(IOI.color,'flow')
                             lp2{IOI.color.eng==IOI.color.flow} = 'k'; %Flow
                             lp3{IOI.color.eng==IOI.color.flow} = 'Flow';
                             ctotal = [ctotal find(IOI.color.eng==IOI.color.flow)];
                         end
                     end
-                    if include_OD
+                    if IC.include_OD
                         %to do...
                     end
                     %global figures, only for 1st onset

@@ -24,13 +24,7 @@ for SubjIdx=1:length(job.IOImat)
     try
         tic
         clear IOI
-        %select a subset of sessions
-        if isfield(job.session_choice,'select_sessions')
-            all_sessions = 0;
-            selected_sessions = job.session_choice.select_sessions.selected_sessions;
-        else
-            all_sessions = 1;
-        end
+        [all_sessions selected_sessions] = ioi_get_sessions(job);
         
         %Load IOI.mat information
         IOImat = job.IOImat{SubjIdx};

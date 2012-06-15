@@ -4,24 +4,10 @@ function out = ioi_GLM_run(job)
 volt = job.volt;
 %bases
 bases = job.bases;
-%HPF filter
-if isfield(job.hpf_butter,'hpf_butter_On')
-    hpf_butter_On = 1;
-    hpf_butter_freq = job.hpf_butter.hpf_butter_On.hpf_butter_freq;
-    hpf_butter_order = job.hpf_butter.hpf_butter_On.hpf_butter_order;
-else
-    hpf_butter_On = 0;
-end
-%LPF filter
-fwhm = job.lpf_gauss.fwhm1;
-
-%select a subset of sessions
-if isfield(job.session_choice,'select_sessions')
-    all_sessions = 0;
-    selected_sessions = job.session_choice.select_sessions.selected_sessions;
-else
-    all_sessions = 1;
-end
+[all_sessions selected_sessions] = ioi_get_sessions(job);
+%filters
+HPF = ioi_get_HPF(job);
+LPF = ioi_get_LPF(job);
 if isfield(job,'remove_stims')
     rmi = job.remove_stims;
 else
@@ -36,13 +22,7 @@ end
 if isfield(job.data_selection_choice,'ROI_mode')
     image_mode = 0;
     ROImat = job.data_selection_choice.ROI_mode.ROImat;
-    %select a subset of ROIs
-    if isfield(job.data_selection_choice.ROI_mode.ROI_choice,'select_ROIs')
-        all_ROIs = 0;
-        selected_ROIs = job.data_selection_choice.ROI_mode.ROI_choice.select_ROIs.selected_ROIs;
-    else
-        all_ROIs = 1;
-    end
+    [all_ROIs selected_ROIs] = ioi_get_ROIs(job);
     show_mse = job.data_selection_choice.ROI_mode.show_mse;
     figure_show_stim = job.data_selection_choice.ROI_mode.figure_show_stim;
     figure_rebase_to_zero_at_stim = job.data_selection_choice.ROI_mode.figure_rebase_to_zero_at_stim;
@@ -56,18 +36,8 @@ else
         spatial_LPF = 0;
     end
 end
-if isfield(job.data_selection_choice.image_mode.shrinkage_choice,'configuration_shrink')
-    SH.shrink_x = job.data_selection_choice.image_mode.shrinkage_choice.configuration_shrink.shrink_x;
-    SH.shrink_y = job.data_selection_choice.image_mode.shrinkage_choice.configuration_shrink.shrink_y;
-    try
-        SH.force_shrink_recompute = job.data_selection_choice.image_mode.shrinkage_choice.configuration_shrink.force_shrink_recompute;
-    catch
-        SH.force_shrink_recompute = 0;
-    end
-    shrinkage_choice = 1;
-else
-    shrinkage_choice = 0;
-end
+[shrinkage_choice SH] = ioi_get_shrinkage_choice(job);
+
 if isfield(job.vasomotion_choice,'vasomotion_on')
     vasomotion_on = 1;
 else
@@ -85,17 +55,8 @@ save_figures = job.save_figures;
 generate_figures = job.generate_figures;
 save_beta_mse = job.save_beta_mse;
 use_onset_amplitudes = job.use_onset_amplitudes;
-include_flow = job.include_flow;
-include_OD = job.include_OD;
-include_HbT = job.include_HbT;
+IC = job.IC; %colors to include
 
-try
-    include_HbR = job.include_HbR;
-    include_HbO = job.include_HbO;
-catch
-    include_HbR = 1;
-    include_HbO = 1;
-end
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
@@ -125,7 +86,7 @@ for SubjIdx=1:length(job.IOImat)
                         dir_fig = fullfile(newDir,'fig');
                         if ~exist(dir_fig,'dir'),mkdir(dir_fig);end
                     end
-                    if include_HbT
+                    if IC.include_HbT
                         if ~isfield(IOI.color,'HbT')
                             IOI.color.HbT = 'T';
                             IOI.color.eng = [IOI.color.eng IOI.color.HbT];
@@ -164,7 +125,7 @@ for SubjIdx=1:length(job.IOImat)
                             
                             %loop over available colors
                             for c1=1:length(IOI.color.eng) %(IOI.sess_res{s1}.fname)
-                                doColor = ioi_doColor(IOI,c1,include_OD,include_flow,include_HbT,include_HbR,include_HbO);
+                                doColor = ioi_doColor(IOI,c1,IC);
                                 if doColor
                                     %select design matrix
                                     if ~iscell(Xtmp)
@@ -188,13 +149,13 @@ for SubjIdx=1:length(job.IOImat)
                                         end
                                         IOI.X{s1}.X0 = X;
                                         %filter X - HPF
-                                        if hpf_butter_On
-                                            X = ButterHPF(1/IOI.dev.TR,hpf_butter_freq,hpf_butter_order,X);
+                                        if HPF.hpf_butter_On
+                                            X = ButterHPF(1/IOI.dev.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,X);
                                         end
                                         %add a constant
                                         X = [X ones(size(X,1),1)];
                                         %get K for low pass filtering:
-                                        K = get_K(1:size(X,1),fwhm,IOI.dev.TR);
+                                        K = get_K(1:size(X,1),LPF.fwhm1,IOI.dev.TR);
                                         %filter X - LPF
                                         %calculate X inverse
                                         %Xm = pinv(X);
@@ -248,8 +209,8 @@ for SubjIdx=1:length(job.IOImat)
                                             %reshape
                                             y = reshape(y,nx*ny,nt);
                                             %GLM on whole images
-                                            if hpf_butter_On
-                                                y =  ButterHPF(1/IOI.dev.TR,hpf_butter_freq,hpf_butter_order,y);
+                                            if HPF.hpf_butter_On
+                                                y =  ButterHPF(1/IOI.dev.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,y);
                                             end
                                             
                                             %filtering of the data: LPF (Gaussian), forward
@@ -361,8 +322,8 @@ for SubjIdx=1:length(job.IOImat)
                                                     if ~isempty(y)
                                                         %yu = y; %unfiltered data
                                                         %filtering of the data: HPF
-                                                        if hpf_butter_On
-                                                            y =  ButterHPF(1/IOI.dev.TR,hpf_butter_freq,hpf_butter_order,y);
+                                                        if HPF.hpf_butter_On
+                                                            y =  ButterHPF(1/IOI.dev.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,y);
                                                         end
                                                         %yu = y;
                                                         %filtering of the data: LPF (Gaussian), forward
@@ -425,7 +386,7 @@ for SubjIdx=1:length(job.IOImat)
                             lp3{IOI.color.eng==IOI.color.HbO} = 'HbO'; %HbO
                             lp3{IOI.color.eng==IOI.color.HbR} = 'HbR'; %HbR
                         end
-                        if include_flow
+                        if IC.include_flow
                             if isfield(IOI.color,'flow')
                                 lp2{IOI.color.eng==IOI.color.flow} = 'k'; %Flow
                                 ctotal = [ctotal find(IOI.color.eng==IOI.color.flow)];
@@ -445,7 +406,7 @@ for SubjIdx=1:length(job.IOImat)
                                         %loop over available colors
                                         for c1=1:ctotal; %length(IOI.sess_res{s1}.fname) %or ctotal
                                             try
-                                                if include_flow || ~(IOI.color.eng(c1)==IOI.color.flow)
+                                                if IC.include_flow || ~(IOI.color.eng(c1)==IOI.color.flow)
                                                     if ~isempty(IOI.X{s1}.yf{r1,c1})
                                                         if length(IOI.X{s1}.X)>1
                                                             X = IOI.X{s1}.X{c1};

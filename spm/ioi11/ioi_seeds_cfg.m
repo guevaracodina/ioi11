@@ -14,8 +14,18 @@ IOImat.ufilter = '^IOI.mat$';
 IOImat.num     = [1 Inf];     % Number of inputs required 
 IOImat.help    = {'Select IOImat dependency if available. '
     'Otherwise, for each subject, select IOI.mat.'}'; % help text displayed
+IOImat         = cfg_files; %Select IOI.mat for this subject 
+IOImat.name    = 'Select IOI.mat'; % The displayed name
+IOImat.tag     = 'IOImat';       %file names
+IOImat.filter  = 'mat';
+IOImat.ufilter = '^IOI.mat$';    
+IOImat.num     = [1 Inf];     % Number of inputs required 
+IOImat.help    = {'Select IOImat dependency if available. '
+    'Otherwise, for each subject, select IOI.mat.'}'; % help text displayed
+IOImat = ioi_cfg_IOImat(1);
+redo1 = ioi_cfg_redo(0);
 
-redo1           = cfg_menu;
+<<<<<<< .mine=======redo1           = cfg_menu;
 redo1.tag       = 'force_redo';
 redo1.name      = 'Force processing';
 redo1.labels    = {'False','True'};
@@ -24,7 +34,7 @@ redo1.val       = {0};
 redo1.help      = {'Force redoing this processing even when it has been done already.'
     'Use option below for treatment of previous seeds.'}';
 
-RemovePreviousSeed          = cfg_menu;
+>>>>>>> .theirsRemovePreviousSeed          = cfg_menu;
 RemovePreviousSeed.tag      = 'RemovePreviousSeed';
 RemovePreviousSeed.name     = 'Treatment of previous seeds';
 RemovePreviousSeed.labels   = {'Keep','Remove'};
@@ -42,7 +52,8 @@ select_names.val    = {1};
 select_names.help   = {'Option for user to manually enter names of seeds.'
     'If No is selected, seed names will be a number (enumeration).'}';
 
-IOImatOverwrite         = cfg_branch;
+<<<<<<< .mineIOImatCopyChoice = ioi_cfg_IOImatCopyChoice('Seeds');
+=======IOImatOverwrite         = cfg_branch;
 IOImatOverwrite.tag     = 'IOImatOverwrite';
 IOImatOverwrite.name    = 'Overwrite IOI.mat structure'; 
 IOImatOverwrite.help    = {'Will not copy IOI structure.'
@@ -71,7 +82,7 @@ IOImatCopyChoice.val    = {IOImatOverwrite};
 IOImatCopyChoice.help   = {'Choose whether to overwrite the IOI.mat structure'
             'or to create a new directory'
             'and copy the IOI.mat structure there'}'; 
-        
+>>>>>>> .theirs        
 ArraySeed           = cfg_entry;
 ArraySeed.name      = 'Size of array of seeds';
 ArraySeed.tag       = 'ArraySeed';       

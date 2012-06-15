@@ -38,21 +38,10 @@ try
     temp_ImNum = 80;
     nzero_padding = 5;
     
-    %shrinkage configuration
-    if isfield(job.configuration_choice,'configuration_shrink')
-        shrinkageOn = 1;
-        shrink_x = job.configuration_choice.configuration_shrink.shrink_x;
-        shrink_y = job.configuration_choice.configuration_shrink.shrink_y;
-    else
-        shrinkageOn = 0;
-    end
+    [shrinkage_choice SH] = ioi_get_shrinkage_choice(job);
     %select a subset of sessions
-    if isfield(job.session_choice,'select_sessions')
-        all_sessions = 0;
-        selected_sessions = job.session_choice.select_sessions.selected_sessions;
-    else
-        all_sessions = 1;
-    end
+    [all_sessions selected_sessions] = ioi_get_sessions(job);
+
     %choose saving mode
     memmapfileOn = job.memmapfileOn;
     try
@@ -265,7 +254,7 @@ try
             end
         end
         IOI.sess_res = sess_res;
-        IOI.res.shrinkageOn = shrinkageOn;
+        IOI.res.shrinkageOn = shrinkage_choice;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %3- Anatomical image
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -310,7 +299,7 @@ try
                             %be done later, in the flow calculation module
                             vx = [1 1 1];
                             if ~(str1 == str_laser) %OK to shrink contrast images though
-                                if shrinkageOn
+                                if shrinkage_choice
                                     %Keep same whatever value of PartialRedo2
                                     IOI.res.shrink_x=shrink_x;
                                     IOI.res.shrink_y=shrink_y;

@@ -3,27 +3,9 @@ function hdm_all1 = ioi_HDM_all_cfg
 % Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
 
-IOImat         = cfg_files; %Select NIRS.mat for this subject 
-IOImat.name    = 'Select IOI.mat'; % The displayed name
-IOImat.tag     = 'IOImat';       %file names
-IOImat.filter = 'mat';
-IOImat.ufilter = '^IOI.mat$';    
-IOImat.num     = [1 Inf];     % Number of inputs required 
-IOImat.help    = {'Select IOImat dependency if available. '
-    'Otherwise, for each subject, select IOI.mat.'}'; % help text displayed
-
-ROImat         = cfg_files; 
-ROImat.name    = 'Select ROI.mat'; 
-ROImat.tag     = 'ROImat';      
-ROImat.filter = 'mat';
-ROImat.ufilter = '^ROI.mat$';
-ROImat.val     = {''};
-ROImat.num     = [1 Inf];    
-ROImat.help    = {'Optional: Select ROImat. This allows working on ROI data even'
-    'if the paths are not correct in IOI.mat. If not specified, the ROI.mat '
-    'specified in IOI.mat will be used.'
-    'If several subjects are run, and ROImat is explicitly specified, then'
-    'it should be specified for all subjects, in the same order as the list of IOI.mat'}'; 
+IOImat = ioi_cfg_IOImat(1);
+redo1 = ioi_cfg_redo(0);
+ROImat = ioi_cfg_ROImat(1);
 
 show_mse      = cfg_menu;
 show_mse.tag  = 'show_mse';
@@ -32,15 +14,6 @@ show_mse.labels = {'Yes','No'};
 show_mse.values = {1,0};
 show_mse.val  = {1};
 show_mse.help = {'Show mean square error on figures.'}';
-
-redo1      = cfg_menu;
-redo1.tag  = 'force_redo';
-redo1.name = 'Force processing';
-redo1.labels = {'False','True'};
-redo1.values = {0,1};
-redo1.val  = {0};
-redo1.help = {'Force redoing this processing even when it has been done already.'
-    'Use option below for treatment of previous ROIs.'}';
 
 only_display      = cfg_menu;
 only_display.tag  = 'only_display';
@@ -54,89 +27,8 @@ only_display.help = {'Only display:'
     'It will overwrite figures, so if you want to keep the old figures, you should rename'
     'the old figure directory, but not the location where the HDM.mat structure is located.'}';
 
-IOImatOverwrite         = cfg_branch;
-IOImatOverwrite.tag     = 'IOImatOverwrite';
-IOImatOverwrite.name    = 'Overwrite IOI.mat structure'; 
-IOImatOverwrite.help    = {'Will not copy IOI structure.'
-            'This will write over the previous NIRS.mat'}';
-
-        
-NewIOIdir         = cfg_entry;
-NewIOIdir.name    = 'New directory for IOI.mat';
-NewIOIdir.tag     = 'NewIOIdir';       
-NewIOIdir.strtype = 's';
-NewIOIdir.val{1}  = 'HDM';
-NewIOIdir.num     = [1 Inf];     
-NewIOIdir.help    = {'Directory for IOI.mat.'}'; 
-
-IOImatCopy         = cfg_branch;
-IOImatCopy.tag     = 'IOImatCopy';
-IOImatCopy.name    = 'Create new directory and copy IOI structure there'; 
-IOImatCopy.val     = {NewIOIdir};
-IOImatCopy.help    = {'Create new directory and copy IOI structure there.'}';
-        
-%Common to most modules: for creating a new directory and copying IOI.mat
-IOImatCopyChoice           = cfg_choice;
-IOImatCopyChoice.name      = 'Choose IOI copy method';
-IOImatCopyChoice.tag       = 'IOImatCopyChoice';
-IOImatCopyChoice.values    = {IOImatOverwrite IOImatCopy}; 
-IOImatCopyChoice.val       = {IOImatOverwrite}; 
-IOImatCopyChoice.help      = {'Choose whether to overwrite the IOI.mat structure'
-            'or to create a new directory'
-            'and copy the IOI.mat structure there'}'; 
-
-includeHbR      = cfg_menu;
-includeHbR.tag  = 'includeHbR';
-includeHbR.name = 'Include HbR';
-includeHbR.labels = {'Yes','No'};
-includeHbR.values = {1,0};
-includeHbR.val  = {1};
-includeHbR.help = {'Include modality HbR.'}';
-
-includeHbT      = cfg_menu;
-includeHbT.tag  = 'includeHbT';
-includeHbT.name = 'Include HbT';
-includeHbT.labels = {'Yes','No'};
-includeHbT.values = {1,0};
-includeHbT.val  = {1};
-includeHbT.help = {'Include modality HbT.'}';
-
-includeFlow      = cfg_menu;
-includeFlow.tag  = 'includeFlow';
-includeFlow.name = 'Include Flow';
-includeFlow.labels = {'Yes','No'};
-includeFlow.values = {1,0};
-includeFlow.val  = {1};
-includeFlow.help = {'Include modality Flow.'}';
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Hemodynamic Model choice
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% BF         = cfg_branch;
-% BF.tag     = 'BF';
-% BF.name    = 'Buxton-Friston';
-% BF.val     = {};
-% BF.help    = {'Buxton-Friston'};
-% 
-% ZM         = cfg_branch;
-% ZM.tag     = 'ZM';
-% ZM.name    = 'Zheng-Mayhew';
-% ZM.val     = {};
-% ZM.help    = {'Zheng-Mayhew'};
-% 
-% BH         = cfg_branch;
-% BH.tag     = 'BH';
-% BH.name    = 'Boas-Huppert';
-% BH.val     = {};
-% BH.help    = {'Boas-Huppert'};
-% 
-% Model_Choice        = cfg_choice;
-% Model_Choice.name   = 'Choose hemodynamic model';
-% Model_Choice.tag    = 'Model_Choice';
-% Model_Choice.values = {BF,ZM,BH};
-% Model_Choice.val    = {BF};
-% Model_Choice.help   = {'Choose hemodynamic model'}';
+IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('HDM');
+IC = ioi_cfg_include_colors(0,1,1,1,0);
 
 PhysioModel_Choice        = cfg_menu;
 PhysioModel_Choice.name   = 'Choose hemodynamic model';
@@ -146,32 +38,7 @@ PhysioModel_Choice.values = {0,1,2};
 PhysioModel_Choice.val    = {0};
 PhysioModel_Choice.help   = {'Choose hemodynamic model'}';
 
-all_ROIs         = cfg_branch;
-all_ROIs.tag     = 'all_ROIs';
-all_ROIs.name    = 'All ROIs';
-all_ROIs.val     = {};
-all_ROIs.help    = {'All ROIs will be processed'};
-
-selected_ROIs      = cfg_entry;
-selected_ROIs.tag  = 'selected_ROIs';
-selected_ROIs.name = 'Enter list of ROIs';
-selected_ROIs.strtype  = 'r';
-selected_ROIs.num = [1 Inf];
-selected_ROIs.val{1} = 1;
-selected_ROIs.help = {'Enter list of ROIs to process.'};
-
-select_ROIs         = cfg_branch;
-select_ROIs.tag     = 'select_ROIs';
-select_ROIs.name    = 'Select ROIs';
-select_ROIs.val     = {selected_ROIs};
-select_ROIs.help    = {'Choose some ROIs to be processed'};
-
-ROI_choice        = cfg_choice;
-ROI_choice.name   = 'Choose ROI selection method';
-ROI_choice.tag    = 'ROI_choice';
-ROI_choice.values = {all_ROIs,select_ROIs};
-ROI_choice.val    = {all_ROIs};
-ROI_choice.help   = {'Choose ROI selection method'}';
+ROI_choice = ioi_cfg_ROI_choice;
 
 image_mode         = cfg_branch;
 image_mode.tag     = 'image_mode';
@@ -193,33 +60,7 @@ data_selection_choice.val    = {image_mode};
 data_selection_choice.help   = {'Choose data selection method'}';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-all_sessions         = cfg_branch;
-all_sessions.tag     = 'all_sessions';
-all_sessions.name    = 'All sessions';
-all_sessions.val     = {};
-all_sessions.help    = {'All good enough sessions will be processed'};
-
-selected_sessions      = cfg_entry;
-selected_sessions.tag  = 'selected_sessions';
-selected_sessions.name = 'Enter list of sessions';
-selected_sessions.strtype  = 'r';
-selected_sessions.num = [1 Inf];
-selected_sessions.val{1} = 1;
-selected_sessions.help = {'Enter list of sessions to process.'};
-
-select_sessions         = cfg_branch;
-select_sessions.tag     = 'select_sessions';
-select_sessions.name    = 'Select sessions';
-select_sessions.val     = {selected_sessions};
-select_sessions.help    = {'Choose some sessions to be processed'};
-
-session_choice        = cfg_choice;
-session_choice.name   = 'Choose session selection method';
-session_choice.tag    = 'session_choice';
-session_choice.values = {all_sessions,select_sessions};
-session_choice.val    = {all_sessions};
-session_choice.help   = {'Choose session selection method'}';
+session_choice = ioi_cfg_session_choice;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -231,43 +72,8 @@ use_onset_amplitudes.values = {1,0};
 use_onset_amplitudes.val  = {0};
 use_onset_amplitudes.help = {'Use onset amplitudes as parameters to weigh the hemodynamic response.'}';
 
+hpf_butter = ioi_cfg_hpf_butter(1,0.01,3);
 
-hpf_butter_freq         = cfg_entry; 
-hpf_butter_freq.name    = 'Cutoff frequency for HPF';
-hpf_butter_freq.tag     = 'hpf_butter_freq';       
-hpf_butter_freq.strtype = 'r';
-hpf_butter_freq.num     = [1 1];     
-hpf_butter_freq.val     = {0.01};
-hpf_butter_freq.help    = {'Enter cutoff frequency in Hz for Butterworth HPF.'};
-
-hpf_butter_order         = cfg_entry; 
-hpf_butter_order.name    = 'Order of Butterworth HPF';
-hpf_butter_order.tag     = 'hpf_butter_order';       
-hpf_butter_order.strtype = 'r';
-hpf_butter_order.num     = [1 1];     
-hpf_butter_order.val     = {3};
-hpf_butter_order.help    = {'Enter order of Butterworth HPF (preferred value = 3).'};
-
-hpf_butter_On         = cfg_branch;
-hpf_butter_On.tag     = 'hpf_butter_On';
-hpf_butter_On.name    = 'Butterworth HP filter';
-hpf_butter_On.val     = {hpf_butter_freq hpf_butter_order}; 
-hpf_butter_On.help    = {'Butterworth high-pass filter.'};
-
-hpf_butter_Off         = cfg_branch;
-hpf_butter_Off.tag     = 'hpf_butter_Off';
-hpf_butter_Off.name    = 'HP filter off';
-hpf_butter_Off.val     = {}; 
-hpf_butter_Off.help    = {'High pass filter turned off.'};
-
-hpf_butter      = cfg_choice;
-hpf_butter.tag  = 'hpf_butter';
-hpf_butter.name = 'Butterworth High Pass Filter';
-hpf_butter.values = {hpf_butter_On hpf_butter_Off};
-hpf_butter.val = {hpf_butter_On};
-hpf_butter.help = {'Choose whether to include a Butterworth High Pass Filter.'
-        'Parameters are: order (e.g. 3) and frequency (e.g. 0.01 Hz)'}';
-  
 % ---------------------------------------------------------------------
 % lpf Low-pass filter
 % ---------------------------------------------------------------------
@@ -454,21 +260,7 @@ show_normalized_parameters.values = {1,0};
 show_normalized_parameters.val  = {0};
 show_normalized_parameters.help = {'Show normalized values parameters.'}';
 
-generate_figures      = cfg_menu;
-generate_figures.tag  = 'generate_figures';
-generate_figures.name = 'Show figures';
-generate_figures.labels = {'Yes','No'};
-generate_figures.values = {1,0};
-generate_figures.val  = {0};
-generate_figures.help = {'Show figures. When selecting this option, the figures will stay opened after the code has completed.'}';
-
-save_figures      = cfg_menu;
-save_figures.tag  = 'save_figures';
-save_figures.name = 'Save figures';
-save_figures.labels = {'Yes','No'};
-save_figures.values = {1,0};
-save_figures.val  = {0};
-save_figures.help = {'Save figures.'}';
+[generate_figures save_figures] = ioi_cfg_generate_figures;
 
 plot_algebraic_CMRO2      = cfg_menu;
 plot_algebraic_CMRO2.tag  = 'plot_algebraic_CMRO2';
@@ -571,7 +363,7 @@ hdm_all1      = cfg_exbranch;       % This is the branch that has information ab
 hdm_all1.name = 'HDM (images or ROIs)';             % The display name
 hdm_all1.tag  = 'hdm_all1'; %Very important: tag is used when calling for execution
 hdm_all1.val  = {IOImat data_selection_choice redo1 only_display IOImatCopyChoice session_choice ...
-     PhysioModel_Choice use_onset_amplitudes includeHbR includeHbT includeFlow ... 
+     PhysioModel_Choice use_onset_amplitudes IC ... 
      hpf_butter lpf_choice baseline_choice EM_parameters show_normalized_parameters ...
      generate_figures save_figures plot_algebraic_CMRO2 simuOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 hdm_all1.prog = @ioi_HDM_all_run;  % A function handle that will be called with the harvested job to run the computation
