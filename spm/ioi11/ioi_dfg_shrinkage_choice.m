@@ -1,4 +1,4 @@
-function shrinkage_choice = ioi_cfg_shrinkage_choice
+function shrinkage_choice = ioi_dfg_shrinkage_choice
 
 shrink_x      = cfg_entry;
 shrink_x.tag  = 'shrink_x';

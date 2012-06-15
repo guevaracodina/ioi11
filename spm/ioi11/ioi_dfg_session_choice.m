@@ -1,4 +1,4 @@
-function session_choice = ioi_cfg_session_choice
+function session_choice = ioi_dfg_session_choice
 all_sessions         = cfg_branch;
 all_sessions.tag     = 'all_sessions';
 all_sessions.name    = 'All sessions';

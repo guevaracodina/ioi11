@@ -58,7 +58,7 @@ MemoryManagementMenu.val  = {1};
 MemoryManagementMenu.help = {'Load all images at once (faster but requires'
     'more memory, or load one image at a time, to compute concentrations.'}';
 
-session_choice = ioi_cfg_session_choice;
+session_choice = ioi_dfg_session_choice;
 
 %%%%%%%%%%%%%%%%%%%%
 % Normalization choice

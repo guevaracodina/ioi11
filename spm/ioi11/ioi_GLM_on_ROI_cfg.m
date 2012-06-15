@@ -9,9 +9,9 @@ ROImat = ioi_dfg_ROImat(1);
 IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('GLM');
 
 %%%%%%%%%%%%%%%%%%%%%%
-ROI_choice = ioi_cfg_ROI_choice;
+ROI_choice = ioi_dfg_ROI_choice;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-session_choice = ioi_cfg_session_choice;
+session_choice = ioi_dfg_session_choice;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ---------------------------------------------------------------------
@@ -300,7 +300,7 @@ lpf_gauss.help    = {'Specify properties of Gaussian filter'};
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 IC = ioi_dfg_include_colors(0,1,1,1,0);
-[generate_figures save_figures] = ioi_cfg_generate_figures;
+[generate_figures save_figures] = ioi_dfg_generate_figures;
 
 figure_show_stim      = cfg_menu;
 figure_show_stim.tag  = 'figure_show_stim';

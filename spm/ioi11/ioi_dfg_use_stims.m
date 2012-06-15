@@ -1,4 +1,4 @@
-function use_stims = ioi_cfg_use_stims
+function use_stims = ioi_dfg_use_stims
 use_stims      = cfg_entry;
 use_stims.tag  = 'use_stims';
 use_stims.name = 'Enter an array of stim onset numbers to use';

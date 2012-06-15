@@ -8,7 +8,7 @@ redo1 = ioi_dfg_redo(0);
 IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('IMean');
 
 %%%%%%%%%%%%%%%%%%%%%%%
-session_choice = ioi_cfg_session_choice;
+session_choice = ioi_dfg_session_choice;
 [window_before window_after window_offset] = ioi_dfg_window(3,20,0);
 
 normalize_choice      = cfg_menu;
@@ -22,10 +22,10 @@ normalize_choice.help = {'Normalization choice. In one test,'
     'when using time zero as the baseline, compared to taking '
     'an average (median) over the window before.'}';
 
-which_onset_type = ioi_cfg_which_onset_type;
-remove_stims = ioi_cfg_remove_stims;
-use_stims = ioi_cfg_use_stims;
-[generate_figures save_figures] = ioi_cfg_generate_figures;
+which_onset_type = ioi_dfg_which_onset_type;
+remove_stims = ioi_dfg_remove_stims;
+use_stims = ioi_dfg_use_stims;
+[generate_figures save_figures] = ioi_dfg_generate_figures;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -92,9 +92,9 @@ interactive_mode.help = {'Interactive mode - let''s user choose stims.'
     'to the next image, or return to the automatic mode.'}';
 
 %%%%%%%%%%%%%%%%%%
-shrinkage_choice = ioi_cfg_shrinkage_choice;
+shrinkage_choice = ioi_dfg_shrinkage_choice;
 %%%%%%%%%%%%%%%%%%%%%%%%%
-spatial_LPF = ioi_cfg_spatial_LPF;
+spatial_LPF = ioi_dfg_spatial_LPF;
 %%%%%%%%%%%%%%%%%%%%%%
 IC = ioi_dfg_include_colors(0,1,1,1,1);
 

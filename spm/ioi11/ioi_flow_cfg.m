@@ -32,7 +32,7 @@ configuration.val     = {inttime1 windowsize1};
 configuration.help    = {'Select values.'};
 
 IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('Flow');
-session_choice = ioi_cfg_session_choice;
+session_choice = ioi_dfg_session_choice;
 
 RemoveLC      = cfg_menu;
 RemoveLC.tag  = 'RemoveLC';

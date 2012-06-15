@@ -21,9 +21,9 @@ redo1.values = {0,1};
 redo1.val  = {0};
 redo1.help = {'Force redoing this processing even when it has been done already'};
 
-IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('Flow');
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('Flow');
 
-session_choice = ioi_cfg_session_choice;
+session_choice = ioi_dfg_session_choice;
 
 % Executable Branch
 electro1      = cfg_exbranch;       % This is the branch that has information about how to run this module

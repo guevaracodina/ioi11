@@ -89,7 +89,7 @@ show_normalized_parameters.values = {1,0};
 show_normalized_parameters.val  = {0};
 show_normalized_parameters.help = {'Show normalized values parameters.'}';
 
-[generate_figures save_figures] = ioi_cfg_generate_figures;
+[generate_figures save_figures] = ioi_dfg_generate_figures;
 
 show_mse      = cfg_menu;
 show_mse.tag  = 'show_mse';

@@ -30,7 +30,7 @@ stim_choice.values = {default_stims,electro_stims};
 stim_choice.val    = {default_stims};
 stim_choice.help   = {'Choose stimulation selection method'}';
 
-session_choice = ioi_cfg_session_choice;
+session_choice = ioi_dfg_session_choice;
 [window_before window_after] = ioi_dfg_window(3,20,0);
 
 normalize_choice      = cfg_menu;
@@ -41,7 +41,7 @@ normalize_choice.values = {1,2};
 normalize_choice.val  = {2};
 normalize_choice.help = {'Normalization choice.'}';
 
-[generate_figures save_figures] = ioi_cfg_generate_figures;
+[generate_figures save_figures] = ioi_dfg_generate_figures;
 
 add_error_bars      = cfg_menu;
 add_error_bars.tag  = 'add_error_bars';

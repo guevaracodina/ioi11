@@ -1,4 +1,4 @@
-function spatial_LPF = ioi_cfg_spatial_LPF
+function spatial_LPF = ioi_dfg_spatial_LPF
 
 spatial_LPF_radius         = cfg_entry;
 spatial_LPF_radius.name    = 'Spatial LPF radius';
