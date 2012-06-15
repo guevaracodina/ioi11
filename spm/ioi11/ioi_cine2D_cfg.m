@@ -3,9 +3,9 @@ function cine2D1 = ioi_cine2D_cfg
 % Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
-IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('Cine');
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('Cine');
 
 %%%%%%%%%%%%%%%%%%
 shrinkage_choice = ioi_cfg_shrinkage_choice;
@@ -44,7 +44,7 @@ stim_choice.help   = {'Use available onsets or enter onsets.'}';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 session_choice = ioi_cfg_session_choice;
-[window_before window_after window_offset] = ioi_cfg_window(3,20);
+[window_before window_after window_offset] = ioi_dfg_window(3,20,0);
 
 normalize_choice      = cfg_menu;
 normalize_choice.tag  = 'normalize_choice';
@@ -78,7 +78,7 @@ high_limit.val     = {10};
 high_limit.help    = {'Enter high limit as percentage of min to max.'
     'For HbR, the code will invert min and max so the user does not have to worry about it.'}';
 
-IC = ioi_cfg_include_colors(0,1,1,1,1);
+IC = ioi_dfg_include_colors(0,1,1,1,1);
 
 skip_overlap      = cfg_menu;
 skip_overlap.tag  = 'skip_overlap';

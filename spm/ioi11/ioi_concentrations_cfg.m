@@ -6,7 +6,7 @@ function conc1 = ioi_concentrations_cfg
 % Read IOI Multispectral files
 % ---------------------------------------------------------------------
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
 
 pathlength1      = cfg_menu;
@@ -47,7 +47,7 @@ configuration.name    = 'Configuration options';
 configuration.val     = {pathlength1 camera1 led1 basehbt1};
 configuration.help    = {'Select values.'};
 
-IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('Conc');
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('Conc');
 
 MemoryManagementMenu      = cfg_menu;
 MemoryManagementMenu.tag  = 'MemoryManagementMenu';

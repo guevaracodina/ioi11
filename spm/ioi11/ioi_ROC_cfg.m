@@ -3,10 +3,10 @@ function ROC1 = ioi_ROC_cfg
 % Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
-ROImat = ioi_cfg_ROImat(1);
-IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('ROC');
+ROImat = ioi_dfg_ROImat(1);
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('ROC');
 ROI_choice = ioi_cfg_ROI_choice;
 session_choice = ioi_cfg_session_choice;
 [generate_figures save_figures] = ioi_cfg_generate_figures;

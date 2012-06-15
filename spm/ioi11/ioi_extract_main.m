@@ -1,4 +1,4 @@
-function [IOI ROI] = ioi_extract_main(IOI,job,d,d3,d4,colorOK,mask)
+function [IOI ROI] = ioi_extract_main(IOI,ROI,job,d,d3,d4,c1,s1,colorOK,mask)
 [all_ROIs selected_ROIs] = ioi_get_ROIs(job);
 msg_ColorNotOK = 1; 
 for r1=1:length(IOI.res.ROI)

@@ -3,10 +3,10 @@ function glm1 = ioi_GLM_cfg
 % Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
-ROImat = ioi_cfg_ROImat(1);
-IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('IGLM');
+ROImat = ioi_dfg_ROImat(1);
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('IGLM');
 
 %%%%%%%%%%%%%%%%%%%%
 
@@ -398,7 +398,7 @@ volt.labels = {
 volt.values = {1 2};
 volt.val    = {1};
 
-hpf_butter = ioi_cfg_hpf_butter(1,0.01,3);
+hpf_butter = ioi_dfg_hpf_butter(1,0.01,3);
 
 
 % ---------------------------------------------------------------------
@@ -420,7 +420,7 @@ lpf_gauss.help    = {'Specify properties of Gaussian filter'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-IC = ioi_cfg_include_colors(0,1,1,1,0);
+IC = ioi_dfg_include_colors(0,1,1,1,0);
 
 which_onset_type = ioi_cfg_which_onset_type;
 remove_stims = ioi_cfg_remove_stims;
@@ -436,7 +436,7 @@ glm1.tag  = 'glm1'; %Very important: tag is used when calling for execution
 glm1.val  = {IOImat data_selection_choice redo1 IOImatCopyChoice ...
      session_choice ...
      bases volt use_onset_amplitudes hpf_butter lpf_gauss vasomotion_choice ...
-     IC.include_flow IC.include_HbT IC.include_HbO IC.include_HbR IC.include_OD ...
+     IC ...
      which_onset_type ...
      remove_stims use_stims override_colorbar save_beta_mse ...
      generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs

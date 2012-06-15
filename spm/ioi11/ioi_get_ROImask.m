@@ -1,4 +1,5 @@
 function [IOI mask] = ioi_get_ROImask(IOI,job)
+[all_sessions selected_sessions] = ioi_get_sessions(job);
 [all_ROIs selected_ROIs] = ioi_get_ROIs(job);
 %loop over ROIs
 first_pass = 1;

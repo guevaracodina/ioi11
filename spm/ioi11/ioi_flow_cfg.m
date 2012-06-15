@@ -6,7 +6,7 @@ function flow1 = ioi_flow_cfg
 % Computes blood flow from speckle contrast
 % ---------------------------------------------------------------------
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
 
 inttime1      = cfg_entry;
@@ -31,7 +31,7 @@ configuration.name    = 'Configuration options';
 configuration.val     = {inttime1 windowsize1};
 configuration.help    = {'Select values.'};
 
-IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('Flow');
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('Flow');
 session_choice = ioi_cfg_session_choice;
 
 RemoveLC      = cfg_menu;

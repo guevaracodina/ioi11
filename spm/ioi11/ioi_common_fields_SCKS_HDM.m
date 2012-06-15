@@ -2,11 +2,11 @@ function [IOImat ROImat redo1 IOImatCopyChoice IC ...
     PhysioModel_Choice ROI_choice session_choice baseline_choice ...
     lpf_choice hpf_butter] = ioi_common_fields_SCKS_HDM(dir_name)
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
-ROImat = ioi_cfg_ROImat(1);
-IOImatCopyChoice = ioi_cfg_IOImatCopyChoice(dir_name);
-IC = ioi_cfg_include_colors(0,1,1,1,1);
+ROImat = ioi_dfg_ROImat(1);
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice(dir_name);
+IC = ioi_dfg_include_colors(0,1,1,1,1);
 
 PhysioModel_Choice        = cfg_menu;
 PhysioModel_Choice.name   = 'Choose hemodynamic model';
@@ -19,7 +19,7 @@ PhysioModel_Choice.help   = {'Choose hemodynamic model'}';
 ROI_choice = ioi_cfg_ROI_choice;
 session_choice = ioi_cfg_session_choice;
 
-hpf_butter = ioi_cfg_hpf_butter(1,0.01,3);
+hpf_butter = ioi_dfg_hpf_butter(1,0.01,3);
 
 % ---------------------------------------------------------------------
 % lpf Low-pass filter

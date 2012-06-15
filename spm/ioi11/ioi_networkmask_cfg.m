@@ -6,7 +6,7 @@ function mask1 = ioi_networkmask_cfg
 %______________________________________________________________________
 
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
 
 % Executable Branch

@@ -3,10 +3,10 @@ function glm_roi1 = ioi_GLM_on_ROI_cfg
 % Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
 
-IOImat = ioi_cfg_IOImat(1);
+IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
-ROImat = ioi_cfg_ROImat(1);
-IOImatCopyChoice = ioi_cfg_IOImatCopyChoice('GLM');
+ROImat = ioi_dfg_ROImat(1);
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('GLM');
 
 %%%%%%%%%%%%%%%%%%%%%%
 ROI_choice = ioi_cfg_ROI_choice;
@@ -278,7 +278,7 @@ volt.labels = {
 volt.values = {1 2};
 volt.val    = {1};
 
-hpf_butter = ioi_cfg_hpf_butter(1,0.01,3);
+hpf_butter = ioi_dfg_hpf_butter(1,0.01,3);
 
 % ---------------------------------------------------------------------
 % lpf Low-pass filter
@@ -299,7 +299,7 @@ lpf_gauss.help    = {'Specify properties of Gaussian filter'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-IC = ioi_cfg_include_colors(0,1,1,1,0);
+IC = ioi_dfg_include_colors(0,1,1,1,0);
 [generate_figures save_figures] = ioi_cfg_generate_figures;
 
 figure_show_stim      = cfg_menu;

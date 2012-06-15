@@ -35,10 +35,10 @@ for s1=1:length(IOI.sess_res)
                         %time dimension in 3rd dimension for colors
                         %R, G, Y, but in 4th dimension for O, D, F
                         %Loop over ROIs
-                        [IOI ROI] = ioi_extract_main(IOI,job,d,d3,d4,colorOK,mask);
-                        if colorOK
-                            disp(['ROIs for session ' int2str(s1) ' and color ' IOI.color.eng(c1) ' completed']);
-                        end
+                        [IOI ROI] = ioi_extract_main(IOI,ROI,job,d,d3,d4,c1,s1,colorOK,mask);
+                    end
+                    if colorOK
+                        disp(['ROIs for session ' int2str(s1) ' and color ' IOI.color.eng(c1) ' completed']);
                     end
                 end
             end
