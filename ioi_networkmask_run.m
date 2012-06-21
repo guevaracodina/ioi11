@@ -9,19 +9,19 @@ function [out, BW_mask] = ioi_networkmask_run(job)
 % OUTPUTS:
 % out       Structure containing the names of IOI matrices
 % BW_mask   Binary mask that contains brain pixels
-%_______________________________________________________________________
-% Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
+%_______________________________________________________________________________
+% Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
-%______________________________________________________________________
+%_______________________________________________________________________________
 
 for SubjIdx=1:length(job.IOImat)
     try
         tic
         clear IOI
-        
-        %Load IOI.mat information
+        % Load IOI.mat information
         IOImat = job.IOImat{SubjIdx};
         load(IOImat);
+        
         if ~isfield(IOI, 'fcIOS')
             % Create fcIOS field to contain the whole structure of fcIOS
             % utilities
@@ -46,21 +46,6 @@ for SubjIdx=1:length(job.IOImat)
             spm_figure('GetWin', 'Graphics');
             spm_figure('Clear', 'Graphics');
             
-            % Grayscale colormap for contrast enhancement
-            % cmap = contrast(im_anat);
-            % h_im = imagesc(im_anat); colormap(cmap);
-            % axis image
-           
-            % Start interactive ROI tool to choose polygonal brain mask
-            % ------------------------------------------------------------------
-            % h_ROI = impoly(gca);
-            % Keep the polygon inside the original dimensions
-            % fcn = makeConstrainToRectFcn('impoly',get(gca,'XLim'), get(gca,'YLim'));
-            % setPositionConstraintFcn(h_ROI,fcn);
-            % Create a mask
-            % BW_mask = createMask(h_ROI,h_im);
-            % ------------------------------------------------------------------
-            
             % Start interactive ROI tool to choose spline brain mask
             % ------------------------------------------------------------------
             BW_mask = ioi_roi_spline(im_anat);
@@ -81,18 +66,16 @@ for SubjIdx=1:length(job.IOImat)
             hdr = spm_vol(fullfile(dirName,fileName));
             ioi_create_vol(fullfile(dirName, brainMaskName), ...
                 hdr.dim, hdr.dt, hdr.pinfo, hdr.mat, hdr.n, BW_mask);
-            
-            if ~isfield(IOI.fcIOS.mask, 'fname') || isempty(IOI.fcIOS.mask, 'fname')
+            if isempty(IOI.fcIOS.mask)
+                % To avoid emptyDotAssignment we create a field
                 IOI.fcIOS.mask = struct('fname', []);
             end
+            
             % Identifier dans IOI le nom du fichier masque
             IOI.fcIOS.mask.fname = fullfile(dirName, brainMaskName);
-            
-            if ~isfield(IOI.fcIOS.mask, 'maskOK') || isempty(IOI.fcIOS.mask, 'maskOK')
-                IOI.fcIOS.mask = struct('maskOK', []);
-            end
             % Mask created succesfully!
             IOI.fcIOS.mask.maskOK = true;
+                       
             save(IOImat,'IOI');
             toc
         end
@@ -106,9 +89,9 @@ for SubjIdx=1:length(job.IOImat)
 end % End of main for
 end % End of function
 
-%_______________________________________________________________________
+%_______________________________________________________________________________
 % Auxiliary functions
-%_______________________________________________________________________
+%_______________________________________________________________________________
 function hdr = ioi_create_vol(fname, dim, dt, pinfo, mat, n, data)
 hdr = struct('fname',fname,...
     'dim', dim,...

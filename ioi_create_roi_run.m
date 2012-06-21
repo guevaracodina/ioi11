@@ -51,15 +51,27 @@ for SubjIdx=1:length(job.IOImat)
                     index = 0;
                 end
             end
-            % Prompt user to choose brain mask
-            [out, full_mask] = ioi_networkmask_run(job);
-            %display anatomical image
+            
+            % Display anatomical image
             vol = spm_vol(IOI.res.file_anat);
             vx = [1 1 1];
             [dir1 fil1] = fileparts(vol.fname);
             im_anat = spm_read_vols(vol);
             % Colormap to enhance contrast
             cmap = contrast(im_anat);
+            % Goto figures window
+            spm_figure('GetWin', 'Graphics');
+            spm_figure('Clear', 'Graphics');
+                
+            if job.displayBrainmask == 1
+                % Display only brain pixels mask
+                vol = spm_vol(IOI.fcIOS.mask.fname);
+                full_mask = logical(spm_read_vols(vol));
+            else
+                % Display all the image
+                full_mask = ones(size(im_anat));
+            end
+            
             if ~autoROI
                 %Display images of changes from 10th to 90th percentile for all sessions
                 try
