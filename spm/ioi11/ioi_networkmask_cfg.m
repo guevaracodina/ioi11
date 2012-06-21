@@ -1,9 +1,9 @@
 function mask1 = ioi_networkmask_cfg
 % Graphical interface configuration function for ioi_networkmask_run
-%_______________________________________________________________________
-% Copyright (C) 2010 LIOM Laboratoire d'Imagerie Optique et Moléculaire
+%_______________________________________________________________________________
+% Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
-%______________________________________________________________________
+%_______________________________________________________________________________
 
 
 IOImat = ioi_dfg_IOImat(1);
@@ -21,7 +21,7 @@ mask1.help = {'Manual segmentation of the brain to provide a mask for fcOIS anal
 return
 
 % make IOI.mat available as a dependency
-function vout = ioi_cfg_vout_networkmask(~)
+function vout = ioi_cfg_vout_networkmask(job)
 vout = cfg_dep;                     % The dependency object
 vout.sname      = 'IOI.mat';       % Displayed dependency name
 vout.src_output = substruct('.','IOImat'); %{1}); %,'IOImat');

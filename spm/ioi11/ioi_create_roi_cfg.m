@@ -69,15 +69,24 @@ AutoROIchoice.values    = {ManualROI ManualEnterROI AutoROI};
 AutoROIchoice.val       = {ManualROI}; 
 AutoROIchoice.help      = {'Choose whether to generate ROI manually or'
         'automatically'}'; 
-        
+
+% Display Brain Mask    
+displayBrainmask         = cfg_menu;
+displayBrainmask.tag     = 'displayBrainmask';
+displayBrainmask.name    = 'Display Brain Mask';
+displayBrainmask.labels  = {'Yes','No'};
+displayBrainmask.values  = {1,0};
+displayBrainmask.val     = {1};
+displayBrainmask.help    = {'Display network mask containing only brain pixels'};
+
 % Executable Branch
 create_roi1      = cfg_exbranch;       % This is the branch that has information about how to run this module
-create_roi1.name = 'Create ROI';             % The display name
+create_roi1.name = 'Create ROI/seed';             % The display name
 create_roi1.tag  = 'create_roi1'; %Very important: tag is used when calling for execution
-create_roi1.val  = {IOImat redo1 RemovePreviousROI IOImatCopyChoice select_names AutoROIchoice};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+create_roi1.val  = {IOImat redo1 RemovePreviousROI IOImatCopyChoice select_names AutoROIchoice displayBrainmask};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 create_roi1.prog = @ioi_create_roi_run;  % A function handle that will be called with the harvested job to run the computation
 create_roi1.vout = @ioi_cfg_vout_create_roi; % A function handle that will be called with the harvested job to determine virtual outputs
-create_roi1.help = {'Create regions of interest.'};
+create_roi1.help = {'Create regions of interest/seeds.'};
 
 return
 

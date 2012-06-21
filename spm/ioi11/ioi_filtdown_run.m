@@ -1,83 +1,153 @@
 function out = ioi_filtdown_run(job)
-%_______________________________________________________________________
-% Copyright (C) 2010 LIOM Laboratoire d'Imagerie Optique et Moléculaire
+% Band-pass filters (usually [0.009 - 0.8]Hz) and downsamples (usually to 1 Hz)
+% a time series of an ROI (seed) and the whole brain mask. Optionally subtracts
+% the global signal from each ROI
+%_______________________________________________________________________________
+% Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
-%______________________________________________________________________
+%_______________________________________________________________________________
 
 for SubjIdx=1:length(job.IOImat)
     try
         tic
         clear IOI
-        
         %Load IOI.mat information
         IOImat = job.IOImat{SubjIdx};
         load(IOImat);
-        if ~isfield(IOI, 'fcIOS')
-            % Create fcIOS field to contain the whole structure of fcIOS
-            % utilities
-            IOI.fcIOS = struct([]);
-            IOI.fcIOS.mask = struct([]);
-            IOI.fcIOS.seeds =[];
-            IOI.fcIOS.filtNdown = struct([]);
-            IOI.fcIOS.filtNdown = struct([]);
+        
+        % IOI copy/overwrite
+        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
+        if isfield(job.IOImatCopyChoice,'IOImatCopy')
+            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
+            newDir = fullfile(dir_ioimat,newDir);
+            if ~exist(newDir,'dir'),mkdir(newDir); end
+            IOImat = fullfile(newDir,'IOI.mat');
+        else
+            newDir = dir_ioimat;
         end
-        if ~isfield(IOI.fcIOS.mask,'maskOK') || job.force_redo
-            % 1-Lis une image nifti de type anatomique (dans notre cas c'est l'image
-            % verte de l'IOI) qui n'est qu'une tranche (sans temps)
-            [dirName fileName fileExt] = fileparts(IOI.res.file_anat);
-            fileName = strcat(fileName, fileExt);
+        try
+            load(IOImat);
+        catch
+            load(job.IOImat{SubjIdx});
+        end
+        
+        if ~isfield(IOI.fcIOS.filtNdown,'filtNdownOK') || job.force_redo
+            % Filter & Downsample time series
+            % ------------------------------------------------------------------
+            % Original Sampling Frequency (5 Hz per color, data is sampled at 20
+            % Hz for 4 colors RGYL)
+            fs = 1/IOI.dev.TR;
             
-            % Read anatomical NIFTI file
-            im_anat = ioi_read_vol(fullfile(dirName, fileName));
+            % Filter order
+            filterOrder = 4;
             
-            % 2-Afficher et utiliser imroi pour que l'usager puisse manuellement
-            % identifier la zone d'intérêt contenant le cerveau (on click un
-            % polygone)
+            % Retrieve data
+            ROIdata = load(IOI.ROI.ROIfname);
+            ROIdata = ROIdata.ROI;
+            brainMaskData = load(IOI.fcIOS.mask.fnameSeries);
+            brainMaskData = brainMaskData.brainMaskSeries;
             
-            % Display anatomical image on SPM graphics window
-            spm_figure('GetWin', 'Graphics');
-            spm_figure('Clear', 'Graphics');
+            [all_sessions selected_sessions] = ioi_get_sessions(job);
             
-            % Grayscale colormap for contrast enhancement
-            cmap = contrast(im_anat);
-            h_im = imagesc(im_anat); colormap(cmap);
-            axis image
-            title('Choose a mask containing only brain pixels','FontSize',13)
+            IC = job.IC;
+            % Loop over sessions
+            for s1=1:length(IOI.sess_res)
+                if all_sessions || sum(s1==selected_sessions)
+                    % Loop over available colors
+                    for c1=1:length(IOI.sess_res{s1}.fname)
+                        doColor = ioi_doColor(IOI,c1,IC);
+                        if doColor
+                            colorOK = 1;
+                            if ~(IOI.color.eng(c1)==IOI.color.laser)
+                                %skip laser - only extract for flow
+                                [all_ROIs selected_ROIs] = ioi_get_ROIs(job);
+                                msg_ColorNotOK = 1;
+                                % Initialize output filtNdown
+                                for r1 = length(ROIdata);
+                                    if all_ROIs || sum(r1==selected_ROIs)
+                                        filtNdown{r1}{s1,c1} = [];
+                                    end
+                                end
+                                % Loop over ROIs
+                                for r1 = 1:length(ROIdata); % All the ROIs
+                                    if all_ROIs || sum(r1==selected_ROIs)
+                                        try
+                                            % Retrieve time-series signal for
+                                            % given ROI, session and color
+                                            ROIsignal = ROIdata{r1}{s1, c1};
+                                            if job.removeMean
+                                                % Subtract signal from
+                                                % brain pixels
+                                                brainSignal = brainMaskData{1}{s1, c1};
+                                                ROIsignal = ROIsignal - brainSignal;
+                                            end
+                                            % Band-passs filtering
+                                            ROIsignal = ButterLPF(fs,job.BPFfreq(2),filterOrder,ROIsignal);
+                                            ROIsignal = ButterHPF(fs,job.BPFfreq(1),filterOrder,ROIsignal);
+                                            % Downsampling
+                                            ROIsignal = downsample(ROIsignal, round(fs/job.downFreq));
+                                        catch
+                                            if msg_ColorNotOK
+                                                msg = ['Problem extracting for color ' int2str(c1) ', session ' int2str(s1) ...
+                                                    ',region ' int2str(r1) ': size ROIcell= ' int2str(size(ROIcell{r1},1)) 'x' ...
+                                                    int2str(size(ROIcell{r1},2)) ', but size image= ' int2str(size(tmp_d,1)) 'x' ...
+                                                    int2str(size(tmp_d,2))];
+                                                IOI = disp_msg(IOI,msg);
+                                                msg_ColorNotOK = 0;
+                                            end
+                                            if colorOK
+                                                try
+                                                    % Retrieve time-series signal for
+                                                    % given ROI, session and color
+                                                    ROIsignal = ROIdata{r1}{s1, c1};
+                                                    if job.removeMean
+                                                        % Subtract signal from
+                                                        % brain pixels
+                                                        brainSignal = brainMaskData{1}{s1, c1};
+                                                        ROIsignal = ROIsignal - brainSignal;
+                                                    end
+                                                    % Band-passs filtering
+                                                    ROIsignal = ButterLPF(fs,job.BPFfreq(2),filterOrder,ROIsignal);
+                                                    ROIsignal = ButterHPF(fs,job.BPFfreq(1),filterOrder,ROIsignal);
+                                                    % Downsampling
+                                                    ROIsignal = downsample(ROIsignal, round(fs/job.downFreq));
+                                                catch
+                                                    msg = ['Unable to extract color ' int2str(c1) ', session ' int2str(s1)];
+                                                    IOI = disp_msg(IOI,msg);
+                                                    colorOK = 0;
+                                                end
+                                            end
+                                        end
+                                        if colorOK
+                                            filtNdown{r1}{s1,c1} = ROIsignal;
+                                        end
+                                    end
+                                end % ROI loop
+                                if colorOK
+                                    filtNdown{r1}{s1,c1} = ROIsignal;
+                                    disp(['Filtering and Downsampling for session ' int2str(s1) ' and color ' IOI.color.eng(c1) ' completed']);
+                                end
+                            end
+                        end
+                    end % Colors loop
+                end
+            end % Sessions loop
+            % ------------------------------------------------------------------
             
-            % Start interactive ROI tool to choose brain mask
-            h_ROI = impoly(gca);
+            % Filter and Downsampling succesful!
+            IOI.fcIOS.filtNdown(1).filtNdownOK = true;
             
-            % Set color of ROI brain mask
-            setColor(h_ROI, 'y')
-            
-            % Keep the polygon inside the original dimensions
-            fcn = makeConstrainToRectFcn('impoly',get(gca,'XLim'), get(gca,'YLim'));
-            setPositionConstraintFcn(h_ROI,fcn)
-            
-            % Create a mask
-            BW_mask = createMask(h_ROI,h_im);
-            
-            % Display masked image on SPM graphics window
-            imagesc(im_anat .* BW_mask);
-            axis image
-            title(['Mask for subject ' IOI.subj_name],'FontSize',13)
-            
-            % 3-Sauver en sortie une image nifti qui s'appelle brainmask.nii qui
-            % vaut 1 dans le cerveau et 0 en dehors.
-            
-            % Create filename according the existing nomenclature at subject level
-            maskName = [IOI.subj_name '_anat_brainmask.nii'];
-            
-            % Create and write a NIFTI file in the subject folder
-            hdr = spm_vol(fullfile(dirName,fileName));
-            ioi_create_vol(fullfile(dirName, maskName), ...
-                hdr.dim, hdr.dt, hdr.pinfo, hdr.mat, hdr.n, BW_mask);
-            
-            % Identifier dans IOI le nom du fichier masque
-            IOI.fcIOS.mask.fname = fullfile(dirName, maskName);
-            
-            % Mask created succesfully!
-            IOI.fcIOS.mask.maskOK = true;
+            % IOI copy/overwrite
+            if isfield(job.IOImatCopyChoice,'IOImatCopy')
+                newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
+                newDir = fullfile(dir_ioimat,newDir);
+                if ~exist(newDir,'dir'),mkdir(newDir); end
+                IOImat = fullfile(newDir,'IOI.mat');
+            end
+            [dir1 dummy] = fileparts(IOImat);
+            filtNdownfname = fullfile(dir1,'filtNdown.mat');
+            save(filtNdownfname,'filtNdown');
+            IOI.fcIOS.filtNdown.fname = filtNdownfname;
             save(IOImat,'IOI');
             toc
         end

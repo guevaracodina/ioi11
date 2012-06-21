@@ -14,7 +14,14 @@ for s1=1:length(IOI.sess_res)
                     %skip laser - only extract for flow
                     fname_list = IOI.sess_res{s1}.fname{c1};
                     %initialize
-                    for r1=1:length(IOI.res.ROI)
+                    
+                    if job.extractBrainMask
+                        nROI = 1; % Only 1 brain mask
+                    else
+                        nROI = 1:length(IOI.res.ROI); % All the ROIs
+                    end
+
+                    for r1 = nROI
                         if all_ROIs || sum(r1==selected_ROIs)
                             ROI{r1}{s1,c1} = [];
                         end
