@@ -42,7 +42,11 @@ try
     vx_anat = [1 1 1];
     vx = [1 1 1];
     TR = 0.2;
-    stim_cutoff = 5;
+    if isfield(job,'stim_cutoff')
+        stim_cutoff = job.stim_cutoff;
+    else
+        stim_cutoff = 5;
+    end
     %subj_OK = 1; %Boolean to exit loop if subject data is too corrupted
     if ~job.PartialRedo2
         IOI.color.eng = str_color;
@@ -97,10 +101,14 @@ try
                 %Get default stimulations -- what if there are several
                 %types of stimulations???
                 stims = ConvertedData.Data.MeasuredData(6).Data;
-                stims_dt= ConvertedData.Data.MeasuredData(4).Property(3).Value;
+                stims_dt= ConvertedData.Data.MeasuredData(6).Property(3).Value;
                 ons0 = stims_dt*find(stims>stim_cutoff);
                 ons1 = find(diff(ons0)>=1);
-                ons = ons0([1 1+ons1']);
+                if ~isempty(ons1)
+                    ons = ons0([1 1+ons1']);
+                else
+                    ons = [];
+                end
                 clear names onsets durations
                 %Converted to seconds, rather than frame number
                 for stim_index=1:1
