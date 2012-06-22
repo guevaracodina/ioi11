@@ -34,7 +34,11 @@ try
     %Variable changed meaning here - more convenient for user to specify
     %duration in seconds
     min_session_duration = job.sess_min_image_files;
-    temp_TR = 0.2;
+    if isfield(job,'acq_freq')
+        temp_TR = job.color_number/job.acq_freq;
+    else
+        temp_TR = 0.2;
+    end
     temp_ImNum = 80;
     nzero_padding = 5;
     
