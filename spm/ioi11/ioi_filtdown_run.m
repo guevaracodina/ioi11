@@ -1,7 +1,6 @@
 function out = ioi_filtdown_run(job)
 % Band-pass filters (usually [0.009 - 0.8]Hz) and downsamples (usually to 1 Hz)
-% a time series of an ROI (seed) and the whole brain mask. Optionally subtracts
-% the global signal from each ROI
+% a time series of an ROI (seed) and the whole brain mask.
 %_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
@@ -38,6 +37,13 @@ for SubjIdx=1:length(job.IOImat)
             % Hz for 4 colors RGYL)
             fs = 1/IOI.dev.TR;
             
+            % Desired downsampling frequency
+            fprintf('Desired downsampling frequency: %0.1f Hz \n',job.downFreq);
+            
+            % Real downsampling frequency
+            samples2skip = round(fs/job.downFreq);
+            fprintf('Real downsampling frequency: %0.1f Hz \n',fs/samples2skip);
+            
             % Filter order
             filterOrder = 4;
             
@@ -62,30 +68,31 @@ for SubjIdx=1:length(job.IOImat)
                                 %skip laser - only extract for flow
                                 [all_ROIs selected_ROIs] = ioi_get_ROIs(job);
                                 msg_ColorNotOK = 1;
-                                % Initialize output filtNdown
+                                % Initialize output filtNdownROI
                                 for r1 = length(ROIdata);
                                     if all_ROIs || sum(r1==selected_ROIs)
-                                        filtNdown{r1}{s1,c1} = [];
+                                        filtNdownROI{r1}{s1,c1} = [];
+                                        filtNdownBrain{1}{s1,c1} = [];
                                     end
                                 end
                                 % Loop over ROIs
                                 for r1 = 1:length(ROIdata); % All the ROIs
                                     if all_ROIs || sum(r1==selected_ROIs)
                                         try
-                                            % Retrieve time-series signal for
-                                            % given ROI, session and color
-                                            ROIsignal = ROIdata{r1}{s1, c1};
-                                            if job.removeMean
-                                                % Subtract signal from
-                                                % brain pixels
-                                                brainSignal = brainMaskData{1}{s1, c1};
-                                                ROIsignal = ROIsignal - brainSignal;
-                                            end
-                                            % Band-passs filtering
-                                            ROIsignal = ButterLPF(fs,job.BPFfreq(2),filterOrder,ROIsignal);
-                                            ROIsignal = ButterHPF(fs,job.BPFfreq(1),filterOrder,ROIsignal);
-                                            % Downsampling
-                                            ROIsignal = downsample(ROIsignal, round(fs/job.downFreq));
+                                             % Retrieve time-series signal for
+                                             % given ROI, session and color
+                                             ROIsignal = ROIdata{r1}{s1, c1};
+                                             % Retrieve time-course
+                                             % signal for brain mask
+                                             brainSignal = brainMaskData{1}{s1, c1};
+                                             % Band-passs filtering
+                                             ROIsignal = ButterLPF(fs,job.BPFfreq(2),filterOrder,ROIsignal);
+                                             ROIsignal = ButterHPF(fs,job.BPFfreq(1),filterOrder,ROIsignal);
+                                             brainSignal = ButterLPF(fs,job.BPFfreq(2),filterOrder,brainSignal);
+                                             brainSignal = ButterHPF(fs,job.BPFfreq(1),filterOrder,brainSignal);
+                                             % Downsampling
+                                             ROIsignal = downsample(ROIsignal, samples2skip);
+                                             brainSignal = downsample(brainSignal, samples2skip);
                                         catch
                                             if msg_ColorNotOK
                                                 msg = ['Problem extracting for color ' int2str(c1) ', session ' int2str(s1) ...
@@ -100,17 +107,17 @@ for SubjIdx=1:length(job.IOImat)
                                                     % Retrieve time-series signal for
                                                     % given ROI, session and color
                                                     ROIsignal = ROIdata{r1}{s1, c1};
-                                                    if job.removeMean
-                                                        % Subtract signal from
-                                                        % brain pixels
-                                                        brainSignal = brainMaskData{1}{s1, c1};
-                                                        ROIsignal = ROIsignal - brainSignal;
-                                                    end
+                                                    % Retrieve time-course
+                                                    % signal for brain mask
+                                                    brainSignal = brainMaskData{1}{s1, c1};
                                                     % Band-passs filtering
                                                     ROIsignal = ButterLPF(fs,job.BPFfreq(2),filterOrder,ROIsignal);
                                                     ROIsignal = ButterHPF(fs,job.BPFfreq(1),filterOrder,ROIsignal);
+                                                    brainSignal = ButterLPF(fs,job.BPFfreq(2),filterOrder,brainSignal);
+                                                    brainSignal = ButterHPF(fs,job.BPFfreq(1),filterOrder,brainSignal);
                                                     % Downsampling
-                                                    ROIsignal = downsample(ROIsignal, round(fs/job.downFreq));
+                                                    ROIsignal = downsample(ROIsignal, samples2skip);
+                                                    brainSignal = downsample(brainSignal, samples2skip);
                                                 catch
                                                     msg = ['Unable to extract color ' int2str(c1) ', session ' int2str(s1)];
                                                     IOI = disp_msg(IOI,msg);
@@ -119,12 +126,14 @@ for SubjIdx=1:length(job.IOImat)
                                             end
                                         end
                                         if colorOK
-                                            filtNdown{r1}{s1,c1} = ROIsignal;
+                                            filtNdownROI{r1}{s1,c1} = ROIsignal;
+                                            filtNdownBrain{1}{s1,c1} = brainSignal;
                                         end
                                     end
                                 end % ROI loop
                                 if colorOK
-                                    filtNdown{r1}{s1,c1} = ROIsignal;
+                                    filtNdownROI{r1}{s1,c1} = ROIsignal;
+                                    filtNdownBrain{1}{s1,c1} = brainSignal;
                                     disp(['Filtering and Downsampling for session ' int2str(s1) ' and color ' IOI.color.eng(c1) ' completed']);
                                 end
                             end
@@ -146,7 +155,7 @@ for SubjIdx=1:length(job.IOImat)
             end
             [dir1 dummy] = fileparts(IOImat);
             filtNdownfname = fullfile(dir1,'filtNdown.mat');
-            save(filtNdownfname,'filtNdown');
+            save(filtNdownfname,'filtNdownROI','filtNdownBrain');
             IOI.fcIOS.filtNdown.fname = filtNdownfname;
             save(IOImat,'IOI');
             toc
