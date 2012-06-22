@@ -1,9 +1,9 @@
-function [out, BW_mask] = ioi_networkmask_run(job)
+function [out, BW_mask] = ioi_brainmask_run(job)
 % Manual segmentation of the brain to provide a mask for resting-state
 % functional connectivity mapping with optical intrinsic signal imaging (fcOIS)
 % analysis. User should only select those pixels belonging to the brain.
 % SYNTAX:
-% out = ioi_networkmask_run(job)
+% out = ioi_brainmask_run(job)
 % INPUTS:
 % job
 % OUTPUTS:
