@@ -12,7 +12,7 @@ addpath(fileparts(which(mfilename)));
 fcIOS        = cfg_choice;
 fcIOS.name   = 'Functional connectivity mapping (fcIOS)';
 fcIOS.tag    = 'fcIOS';
-fcIOS.values = {ioi_brainmask_cfg ioi_create_roi_cfg ioi_filtdown_cfg ioi_fcmap1_cfg};
+fcIOS.values = {ioi_brainmask_cfg ioi_create_roi_cfg ioi_filtdown_cfg ioi_fc_GLM_on_ROI_cfg};
 fcIOS.help   = {'These modules perform resting-state functional connectivity mapping with intrinsic optical signal (fcIOS).'};
 
 %-----------------------------------------------------------------------
