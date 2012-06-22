@@ -79,6 +79,9 @@ try
                     t0 = char(t0');
                     t0 = deblank(t0);
                     color_order_french = t0(end-3:end);
+                    if strcmp(color_order_french,'flat')
+                        color_order_french = 'RVJL';
+                    end
                     %color_order_french = color_order_french(1:4);
                     color_order = color_order_french;
                     %get English colors
