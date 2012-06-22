@@ -98,7 +98,17 @@ sess_min_image_files.help    = {'Minimum length of each session in seconds'
     'If that is not the case, change temp_TR in ioi_msioi_run'
     'Another assumption is made that there are approximately 80 images per'
     'raw binary file. If that is not the case, change temp_ImNum in ioi_msioi_run'
-    'Applies to old data format only'};   
+    'Applies to old data format only'}; 
+
+stim_cutoff         = cfg_entry; 
+stim_cutoff.name    = 'Cutoff to use on stim data';
+stim_cutoff.tag     = 'stim_cutoff';       
+stim_cutoff.strtype = 'r';
+stim_cutoff.num     = [1 1];
+stim_cutoff.val     = {1.5};
+stim_cutoff.help    = {'Enter voltage cutoff. Sometimes it is 5 V, but 0.5 V '
+    'is also possible'
+    'Only applicable for new recording system.'}'; 
 
 save_choice        = cfg_menu;
 save_choice.name   = 'Choose saving method';
@@ -134,7 +144,7 @@ msioi1      = cfg_exbranch;       % This is the branch that has information abou
 msioi1.name = 'Read Multi-Spectral IOI';             % The display name
 msioi1.tag  = 'msioi1'; %Very important: tag is used when calling for execution
 msioi1.val  = {top_bin_dir treatment_mode redo1 shrinkage_choice output_path_choice ...
-    session_choice save_choice memmapfileOn sess_min_image_files forceProcessingOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    session_choice save_choice memmapfileOn sess_min_image_files stim_cutoff forceProcessingOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 msioi1.prog = @ioi_msioi_run;  % A function handle that will be called with the harvested job to run the computation
 msioi1.vout = @ioi_cfg_vout_msioi; % A function handle that will be called with the harvested job to determine virtual outputs
 msioi1.help = {'Module to create .nifti images from .bin images'
