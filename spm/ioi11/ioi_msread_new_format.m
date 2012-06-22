@@ -41,7 +41,11 @@ try
     %leave voxel size in arbitrary units for now, for anatomical image
     vx_anat = [1 1 1];
     vx = [1 1 1];
-    TR = 0.2;
+    if isfield(job,'acq_freq')
+        TR = job.color_number/job.acq_freq;
+    else
+        TR = 0.2;
+    end
     if isfield(job,'stim_cutoff')
         stim_cutoff = job.stim_cutoff;
     else
@@ -110,7 +114,7 @@ try
                 if ~isempty(ons1)
                     ons = ons0([1 1+ons1']);
                 else
-                    ons = [];
+                    ons = []; %in case we have a rest session
                 end
                 clear names onsets durations
                 %Converted to seconds, rather than frame number
@@ -137,7 +141,7 @@ try
                 el = ConvertedData.Data.MeasuredData(5).Data;
                 save(elfile,'el');
                 IOI.res.electroOK = 1; %not by session...
-                IOI.res.sfel = 10000;
+                IOI.res.sfel = 1/stims_dt;
                 if expedite
                     ioi_plot_LFP(IOI,el,s1);
                 end
@@ -259,7 +263,7 @@ try
                     for c1=1:nColors
                         %skip laser
                         if ~(str_color(c1)==str_laser)
-                            median0{c1} = median(im_obj.Data.image_total(:,:,:,:,c1),4);
+                            median0{c1} = median(single(im_obj.Data.image_total(:,:,:,:,c1)),4);
                             %Save the median
                             str1 = str_color(c1);
                             sess.fname_median{c1} = fullfile(dir_subj_res,sess_str, ...

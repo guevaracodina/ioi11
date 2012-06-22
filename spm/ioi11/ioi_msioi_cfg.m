@@ -110,6 +110,32 @@ stim_cutoff.help    = {'Enter voltage cutoff. Sometimes it is 5 V, but 0.5 V '
     'is also possible'
     'Only applicable for new recording system.'}'; 
 
+acq_freq         = cfg_entry; 
+acq_freq.name    = 'Acquisition frequency (of all colors) in Hz';
+acq_freq.tag     = 'acq_freq';       
+acq_freq.strtype = 'r';
+acq_freq.num     = [1 1];
+acq_freq.val     = {20};
+acq_freq.help    = {'Acquisition frequency'
+    'Enter 20 Hz if this is the frequency of the camera. '
+    'If there are 4 colors recorded, then the TR will be 0.2 s.'}'; 
+
+color_number         = cfg_entry; 
+color_number.name    = 'Number of colors acquired';
+color_number.tag     = 'color_number';       
+color_number.strtype = 'r';
+color_number.num     = [1 1];
+color_number.val     = {4};
+color_number.help    = {'Number of colors acquired'}'; 
+
+% order_colors         = cfg_entry; 
+% order_colors.name    = 'Color order';
+% order_colors.tag     = 'order_colors';       
+% order_colors.strtype = 's';
+% order_colors.num     = [1 1];
+% order_colors.val     = {'RVJL'};
+% order_colors.help    = {'Enter acquisition colors in French.'}'; 
+
 save_choice        = cfg_menu;
 save_choice.name   = 'Choose saving method';
 save_choice.tag    = 'save_choice';
@@ -144,7 +170,8 @@ msioi1      = cfg_exbranch;       % This is the branch that has information abou
 msioi1.name = 'Read Multi-Spectral IOI';             % The display name
 msioi1.tag  = 'msioi1'; %Very important: tag is used when calling for execution
 msioi1.val  = {top_bin_dir treatment_mode redo1 shrinkage_choice output_path_choice ...
-    session_choice save_choice memmapfileOn sess_min_image_files stim_cutoff forceProcessingOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    session_choice save_choice memmapfileOn sess_min_image_files ...
+    color_number stim_cutoff acq_freq forceProcessingOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 msioi1.prog = @ioi_msioi_run;  % A function handle that will be called with the harvested job to run the computation
 msioi1.vout = @ioi_cfg_vout_msioi; % A function handle that will be called with the harvested job to determine virtual outputs
 msioi1.help = {'Module to create .nifti images from .bin images'
