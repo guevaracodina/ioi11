@@ -22,6 +22,7 @@ else
 end
 remove_segment_drift = job.remove_segment_drift;
 fit_3_gamma = job.fit_3_gamma;
+extract_HRF = job.extract_HRF;
 %Other options
 generate_global = job.generate_global;
 IC = job.IC; %colors to include
@@ -89,8 +90,8 @@ for SubjIdx=1:length(job.IOImat)
                     end
                 end
                 %restric onsets
-                [IOI onsets_list] = ioi_restrict_onsets(IOI,job,rmi,ust);             
-                
+                [IOI onsets_list] = ioi_restrict_onsets(IOI,job,rmi,ust);
+                %                 onsets_list=onsets_list{2};
                 %Check whether there is the same number of onset types in
                 %each session; this is a
                 %check if averaging over all selected sessions is sensible
@@ -151,7 +152,9 @@ for SubjIdx=1:length(job.IOImat)
                 Mb = cell(Nroi,maxM);
                 Da = cell(Nroi,maxM);
                 Db = cell(Nroi,maxM);
-                
+                Dma = cell(Nroi,maxM);
+                Dmb = cell(Nroi,maxM);
+                Rs = cell(Nroi,maxM);
                 %loop over onset types
                 for m1=1:maxM
                     %loop over colors
@@ -205,14 +208,14 @@ for SubjIdx=1:length(job.IOImat)
                                             OP.ubf = 1; %use Butterworth filter
                                             OP.bf = 0.01; %Butterworth HPF cutoff
                                             OP.bo = 2; %Butterworth order
-
+                                            
                                             %if ~isempty(rmi{i0})
-                                                if IOI.color.eng(c1) == IOI.color.flow
-                                                    OP.ubf = 0;
-                                                else
-                                                    OP.ubf = 1;
-                                                end
-                                                tmp_d = ioi_remove_jumps(tmp_d,OP);
+                                            if IOI.color.eng(c1) == IOI.color.flow
+                                                OP.ubf = 0;
+                                            else
+                                                OP.ubf = 1;
+                                            end
+                                            tmp_d = ioi_remove_jumps(tmp_d,OP);
                                             %end
                                         catch
                                             tmp_d = [];
@@ -535,12 +538,14 @@ for SubjIdx=1:length(job.IOImat)
                                             h(h1) = figure;
                                             leg_str = {};
                                             for c1 = ctotal
-                                                if ~add_error_bars
-                                                    plot(ls,Ma{r2,m1}{c1,s1},[lp1{1} lp2{c1}]); hold on
-                                                else
-                                                    errorbar(ls(2:end-1),Ma{r2,m1}{c1,s1}(2:end-1),Da{r2,m1}{c1,s1}(2:end-1),[lp1{1} lp2{c1}]); hold on
+                                                try %in case we do not have this color
+                                                    if ~add_error_bars
+                                                        plot(ls,Ma{r2,m1}{c1,s1},[lp1{1} lp2{c1}]); hold on
+                                                    else
+                                                        errorbar(ls(2:end-1),Ma{r2,m1}{c1,s1}(2:end-1),Da{r2,m1}{c1,s1}(2:end-1),[lp1{1} lp2{c1}]); hold on
+                                                    end
+                                                    leg_str = [leg_str; lp3{c1}];
                                                 end
-                                                leg_str = [leg_str; lp3{c1}];
                                                 if extract_HRF
                                                     if include_nlinfit
                                                         plot(ls,F{r2,m1}{c1,s1}.yp,[lp1{2} lp2{c1}]); hold on
@@ -566,30 +571,34 @@ for SubjIdx=1:length(job.IOImat)
                                     %Figures with ROIs combined on same figure - one figure per color
                                     if size(Ma,1) <= length(lp1) %plot identifiable ROIs
                                         for c1 = ctotal
-                                            h1 = h1 + 1;
-                                            h(h1) = figure;
-                                            r2 = 0;
-                                            leg = {};
-                                            for r1=1:length(ROI)
-                                                if all_ROIs || sum(r1==selected_ROIs)
-                                                    r2 = r2+1;
-                                                    if ~add_error_bars
-                                                        plot(ls,Ma{r2,m1}{c1,s1},[lp1{r2} lp2{c1}]); hold on
-                                                    else
-                                                        errorbar(ls(2:end-1),Ma{r2,m1}{c1,s1}(2:end-1),Da{r2,m1}{c1,s1}(2:end-1),[lp1{r2} lp2{c1}]); hold on
-                                                    end
-                                                    try
-                                                        leg = [leg; IOI.res.ROI{r1}.name];
-                                                    catch
-                                                        leg = [leg; ['ROI ' int2str(r1)]];
+                                            try %if we do not have this color
+                                                h1 = h1 + 1;
+                                                h(h1) = figure;
+                                                r2 = 0;
+                                                leg = {};
+                                                for r1=1:length(ROI)
+                                                    if all_ROIs || sum(r1==selected_ROIs)
+                                                        
+                                                        r2 = r2+1;
+                                                        if ~add_error_bars
+                                                            plot(ls,Ma{r2,m1}{c1,s1},[lp1{r2} lp2{c1}]); hold on
+                                                        else
+                                                            errorbar(ls(2:end-1),Ma{r2,m1}{c1,s1}(2:end-1),Da{r2,m1}{c1,s1}(2:end-1),[lp1{r2} lp2{c1}]); hold on
+                                                        end
+                                                        try
+                                                            leg = [leg; IOI.res.ROI{r1}.name];
+                                                        catch
+                                                            leg = [leg; ['ROI ' int2str(r1)]];
+                                                        end
+                                                        
                                                     end
                                                 end
-                                            end
-                                            legend(gca,leg);
-                                            if save_figures
-                                                tit = [IOI.subj_name ' Color ' IOI.color.eng(c1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
-                                                title(tit);
-                                                ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
+                                                legend(gca,leg);
+                                                if save_figures
+                                                    tit = [IOI.subj_name ' Color ' IOI.color.eng(c1) ', Session ' int2str(s1) ', Stimulus ' int2str(m1)];
+                                                    title(tit);
+                                                    ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
+                                                end
                                             end
                                         end
                                     else

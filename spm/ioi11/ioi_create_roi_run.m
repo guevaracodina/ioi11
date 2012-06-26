@@ -63,6 +63,7 @@ for SubjIdx=1:length(job.IOImat)
             spm_figure('GetWin', 'Graphics');
             spm_figure('Clear', 'Graphics');
                 
+           if isfield(job,'displayBrainmask')
             if job.displayBrainmask == 1
                 % Display only brain pixels mask
                 vol = spm_vol(IOI.fcIOS.mask.fname);
@@ -70,6 +71,9 @@ for SubjIdx=1:length(job.IOImat)
             else
                 % Display all the image
                 full_mask = ones(size(im_anat));
+            end
+            else
+                full_mask=ones(size(im_anat));
             end
             
             if ~autoROI
