@@ -253,7 +253,7 @@ try
                             im_obj.Data.image_total(:,:,:,tframe+iC,tcol) = tmp_image{tcol};
                             %image_total{tcol}(:,:,:,tframe) = tmp_image{tcol};
                             if s1==1 && f1==1 && (fr1 <= nColors) && strcmp(str_color(tcol),str_anat)
-                                image_anat = images{fr1};
+                                image_anat = images{fr1}; %problem with fr1 sometimes...
                             end
                         end
                         iC = iC + nImages;

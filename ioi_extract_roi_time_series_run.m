@@ -34,7 +34,7 @@ for SubjIdx=1:length(job.IOImat)
             disp(['No ROI available for subject ' int2str(SubjIdx) ' ... skipping series extraction']);
         else
             if ~isfield(IOI.res,'seriesOK') || job.force_redo
-                % Get mask for each ROI 
+                % Get mask for each ROI
                 [IOI mask] = ioi_get_ROImask(IOI,job);
                 % Extract ROI
                 [ROI IOI] = ioi_extract_core(IOI,job,mask);
@@ -52,35 +52,36 @@ for SubjIdx=1:length(job.IOImat)
                 save(IOImat,'IOI');
             end
         end
-        
-        if ~isfield(IOI.fcIOS.mask, 'maskOK')
-            disp(['No brain mask available for subject ' int2str(SubjIdx) ' (' IOI.subj_name ')'  ' ... skipping series extraction']);
-        elseif job.extractBrainMask
-            % ------------------ Extract brain mask here -----------------------
-            if ~isfield(IOI.fcIOS.mask,'seriesOK') || job.force_redo
-                disp(['Extracting time series of global brain signal for subject ' int2str(SubjIdx) ' (' IOI.subj_name ')']);
-                % Get brain mask 
-                [IOI mask] = ioi_get_network_mask(IOI,job);
-                % Extract brain mask here
-                [brainMaskSeries IOI] = ioi_extract_core(IOI,job,mask);
-                % Brain mask time series extraction succesful!
-                IOI.fcIOS.mask.seriesOK = true;
-                if isfield(job.IOImatCopyChoice,'IOImatCopy')
-                    newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-                    newDir = fullfile(dir_ioimat,newDir);
-                    if ~exist(newDir,'dir'),mkdir(newDir); end
-                    IOImat = fullfile(newDir,'IOI.mat');
+        if job.extractBrainMask
+            if ~isfield(IOI.fcIOS.mask, 'maskOK')
+                disp(['No brain mask available for subject ' int2str(SubjIdx) ' (' IOI.subj_name ')'  ' ... skipping series extraction']);
+            elseif job.extractBrainMask
+                % ------------------ Extract brain mask here -----------------------
+                if ~isfield(IOI.fcIOS.mask,'seriesOK') || job.force_redo
+                    disp(['Extracting time series of global brain signal for subject ' int2str(SubjIdx) ' (' IOI.subj_name ')']);
+                    % Get brain mask
+                    [IOI mask] = ioi_get_network_mask(IOI,job);
+                    % Extract brain mask here
+                    [brainMaskSeries IOI] = ioi_extract_core(IOI,job,mask);
+                    % Brain mask time series extraction succesful!
+                    IOI.fcIOS.mask.seriesOK = true;
+                    if isfield(job.IOImatCopyChoice,'IOImatCopy')
+                        newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
+                        newDir = fullfile(dir_ioimat,newDir);
+                        if ~exist(newDir,'dir'),mkdir(newDir); end
+                        IOImat = fullfile(newDir,'IOI.mat');
+                    end
+                    [dir1 dummy] = fileparts(IOImat);
+                    fnameSeries = fullfile(dir1,'brainMaskSeries.mat');
+                    save(fnameSeries,'brainMaskSeries');
+                    % identify in IOI the file name of the time series
+                    IOI.fcIOS.mask.fnameSeries = fnameSeries;
+                    save(IOImat,'IOI');
                 end
-                [dir1 dummy] = fileparts(IOImat);
-                fnameSeries = fullfile(dir1,'brainMaskSeries.mat');
-                save(fnameSeries,'brainMaskSeries');
-                % identify in IOI the file name of the time series
-                IOI.fcIOS.mask.fnameSeries = fnameSeries;
-                save(IOImat,'IOI');
             end
         end
         toc
-        disp(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ' complete']);
+        disp(['Subject ' int2str(SubjIdx) ' complete']);
         out.IOImat{SubjIdx} = IOImat;
     catch exception
         disp(exception.identifier)
