@@ -1,7 +1,9 @@
 function extract_roi1 = ioi_extract_roi_time_series_cfg
-%_______________________________________________________________________
+%_______________________________________________________________________________
 % Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
+%_______________________________________________________________________________
+
 IOImat = ioi_dfg_IOImat(1);
 redo1 = ioi_dfg_redo(0);
 IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('Series');
@@ -18,7 +20,7 @@ extractBrainMask.tag       = 'extractBrainMask';
 extractBrainMask.name      = 'Extract brain mask signal';
 extractBrainMask.labels    = {'False','True'};
 extractBrainMask.values    = {0,1};
-extractBrainMask.val       = {1};
+extractBrainMask.val       = {0};   % Default value = 0
 extractBrainMask.help      = {'Extract mean signal from the non-masked brain pixels'};
 
 % Executable Branch

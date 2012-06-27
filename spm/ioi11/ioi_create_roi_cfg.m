@@ -76,7 +76,7 @@ displayBrainmask.tag     = 'displayBrainmask';
 displayBrainmask.name    = 'Display Brain Mask';
 displayBrainmask.labels  = {'Yes','No'};
 displayBrainmask.values  = {1,0};
-displayBrainmask.val     = {0};
+displayBrainmask.val     = {0}; % Default value = 0
 displayBrainmask.help    = {'Display network mask containing only brain pixels'};
 
 % Executable Branch
