@@ -63,15 +63,15 @@ for SubjIdx=1:length(job.IOImat)
             spm_figure('GetWin', 'Graphics');
             spm_figure('Clear', 'Graphics');
                 
-           if isfield(job,'displayBrainmask')
-            if job.displayBrainmask == 1
-                % Display only brain pixels mask
-                vol = spm_vol(IOI.fcIOS.mask.fname);
-                full_mask = logical(spm_read_vols(vol));
-            else
-                % Display all the image
-                full_mask = ones(size(im_anat));
-            end
+            if isfield(job,'displayBrainmask')
+                if job.displayBrainmask == 1
+                    % Display only brain pixels mask
+                    vol = spm_vol(IOI.fcIOS.mask.fname);
+                    full_mask = logical(spm_read_vols(vol));
+                else
+                    % Display all the image
+                    full_mask = ones(size(im_anat));
+                end
             else
                 full_mask=ones(size(im_anat));
             end
@@ -79,25 +79,34 @@ for SubjIdx=1:length(job.IOImat)
             if ~autoROI
                 %Display images of changes from 10th to 90th percentile for all sessions
                 try
+                    nCols = ceil(sqrt(length(IOI.sess_res)));
+                    nRows = ceil(length(IOI.sess_res) / nRows);
                     for i0=1:length(IOI.sess_res)
-                        hs{i0} = figure;
+                        % Only open 1 figure for all the sessions
+                        if i0 == 1,
+                            hs = figure;
+                            set(hs, 'Name', '10-90 percentile changes')
+                        end
                         V = spm_vol(IOI.sess_res{i0}.fname_change_90_10{1}); %color green
                         tmp_image = spm_read_vols(V);
-                        imagesc(tmp_image);
+                        figure(hs);
+                        subplot(nRows, nCols, i0);
+                        imagesc(tmp_image); axis image
                         title(['Session ' int2str(i0) ': ratio of 90th to 10th percentile']);
                     end
                 end
-                p = 1;
-                h2 = figure; spm_input(['Subject ' int2str(SubjIdx)],'-1','d');
-                
-                % full_mask = ones(size(im_anat)); % Is it still necessary? //EGC
-                
+                oneMoreROI = 1;
+                % Goto interactive window
+                h2 = spm_figure('GetWin', 'Interactive');
+                spm_figure('Clear', 'Interactive');
+                spm_input(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ],'-1','d');
+
                 linecount = 0;
-                while p
+                while oneMoreROI
                     figure(h2);
-                    p = spm_input('Add an ROI?',2*linecount+2,'y/n');
-                    if p == 'y', p = 1; else p = 0; end
-                    if p
+                    oneMoreROI = spm_input('Add an ROI?',2*linecount+2,'y/n');
+                    if oneMoreROI == 'y', oneMoreROI = 1; else oneMoreROI = 0; end
+                    if oneMoreROI
                         % h1 = figure('Position',[20 50 3*size(im_anat,1) 3*size(im_anat,2)]);
                         % Display anatomical image on SPM graphics window
                         spm_figure('GetWin', 'Graphics');
@@ -137,16 +146,16 @@ for SubjIdx=1:length(job.IOImat)
                         IOI.res.ROI{index}.name = name;
                         if index < 10, str0 = '0'; else str0 = ''; end
                         str = [str0 int2str(index)];
-                        fname_mask = fullfile(dir1,[fil1 '_ROI_' str '.nii']);
+                        % Save nifti files in ROI sub-folder //EGC
+                        fname_mask = fullfile(newDir,[fil1 '_ROI_' str '.nii']);
                         IOI.res.ROI{index}.fname = fname_mask;
                         ioi_save_nifti(mask, fname_mask, vx);
                     end
                 end
                 % try close(h1); end
-                try close(h2); end
-                for i0=1:length(IOI.sess_res)
-                    try close(hs{i0}); end
-                end
+                % try close(h2); end
+                try close(hs); end
+                
             else
                 %automatic ROIs
                 %h1 = figure('Position',[20 50 3*size(im_anat,1) 3*size(im_anat,2)]);
@@ -168,7 +177,8 @@ for SubjIdx=1:length(job.IOImat)
                         mask = single(mask);
                         if index < 10, str0 = '0'; else str0 = ''; end
                         str = [str0 int2str(index)];
-                        fname_mask = fullfile(dir1,[fil1 '_ROI_' str '_' int2str(i1) 'x' int2str(i2) '.nii']);
+                        % Save nifti files in ROI sub-folder //EGC
+                        fname_mask = fullfile(newDir,[fil1 '_ROI_' str '_' int2str(i1) 'x' int2str(i2) '.nii']);
                         IOI.res.ROI{index}.fname = fname_mask;
                         ioi_save_nifti(mask, fname_mask, vx);
                     end

@@ -97,7 +97,7 @@ for SubjIdx=1:length(job.IOImat)
                                                     % the mean global signal
                                                     % just to test
                                                     SPM.xX.name = cellstr(['Global Brain Signal']);
-                                                    SPM.xX.X = brainSignal';        % Regression is along first dimension
+                                                    SPM.xX.X = brainSignal';        % Regression is along first dimension. For one regressor it is a column vector.
                                                     
                                                     % A revoir
                                                     SPM.xX.iG = [];
@@ -126,6 +126,7 @@ for SubjIdx=1:length(job.IOImat)
                                                     fprintf('GLM for ROI %d Session %d Color %d done!\n',r1,s1,c1)
                                                 end
                                             end
+                                            % GLM on images here!
                                         end
                                     end % ROI loop
                                 end % colors loop
