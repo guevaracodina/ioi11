@@ -12,7 +12,7 @@ IOImat = ioi_dfg_IOImat(1);
 % Force processing
 redo1 = ioi_dfg_redo(0);
 % IOI copy/overwrite method
-IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('GLM');
+IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('GLMfcIOS');
 % Choose ROI selection method (all/selected)
 ROI_choice = ioi_dfg_ROI_choice;
 % Choose session selection method (all/selected)

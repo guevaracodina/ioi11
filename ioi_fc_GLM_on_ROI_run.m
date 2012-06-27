@@ -50,6 +50,7 @@ for SubjIdx=1:length(job.IOImat)
                         IC = job.IC;
                         % Load filtered downsampled signals
                         filtNdownData = load(IOI.fcIOS.filtNdown.fname);
+                        fnameROIregress = fullfile(newDir,'ROIregress.mat');
                         % Loop over sessions
                         for s1=1:length(IOI.sess_res)
                             if all_sessions || sum(s1==selected_sessions)
@@ -59,10 +60,14 @@ for SubjIdx=1:length(job.IOImat)
                                     if doColor
                                         %skip laser - only extract for flow
                                         if ~(IOI.color.eng(c1)==IOI.color.laser)
+                                            %% GLM on images here!
+                                            
                                             % Loop over ROIs
                                             for r1=1:length(IOI.res.ROI)
                                                 if all_ROIs || sum(r1==selected_ROIs)
-                                                    %% Do my GLM spm code here
+                                                    % Initialize y tilde (ROIregress)
+                                                    ROIregress{r1}{s1,c1} = [];
+                                                    %% Do my GLM on ROI code here
                                                     % Get filtered downsampled
                                                     % signals
                                                     brainSignal = filtNdownData.filtNdownBrain{1}{s1, c1};
@@ -71,9 +76,9 @@ for SubjIdx=1:length(job.IOImat)
                                                     % Display plots on SPM graphics window
                                                     spm_figure('GetWin', 'Graphics');
                                                     spm_figure('Clear', 'Graphics');
-                                                    subplot(211); plot(y);
+                                                    subplot(311); plot(y);
                                                     title(sprintf('Seed %d time-course, S%d, C%d',r1,s1,c1));
-                                                    subplot(212); plot(brainSignal);
+                                                    subplot(312); plot(brainSignal);
                                                     title(sprintf('Mean global signal time-course, S%d, C%d',s1,c1));
                                                     
                                                     % Creating nifti files to be able to use SPM later
@@ -114,6 +119,25 @@ for SubjIdx=1:length(job.IOImat)
                                                     % GLM is performed here
                                                     SPM = spm_spm(SPM);
                                                     
+                                                    if job.regressBrainSignal == 1,
+                                                        % Subtract global brain
+                                                        % signal from ROI time
+                                                        % courses
+                                                        betaVol = spm_vol(fullfile(SPM.swd,SPM.Vbeta.fname));
+                                                        beta = spm_read_vols(betaVol);
+                                                        ROIregress{r1}{s1, c1} = y - beta * brainSignal;
+                                                        
+                                                        % Brain signal regression succesful!
+                                                        IOI.fcIOS.SPM(1).ROIregressOK{r1}{s1, c1} = true;
+                                                        
+                                                        % Identify in IOI the file name of the time series
+                                                        IOI.fcIOS.SPM(1).fnameROIregress = fnameROIregress;
+                                                        colorNames = fieldnames(IOI.color);
+                                                        fprintf('Global brain signal regressed from ROI %d (%s) Session %d Color %d (%s) done!\n',r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1})
+                                                        subplot(313); plot(ROIregress{r1}{s1, c1});
+                                                        title(sprintf('Global signal regressed from ROI time-course %d, S%d, C%d',r1,s1,c1));
+                                                    end
+                                                    
                                                     % Update SPM matrix info
                                                     IOI.fcIOS.SPM(1).fname{r1}{s1, c1} = SPM.swd;
                                                     
@@ -126,7 +150,6 @@ for SubjIdx=1:length(job.IOImat)
                                                     fprintf('GLM for ROI %d Session %d Color %d done!\n',r1,s1,c1)
                                                 end
                                             end
-                                            % GLM on images here!
                                         end
                                     end % ROI loop
                                 end % colors loop
@@ -134,6 +157,9 @@ for SubjIdx=1:length(job.IOImat)
                         end % sessions loop
                         % GLM regression succesful!
                         IOI.fcIOS.SPM(1).GLMOK = true;
+                        if job.regressBrainSignal == 1,
+                            save(fnameROIregress,'ROIregress');
+                        end
                         save(IOImat,'IOI');
                     end % GLM OK or redo job
                 end % Filtering&Downsampling OK
