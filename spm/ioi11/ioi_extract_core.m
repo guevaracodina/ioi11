@@ -45,7 +45,8 @@ for s1=1:length(IOI.sess_res)
                         [IOI ROI] = ioi_extract_main(IOI,ROI,job,d,d3,d4,c1,s1,colorOK,mask);
                     end
                     if colorOK
-                        disp(['ROIs for session ' int2str(s1) ' and color ' IOI.color.eng(c1) ' completed']);
+                        colorNames = fieldnames(IOI.color);
+                        fprintf('ROIs/seeds time-course for session %d and color %d (%s) completed\n',s1,c1,colorNames{1+c1})
                     end
                 end
             end

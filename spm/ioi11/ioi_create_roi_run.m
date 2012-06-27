@@ -98,7 +98,6 @@ for SubjIdx=1:length(job.IOImat)
                 oneMoreROI = 1;
                 % Goto interactive window
                 h2 = spm_figure('GetWin', 'Interactive');
-                spm_figure('Clear', 'Interactive');
                 spm_input(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ],'-1','d');
 
                 linecount = 0;
