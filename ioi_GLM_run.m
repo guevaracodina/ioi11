@@ -226,6 +226,7 @@ for SubjIdx=1:length(job.IOImat)
                                             b = Xm * y'; % beta : least square estimate
                                             %Compute t stat
                                             %res = ; %a few seconds
+                                            %ytilde = y'-X*b;
                                             res2 = sum((y'-X*b).^2);
                                             clear y
                                             mse = res2/length(res2);
