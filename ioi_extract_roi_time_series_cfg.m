@@ -25,7 +25,7 @@ extractBrainMask.help      = {'Extract mean signal from the non-masked brain pix
 
 % Executable Branch
 extract_roi1      = cfg_exbranch;       % This is the branch that has information about how to run this module
-extract_roi1.name = 'Extract ROI';             % The display name
+extract_roi1.name = 'Extract ROI/seed';             % The display name
 extract_roi1.tag  = 'extract_roi1'; %Very important: tag is used when calling for execution
 extract_roi1.val  = {IOImat redo1 IOImatCopyChoice session_choice ROI_choice IC extractBrainMask};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 extract_roi1.prog = @ioi_extract_roi_time_series_run;  % A function handle that will be called with the harvested job to run the computation

@@ -54,23 +54,80 @@ for SubjIdx=1:length(job.IOImat)
                         % Loop over sessions
                         for s1=1:length(IOI.sess_res)
                             if all_sessions || sum(s1==selected_sessions)
+                                sessionDir = [newDir filesep 'S' sprintf('%02d',s1)];
+                                if ~exist(sessionDir,'dir'),mkdir(sessionDir); end
                                 % Loop over available colors
                                 for c1=1:length(IOI.sess_res{s1}.fname)
                                     doColor = ioi_doColor(IOI,c1,IC);
                                     if doColor
                                         %skip laser - only extract for flow
                                         if ~(IOI.color.eng(c1)==IOI.color.laser)
-                                            %% GLM on images here!
+                                            colorDir = [sessionDir filesep 'C' sprintf('%d',c1)];
+                                            if ~exist(colorDir,'dir'),mkdir(colorDir); end
+                                            % Get filtered downsampled signals
+                                            brainSignal = filtNdownData.filtNdownBrain{1}{s1, c1};
+                                            dim = [1 1 1/IOI.fcIOS.filtNdown.downFreq];
+                                            if job.wholeImage
+                                                %% GLM on images here!
+                                                % y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,dir_ioimat,shrinkage_choice);
+                                                
+                                                % Constructing inputs required for
+                                                % GLM analysis within the SPM
+                                                % framework
+                                                SPM.xY.VY = spm_vol(IOI.fcIOS.filtNdown.fnameWholeImage{s1, c1});
+                                                y = spm_read_vols(SPM.xY.VY);
+                                                % Preallocating output images
+                                                yRegress = zeros(size(y));
+                                                
+                                                % All regressors are identified
+                                                % here, lets take the mean global
+                                                % signal just to test
+                                                SPM.xX.name = cellstr(['Global Brain Signal']);
+                                                SPM.xX.X = brainSignal';        % Regression is along first dimension. For one regressor it is a column vector.
+                                                
+                                                % A revoir
+                                                SPM.xX.iG = [];
+                                                SPM.xX.iH = [];
+                                                SPM.xX.iC = 1:size(SPM.xX,2);   % Indices of regressors of interest
+                                                SPM.xX.iB = [];                 % Indices of confound regressors
+                                                
+                                                SPM.xVi.Vi = {speye(size(SPM.xX.X,1))}; % Time correlation
+                                                
+                                                % Directory to save SPM and img/hdr
+                                                % files
+                                                SPM.swd = colorDir;
+                                                if ~exist(SPM.swd,'dir'),mkdir(SPM.swd); end
+                                                
+                                                % GLM is performed here
+                                                SPM = spm_spm(SPM);
+                                                
+                                                if job.regressBrainSignal == 1,
+                                                    % Subtract global brain signal
+                                                    % from every pixel time course
+                                                    betaVol = spm_vol(fullfile(SPM.swd,SPM.Vbeta.fname));
+                                                    beta = spm_read_vols(betaVol);
+                                                    brainSignalRep(1,1,1,:) = brainSignal;
+                                                    yRegress = y - repmat(beta,[1 1 1 size(y,4)]) .* repmat(brainSignalRep,[size(beta,1) size(beta,2) 1 1]);
+                                                    
+                                                    filtNdownfnameRegress = fullfile(sessionDir,[IOI.subj_name '_OD_' IOI.color.eng(c1) '_regress_' sprintf('%05d',1) 'to' sprintf('%05d',IOI.sess_res{s1}.n_frames) '.nii']);
+                                                    % Save NIFTI file
+                                                    ioi_save_nifti(yRegress, filtNdownfnameRegress, dim);
+                                                    % Brain signal regression succesful!
+                                                    IOI.fcIOS.SPM(1).wholeImageRegressOK{s1, c1} = true;
+                                                end
+                                                % Update SPM matrix info
+                                                IOI.fcIOS.SPM(1).fnameSPM{s1, c1} = SPM.swd;
+                                                IOI.fcIOS.SPM(1).fname{s1, c1} = filtNdownfnameRegress;
+                                            end % end on GLM on images
                                             
                                             % Loop over ROIs
                                             for r1=1:length(IOI.res.ROI)
                                                 if all_ROIs || sum(r1==selected_ROIs)
+                                                    ROIdir = [colorDir filesep 'ROI' sprintf('%02d',r1)];
+                                                    if ~exist(ROIdir,'dir'),mkdir(ROIdir); end
                                                     % Initialize y tilde (ROIregress)
                                                     ROIregress{r1}{s1,c1} = [];
                                                     %% Do my GLM on ROI code here
-                                                    % Get filtered downsampled
-                                                    % signals
-                                                    brainSignal = filtNdownData.filtNdownBrain{1}{s1, c1};
                                                     y = filtNdownData.filtNdownROI{r1}{s1, c1};
                                                     
                                                     % Display plots on SPM graphics window
@@ -83,12 +140,12 @@ for SubjIdx=1:length(job.IOImat)
                                                     
                                                     % Creating nifti files to be able to use SPM later
                                                     % --------------------------
-                                                    fnameNIFTI = fullfile(newDir,['ROI' num2str(r1) '_S' num2str(s1) '_C' num2str(c1),'.nii']);
-                                                    dim=[1,1,1];
+                                                    fnameNIFTI = fullfile(ROIdir,['ROI' sprintf('%02d',r1) '_S' sprintf('%02d',s1) '_C' num2str(c1),'.nii']);
+                                                    dim = [1 1 1];
                                                     % Create a single voxel 4-D
                                                     % series
                                                     y2(1,1,1,:) = y;
-                                                    ioi_write_nifti(y2, dim, [], spm_type('float64'), '', fnameNIFTI);
+                                                    ioi_save_nifti(y2, fnameNIFTI, dim);
                                                     % --------------------------
                                                     % end of nifti processing
                                                     
@@ -114,7 +171,7 @@ for SubjIdx=1:length(job.IOImat)
                                                     
                                                     % Directory to save SPM and
                                                     % img/hdr files
-                                                    SPM.swd = [newDir filesep 'ROI' num2str(r1) '_S' num2str(s1) '_C' num2str(c1)];
+                                                    SPM.swd = ROIdir;
                                                     if ~exist(SPM.swd,'dir'),mkdir(SPM.swd); end
                                                     % GLM is performed here
                                                     SPM = spm_spm(SPM);
@@ -137,10 +194,9 @@ for SubjIdx=1:length(job.IOImat)
                                                         subplot(313); plot(ROIregress{r1}{s1, c1});
                                                         title(sprintf('Global signal regressed from ROI time-course %d, S%d, C%d',r1,s1,c1));
                                                     end
-                                                    
                                                     % Update SPM matrix info
-                                                    IOI.fcIOS.SPM(1).fname{r1}{s1, c1} = SPM.swd;
-                                                    
+                                                    IOI.fcIOS.SPM(1).fnameROISPM{r1}{s1, c1} = SPM.swd;
+                                                    IOI.fcIOS.SPM(1).fnameROInifti{r1}{s1, c1} = fnameNIFTI;
                                                     % Contrasts
                                                     % --------------------------
                                                     % [Ic, xCon] = spm_conman(SPM, 'T|F', Inf, 'Select contrasts...', 'Contrasts amongst spectral regressors', 1);

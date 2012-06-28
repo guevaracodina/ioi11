@@ -31,6 +31,8 @@ for SubjIdx=1:length(job.IOImat)
         end
         
         if ~isfield(IOI.fcIOS.filtNdown,'filtNdownOK') || job.force_redo
+            % Get shrinkage options
+            shrinkage_choice = IOI.res.shrinkageOn;
             % Filter & Downsample time series
             % ------------------------------------------------------------------
             % Original Sampling Frequency (5 Hz per color, data is sampled at 20
@@ -43,6 +45,7 @@ for SubjIdx=1:length(job.IOImat)
             % Real downsampling frequency
             samples2skip = round(fs/job.downFreq);
             fprintf('Real downsampling frequency: %0.1f Hz \n',fs/samples2skip);
+            IOI.fcIOS.filtNdown(1).fs = fs/samples2skip;
             
             % Filter order
             filterOrder = 4;
@@ -59,12 +62,47 @@ for SubjIdx=1:length(job.IOImat)
             % Loop over sessions
             for s1=1:length(IOI.sess_res)
                 if all_sessions || sum(s1==selected_sessions)
+                    colorNames = fieldnames(IOI.color);
                     % Loop over available colors
                     for c1=1:length(IOI.sess_res{s1}.fname)
                         doColor = ioi_doColor(IOI,c1,IC);
                         if doColor
                             colorOK = 1;
                             if ~(IOI.color.eng(c1)==IOI.color.laser)
+                                if job.wholeImage
+                                    %% Filtering & Downsampling whole images
+                                    y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,dir_ioimat,shrinkage_choice);
+                                    % Preallocating output images
+                                    filtY = zeros([size(y,1) size(y,2) 1 size(y,3)]);
+                                    % Computing lenght of time vector
+                                    nT = ceil(size(y,3) / samples2skip);
+                                    filtNdownY = zeros([size(y,1) size(y,2) 1 nT]);
+                                    % Read brain mask file
+                                    vol = spm_vol(IOI.fcIOS.mask.fname);
+                                    brainMask = spm_read_vols(vol);
+                                    spm_progress_bar('Init', size(filtY,1), 'Filtering & Downsampling', 'Pixels along X');
+                                    for iX = 1:size(filtY,1)
+                                        spm_progress_bar('Set', iX);
+                                        for iY = 1:size(filtY,2)
+                                            if brainMask(iX,iY) == 1
+                                                % Only non-masked pixels
+                                                % Band-passs filtering
+                                                filtY(iX,iY,1,:) = ButterLPF(fs,job.BPFfreq(2),filterOrder,squeeze(y(iX,iY,:)));
+                                                filtY(iX,iY,1,:) = ButterHPF(fs,job.BPFfreq(1),filterOrder,squeeze(filtY(iX,iY,1,:)));
+                                                % Downsampling
+                                                filtNdownY(iX,iY,1,:) = downsample(squeeze(filtY(iX,iY,1,:)), samples2skip);
+                                            end
+                                        end
+                                    end
+                                    spm_progress_bar('Clear');
+                                    % Saving images
+                                    sessionDir = [newDir filesep 'S' sprintf('%02d',s1)];
+                                    if ~exist(sessionDir,'dir'),mkdir(sessionDir); end
+                                    filtNdownfnameWholeImage = fullfile(sessionDir,[IOI.subj_name '_OD_' IOI.color.eng(c1) '_filtNdown_' sprintf('%05d',1) 'to' sprintf('%05d',IOI.sess_res{s1}.n_frames) '.nii']);
+                                    ioi_save_nifti(filtNdownY, filtNdownfnameWholeImage, [1 1 samples2skip/fs]);
+                                    IOI.fcIOS.filtNdown.fnameWholeImage{s1, c1} = filtNdownfnameWholeImage;
+                                    fprintf('Filtering and downsampling whole images for session %d and color %d (%s) completed\n',s1,c1,colorNames{1+c1})
+                                end % End of filtering & downsampling whole images
                                 %skip laser - only extract for flow
                                 [all_ROIs selected_ROIs] = ioi_get_ROIs(job);
                                 msg_ColorNotOK = 1;
@@ -134,7 +172,7 @@ for SubjIdx=1:length(job.IOImat)
                                 if colorOK
                                     filtNdownROI{r1}{s1,c1} = ROIsignal;
                                     filtNdownBrain{1}{s1,c1} = brainSignal;
-                                    disp(['Filtering and Downsampling for session ' int2str(s1) ' and color ' IOI.color.eng(c1) ' completed']);
+                                    fprintf('Filtering and downsampling ROIs for session %d and color %d (%s) completed\n',s1,c1,colorNames{1+c1})
                                 end
                             end
                         end
@@ -157,6 +195,8 @@ for SubjIdx=1:length(job.IOImat)
             filtNdownfname = fullfile(dir1,'filtNdown.mat');
             save(filtNdownfname,'filtNdownROI','filtNdownBrain');
             IOI.fcIOS.filtNdown.fname = filtNdownfname;
+            IOI.fcIOS.filtNdown.downFreq = job.downFreq;
+            IOI.fcIOS.filtNdown.BPFfreq = job.BPFfreq;
             save(IOImat,'IOI');
             toc
         end
