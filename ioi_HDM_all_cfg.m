@@ -73,38 +73,7 @@ use_onset_amplitudes.val  = {0};
 use_onset_amplitudes.help = {'Use onset amplitudes as parameters to weigh the hemodynamic response.'}';
 
 hpf_butter = ioi_dfg_hpf_butter(1,0.01,3);
-
-% ---------------------------------------------------------------------
-% lpf Low-pass filter
-% ---------------------------------------------------------------------
-fwhm1      = cfg_entry;
-fwhm1.tag  = 'fwhm1';
-fwhm1.name = 'FWHM in seconds';
-fwhm1.val = {0.67};
-fwhm1.strtype = 'r';  
-fwhm1.num     = [1 1]; 
-fwhm1.help    = {'FWHM in seconds.'}; 
-
-lpf_gauss_On         = cfg_branch;
-lpf_gauss_On.tag     = 'lpf_gauss_On';
-lpf_gauss_On.name    = 'Gaussian LP filter';
-lpf_gauss_On.val     = {fwhm1}; 
-lpf_gauss_On.help    = {'Gaussian low-pass filter '}';
-   % '(applied forward then backward so that it does not create a time shift)'}';
-
-lpf_Off         = cfg_branch;
-lpf_Off.tag     = 'lpf_Off';
-lpf_Off.name    = 'LP filter off';
-lpf_Off.val     = {}; 
-lpf_Off.help    = {'Low pass filter turned off.'};
-
-lpf_choice      = cfg_choice;
-lpf_choice.tag  = 'lpf_choice';
-lpf_choice.name = 'Choose Low Pass Filter';
-lpf_choice.values = {lpf_gauss_On lpf_Off};
-lpf_choice.val = {lpf_gauss_On};
-lpf_choice.help = {'Choose whether to include a Low Pass Filter.'
-        'Parameters'}';
+lpf_choice = ioi_dfg_lpf_choice(1,0.67);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     

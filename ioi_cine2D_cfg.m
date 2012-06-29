@@ -79,6 +79,8 @@ high_limit.help    = {'Enter high limit as percentage of min to max.'
     'For HbR, the code will invert min and max so the user does not have to worry about it.'}';
 
 IC = ioi_dfg_include_colors(0,1,1,1,1);
+hpf_butter = ioi_dfg_hpf_butter(0,0.01,3);
+lpf_choice = ioi_dfg_lpf_choice(1,0.67);
 
 skip_overlap      = cfg_menu;
 skip_overlap.tag  = 'skip_overlap';
@@ -99,37 +101,6 @@ group_onset_types.val  = {1};
 group_onset_types.help = {'If there are several types of onsets, '
     'they will be grouped into the same type.'
     'This option overrides the which_onset_type to use.'}';
-
-% ---------------------------------------------------------------------
-% lpf Low-pass filter
-% ---------------------------------------------------------------------
-fwhm1      = cfg_entry;
-fwhm1.tag  = 'fwhm1';
-fwhm1.name = 'FWHM in seconds';
-fwhm1.val = {1};
-fwhm1.strtype = 'r';  
-fwhm1.num     = [1 1]; 
-fwhm1.help    = {'FWHM in seconds.'}; 
-
-lpf_gauss_On         = cfg_branch;
-lpf_gauss_On.tag     = 'lpf_gauss_On';
-lpf_gauss_On.name    = 'Gaussian LP filter';
-lpf_gauss_On.val     = {fwhm1}; 
-lpf_gauss_On.help    = {'Gaussian low-pass filter '
-    '(applied forward then backward so that it does not create a time shift)'}';
-
-lpf_Off         = cfg_branch;
-lpf_Off.tag     = 'lpf_Off';
-lpf_Off.name    = 'LP filter off';
-lpf_Off.val     = {}; 
-lpf_Off.help    = {'Low pass filter turned off.'};
-
-lpf_choice      = cfg_choice;
-lpf_choice.tag  = 'lpf_choice';
-lpf_choice.name = 'Choose Low Pass Filter';
-lpf_choice.values = {lpf_gauss_On lpf_Off};
-lpf_choice.val = {lpf_Off};
-lpf_choice.help = {'Choose whether to include a Low Pass Filter.'}';
  
 show_movie      = cfg_menu;
 show_movie.tag  = 'show_movie';
@@ -139,15 +110,23 @@ show_movie.values = {1,0};
 show_movie.val  = {1};
 show_movie.help = {'Show movie. In either case, the movie will be saved.'}';
 
+downFact      = cfg_entry;
+downFact.tag  = 'downFact';
+downFact.name = 'Downsampling factor';
+downFact.val = {5};
+downFact.strtype = 'r';  
+downFact.num     = [1 1]; 
+downFact.help    = {'Downsampling factor.'}; 
+
 % Executable Branch
 cine2D1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 cine2D1.name = '2D Cine';             % The display name
 cine2D1.tag  = 'cine2D1'; %Very important: tag is used when calling for execution
-cine2D1.val  = {IOImat redo1 IOImatCopyChoice session_choice shrinkage_choice ...
+cine2D1.val  = {IOImat redo1 IOImatCopyChoice session_choice shrinkage_choice downFact ...
     stim_choice window_after window_before window_offset skip_overlap ...
     normalize_choice group_onset_types which_onset_type ...
     high_limit low_limit IC ...
-    lpf_choice show_movie };    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    hpf_butter lpf_choice show_movie };    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 cine2D1.prog = @ioi_cine2D_run;  % A function handle that will be called with the harvested job to run the computation
 cine2D1.vout = @ioi_cfg_vout_cine2D; % A function handle that will be called with the harvested job to determine virtual outputs
 cine2D1.help = {'Generate a 2D movie'

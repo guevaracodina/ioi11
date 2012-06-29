@@ -30,39 +30,8 @@ use_stims = ioi_dfg_use_stims;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 hpf_butter = ioi_dfg_hpf_butter(1,0.01,3);
-
-% ---------------------------------------------------------------------
-% lpf Low-pass filter
-% ---------------------------------------------------------------------
-fwhm1      = cfg_entry;
-fwhm1.tag  = 'fwhm1';
-fwhm1.name = 'FWHM in seconds';
-fwhm1.val = {0.67};
-fwhm1.strtype = 'r';  
-fwhm1.num     = [1 1]; 
-fwhm1.help    = {'FWHM in seconds.'}; 
-
-lpf_gauss_On         = cfg_branch;
-lpf_gauss_On.tag     = 'lpf_gauss_On';
-lpf_gauss_On.name    = 'Gaussian LP filter';
-lpf_gauss_On.val     = {fwhm1}; 
-lpf_gauss_On.help    = {'Gaussian low-pass filter '
-    '(applied forward then backward so that it does not create a time shift)'}';
-
-lpf_Off         = cfg_branch;
-lpf_Off.tag     = 'lpf_Off';
-lpf_Off.name    = 'LP filter off';
-lpf_Off.val     = {}; 
-lpf_Off.help    = {'Low pass filter turned off.'};
-
-lpf_choice      = cfg_choice;
-lpf_choice.tag  = 'lpf_choice';
-lpf_choice.name = 'Choose Low Pass Filter';
-lpf_choice.values = {lpf_gauss_On lpf_Off};
-lpf_choice.val = {lpf_Off};
-lpf_choice.help = {'Choose whether to include a Low Pass Filter.'
-        'Parameters'}';
-    
+lpf_choice = ioi_dfg_lpf_choice(0,0.67);
+   
 remove_segment_drift      = cfg_menu;
 remove_segment_drift.tag  = 'remove_segment_drift';
 remove_segment_drift.name = 'Remove segment drift';
@@ -105,11 +74,8 @@ stim_mean_image1.tag  = 'stim_mean_image1'; %Very important: tag is used when ca
 stim_mean_image1.val  = {IOImat redo1 IOImatCopyChoice interactive_mode shrinkage_choice ...
     spatial_LPF session_choice window_start_delay ...
     window_after window_before window_offset normalize_choice hpf_butter ...
-    lpf_choice IC ...
-    which_onset_type ...
-    remove_stims use_stims remove_stims_SD ...
-    generate_figures save_figures ...
-    remove_segment_drift };    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    lpf_choice IC which_onset_type remove_stims use_stims remove_stims_SD ...
+    generate_figures save_figures remove_segment_drift };    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 stim_mean_image1.prog = @ioi_stim_mean_image_run;  % A function handle that will be called with the harvested job to run the computation
 stim_mean_image1.vout = @ioi_cfg_vout_stim_mean_image; % A function handle that will be called with the harvested job to determine virtual outputs
 stim_mean_image1.help = {'Calculate average over stimulations over full images.'};

@@ -419,18 +419,28 @@ for SubjIdx=1:length(job.IOImat)
                                     %loop over sessions
                                     for s1=1:length(IOI.sess_res)
                                         if all_sessions || sum(s1==selected_sessions)
-                                            d = Ma{r2,m1}{c1,s1};
-                                            if ~isempty(d)
-                                                F{r2,m1}{c1,s1} = ioi_nlinfit(x,d,IOI.color,c1,IC.include_flow);
-                                                H{r2,m1}{c1,s1} = ioi_HDM_hrf(IOI.dev.TR,x,d,IOI.color,c1,IC.include_flow,fit_3_gamma);
+                                            try
+                                                d = Ma{r2,m1}{c1,s1};
+                                                if ~isempty(d)
+                                                    F{r2,m1}{c1,s1} = ioi_nlinfit(x,d,IOI.color,c1,IC.include_flow);
+                                                    H{r2,m1}{c1,s1} = ioi_HDM_hrf(IOI.dev.TR,x,d,IOI.color,c1,IC.include_flow,fit_3_gamma);
+                                                end
+                                            catch
+                                                F{r2,m1}{c1,s1} = [];
+                                                H{r2,m1}{c1,s1} = [];
                                             end
                                         end
                                     end
                                     if global_M
-                                        d = GMa{r2,m1}{c1};
-                                        if ~isempty(d)
-                                            GF{r2,m1}{c1} = ioi_nlinfit(x,d,IOI.color,c1,IC.include_flow);
-                                            GH{r2,m1}{c1,s1} = ioi_HDM_hrf(IOI.dev.TR,x,d,IOI.color,c1,IC.include_flow,fit_3_gamma);
+                                        try
+                                            d = GMa{r2,m1}{c1};
+                                            if ~isempty(d)
+                                                GF{r2,m1}{c1} = ioi_nlinfit(x,d,IOI.color,c1,IC.include_flow);
+                                                GH{r2,m1}{c1,s1} = ioi_HDM_hrf(IOI.dev.TR,x,d,IOI.color,c1,IC.include_flow,fit_3_gamma);
+                                            end
+                                        catch
+                                            GF{r2,m1}{c1} = [];
+                                            GH{r2,m1}{c1,s1} = [];
                                         end
                                     end
                                 end
@@ -553,6 +563,13 @@ for SubjIdx=1:length(job.IOImat)
                                                     end
                                                     plot(ls,H{r2,m1}{c1,s1}.yp,[lp1{3} lp2{c1}]); hold on
                                                     leg_str = [leg_str; [lp3{c1} '-EM']];
+%***************************************change by cong on 06/28
+%                                                     try
+%                                                     plot(ls,H{r2,m1}{c1,s1}.yp,[lp1{3} lp2{c1}]); hold on
+%                                                     leg_str = [leg_str; [lp3{c1} '-EM']];
+%                                                     catch
+%                                                     end
+  %*****************************    end                                                 
                                                 end
                                             end
                                             legend(leg_str);
@@ -610,7 +627,13 @@ for SubjIdx=1:length(job.IOImat)
                                             set(gca, 'ColorOrder', ColorSet);
                                             hold all
                                             for r1=1:size(Ma,1)
-                                                plot(ls,Ma{r1,m1}{c1,s1}); %hold on
+                                                 plot(ls,Ma{r1,m1}{c1,s1}); %hold on
+         %****************************************** changed by Cong on 06/28
+%                                                 try
+%                                                 plot(ls,Ma{r1,m1}{c1,s1}); %hold on
+%                                                 catch 
+%                                                 end
+         %**********************************************fini
                                             end
                                             legend off
                                             set(gcf, 'Colormap', ColorSet);
