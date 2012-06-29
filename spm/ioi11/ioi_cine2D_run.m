@@ -150,9 +150,18 @@ for SubjIdx=1:length(job.IOImat)
                             if IC.include_HbT
                                 HbColors = [IOI.color.HbO IOI.color.HbR IOI.color.HbT];
                             else
-                                HbColors = [IOI.color.HbO IOI.color.HbR];
+                                HbColors = [];
                             end
-                            
+                            if IC.include_HbO
+                                if IOI.color.eng(c1)==IOI.color.HbO
+                                    do_color = 1;
+                                end
+                            end
+                            if IC.include_HbR
+                                if IOI.color.eng(c1)==IOI.color.HbR
+                                    do_color = 1;
+                                end
+                            end
                             if any(IOI.color.eng(c1)==HbColors)
                                 do_color = 1;
                             end
@@ -226,6 +235,14 @@ for SubjIdx=1:length(job.IOImat)
                                     
                                     %save movie
                                     d = tmp_array_after/ka;
+                                    if job.downFact > 1
+                                        nT = round(size(d,3)/job.downFact);
+                                        tmpd = zeros(size(d,1),size(d,2),nT);
+                                        for j0=1:nT
+                                            tmpd(:,:,j0) = mean(d(:,:,(1:job.downFact)+job.downFact*(j0-1)),3);
+                                        end
+                                        d = tmpd;
+                                    end
                                     m0 = min(d(:));
                                     M0 = max(d(:));
                                     %best is to save d
