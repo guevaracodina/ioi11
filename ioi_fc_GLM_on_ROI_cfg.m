@@ -1,4 +1,4 @@
-function filtdown1 = ioi_fc_GLM_on_ROI_cfg
+function fc_GLM_on_ROI1 = ioi_fc_GLM_on_ROI_cfg
 % Graphical interface configuration function for ioi_filtdown_cfg
 % GLM regression of global brain signal in resting-state from ROI/seeds time
 % trace in order to remove global source of variance. 
@@ -39,13 +39,13 @@ wholeImage.val  = {1};
 wholeImage.help = {'Regress signal from whole image time-course. It creates a new sub-folder for each session'};
 
 % Executable Branch
-filtdown1      = cfg_exbranch;       % This is the branch that has information about how to run this module
-filtdown1.name = 'GLM regression';             % The display name
-filtdown1.tag  = 'fc_GLM_on_ROI1'; %Very important: tag is used when calling for execution
-filtdown1.val  = {IOImat redo1 IOImatCopyChoice ROI_choice session_choice IC regressBrainSignal wholeImage};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
-filtdown1.prog = @ioi_fc_GLM_on_ROI_run;  % A function handle that will be called with the harvested job to run the computation
-filtdown1.vout = @ioi_cfg_vout_fc_GLM_on_ROI; % A function handle that will be called with the harvested job to determine virtual outputs
-filtdown1.help = {'GLM regression of global brain signal from ROI/seeds and whole image time trace in order to remove global source of variance'};
+fc_GLM_on_ROI1      = cfg_exbranch;       % This is the branch that has information about how to run this module
+fc_GLM_on_ROI1.name = 'GLM regression';             % The display name
+fc_GLM_on_ROI1.tag  = 'fc_GLM_on_ROI1'; %Very important: tag is used when calling for execution
+fc_GLM_on_ROI1.val  = {IOImat redo1 IOImatCopyChoice ROI_choice session_choice IC regressBrainSignal wholeImage};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+fc_GLM_on_ROI1.prog = @ioi_fc_GLM_on_ROI_run;  % A function handle that will be called with the harvested job to run the computation
+fc_GLM_on_ROI1.vout = @ioi_cfg_vout_fc_GLM_on_ROI; % A function handle that will be called with the harvested job to determine virtual outputs
+fc_GLM_on_ROI1.help = {'GLM regression of global brain signal from ROI/seeds and whole image time trace in order to remove global source of variance'};
 
 return
 

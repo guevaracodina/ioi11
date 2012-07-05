@@ -85,10 +85,9 @@ for SubjIdx=1:length(job.IOImat)
                                         spm_progress_bar('Set', iX);
                                         for iY = 1:size(filtY,2)
                                             if brainMask(iX,iY) == 1
-                                                % Only non-masked pixels
-                                                % Band-passs filtering
-                                                filtY(iX,iY,1,:) = ButterLPF(fs,job.BPFfreq(2),filterOrder,squeeze(y(iX,iY,:)));
-                                                filtY(iX,iY,1,:) = ButterHPF(fs,job.BPFfreq(1),filterOrder,squeeze(filtY(iX,iY,1,:)));
+                                                % Only non-masked pixels are
+                                                % band-passs filtered
+                                                filtY(iX,iY,1,:) = ButterBPF(fs,job.BPFfreq,filterOrder,squeeze(y(iX,iY,:)));
                                                 % Downsampling
                                                 filtNdownY(iX,iY,1,:) = downsample(squeeze(filtY(iX,iY,1,:)), samples2skip);
                                             end
@@ -124,10 +123,8 @@ for SubjIdx=1:length(job.IOImat)
                                              % signal for brain mask
                                              brainSignal = brainMaskData{1}{s1, c1};
                                              % Band-passs filtering
-                                             ROIsignal = ButterLPF(fs,job.BPFfreq(2),filterOrder,ROIsignal);
-                                             ROIsignal = ButterHPF(fs,job.BPFfreq(1),filterOrder,ROIsignal);
-                                             brainSignal = ButterLPF(fs,job.BPFfreq(2),filterOrder,brainSignal);
-                                             brainSignal = ButterHPF(fs,job.BPFfreq(1),filterOrder,brainSignal);
+                                             ROIsignal = ButterBPF(fs,job.BPFfreq,filterOrder,ROIsignal);
+                                             brainSignal = ButterBPF(fs,job.BPFfreq,filterOrder,brainSignal);
                                              % Downsampling
                                              ROIsignal = downsample(ROIsignal, samples2skip);
                                              brainSignal = downsample(brainSignal, samples2skip);
@@ -149,10 +146,8 @@ for SubjIdx=1:length(job.IOImat)
                                                     % signal for brain mask
                                                     brainSignal = brainMaskData{1}{s1, c1};
                                                     % Band-passs filtering
-                                                    ROIsignal = ButterLPF(fs,job.BPFfreq(2),filterOrder,ROIsignal);
-                                                    ROIsignal = ButterHPF(fs,job.BPFfreq(1),filterOrder,ROIsignal);
-                                                    brainSignal = ButterLPF(fs,job.BPFfreq(2),filterOrder,brainSignal);
-                                                    brainSignal = ButterHPF(fs,job.BPFfreq(1),filterOrder,brainSignal);
+                                                    ROIsignal = ButterBPF(fs,job.BPFfreq,filterOrder,ROIsignal);
+                                                    brainSignal = ButterBPF(fs,job.BPFfreq,filterOrder,brainSignal);
                                                     % Downsampling
                                                     ROIsignal = downsample(ROIsignal, samples2skip);
                                                     brainSignal = downsample(brainSignal, samples2skip);
@@ -172,7 +167,7 @@ for SubjIdx=1:length(job.IOImat)
                                 if colorOK
                                     filtNdownROI{r1}{s1,c1} = ROIsignal;
                                     filtNdownBrain{1}{s1,c1} = brainSignal;
-                                    fprintf('Filtering and downsampling ROIs for session %d and color %d (%s) completed\n',s1,c1,colorNames{1+c1})
+                                    fprintf('Filtering and downsampling ROIs/seeds for session %d and color %d (%s) completed\n',s1,c1,colorNames{1+c1})
                                 end
                             end
                         end
@@ -209,3 +204,5 @@ for SubjIdx=1:length(job.IOImat)
     end % End of try
 end % End of main for
 end % End of function
+
+% EOF

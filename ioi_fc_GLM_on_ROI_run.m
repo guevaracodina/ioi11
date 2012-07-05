@@ -48,6 +48,7 @@ for SubjIdx=1:length(job.IOImat)
                     if ~isfield(IOI.fcIOS.SPM,'GLMOK') || job.force_redo
                         % Get colors to include information
                         IC = job.IC;
+                        colorNames = fieldnames(IOI.color);
                         % Load filtered downsampled signals
                         filtNdownData = load(IOI.fcIOS.filtNdown.fname);
                         fnameROIregress = fullfile(newDir,'ROIregress.mat');
@@ -66,6 +67,8 @@ for SubjIdx=1:length(job.IOImat)
                                             if ~exist(colorDir,'dir'),mkdir(colorDir); end
                                             % Get filtered downsampled signals
                                             brainSignal = filtNdownData.filtNdownBrain{1}{s1, c1};
+                                            % Initialize single voxel 4-D series
+                                            brainSignalRep = zeros([1 1 1 numel(brainSignal)]);
                                             dim = [1 1 1/IOI.fcIOS.filtNdown.downFreq];
                                             if job.wholeImage
                                                 %% GLM on images here!
@@ -74,6 +77,7 @@ for SubjIdx=1:length(job.IOImat)
                                                 % Constructing inputs required for
                                                 % GLM analysis within the SPM
                                                 % framework
+                                                clear SPM
                                                 SPM.xY.VY = spm_vol(IOI.fcIOS.filtNdown.fnameWholeImage{s1, c1});
                                                 y = spm_read_vols(SPM.xY.VY);
                                                 % Preallocating output images
@@ -90,6 +94,7 @@ for SubjIdx=1:length(job.IOImat)
                                                 SPM.xX.iH = [];
                                                 SPM.xX.iC = 1:size(SPM.xX,2);   % Indices of regressors of interest
                                                 SPM.xX.iB = [];                 % Indices of confound regressors
+                                                SPM.xGX.rg = [];                % Raw globals, need to check this //EGC
                                                 
                                                 SPM.xVi.Vi = {speye(size(SPM.xX.X,1))}; % Time correlation
                                                 
@@ -106,6 +111,8 @@ for SubjIdx=1:length(job.IOImat)
                                                     % from every pixel time course
                                                     betaVol = spm_vol(fullfile(SPM.swd,SPM.Vbeta.fname));
                                                     beta = spm_read_vols(betaVol);
+                                                    % Create a single voxel 4-D
+                                                    % series
                                                     brainSignalRep(1,1,1,:) = brainSignal;
                                                     yRegress = y - repmat(beta,[1 1 1 size(y,4)]) .* repmat(brainSignalRep,[size(beta,1) size(beta,2) 1 1]);
                                                     
@@ -129,14 +136,17 @@ for SubjIdx=1:length(job.IOImat)
                                                     ROIregress{r1}{s1,c1} = [];
                                                     %% Do my GLM on ROI code here
                                                     y = filtNdownData.filtNdownROI{r1}{s1, c1};
+                                                    % Initialize single voxel
+                                                    % 4-D series
+                                                    y2 = zeros([1 1 1 numel(y)]);
                                                     
                                                     % Display plots on SPM graphics window
                                                     spm_figure('GetWin', 'Graphics');
                                                     spm_figure('Clear', 'Graphics');
                                                     subplot(311); plot(y);
-                                                    title(sprintf('Seed %d time-course, S%d, C%d',r1,s1,c1));
+                                                    title(sprintf('Seed %d time-course, S%d, C%d (%s)',r1,s1,c1,colorNames{1+c1}));
                                                     subplot(312); plot(brainSignal);
-                                                    title(sprintf('Mean global signal time-course, S%d, C%d',s1,c1));
+                                                    title(sprintf('Mean global signal time-course, S%d, C%d (%s)',s1,c1,colorNames{1+c1}));
                                                     
                                                     % Creating nifti files to be able to use SPM later
                                                     % --------------------------
@@ -152,6 +162,7 @@ for SubjIdx=1:length(job.IOImat)
                                                     % Constructing inputs
                                                     % required for GLM analysis
                                                     % within the SPM framework
+                                                    clear SPM
                                                     SPM.xY.VY = spm_vol(fnameNIFTI);
                                                     
                                                     % All regressors are
@@ -166,6 +177,7 @@ for SubjIdx=1:length(job.IOImat)
                                                     SPM.xX.iH = [];
                                                     SPM.xX.iC = 1:size(SPM.xX,2);   % Indices of regressors of interest
                                                     SPM.xX.iB = [];                 % Indices of confound regressors
+                                                    SPM.xGX.rg = [];                % Raw globals, need to check this //EGC
                                                     
                                                     SPM.xVi.Vi = {speye(size(SPM.xX.X,1))}; % Time correlation
                                                     
@@ -189,10 +201,9 @@ for SubjIdx=1:length(job.IOImat)
                                                         
                                                         % Identify in IOI the file name of the time series
                                                         IOI.fcIOS.SPM(1).fnameROIregress = fnameROIregress;
-                                                        colorNames = fieldnames(IOI.color);
                                                         fprintf('Global brain signal regressed from ROI %d (%s) Session %d Color %d (%s) done!\n',r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1})
                                                         subplot(313); plot(ROIregress{r1}{s1, c1});
-                                                        title(sprintf('Global signal regressed from ROI time-course %d, S%d, C%d',r1,s1,c1));
+                                                        title(sprintf('Global signal regressed from ROI time-course %d, S%d, C%d (%s)',r1,s1,c1,colorNames{1+c1}));
                                                     end
                                                     % Update SPM matrix info
                                                     IOI.fcIOS.SPM(1).fnameROISPM{r1}{s1, c1} = SPM.swd;
@@ -203,7 +214,7 @@ for SubjIdx=1:length(job.IOImat)
                                                     % SPM.xCon = xCon;
                                                     % [SPM,xSPM]=spm_getSPM(SPM,[]);
                                                     % --------------------------
-                                                    fprintf('GLM for ROI %d Session %d Color %d done!\n',r1,s1,c1)
+                                                    fprintf('GLM for ROI %d Session %d Color %d (%s) done!\n',r1,s1,c1,colorNames{1+c1})
                                                 end
                                             end
                                         end
@@ -230,7 +241,6 @@ for SubjIdx=1:length(job.IOImat)
         disp(exception.stack(1))
     end
 end % Big loop over subjects
-end
 
-%spm get spm
+% EOF
 
