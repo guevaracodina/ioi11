@@ -1,11 +1,14 @@
 function [IOI ROI] = ioi_extract_main(IOI,ROI,job,d,d3,d4,c1,s1,colorOK,mask)
 [all_ROIs selected_ROIs] = ioi_get_ROIs(job);
 msg_ColorNotOK = 1;
-if job.extractBrainMask
-    nROI = 1; % Only 1 brain mask
-else
-    nROI = 1:length(IOI.res.ROI); % All the ROIs
+
+nROI = 1:length(IOI.res.ROI); % All the ROIs
+if isfield(job,'extractingBrainMask')
+    if job.extractingBrainMask
+        nROI = 1; % Only 1 brain mask
+    end
 end
+
 for r1 = nROI,
     if all_ROIs || sum(r1==selected_ROIs)
         tmp_mask_done = 0;
@@ -55,3 +58,6 @@ for r1 = nROI,
         end
     end
 end
+
+% EOF
+

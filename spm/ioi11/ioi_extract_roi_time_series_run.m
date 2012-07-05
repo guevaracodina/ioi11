@@ -59,6 +59,8 @@ for SubjIdx=1:length(job.IOImat)
                 % ------------------ Extract brain mask here -----------------------
                 if ~isfield(IOI.fcIOS.mask,'seriesOK') || job.force_redo
                     disp(['Extracting time series of global brain signal for subject ' int2str(SubjIdx) ' (' IOI.subj_name ')']);
+                    % It means we will extract only 1 ROI
+                    job.extractingBrainMask = true;
                     % Get brain mask
                     [IOI mask] = ioi_get_network_mask(IOI,job);
                     % Extract brain mask here
