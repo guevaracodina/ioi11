@@ -40,8 +40,8 @@ downFreq.help       = {'Enter downsampling frequency in Hz. A target sampling fr
 wholeImage      = cfg_menu;
 wholeImage.tag  = 'wholeImage';
 wholeImage.name = 'Filter and downsample whole image time-series';
-wholeImage.labels = {'False','True'};
-wholeImage.values = {0,1};
+wholeImage.labels = {'Yes','No'};
+wholeImage.values = {1,0};
 wholeImage.val  = {1};
 wholeImage.help = {'Filter and downsample whole image time-series. It creates a new sub-folder for each session'};
 

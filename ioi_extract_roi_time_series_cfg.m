@@ -18,8 +18,8 @@ IC = ioi_dfg_include_colors(0,1,1,1,1);
 extractBrainMask           = cfg_menu;
 extractBrainMask.tag       = 'extractBrainMask';
 extractBrainMask.name      = 'Extract brain mask signal';
-extractBrainMask.labels    = {'False','True'};
-extractBrainMask.values    = {0,1};
+extractBrainMask.labels    = {'Yes','No'};
+extractBrainMask.values    = {1,0};
 extractBrainMask.val       = {0};   % Default value = 0
 extractBrainMask.help      = {'Extract mean signal from the non-masked brain pixels'};
 
