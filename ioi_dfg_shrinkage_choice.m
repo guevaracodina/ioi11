@@ -5,7 +5,7 @@ shrink_x.tag  = 'shrink_x';
 shrink_x.name = 'Shrink factor for x dimension';
 shrink_x.strtype  = 'i';
 shrink_x.num = [1 1];
-shrink_x.val  = {2};
+shrink_x.val  = {4};
 shrink_x.help = {'Data reduction factor in x.'};
 
 shrink_y      = cfg_entry;
@@ -13,7 +13,7 @@ shrink_y.tag  = 'shrink_y';
 shrink_y.name = 'Shrink factor for y dimension';
 shrink_y.strtype  = 'i';
 shrink_y.num = [1 1];
-shrink_y.val = {2};
+shrink_y.val = {4};
 shrink_y.help = {'Data reduction factor in y.'};
 
 force_shrink_recompute      = cfg_menu;
