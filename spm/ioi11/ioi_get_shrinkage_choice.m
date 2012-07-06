@@ -10,4 +10,5 @@ if isfield(job.shrinkage_choice,'configuration_shrink')
     shrinkage_choice = 1;
 else
     shrinkage_choice = 0;
+    SH = [];
 end

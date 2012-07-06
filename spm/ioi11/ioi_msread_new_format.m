@@ -190,7 +190,23 @@ try
                         dupOn = 0;
                         ny = ny0;
                     end
-                    %create large memmapfile for all the images (several GB)
+                    
+                    %shrink if required
+                    [shrinkage_choice SH] = ioi_get_shrinkage_choice(job); 
+                    IOI.res.shrinkageOn = shrinkage_choice; 
+                    IOI.res.SH = SH;
+                    NX = nx;
+                    NY = ny;
+                    if shrinkage_choice
+                        nx = NX/SH.shrink_x;
+                        ny = NY/SH.shrink_y;
+                        K.radius = SH.shrink_x;
+                        K.k1 = NX;
+                        K.k2 = NY;
+                        K = ioi_spatial_LPF('set', K);
+                    end
+                    
+                    %create large memmapfile for Y, R, G images (several GB)
                     fmem_name = 'all_images.dat';
                     %                 if exist(fmem_name,'file')
                     %                     try
@@ -219,6 +235,10 @@ try
                         %image_total{c1} = zeros(nx,ny,nz,nImages);
                         si = iC+1; %start index
                         ei = iC+nImages; %end index
+                        %create an array for laser
+                        if shrinkage_choice
+                            laser_array = zeros(NX,NY,nImages);
+                        end
                         sess.si = [sess.si si];
                         sess.ei = [sess.ei ei];
                         image_str_start = gen_num_str(si,nzero_padding);
@@ -245,18 +265,38 @@ try
                             end
                             tframe = ceil(fr1/nColors); %which image for this frame
                             if ~(any(fr1+iC*nColors == missing_frames))
-                                tmp_image{tcol} = images{frames(frames(:,1)==(fr1+iC*nColors),2)};
+                                if ~(IOI.color.eng(tcol)==str_laser)
+                                    tmp_image{tcol} = images{frames(frames(:,1)==(fr1+iC*nColors),2)};
+                                    if shrinkage_choice
+                                        %first spatially filter the images
+                                        tmp_image{tcol} = ioi_spatial_LPF('lpf', K, tmp_image{tcol});
+                                        %then downsample
+                                        tmp_image{tcol} = tmp_image{tcol}((SH.shrink_x/2+1):SH.shrink_x:end,(SH.shrink_y/2+1):SH.shrink_y:end);
+                                    end
+                                else
+                                    %laser -- do not shrink now
+                                    tmp_image{tcol} = images{frames(frames(:,1)==(fr1+iC*nColors),2)};
+                                end
                             else
                                 %missing frame: tmp_image{tcol} does not change, so the
                                 %previous image will be used
                             end
-                            im_obj.Data.image_total(:,:,:,tframe+iC,tcol) = tmp_image{tcol};
+                            if ~shrinkage_choice || (shrinkage_choice && ~(IOI.color.eng(tcol)==str_laser))
+                                im_obj.Data.image_total(:,:,:,tframe+iC,tcol) = tmp_image{tcol};
+                            else
+                                %store laser data
+                                laser_array(:,:,tframe) = tmp_image{tcol}; %tframe???
+                            end
                             %image_total{tcol}(:,:,:,tframe) = tmp_image{tcol};
                             if s1==1 && f1==1 && (fr1 <= nColors) && strcmp(str_color(tcol),str_anat)
                                 image_anat = images{fr1}; %problem with fr1 sometimes...
                             end
                         end
                         iC = iC + nImages;
+                        if shrinkage_choice
+                            %save laser images
+                            ioi_save_nifti(single(laser_array),sess.fname{IOI.eng.color == str_laser}{f1},vx);
+                        end
                     end
                     
                     %Compute median
@@ -320,7 +360,9 @@ try
                             if ~(str_color(c1)==str_laser)
                                 ioi_save_nifti(-log(single(im_obj.Data.image_total(:,:,:,ind0,c1))./repmat(single(median0{c1}),[1 1 1 length(ind0)])),sess.fname{c1}{f1},vx);
                             else
-                                ioi_save_nifti(single(im_obj.Data.image_total(:,:,:,ind0,c1)),sess.fname{c1}{f1},vx);
+                                if ~shrinkage_choice
+                                    ioi_save_nifti(single(im_obj.Data.image_total(:,:,:,ind0,c1)),sess.fname{c1}{f1},vx);
+                                end
                             end
                         end
                     end
