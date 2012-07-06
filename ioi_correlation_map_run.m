@@ -44,6 +44,9 @@ for SubjIdx=1:length(job.IOImat)
                     vx = [1 1 1];
                 end
                 
+                % File name where correlation data is saved
+                IOI.fcIOS.corr(1).fname = fullfile(newDir,'seed_based_fcIOS_map.mat');
+                
                 % Loop over sessions
                 for s1=1:length(IOI.sess_res)
                     if all_sessions || sum(s1==selected_sessions)
@@ -87,16 +90,21 @@ for SubjIdx=1:length(job.IOImat)
                                                 % ROImask = spm_read_vols(ROImaskVol);
                                                 % Preallocate
                                                 tempCorrMap = zeros([size(y,1) size(y,2)]);
+                                                pValuesMap =  zeros([size(y,1) size(y,2)]);
                                                 % Find Pearson's correlation coefficient
                                                 fprintf('Computing Pearson''s correlation map...\n');
                                                 for iX = 1:size(y,1),
                                                     for iY = 1:size(y,2),
                                                         if mask(iX, iY)
-                                                            tempCorrMap(iX, iY) = corr(squeeze(ROI), squeeze(y(iX, iY, 1, :)));
+                                                            [tempCorrMap(iX, iY) pValuesMap(iX, iY)]= corr(squeeze(ROI), squeeze(y(iX, iY, 1, :)));
                                                         end
                                                     end
                                                 end
-
+                                                % Assign data to be saved to
+                                                % .mat file
+                                                seed_based_fcIOS_map{r1}{s1,c1}.pearson = tempCorrMap;
+                                                seed_based_fcIOS_map{r1}{s1,c1}.pValue = pValuesMap;
+                                                
                                                 if job.generate_figures
                                                     % Display plots on SPM graphics window
                                                     h = spm_figure('GetWin', 'Graphics');
@@ -117,9 +125,16 @@ for SubjIdx=1:length(job.IOImat)
 
                                                     % Improve display
                                                     tempCorrMap(mask==0) = median(tempCorrMap(:));
-                                                    imagesc(tempCorrMap); axis image
                                                     spm_figure('ColorMap','jet')
+                                                    subplot(211)
+                                                    % Correlation map
+                                                    imagesc(tempCorrMap); colorbar; axis image
                                                     title(sprintf('fcIOS map Seed %d (%s) S%d C%d (%s)\n',r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}))
+                                                    subplot(212)
+                                                    % Show only significant
+                                                    % pixels
+                                                    imagesc(tempCorrMap .* (pValuesMap <= job.pValue), [-1 1]); colorbar; axis image
+                                                    title(sprintf('Significant pixels (p<%f) Seed %d (%s) S%d C%d (%s)\n',job.pValue,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}))
                                                     
                                                     if job.save_figures
                                                         [~, oldName, oldExt] = fileparts(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
@@ -130,6 +145,7 @@ for SubjIdx=1:length(job.IOImat)
                                                         print(h, '-dpng', fullfile(newDir,newName), '-r300');
                                                         % Save as nifti
                                                         ioi_save_nifti(tempCorrMap, fullfile(newDir,[newName oldExt]), vx);
+                                                        IOI.fcIOS.corr(1).corrMapName{r1}{s1, c1} = fullfile(newDir,[newName oldExt]);
                                                     end
                                                 end
                                                 
@@ -154,6 +170,9 @@ for SubjIdx=1:length(job.IOImat)
                 end % Sessions Loop
                 % LPF succesful!
                 IOI.fcIOS.corr(1).corrOK = true;
+                % Save fcIOS data
+                save(IOI.fcIOS.corr(1).fname,'seed_based_fcIOS_map')
+                % Save IOI matrix
                 save(IOImat,'IOI');
             end % LPF OK or redo job
         end % Concentrations OK
