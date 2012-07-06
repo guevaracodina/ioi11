@@ -8,10 +8,10 @@ LPF = ioi_get_LPF(job);
 %Hemodynamic model choice
 O.PhysioModel_Choice = job.PhysioModel_Choice;
 %modalities to include
-O.includeHbR = job.includeHbR;
-O.includeHbO = job.includeHbO;
-O.includeHbT = job.includeHbT;
-O.includeFlow = job.includeFlow;
+O.includeHbR = job.IC.include_HbR;
+O.includeHbO = job.IC.include_HbO;
+O.includeHbT = job.IC.include_HbT;
+O.includeFlow = job.IC.include_flow;
 %Baseline choice
 if isfield(job.baseline_choice,'baseline_percentile_choice')
     O.baseline_choice = 1;
