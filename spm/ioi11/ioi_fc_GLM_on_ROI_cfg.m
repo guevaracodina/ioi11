@@ -33,8 +33,8 @@ regressBrainSignal.help     = {'Include global brain signal as a regressor'};
 wholeImage      = cfg_menu;
 wholeImage.tag  = 'wholeImage';
 wholeImage.name = 'Regress signal from whole image time-course';
-wholeImage.labels = {'False','True'};
-wholeImage.values = {0,1};
+wholeImage.labels = {'Yes','No'};
+wholeImage.values = {1,0};
 wholeImage.val  = {1};
 wholeImage.help = {'Regress signal from whole image time-course. It creates a new sub-folder for each session'};
 

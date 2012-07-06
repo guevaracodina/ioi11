@@ -1,7 +1,6 @@
 function spatial_LPF1 = ioi_spatial_LPF_cfg
-% Graphical interface configuration function for ioi_filtdown_cfg
-% GLM regression of global brain signal in resting-state from ROI/seeds time
-% trace in order to remove global source of variance. 
+% Graphical interface configuration function for ioi_spatial_LPF_run
+% Low-pass filtering of 2-D images with a rotationally symmetric gaussian kernel
 %_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
@@ -17,6 +16,7 @@ IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('LPF');
 session_choice = ioi_dfg_session_choice;
 % Colors to include (OD,HbO,HbR,HbT,Flow)
 IC = ioi_dfg_include_colors(0,1,1,1,1);
+% Spatial low-pass filter options
 spatial_LPF_options = ioi_dfg_spatial_LPF;
 
 % Executable Branch
@@ -38,3 +38,5 @@ vout.sname      = 'IOI.mat';       % Displayed dependency name
 vout.src_output = substruct('.','IOImat'); %{1}); %,'IOImat');
 %substruct('()',{1}); % The output subscript reference. This could be any reference into the output variable created during computation
 vout.tgt_spec   = cfg_findspec({{'filter','mat','strtype','e'}});
+
+% EOF

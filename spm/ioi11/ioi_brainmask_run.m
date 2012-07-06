@@ -25,9 +25,12 @@ for SubjIdx=1:length(job.IOImat)
         if ~isfield(IOI, 'fcIOS')
             % Create fcIOS field to contain the whole structure of fcIOS
             % utilities
-            IOI.fcIOS = struct('mask', [], 'filtNdown', []);
-            IOI.fcIOS.mask = struct([]);
-            IOI.fcIOS.filtNdown = struct([]);
+            IOI.fcIOS = struct([]);
+            IOI.fcIOS(1).mask = struct([]);
+            IOI.fcIOS(1).LPF  = struct([]);
+            IOI.fcIOS(1).filtNdown = struct([]);
+            IOI.fcIOS(1).SPM = struct([]);
+            IOI.fcIOS(1).corr = struct([]);
         end
         if ~isfield(IOI.fcIOS.mask,'maskOK') || job.force_redo
             % 1-Lis une image nifti de type anatomique (dans notre cas c'est l'image

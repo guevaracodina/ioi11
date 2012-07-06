@@ -80,7 +80,10 @@ for SubjIdx=1:length(job.IOImat)
                                     % Read brain mask file
                                     vol = spm_vol(IOI.fcIOS.mask.fname);
                                     brainMask = spm_read_vols(vol);
-                                    spm_progress_bar('Init', size(filtY,1), 'Filtering & Downsampling', 'Pixels along X');
+                                    % Color names
+                                    colorNames = fieldnames(IOI.color);
+                                    % Initialize progress bar
+                                    spm_progress_bar('Init', size(filtY,1), sprintf('Filtering & Downsampling session %d, color %d (%s)\n',s1,c1,colorNames{1+c1}), 'Pixels along X');
                                     for iX = 1:size(filtY,1)
                                         spm_progress_bar('Set', iX);
                                         for iY = 1:size(filtY,2)
