@@ -194,12 +194,17 @@ try
                     %shrink if required
                     [shrinkage_choice SH] = ioi_get_shrinkage_choice(job); 
                     IOI.res.shrinkageOn = shrinkage_choice; 
-                    IOI.res.SH = SH;
+                    IOI.res.shrink_x = SH.shrink_x;
+                    IOI.res.shrink_y = SH.shrink_y;                    
                     NX = nx;
                     NY = ny;
                     if shrinkage_choice
-                        nx = NX/SH.shrink_x;
-                        ny = NY/SH.shrink_y;
+                        nx = floor(NX/SH.shrink_x);
+                        if dupOn
+                            ny = floor(NY/(SH.shrink_y/2));
+                        else
+                            ny = floor(NY/SH.shrink_y);
+                        end
                         K.radius = SH.shrink_x;
                         K.k1 = NX;
                         K.k2 = NY;
@@ -271,7 +276,7 @@ try
                                         %first spatially filter the images
                                         tmp_image{tcol} = ioi_spatial_LPF('lpf', K, tmp_image{tcol});
                                         %then downsample
-                                        tmp_image{tcol} = tmp_image{tcol}((SH.shrink_x/2+1):SH.shrink_x:end,(SH.shrink_y/2+1):SH.shrink_y:end);
+                                        tmp_image{tcol} = tmp_image{tcol}((SH.shrink_x/2+1):SH.shrink_x:(end-(SH.shrink_x/2)),(SH.shrink_y/2+1):SH.shrink_y:(end-(SH.shrink_y/2)));
                                     end
                                 else
                                     %laser -- do not shrink now
@@ -295,7 +300,7 @@ try
                         iC = iC + nImages;
                         if shrinkage_choice
                             %save laser images
-                            ioi_save_nifti(single(laser_array),sess.fname{IOI.eng.color == str_laser}{f1},vx);
+                            ioi_save_nifti(single(laser_array),sess.fname{IOI.color.eng == str_laser}{f1},vx);
                         end
                     end
                     
