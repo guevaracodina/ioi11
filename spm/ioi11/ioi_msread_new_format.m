@@ -273,10 +273,23 @@ try
                                 if ~(IOI.color.eng(tcol)==str_laser)
                                     tmp_image{tcol} = images{frames(frames(:,1)==(fr1+iC*nColors),2)};
                                     if shrinkage_choice
-                                        %first spatially filter the images
-                                        tmp_image{tcol} = ioi_spatial_LPF('lpf', K, tmp_image{tcol});
-                                        %then downsample
-                                        tmp_image{tcol} = tmp_image{tcol}((SH.shrink_x/2+1):SH.shrink_x:(end-(SH.shrink_x/2)),(SH.shrink_y/2+1):SH.shrink_y:(end-(SH.shrink_y/2)));
+                                        try
+                                            % Added by EGC: downsampling below
+                                            % does not always work, e.g. for
+                                            % NX=792, nx=396, but
+                                            % size(tmp_image{tcol},1) = 395 and
+                                            % there is a mismatch when assigning
+                                            % dimensions in the large memory
+                                            % mapped file im_obj
+                                            tmp_image{tcol} = imresize(tmp_image{tcol},[nx ny]);
+                                        catch exception
+                                            disp(exception.identifier)
+                                            disp(exception.stack(1))
+                                            % first spatially filter the images
+                                            tmp_image{tcol} = ioi_spatial_LPF('lpf', K, tmp_image{tcol});
+                                            % then downsample
+                                            tmp_image{tcol} = tmp_image{tcol}((SH.shrink_x/2+1):SH.shrink_x:(end-(SH.shrink_x/2)),(SH.shrink_y/2+1):SH.shrink_y:(end-(SH.shrink_y/2)));
+                                        end
                                     end
                                 else
                                     %laser -- do not shrink now
@@ -287,7 +300,9 @@ try
                                 %previous image will be used
                             end
                             if ~shrinkage_choice || (shrinkage_choice && ~(IOI.color.eng(tcol)==str_laser))
-                                im_obj.Data.image_total(:,:,:,tframe+iC,tcol) = tmp_image{tcol};
+                                % im_obj.Data.image_total(:,:,:,tframe+iC,tcol) = tmp_image{tcol};
+                                % Correct assignment for the 3rd dimension //EGC
+                                im_obj.Data.image_total(:,:,1,tframe+iC,tcol) = tmp_image{tcol};
                             else
                                 %store laser data
                                 laser_array(:,:,tframe) = tmp_image{tcol}; %tframe???
@@ -375,7 +390,7 @@ try
                     IOI.sess_res{sC} = sess;
                     IOI.sess_res{sC}.hasRGY = hasRGY;
                     %sess_res =[sess_res sess];
-                    disp(['Done processing session ' int2str(s1) ' images (' int2str(iC) 'images)']);
+                    disp(['Done processing session ' int2str(s1) ' images (' int2str(iC) ' images)']);
                     clear im_obj;
                     delete('all_images.dat');
                 end

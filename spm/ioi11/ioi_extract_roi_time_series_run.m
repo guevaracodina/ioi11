@@ -82,7 +82,7 @@ for SubjIdx=1:length(job.IOImat)
                 end
             end
         end
-        toc
+        disp(['Elapsed time: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
         disp(['Subject ' int2str(SubjIdx) ' complete']);
         out.IOImat{SubjIdx} = IOImat;
     catch exception
