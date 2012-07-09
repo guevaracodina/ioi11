@@ -78,11 +78,10 @@ for SubjIdx=1:length(job.IOImat)
             IOI.fcIOS.mask.fname = fullfile(dirName, brainMaskName);
             % Mask created succesfully!
             IOI.fcIOS.mask.maskOK = true;
-                       
             save(IOImat,'IOI');
-            toc
         end
         out.IOImat{SubjIdx} = IOImat;
+        disp(['Elapsed time: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
         disp(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ' complete']);
     catch exception
         disp(exception.identifier)

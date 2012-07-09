@@ -176,7 +176,7 @@ for SubjIdx=1:length(job.IOImat)
                 save(IOImat,'IOI');
             end % LPF OK or redo job
         end % Concentrations OK
-        
+        disp(['Elapsed time: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
         disp(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ' complete']);
         out.IOImat{SubjIdx} = IOImat;
     catch exception

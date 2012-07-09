@@ -100,7 +100,7 @@ for SubjIdx=1:length(job.top_bin_dir)
         if subj_OK
             out.IOImat = [out.IOImat IOImat];
         end
-        toc
+        disp(['Elapsed time: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
         disp(['Subject ' int2str(SubjIdx) ' complete']);
     catch exception
         disp(exception.identifier)
