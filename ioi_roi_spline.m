@@ -1,8 +1,8 @@
-function mask = ioi_roi_spline(I,kind,tension)
+function mask = ioi_roi_spline(I, kind, tension, titleText)
 % Begins interactive placement of a spline on the current axes.
 % Based on funciton roispline by Simone Cazzaniga. File ID: #12530
 % SYNTAX:
-% function [mask]=roispline(I,kind,tension)
+% function [mask] = roispline(I, kind, tension, titleText)
 % INPUTS:
 % I         : Anatomical image
 % kind      : [Optional] String specifying the kind of spline ('natural' for
@@ -10,27 +10,33 @@ function mask = ioi_roi_spline(I,kind,tension)
 %           DEFAULT = 'natural'
 % tension   : [Optional] Tension parameter between 0 and 1 for cardinal spline.
 %           DEFAULT = 0.5
-%
+% titleText : [Optional] Text to be displayed as title, usually instructing the
+%           user to select an ROI mask
+%           DEFAULT = 'Choose a mask containing only brain pixels'
 % OUTPUTS:
 % mask      : Binary mask of segmented ROI
-%_______________________________________________________________________
+%_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
-%______________________________________________________________________
+%_______________________________________________________________________________
 
-if nargin<2
+if nargin<2 || isempty(kind)
     % Default value for spline type
     kind = 'natural';
-elseif nargin<3
+elseif nargin<3 || isempty(tension)
     % Default value for spline tension
     tension = 0.5;
+end
+
+if nargin < 4,
+    titleText = 'Choose a mask containing only brain pixels';
 end
 
 siz=size(I);
 cmap = contrast(I);
 imagesc(I); colormap(cmap);
 axis image
-title('Choose a mask containing only brain pixels','FontSize',13)
+title(titleText,'FontSize',13)
 hold on;
 
 % initializes number of points for each step
@@ -57,7 +63,7 @@ switch kind
                     break;
                 end
             end
-            plot(cor(1,i),cor(2,i),'y.');
+            plot(cor(1,i),cor(2,i),'r.');
     
             if i>1      
                 if (norm(cor(:,1)-cor(:,i))<dim && i>2) && flag
@@ -69,8 +75,8 @@ switch kind
                 hold on;
                 spcv = cscvn(cor);              
                 points=myfnplt(spcv,npoints*i);
-                plot(points(1,:),points(2,:),'y','LineWidth',2);
-                plot(cor(1,:),cor(2,:),'y.');
+                plot(points(1,:),points(2,:),'Color',[0.8 0 0],'LineWidth',2);
+                plot(cor(1,:),cor(2,:),'r.');
                 drawnow;
             end
         end
@@ -115,8 +121,8 @@ switch kind
                 % imshow(I);
                 imagesc(I);
                 hold on;
-                plot(pointsx,pointsy,'y','LineWidth',2);
-                plot(x,y,'y.');
+                plot(pointsx,pointsy,'Color',[0.8 0 0],'LineWidth',2);
+                plot(x,y,'r.');
                 drawnow;
             end
         end
