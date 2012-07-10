@@ -23,7 +23,9 @@ imagesc(image);
 colorbar;
 title(tit);
 if Im.save_figures
-    print(h, '-dtiffn', [fname '.tiff']);
+    %     print(h, '-dtiffn', [fname '.tiff']);
+    % Save as PNG: ~10x smaller file size and 2x the resolution //EGC
+    print(h, '-dpng', fname, '-r300');
     saveas(h,[fname '.fig']);
 end
 if ~Im.generate_figures, close(h); end

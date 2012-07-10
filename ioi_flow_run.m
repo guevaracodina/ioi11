@@ -57,10 +57,13 @@ for SubjIdx=1:length(job.IOImat)
                                 for f1=1:length(fname_list)
                                     fname = fname_list{f1};
                                     %load data
-                                    vol=spm_vol(fname);
-                                    nx=vol(1).dim(1);
-                                    ny=vol(1).dim(2);
-                                    nt = length(vol); 
+                                    vol = spm_vol(fname);
+                                    nx = vol(1).dim(1);
+                                    ny = vol(1).dim(2);
+                                    nt = vol(1).dim(3);
+                                    % NOTE: nt is not necessarily the largest
+                                    % dimension of vol //EGC
+                                    % nt = length(vol); 
                                     win2 = ones(wsize,wsize);
                                     laser=spm_read_vols(vol);
                                     %mean_laser = zeros(size(laser));
@@ -70,7 +73,7 @@ for SubjIdx=1:length(job.IOImat)
                                     OPTIONS.Power2Flag = 0;
                                     OPTIONS.Brep = 0;
                                     for i3=1:nt
-                                        tmp_laser = squeeze(laser(:,:,:,i3));
+                                        tmp_laser = squeeze(laser(:,:,i3));
                                         std_laser=stdfilt(tmp_laser,win2);
                                         %this is much faster (4 times) than conv2
                                         %tic
