@@ -153,7 +153,7 @@ for SubjIdx=1:length(job.IOImat)
                         elseif ManualROIspline
                             % Start interactive ROI tool to choose spline
                             % ROI/seed
-                            mask = ioi_roi_spline(im_anat);
+                            mask = ioi_roi_spline(im_anat,[],[],'Mark spline points, then right-click in it to create ROI/seed');
                         else
                             if pointNclickROI
                                 % Specify center of circular ROI/seed with mouse
