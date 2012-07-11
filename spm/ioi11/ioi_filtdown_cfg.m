@@ -47,7 +47,7 @@ wholeImage.help     = {'Filter and downsample whole image time-series. It create
 
 % Executable Branch
 filtdown1           = cfg_exbranch; % This is the branch that has information about how to run this module
-filtdown1.name      = 'Temporal filtering and downsampling of seeds & whole image series';             % The display name
+filtdown1.name      = 'Temp. filtering & downsampling seeds/whole image series';             % The display name
 filtdown1.tag       = 'filtdown1'; %Very important: tag is used when calling for execution
 filtdown1.val       = {IOImat redo1 IOImatCopyChoice ROI_choice session_choice IC BPFfreq downFreq wholeImage};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 filtdown1.prog      = @ioi_filtdown_run;  % A function handle that will be called with the harvested job to run the computation

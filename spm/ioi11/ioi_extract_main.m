@@ -35,7 +35,10 @@ for r1 = nROI,
                             try
                                 %try to resize mask - but only attempt to do it once
                                 if ~tmp_mask_done
-                                    tmp_mask = imresize(mask{r1},size(tmp_d));
+                                    % tmp_mask = imresize(mask{r1},size(tmp_d));
+                                    % ioi_MYimresize works with no image
+                                    % processing toolbox //EGC
+                                    tmp_mask = ioi_MYimresize(mask{r1},size(tmp_d));
                                     tmp_mask_done = 1;
                                 end
                                 e = mean(tmp_d(tmp_mask));
@@ -48,7 +51,10 @@ for r1 = nROI,
                     end
                 else
                     %contrast images will be smaller and need to be resized
-                    tmask = imresize(mask{r1},[d1 d2]);
+                    % tmask = imresize(mask{r1},[d1 d2]);
+                    % ioi_MYimresize works with no image processing toolbox
+                    % //EGC
+                    tmask = ioi_MYimresize(mask{r1},[d1 d2]);
                     e = mean(tmp_d(tmask));
                 end
                 if colorOK

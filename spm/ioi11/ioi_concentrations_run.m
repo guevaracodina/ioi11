@@ -100,6 +100,8 @@ for SubjIdx=1:length(job.IOImat)
                             end
                         end
                         if ~isempty(fname_list)
+                            % Initialize progress bar
+                            spm_progress_bar('Init', length(fname_list), sprintf('Concentrations computation, session %d\n',s1), 'Files');
                             for f1=1:length(fname_list)
                                 vols = {}; vi = 1;
                                 %get volume headers for each color
@@ -181,8 +183,12 @@ for SubjIdx=1:length(job.IOImat)
                                 fname_new_HbR = regexprep(fname,tmp_str_avail_color ,tmp_str_HbR);
                                 fname_new_HbR_list = [fname_new_HbR_list; fname_new_HbR];
                                 ioi_save_nifti(image_hbr, fname_new_HbR, vx);
-                            end
+                                % Update progress bar
+                                spm_progress_bar('Set', f1);
+                            end % files loop
                         end
+                        % Clear progress bar
+                        spm_progress_bar('Clear');
                         IOI.sess_res{s1}.fname{IOI.color.eng==str_HbO} = fname_new_HbO_list;
                         IOI.sess_res{s1}.fname{IOI.color.eng==str_HbR} = fname_new_HbR_list;
                         %toc
@@ -211,7 +217,7 @@ for SubjIdx=1:length(job.IOImat)
             end
         end
         out.IOImat{SubjIdx} = IOImat;
-        toc
+        disp(['Elapsed time: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
         disp(['Subject ' int2str(SubjIdx) ' complete']);
     catch exception
         disp(exception.identifier)

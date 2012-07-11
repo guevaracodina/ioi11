@@ -65,7 +65,6 @@ for SubjIdx=1:length(job.IOImat)
                                         spm_progress_bar('Init', length(fname_list), sprintf('Spatial LPF session %d, color %d (%s)\n',s1,c1,colorNames{1+c1}), 'Files');
                                         % Loop over files
                                         for f1 = 1:length(fname_list)
-                                            spm_progress_bar('Set', f1);
                                             try
                                                 fname = fname_list{f1};
                                                 vols = spm_vol(fname);
@@ -93,6 +92,8 @@ for SubjIdx=1:length(job.IOImat)
                                             end
                                             % Overwrite the image
                                             ioi_save_nifti(imagesTimeCourseLPF, fname, vx);
+                                            % Update progress bar
+                                            spm_progress_bar('Set', f1);
                                         end
                                         % Clear progress bar
                                         spm_progress_bar('Clear');
@@ -106,6 +107,9 @@ for SubjIdx=1:length(job.IOImat)
                     end % Sessions Loop
                     % LPF succesful!
                     IOI.fcIOS.LPF(1).LPFOK = true;
+                    % Save LPF settings
+                    IOI.fcIOS.LPF(1).radius = K.radius;
+                    IOI.fcIOS.LPF(1).sigma = K.radius/2;
                     save(IOImat,'IOI');
                 end % LPF OK or redo job
             end % Flow OK

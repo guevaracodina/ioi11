@@ -80,14 +80,23 @@ for SubjIdx=1:length(job.IOImat)
                                                 ROIvol = spm_vol(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
                                                 ROI = spm_read_vols(ROIvol);
                                                 % Load brain mask
-                                                maskVol = spm_vol(IOI.fcIOS.mask.fname);
-                                                mask = spm_read_vols(maskVol);
+                                                brainMaskVol = spm_vol(IOI.fcIOS.mask.fname);
+                                                brainMask = spm_read_vols(brainMaskVol);
+                                                if size(brainMask,1)~= size(y,1)|| size(brainMask,2)~= size(y,2)
+                                                    brainMask = ioi_MYimresize(brainMask, [size(y,1) size(y,2)]);
+                                                end
                                                 % Load anatomical image
-                                                anatVol = spm_vol(IOI.res.file_anat);
-                                                anat = spm_read_vols(anatVol);
+                                                % anatVol = spm_vol(IOI.res.file_anat);
+                                                % anat = spm_read_vols(anatVol);
+                                                % if size(anat,1)~= size(y,1)|| size(anat,2)~= size(y,2)
+                                                %     anat = ioi_MYimresize(anat, [size(y,1) size(y,2)]);
+                                                % end
                                                 % Load ROI mask
                                                 % ROImaskVol = spm_vol(IOI.res.ROI{r1}.fname);
                                                 % ROImask = spm_read_vols(ROImaskVol);
+                                                % if size(ROImask,1)~= size(y,1)|| size(ROImask,2)~= size(y,2)
+                                                %     ROImask = ioi_MYimresize(ROImask, [size(y,1) size(y,2)]);
+                                                % end
                                                 % Preallocate
                                                 tempCorrMap = zeros([size(y,1) size(y,2)]);
                                                 pValuesMap =  zeros([size(y,1) size(y,2)]);
@@ -95,7 +104,7 @@ for SubjIdx=1:length(job.IOImat)
                                                 fprintf('Computing Pearson''s correlation map...\n');
                                                 for iX = 1:size(y,1),
                                                     for iY = 1:size(y,2),
-                                                        if mask(iX, iY)
+                                                        if brainMask(iX, iY)
                                                             [tempCorrMap(iX, iY) pValuesMap(iX, iY)]= corr(squeeze(ROI), squeeze(y(iX, iY, 1, :)));
                                                         end
                                                     end
@@ -119,12 +128,12 @@ for SubjIdx=1:length(job.IOImat)
 %                                                     oldMax = max(anat(:));
 %                                                     % Value in new range
 %                                                     anat = (anat - oldMin)*(newMax-newMin)/(oldMax-oldMin)+newMin;
-%                                                     tempCorrMap(mask==0) = anat(mask==0);
+%                                                     tempCorrMap(brainMask==0) = anat(brainMask==0);
 %                                                     spm_figure('ColorMap','gray-jet')
 %                                                     % -------------------------
 
                                                     % Improve display
-                                                    tempCorrMap(mask==0) = median(tempCorrMap(:));
+                                                    tempCorrMap(brainMask==0) = median(tempCorrMap(:));
                                                     spm_figure('ColorMap','jet')
                                                     subplot(211)
                                                     % Correlation map
@@ -158,6 +167,7 @@ for SubjIdx=1:length(job.IOImat)
                                                 fprintf('Pearson''s correlation coefficient failed! Seed %d (%s) S%d C%d (%s)\n',r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1});
                                             end
                                         end
+                                        % Update progress bar
                                         spm_progress_bar('Set', r1);
                                     end % ROI/seeds loop
                                     % Clear progress bar
