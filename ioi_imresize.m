@@ -1,13 +1,17 @@
 function image_out = ioi_imresize(image,mode,nx,ny,vx1,vx2)
-%mode=0 is faster
+% mode=0 is faster
+% Preallocating memory for the output can improve speed in mode 1. //EGC
+image_out = zeros(nx, ny, size(image,3), size(image,4));
 if mode %3 times slower than naive shrink below
     for i3=1:size(image,3)
         for i4=1:size(image,4)
-            image_out(:,:,i3,i4) = imresize(squeeze(image(:,:,i3,i4)),[nx ny],'bicubic');
+            % image_out(:,:,i3,i4) = imresize(squeeze(image(:,:,i3,i4)),[nx ny],'bicubic');
+            image_out(:,:,i3,i4) = ioi_MYimresize(squeeze(image(:,:,i3,i4)),[nx ny],'bicubic');
         end
     end
 else
-    image_out = zeros(nx,ny,size(image,3),size(image,4));
+    % image_out = zeros(nx,ny,size(image,3),size(image,4)); 
+    % Preallocation is already done //EGC
     for i1=1:vx1
         for i2=1:vx2
             image_out = image_out + ...

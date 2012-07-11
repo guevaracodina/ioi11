@@ -226,7 +226,9 @@ try
                     im_obj = memmapfile(fmem_name,'format',...
                         {'int16' [nx ny 1 n_frames nColors] 'image_total'},...
                         'writable',true);
-                    
+                    % Initialize progress bar
+                    spm_progress_bar('Init', length(fileNo), sprintf('Multispectral reading. Subject %s, Session %d\n',IOI.subj_name,s1), 'Files');
+                    % Loop over files
                     for f1 = 1:length(fileNo)
                         frames = frameReadOut(frameReadOut(:,3)==fileNo(f1),:);
                         % extract certain frame
@@ -273,23 +275,25 @@ try
                                 if ~(IOI.color.eng(tcol)==str_laser)
                                     tmp_image{tcol} = images{frames(frames(:,1)==(fr1+iC*nColors),2)};
                                     if shrinkage_choice
-                                        try
-                                            % Added by EGC: downsampling below
-                                            % does not always work, e.g. for
-                                            % NX=792, nx=396, but
-                                            % size(tmp_image{tcol},1) = 395 and
-                                            % there is a mismatch when assigning
-                                            % dimensions in the large memory
-                                            % mapped file im_obj
-                                            tmp_image{tcol} = imresize(tmp_image{tcol},[nx ny]);
-                                        catch exception
-                                            disp(exception.identifier)
-                                            disp(exception.stack(1))
-                                            % first spatially filter the images
-                                            tmp_image{tcol} = ioi_spatial_LPF('lpf', K, tmp_image{tcol});
-                                            % then downsample
-                                            tmp_image{tcol} = tmp_image{tcol}((SH.shrink_x/2+1):SH.shrink_x:(end-(SH.shrink_x/2)),(SH.shrink_y/2+1):SH.shrink_y:(end-(SH.shrink_y/2)));
-                                        end
+                                        % ioi_MYimresize replaces imresize
+                                        tmp_image{tcol} = ioi_MYimresize(tmp_image{tcol}, [nx ny]);
+                                        %                                         try
+%                                             % Added by EGC: downsampling below
+%                                             % does not always work, e.g. for
+%                                             % NX=792, nx=396, but
+%                                             % size(tmp_image{tcol},1) = 395 and
+%                                             % there is a mismatch when assigning
+%                                             % dimensions in the large memory
+%                                             % mapped file im_obj
+%                                             tmp_image{tcol} = imresize(tmp_image{tcol},[nx ny]);
+%                                         catch exception
+%                                             disp(exception.identifier)
+%                                             disp(exception.stack(1))
+%                                             % first spatially filter the images
+%                                             tmp_image{tcol} = ioi_spatial_LPF('lpf', K, tmp_image{tcol});
+%                                             % then downsample
+%                                             tmp_image{tcol} = tmp_image{tcol}((SH.shrink_x/2+1):SH.shrink_x:(end-(SH.shrink_x/2)),(SH.shrink_y/2+1):SH.shrink_y:(end-(SH.shrink_y/2)));
+%                                         end
                                     end
                                 else
                                     %laser -- do not shrink now
@@ -317,12 +321,19 @@ try
                             %save laser images
                             ioi_save_nifti(single(laser_array),sess.fname{IOI.color.eng == str_laser}{f1},vx);
                         end
-                    end
+                        % Update progress bar
+                        spm_progress_bar('Set', f1);
+                    end % Files loop
+                    % Clear progress bar
+                    spm_progress_bar('Clear');
+                    
+                    
                     
                     %Compute median
                     for c1=1:nColors
                         %skip laser
                         if ~(str_color(c1)==str_laser)
+                            fprintf('Computing median. Subject %s, Session %d, Color %d...\n',IOI.subj_name,s1,c1);
                             median0{c1} = median(single(im_obj.Data.image_total(:,:,:,:,c1)),4);
                             %Save the median
                             str1 = str_color(c1);
@@ -372,7 +383,8 @@ try
                                 ioi_save_images(single(change_90_10),sess.fname_change_90_10{c1},vx,[],tit6);
                             end
                         end
-                    end
+                    end % color loop
+                    fprintf('Saving files. Subject %s, Session %d...\n',IOI.subj_name,s1);
                     for f1 = 1:length(fileNo)
                         ind0 = sess.si{f1}:sess.ei{f1};
                         %save images in nifti format
@@ -394,8 +406,8 @@ try
                     clear im_obj;
                     delete('all_images.dat');
                 end
-            end %for s1
-        end
+            end
+        end % sessions for
         %IOI.sess_res = sess_res;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %4- Anatomical image

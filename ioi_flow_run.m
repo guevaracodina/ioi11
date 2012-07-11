@@ -53,6 +53,8 @@ for SubjIdx=1:length(job.IOImat)
                             fname_list = IOI.sess_res{s1}.fname{Li};
                             fname_new_list = {};
                             if ~isempty(fname_list)
+                                % Initialize progress bar
+                                spm_progress_bar('Init', length(fname_list), sprintf('Flow computation, session %d\n',s1), 'Files');
                                 %loop over data files
                                 for f1=1:length(fname_list)
                                     fname = fname_list{f1};
@@ -99,7 +101,11 @@ for SubjIdx=1:length(job.IOImat)
                                     fname_new = regexprep(fname, tmp_str_laser , tmp_str_flow);
                                     fname_new_list = [fname_new_list; fname_new];
                                     ioi_save_nifti(image_flow, fname_new, vx);
-                                end
+                                    % Update progress bar
+                                    spm_progress_bar('Set', f1);
+                                end % files loop
+                                % Clear progress bar
+                                spm_progress_bar('Clear');
                                 IOI.sess_res{s1}.fname{IOI.color.eng==str_flow} = fname_new_list;
                             end
                         end
@@ -138,7 +144,7 @@ for SubjIdx=1:length(job.IOImat)
             end
         end
         out.IOImat{SubjIdx} = IOImat;
-        toc
+        disp(['Elapsed time: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
         disp(['Subject ' int2str(SubjIdx) ' complete']);
     catch exception
         disp(exception.identifier)

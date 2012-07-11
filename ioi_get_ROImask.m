@@ -14,10 +14,11 @@ for r1=1:length(IOI.res.ROI)
         %shrink mask to voxel size
         if IOI.res.shrinkageOn
             sz = size(tmp_mask);
-            %careful, this floor might not lead to the
-            %correct size - better to do a check on image
-            %size
-            mask{r1} = imresize(tmp_mask,[floor(sz(1)/IOI.res.shrink_x) floor(sz(2)/IOI.res.shrink_y)],'bicubic');
+            % careful, this floor might not lead to the correct size - better to
+            % do a check on image size
+            % mask{r1} = imresize(tmp_mask,[floor(sz(1)/IOI.res.shrink_x) floor(sz(2)/IOI.res.shrink_y)],'bicubic');
+            % ioi_MYimresize works with no image processing toolbox //EGC
+            mask{r1} = ioi_MYimresize(tmp_mask,[floor(sz(1)/IOI.res.shrink_x) floor(sz(2)/IOI.res.shrink_y)],'bicubic');
         else
             mask{r1} = tmp_mask;
         end
@@ -45,7 +46,9 @@ for r1=1:length(IOI.res.ROI)
             first_pass = 0;
         end
         if ~(d1 == size(mask{1},1) && d2 == size(mask{1},2))
-            mask{r1} = imresize(mask{r1},[d1 d2]);
+            % mask{r1} = imresize(mask{r1},[d1 d2]);
+            % ioi_MYimresize works with no image processing toolbox //EGC
+            mask{r1} = ioi_MYimresize(mask{r1},[d1 d2]);
         end
     end
 end

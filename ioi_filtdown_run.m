@@ -1,6 +1,6 @@
 function out = ioi_filtdown_run(job)
 % Band-pass filters (usually [0.009 - 0.8]Hz) and downsamples (usually to 1 Hz)
-% a time series of an ROI (seed) and the whole brain mask.
+% the time series of an ROI (seed) and the whole brain mask.
 %_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
@@ -70,7 +70,7 @@ for SubjIdx=1:length(job.IOImat)
                             colorOK = 1;
                             if ~(IOI.color.eng(c1)==IOI.color.laser)
                                 if job.wholeImage
-                                    %% Filtering & Downsampling whole images
+                                    %% Filtering & Downsampling whole images (y)
                                     y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,dir_ioimat,shrinkage_choice);
                                     % Preallocating output images
                                     filtY = zeros([size(y,1) size(y,2) 1 size(y,3)]);
@@ -79,7 +79,26 @@ for SubjIdx=1:length(job.IOImat)
                                     filtNdownY = zeros([size(y,1) size(y,2) 1 nT]);
                                     % Read brain mask file
                                     vol = spm_vol(IOI.fcIOS.mask.fname);
-                                    brainMask = spm_read_vols(vol);
+                                    brainMask = logical(spm_read_vols(vol));
+                                    % Test if there was shrinkage
+                                    if size(brainMask,1)~= size(y,1)|| size(brainMask,2)~= size(y,2)
+                                        brainMask = ioi_MYimresize(brainMask, [size(y,1) size(y,2)]);
+%                                         try
+%                                             % Brain mask is resized to match
+%                                             brainMask = imresize(brainMask, [size(y,1) size(y,2)]);
+%                                         catch exception
+%                                             disp(exception.identifier)
+%                                             disp(exception.stack(1))
+%                                             K.radius = IOI.res.shrink_x;
+%                                             K.k1 = size(y,1);
+%                                             K.k2 = size(y,2);
+%                                             K = ioi_spatial_LPF('set', K);
+%                                             % first spatially filter the images
+%                                             brainMask = ioi_spatial_LPF('lpf', K, brainMask);
+%                                             % then downsample
+%                                             brainMask = brainMask((IOI.res.shrink_x/2+1):IOI.res.shrink_x:(end-(IOI.res.shrink_x/2)), (IOI.res.shrink_y/2+1):IOI.res.shrink_y:(end-(IOI.res.shrink_y/2)));
+%                                         end
+                                    end
                                     % Color names
                                     colorNames = fieldnames(IOI.color);
                                     % Initialize progress bar
