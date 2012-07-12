@@ -212,6 +212,8 @@ for SubjIdx=1:length(job.IOImat)
             filtNdownfname = fullfile(dir1,'filtNdown.mat');
             save(filtNdownfname,'filtNdownROI','filtNdownBrain');
             IOI.fcIOS.filtNdown.fname = filtNdownfname;
+            % Desired downsampling frequency, it could be different to real
+            % downsampling frequency (filtNdown.fs)
             IOI.fcIOS.filtNdown.downFreq = job.downFreq;
             IOI.fcIOS.filtNdown.BPFfreq = job.BPFfreq;
             save(IOImat,'IOI');

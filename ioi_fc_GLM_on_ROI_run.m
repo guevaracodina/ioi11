@@ -130,11 +130,11 @@ for SubjIdx=1:length(job.IOImat)
                                                     IOI.fcIOS.SPM(1).fnameSPM{s1, c1} = SPM.swd;
                                                     IOI.fcIOS.SPM(1).fname{s1, c1} = filtNdownfnameRegress;
                                                 catch exception
-                                                    disp(exception.identifier)
-                                                    disp(exception.stack(1))
                                                     % Brain signal regression failed!
                                                     IOI.fcIOS.SPM(1).wholeImageRegressOK{s1, c1} = false;
                                                     fprintf('Global brain signal regressed from whole images in Session %d Color %d (%s) failed!\n',s1,c1,colorNames{1+c1})
+                                                    disp(exception.identifier)
+                                                    disp(exception.stack(1))
                                                 end
                                             end % end on GLM on images
                                             
@@ -142,7 +142,7 @@ for SubjIdx=1:length(job.IOImat)
                                             for r1=1:length(IOI.res.ROI)
                                                 if all_ROIs || sum(r1==selected_ROIs)
                                                     ROIdir = [colorDir filesep 'ROI' sprintf('%02d',r1)];
-                                                    if ~exist(ROIdir,'dir'),mkdir(ROIdir); end
+                                                    % if ~exist(ROIdir,'dir'),mkdir(ROIdir); end
                                                     % Initialize y tilde (ROIregress)
                                                     ROIregress{r1}{s1,c1} = [];
                                                     %% GLM on ROI code
@@ -231,11 +231,11 @@ for SubjIdx=1:length(job.IOImat)
                                                         % --------------------------
                                                         fprintf('GLM for ROI %d Session %d Color %d (%s) done!\n',r1,s1,c1,colorNames{1+c1})
                                                     catch exception
-                                                        disp(exception.identifier)
-                                                        disp(exception.stack(1))
                                                         % Brain signal regression on ROI failed!
                                                         IOI.fcIOS.SPM(1).ROIregressOK{r1}{s1, c1} = false;
                                                         fprintf('GLM for ROI %d Session %d Color %d (%s) failed!\n',r1,s1,c1,colorNames{1+c1})
+                                                        disp(exception.identifier)
+                                                        disp(exception.stack(1))
                                                     end
                                                 end
                                             end
