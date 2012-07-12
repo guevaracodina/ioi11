@@ -63,7 +63,8 @@ for SubjIdx=1:length(job.IOImat)
                                     
                                     % Initialize progress bar
                                     spm_progress_bar('Init', numel(nROI), sprintf('fcIOS map S%d C%d (%s)\n',s1,c1,colorNames{1+c1}), 'Seeds');
-                                    
+                                    % Load regressed ROI data in cell ROIregress
+                                    load(IOI.fcIOS.SPM.fnameROIregress)
                                     % Loop over ROI/seeds
                                     for r1 = nROI,
                                         if all_ROIs || sum(r1==selected_ROIs)
@@ -74,14 +75,19 @@ for SubjIdx=1:length(job.IOImat)
                                             if IOI.fcIOS.SPM.wholeImageRegressOK{s1, c1} && IOI.fcIOS.SPM.ROIregressOK{r1}{s1, c1}
                                                 fprintf('Loading data, seed %d (%s) session %d C%d (%s)...\n',r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1});
                                                 % Load brain pixels time-course
+                                                % already filtered/downsampled &
+                                                % regressed
                                                 vol = spm_vol(IOI.fcIOS.SPM.fname{s1, c1});
                                                 y = spm_read_vols(vol);
-                                                % Load ROI time-course
-                                                ROIvol = spm_vol(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
-                                                ROI = spm_read_vols(ROIvol);
+                                                % Load ROI time-course already
+                                                % filtered/downsampled &
+                                                % regressed (column vector)
+                                                % ROIvol = spm_vol(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
+                                                % ROI = spm_read_vols(ROIvol);
+                                                ROI = ROIregress{r1}{s1, c1}';
                                                 % Load brain mask
                                                 brainMaskVol = spm_vol(IOI.fcIOS.mask.fname);
-                                                brainMask = spm_read_vols(brainMaskVol);
+                                                brainMask = logical(spm_read_vols(brainMaskVol));
                                                 if size(brainMask,1)~= size(y,1)|| size(brainMask,2)~= size(y,2)
                                                     brainMask = ioi_MYimresize(brainMask, [size(y,1) size(y,2)]);
                                                 end
@@ -133,17 +139,48 @@ for SubjIdx=1:length(job.IOImat)
 %                                                     % -------------------------
 
                                                     % Improve display
-                                                    tempCorrMap(brainMask==0) = median(tempCorrMap(:));
+                                                    tempCorrMap(~brainMask) = median(tempCorrMap(:));
+                                                    % Seed annotation dimensions
+                                                    % the lower left corner of
+                                                    % the bounding rectangle at
+                                                    % the point seedX, seedY
+                                                    seedX = IOI.res.ROI{r1}.center(2) - IOI.res.ROI{r1}.radius;
+                                                    seedY = IOI.res.ROI{r1}.center(1) - IOI.res.ROI{r1}.radius;
+                                                    seedW = 2*IOI.res.ROI{r1}.radius;
+                                                    seedH = 2*IOI.res.ROI{r1}.radius;
+                                                    if isfield(IOI.res,'shrinkageOn')
+                                                        if IOI.res.shrinkageOn == 1
+                                                            seedX = seedX / IOI.res.shrink_x;
+                                                            seedY = seedY / IOI.res.shrink_y;
+                                                            seedW = seedW / IOI.res.shrink_x;
+                                                            seedH = seedH / IOI.res.shrink_y;
+                                                        end
+                                                    end
+                                                    
                                                     spm_figure('ColorMap','jet')
-                                                    subplot(211)
+                                                    
                                                     % Correlation map
-                                                    imagesc(tempCorrMap); colorbar; axis image
-                                                    title(sprintf('fcIOS map Seed %d (%s) S%d C%d (%s)\n',r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}))
-                                                    subplot(212)
+                                                    subplot(211)
+                                                    imagesc(tempCorrMap); colorbar; axis image; 
+                                                    % Display ROI
+                                                    rectangle('Position',[seedX seedY seedW seedH],...
+                                                        'Curvature',[1,1],...
+                                                        'LineWidth',2,'LineStyle','-');
+                                                    set(gca,'Xtick',[]); set(gca,'Ytick',[]);
+                                                    xlabel('Left'); ylabel('Rostral');
+                                                    title(sprintf('%s fcIOS map Seed %d (%s) S%d C%d (%s)\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none')
+                                                    
                                                     % Show only significant
                                                     % pixels
-                                                    imagesc(tempCorrMap .* (pValuesMap <= job.pValue), [-1 1]); colorbar; axis image
-                                                    title(sprintf('Significant pixels (p<%f) Seed %d (%s) S%d C%d (%s)\n',job.pValue,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}))
+                                                    subplot(212)
+                                                    imagesc(tempCorrMap .* (pValuesMap <= job.pValue), [-1 1]); colorbar; axis image;
+                                                    % Display ROI
+                                                    rectangle('Position',[seedX seedY seedW seedH],...
+                                                        'Curvature',[1,1],...
+                                                        'LineWidth',2,'LineStyle','-');
+                                                    set(gca,'Xtick',[]); set(gca,'Ytick',[]);
+                                                    xlabel('Left'); ylabel('Rostral');
+                                                    title(sprintf('%s significant pixels (p<%.2f) Seed %d (%s) S%d C%d (%s)\n',IOI.subj_name,job.pValue,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none')
                                                     
                                                     if job.save_figures
                                                         [~, oldName, oldExt] = fileparts(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});

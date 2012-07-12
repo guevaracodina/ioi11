@@ -19,9 +19,10 @@ if Im.cbar.colorbar_override
     %hc = colorbar;
     %set(hc, 'YLim', [Im.cbar.c_min Im.cbar.c_max]);
 end
-imagesc(image);
+imagesc(image); axis image
 colorbar;
-title(tit);
+% Here I prevent title to display characters preceded by _ as subscripts
+title(tit,'interpreter', 'none');
 if Im.save_figures
     %     print(h, '-dtiffn', [fname '.tiff']);
     % Save as PNG: ~10x smaller file size and 2x the resolution //EGC

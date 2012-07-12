@@ -42,6 +42,7 @@ try
     %leave voxel size in arbitrary units for now, for anatomical image
     vx_anat = [1 1 1];
     vx = [1 1 1];
+    % Is it not dangerous to let the user choose the acq_freq? //EGC
     if isfield(job,'acq_freq')
         TR = job.color_number/job.acq_freq;
     else
@@ -417,7 +418,7 @@ try
         %use first green colored image as the anatomy
         if ~expedite
             fname = fullfile(dir_subj_res, [subj_name '_' suffix_for_anat_file '.nii']);
-            ioi_save_images(image_anat, fname, vx_anat,[],'Anatomical image')
+            ioi_save_images(image_anat, fname, vx_anat,[],sprintf('%s Anatomical image',IOI.subj_name))
             %ioi_save_nifti(image_anat, fname, vx_anat);
             IOI.res.file_anat=fname;
         end
