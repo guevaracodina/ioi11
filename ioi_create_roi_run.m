@@ -89,7 +89,14 @@ for SubjIdx=1:length(job.IOImat)
             end
             
             % Display anatomical image
+            try 
             vol = spm_vol(IOI.res.file_anat);
+            catch 
+                disp('Could not find anatomical image');
+                [t sts] = spm_select(1,'image','Select anatomical image','',dir_ioimat,'.*',1);
+                IOI.res.file_anat = t;
+                vol = spm_vol(IOI.res.file_anat);
+            end
             vx = [1 1 1];
             [dir1 fil1] = fileparts(vol.fname);
             im_anat = spm_read_vols(vol);
