@@ -1,5 +1,6 @@
 function IOI = ioi_msread_new_format(IOI,job)
 try
+    image_anat_first_pass = 1;
     %select a subset of sessions
     [all_sessions selected_sessions] = ioi_get_sessions(job);
 
@@ -312,8 +313,9 @@ try
                                 laser_array(:,:,tframe) = tmp_image{tcol}; %tframe???
                             end
                             %image_total{tcol}(:,:,:,tframe) = tmp_image{tcol};
-                            if s1==1 && f1==1 && (fr1 <= nColors) && strcmp(str_color(tcol),str_anat)
+                            if ~image_anat_first_pass && f1==1 && (fr1 <= nColors) && strcmp(str_color(tcol),str_anat)
                                 image_anat = images{fr1}; %problem with fr1 sometimes...
+                                image_anat_first_pass = 0;
                             end
                         end
                         iC = iC + nImages;
