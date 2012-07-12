@@ -104,11 +104,20 @@ displayBrainmask.values = {1,0};
 displayBrainmask.val    = {0}; % Default value = 0
 displayBrainmask.help   = {'Display network mask containing only brain pixels'};
 
+use_gray_contrast      = cfg_menu;
+use_gray_contrast.tag  = 'use_gray_contrast';
+use_gray_contrast.name = 'Use gray contrast';
+use_gray_contrast.labels = {'False','True'};
+use_gray_contrast.values = {0,1};
+use_gray_contrast.val  = {1};
+use_gray_contrast.help = {'Use gray contrast.'}';
+
 % Executable Branch
 create_roi1             = cfg_exbranch;       % This is the branch that has information about how to run this module
 create_roi1.name        = 'Create ROI/seed';             % The display name
 create_roi1.tag         = 'create_roi1'; %Very important: tag is used when calling for execution
-create_roi1.val         = {IOImat redo1 RemovePreviousROI IOImatCopyChoice select_names AutoROIchoice displayBrainmask};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+create_roi1.val         = {IOImat redo1 RemovePreviousROI IOImatCopyChoice ...
+    select_names AutoROIchoice displayBrainmask use_gray_contrast};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 create_roi1.prog        = @ioi_create_roi_run;  % A function handle that will be called with the harvested job to run the computation
 create_roi1.vout        = @ioi_cfg_vout_create_roi; % A function handle that will be called with the harvested job to determine virtual outputs
 create_roi1.help        = {'Create regions of interest/seeds.'};

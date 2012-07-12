@@ -1,5 +1,9 @@
 function out = ioi_create_roi_run(job)
-
+try
+    use_gray_contrast = job.use_gray_contrast;
+catch
+    use_gray_contrast = 0;
+end
 % Manual/automatic selection of ROIs/seeds (pointNclickROI ManualROIspline)
 
 % if isfield(job.AutoROIchoice,'AutoROI')
@@ -89,9 +93,9 @@ for SubjIdx=1:length(job.IOImat)
             end
             
             % Display anatomical image
-            try 
-            vol = spm_vol(IOI.res.file_anat);
-            catch 
+            try
+                vol = spm_vol(IOI.res.file_anat);
+            catch
                 disp('Could not find anatomical image');
                 [t sts] = spm_select(1,'image','Select anatomical image','',dir_ioimat,'.*',1);
                 IOI.res.file_anat = t;
@@ -101,11 +105,13 @@ for SubjIdx=1:length(job.IOImat)
             [dir1 fil1] = fileparts(vol.fname);
             im_anat = spm_read_vols(vol);
             % Gray-scale colormap to enhance contrast
-            cmap = contrast(im_anat);
+            if use_gray_contrast
+                cmap = contrast(im_anat);
+            end
             % Goto figures window
             spm_figure('GetWin', 'Graphics');
             spm_figure('Clear', 'Graphics');
-                
+            
             if isfield(job,'displayBrainmask')
                 if job.displayBrainmask == 1
                     % Display only brain pixels mask
@@ -152,7 +158,13 @@ for SubjIdx=1:length(job.IOImat)
                         % Display anatomical image on SPM graphics window
                         spm_figure('GetWin', 'Graphics');
                         spm_figure('Clear', 'Graphics');
-                        imagesc(im_anat .* full_mask); colormap(cmap); axis image;
+                        imagesc(im_anat .* full_mask);
+                        if use_gray_contrast
+                            colormap(cmap);
+                        else
+                            colormap(gray);
+                        end
+                        axis image;
                         if graphicalROI
                             % Specify polygonal region of interest (ROI)
                             title('Make ROI polygon, then double click in it to create ROI.');
