@@ -353,17 +353,17 @@ try
                                 ninetiethpctle_image = prctile(im_obj.Data.image_total(:,:,:,:,c1),90,4);
                                 change_90_10 = single(ninetiethpctle_image) ./ single(tenthpctle_image);
                                 sess.fname_min{c1} = fullfile(dir_subj_res,sess_str, ...
-                                    [subj_name '_' OD_label '_min_' str1 '_' sess_str '.nii']);
+                                    [subj_name '_' OD_label '_min_' str1 '_' sess_str]);
                                 sess.fname_max{c1} = fullfile(dir_subj_res,sess_str, ...
-                                    [subj_name '_' OD_label '_max_' str1 '_' sess_str '.nii']);
+                                    [subj_name '_' OD_label '_max_' str1 '_' sess_str]);
                                 sess.fname_10pctle{c1} = fullfile(dir_subj_res,sess_str, ...
-                                    [subj_name '_' OD_label '_10pctle_' str1 '_' sess_str '.nii']);
+                                    [subj_name '_' OD_label '_10pctle_' str1 '_' sess_str]);
                                 sess.fname_90pctle{c1} = fullfile(dir_subj_res,sess_str, ...
-                                    [subj_name '_' OD_label '_90pctle_' str1 '_' sess_str '.nii']);
+                                    [subj_name '_' OD_label '_90pctle_' str1 '_' sess_str]);
                                 sess.fname_change{c1} = fullfile(dir_subj_res,sess_str, ...
-                                    [subj_name '_' OD_label '_change_' str1 '_' sess_str '.nii']);
+                                    [subj_name '_' OD_label '_change_' str1 '_' sess_str]);
                                 sess.fname_change_90_10{c1} = fullfile(dir_subj_res,sess_str, ...
-                                    [subj_name '_' OD_label '_change_90_10_' str1 '_' sess_str '.nii']);
+                                    [subj_name '_' OD_label '_change_90_10_' str1 '_' sess_str]);
                                 tit1 = [subj_name ' ' OD_label ' min ' str1 ' ' sess_str];
                                 tit2 = [subj_name ' ' OD_label ' max ' str1 ' ' sess_str];
                                 tit3 = [subj_name ' ' OD_label ' 10pctle ' str1 ' ' sess_str];
@@ -412,10 +412,10 @@ try
                     % Use first green colored image as the anatomy
                     % anat_fname = fullfile(dir_subj_res, [subj_name '_' suffix_for_anat_file '.nii']);
                     anat_fname = fullfile(dir_subj_res,sess_str, ...
-                                    [subj_name '_' suffix_for_anat_file '_' sess_str '.nii']);
+                                    [subj_name '_' suffix_for_anat_file '_' sess_str]);
                     ioi_save_images(image_anat, anat_fname, vx_anat,[],sprintf('%s Anatomical image',IOI.subj_name))
                     % It will always point to the last anatomical image
-                    IOI.res.file_anat = anat_fname;
+                    IOI.res.file_anat = [anat_fname '.nii'];
                 end
             end
         end % sessions for
