@@ -1,6 +1,5 @@
 function IOI = ioi_msread_new_format(IOI,job)
 try
-    image_anat_first_pass = 1;
     %select a subset of sessions
     [all_sessions selected_sessions] = ioi_get_sessions(job);
 
@@ -314,9 +313,8 @@ try
                                 laser_array(:,:,tframe) = tmp_image{tcol}; %tframe???
                             end
                             %image_total{tcol}(:,:,:,tframe) = tmp_image{tcol};
-                            if ~image_anat_first_pass && f1==1 && (fr1 <= nColors) && strcmp(str_color(tcol),str_anat)
+                            if f1==1 && (fr1 <= nColors) && strcmp(str_color(tcol),str_anat)
                                 image_anat = images{fr1}; %problem with fr1 sometimes...
-                                image_anat_first_pass = 0;
                             end
                         end
                         iC = iC + nImages;
@@ -408,20 +406,20 @@ try
                     disp(['Done processing session ' int2str(s1) ' images (' int2str(iC) ' images)']);
                     clear im_obj;
                     delete('all_images.dat');
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    %4- Anatomical image - Save for each session
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    % Use first green colored image as the anatomy
+                    % anat_fname = fullfile(dir_subj_res, [subj_name '_' suffix_for_anat_file '.nii']);
+                    anat_fname = fullfile(dir_subj_res,sess_str, ...
+                                    [subj_name '_' suffix_for_anat_file '_' sess_str '.nii']);
+                    ioi_save_images(image_anat, anat_fname, vx_anat,[],sprintf('%s Anatomical image',IOI.subj_name))
+                    % It will always point to the last anatomical image
+                    IOI.res.file_anat = anat_fname;
                 end
             end
         end % sessions for
         %IOI.sess_res = sess_res;
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %4- Anatomical image
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %use first green colored image as the anatomy
-        if ~expedite
-            fname = fullfile(dir_subj_res, [subj_name '_' suffix_for_anat_file '.nii']);
-            ioi_save_images(image_anat, fname, vx_anat,[],sprintf('%s Anatomical image',IOI.subj_name))
-            %ioi_save_nifti(image_anat, fname, vx_anat);
-            IOI.res.file_anat=fname;
-        end
     end
 catch exception
     disp(exception.identifier)
