@@ -62,7 +62,7 @@ for SubjIdx=1:length(job.IOImat)
                     % It means we will extract only 1 ROI
                     job.extractingBrainMask = true;
                     % Get brain mask
-                    [IOI mask] = ioi_get_network_mask(IOI,job);
+                    [IOI mask] = ioi_get_brain_mask(IOI,job);
                     % Extract brain mask here
                     [brainMaskSeries IOI] = ioi_extract_core(IOI,job,mask);
                     % Brain mask time series extraction succesful!
