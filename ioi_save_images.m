@@ -24,10 +24,11 @@ colorbar;
 % Here I prevent title to display characters preceded by _ as subscripts
 title(tit,'interpreter', 'none');
 if Im.save_figures
-    %     print(h, '-dtiffn', [fname '.tiff']);
-    % Save as PNG: ~10x smaller file size and 2x the resolution //EGC
-    print(h, '-dpng', fname, '-r300');
+%     print(h, '-dtiffn', [fname '.tiff']);
     saveas(h,[fname '.fig']);
+    % Save as PNG: ~10x smaller file size and 2x the resolution //EGC
+    % It is necessary to add file extension //EGC
+    print(h, '-dpng', [fname '.png'], '-r300');
 end
 if ~Im.generate_figures, close(h); end
 end
