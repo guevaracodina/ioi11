@@ -280,23 +280,7 @@ volt.val    = {1};
 
 hpf_butter = ioi_dfg_hpf_butter(1,0.01,3);
 
-% ---------------------------------------------------------------------
-% lpf Low-pass filter
-% ---------------------------------------------------------------------
-fwhm1      = cfg_entry;
-fwhm1.tag  = 'fwhm1';
-fwhm1.name = 'FWHM in seconds';
-fwhm1.val = {0.67};
-fwhm1.strtype = 'r';  
-fwhm1.num     = [1 1]; 
-fwhm1.help    = {'FWHM in seconds.'}; 
-
-lpf_gauss         = cfg_branch;
-lpf_gauss.tag     = 'lpf_gauss';
-lpf_gauss.name    = 'Gaussian Filter';
-lpf_gauss.val     = {fwhm1}; 
-lpf_gauss.help    = {'Specify properties of Gaussian filter'};
-
+lpf_choice = ioi_dfg_lpf_choice(1,0.67);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 IC = ioi_dfg_include_colors(0,1,1,1,0);
@@ -334,7 +318,7 @@ glm_roi1      = cfg_exbranch;       % This is the branch that has information ab
 glm_roi1.name = 'GLM on ROI';             % The display name
 glm_roi1.tag  = 'glm_roi1'; %Very important: tag is used when calling for execution
 glm_roi1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ROI_choice...
-     bases volt use_onset_amplitudes hpf_butter lpf_gauss IC ...
+     bases volt use_onset_amplitudes hpf_butter lpf_choice IC ...
      generate_figures save_figures ...
      figure_show_stim figure_rebase_to_zero_at_stim show_mse};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 glm_roi1.prog = @ioi_GLM_on_ROI_run;  % A function handle that will be called with the harvested job to run the computation

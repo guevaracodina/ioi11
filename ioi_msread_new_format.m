@@ -85,7 +85,17 @@ try
                     t0 = deblank(t0);
                     color_order_french = t0(end-3:end);
                     if strcmp(color_order_french,'flat')
-                        color_order_french = 'RVJL';
+                        try
+                             sp0 = strfind(t0,'Light : ');
+                             sr0 = t0((sp0+8):(sp0+19)); 
+                             color_order_french = [sr0(1) sr0(4) sr0(7) sr0(10)];
+                             %These are the number of frames for each color
+                             %not used currently, but will be for calcium
+                             %imaging
+                             color_numbers = [sr0(2) sr0(5) sr0(8) sr0(11)];
+                        catch
+                            color_order_french = 'RVJL';
+                        end
                     end
                     %color_order_french = color_order_french(1:4);
                     color_order = color_order_french;
@@ -141,6 +151,13 @@ try
                 %save electrophysiological data
                 el = ConvertedData.Data.MeasuredData(5).Data;
                 save(elfile,'el');
+                try
+                    elfile_info2 = fullfile(dir_subj_res,[short_el_label '2' el_info '_' sess_label gen_num_str(sC,2) '.mat']);
+                    elfile2 = fullfile(dir_subj_res,[short_el_label '2_' sess_label gen_num_str(sC,2) '.mat']);
+                    %save 2nd channel of electrophysiology
+                    el2 = ConvertedData.Data.MeasuredData(12).Data;
+                    save(elfile2,'el2');
+                end
                 IOI.res.electroOK = 1; %not by session...
                 IOI.res.sfel = 1/stims_dt;
                 if expedite
@@ -154,6 +171,7 @@ try
                     %[imfiles dummy] = cfg_getfile('FPList',dirs{s1},'image');
                     %read frame present
                     [Imout frameout frameReadOut fileNo] = LectureImageMultiFast(dirs{s1},'image',-1);
+                    frameReadOut = frameReadOut(frameReadOut(:,1) ~= 0,:);
                     fileNo = sort(fileNo);
                     missing_frames = [];
                     n_frames = ceil(max(frameReadOut(:,1))/nColors);
@@ -404,6 +422,9 @@ try
                     IOI.sess_res{sC}.hasRGY = hasRGY;
                     %sess_res =[sess_res sess];
                     disp(['Done processing session ' int2str(s1) ' images (' int2str(iC) ' images)']);
+                    if iC == 0
+                        a=1;
+                    end
                     clear im_obj;
                     delete('all_images.dat');
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

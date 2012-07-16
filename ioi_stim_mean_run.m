@@ -561,14 +561,14 @@ for SubjIdx=1:length(job.IOImat)
                                                         plot(ls,F{r2,m1}{c1,s1}.yp,[lp1{2} lp2{c1}]); hold on
                                                         leg_str = [leg_str; [lp3{c1} '-NL']];
                                                     end
-                                                    plot(ls,H{r2,m1}{c1,s1}.yp,[lp1{3} lp2{c1}]); hold on
-                                                    leg_str = [leg_str; [lp3{c1} '-EM']];
-%***************************************change by cong on 06/28
-%                                                     try
 %                                                     plot(ls,H{r2,m1}{c1,s1}.yp,[lp1{3} lp2{c1}]); hold on
 %                                                     leg_str = [leg_str; [lp3{c1} '-EM']];
-%                                                     catch
-%                                                     end
+%***************************************change by cong on 06/28
+                                                    try
+                                                    plot(ls,H{r2,m1}{c1,s1}.yp,[lp1{3} lp2{c1}]); hold on
+                                                    leg_str = [leg_str; [lp3{c1} '-EM']];
+                                                    catch
+                                                    end
   %*****************************    end                                                 
                                                 end
                                             end
