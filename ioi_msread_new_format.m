@@ -160,9 +160,14 @@ try
                 end
                 IOI.res.electroOK = 1; %not by session...
                 IOI.res.sfel = 1/stims_dt;
-                if expedite
-                    ioi_plot_LFP(IOI,el,s1);
-                end
+                %if expedite
+                dir_elfig = fullfile(dir_subj_res,'fig_el');
+                if ~exist(dir_elfig,'dir'), mkdir(dir_elfig); end
+                fname_el = fullfile(dir_elfig,[short_el_label '_' sess_label gen_num_str(sC,2)]);
+                fname_el2 = fullfile(dir_elfig,[short_el_label '2_' sess_label gen_num_str(sC,2)]);
+                ioi_plot_LFP(IOI,el,s1,1,1,fname_el);
+                try ioi_plot_LFP2(IOI,el,s1,el2,1,1,fname_el2); end;
+                %end
                 if ~expedite
                     %extract ttl
                     ttl=TDMS2ttl(ConvertedData);
