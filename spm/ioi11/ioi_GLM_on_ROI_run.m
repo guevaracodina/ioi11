@@ -183,7 +183,10 @@ for SubjIdx=1:length(job.IOImat)
                     end
                     %Plot figures of fits
                     %line specification - (yp or yf) x color
-                    lp1{1} = ':'; lp1{2} = '-'; %lp1{3} = '--'; lp1{4} = '-.';
+                    lp1{1} = ':'; lp1{2} = '-'; 
+                    %%%%%%%%%%%%%%%%%by Cong on 2012_07_06
+                    lp1{3} = '--'; lp1{4} = '-.';
+                    %*********************************
                     ctotal = [];
                     if isfield(IOI.color,'HbO')
                         lp2{IOI.color.eng==IOI.color.HbO} = 'r'; %HbO
@@ -202,72 +205,89 @@ for SubjIdx=1:length(job.IOImat)
                     end
                     %loop over sessions
                     h1 = 0;
+                    
                     for s1=1:length(IOI.sess_res)
                         if all_sessions || sum(s1==selected_sessions)
+                            
                             %Loop over ROIs
                             for r1=1:length(ROI)
-                                if all_ROIs || sum(r1==selected_ROIs)
-                                    h1 = h1 + 1;
-                                    h(h1) = figure;
-                                    legstr = {};
-                                    %loop over available colors
-                                    for c1=1:ctotal; %length(IOI.sess_res{s1}.fname) %or ctotal
-                                        try
-                                            if include_flow || ~(IOI.color.eng(c1)==IOI.color.flow)
-                                                if ~isempty(IOI.X{s1}.yf{r1,c1})
-                                                    if length(IOI.X{s1}.X)>1
-                                                        X = IOI.X{s1}.X{c1};
-                                                    else
-                                                        X = IOI.X{s1}.X{1};
-                                                    end
-                                                    %lp = linspace(0,(size(X,1)-spm_shift)*IOI.dev.TR,size(X,1)-spm_shift);
-                                                    lp = linspace(0,size(X,1)*IOI.dev.TR,size(X,1));
-                                                    %filtered data
-                                                    yf = IOI.X{s1}.yf{r1,c1};
-                                                    %reconstructed data
-                                                    yp = IOI.X{s1}.yp{r1,c1};
-                                                    if figure_rebase_to_zero_at_stim
-                                                        u0 = full(IOI.Sess(s1).U.u(33:end)');
-                                                        u0(u0==0) = NaN;
-                                                        for k0=1:length(u0)
-                                                            if u0(k0) > 0
-                                                                yf(k0:end) = yf(k0:end)-yf(k0);
-                                                                yp(k0:end) = yp(k0:end)-yp(k0);
+                                
+                            %**************************************
+                                c0 = length(ctotal)-0;
+                            %**************************************************
+                                    if all_ROIs || sum(r1==selected_ROIs)
+                                        h1 = h1 + 1;
+                                        h(h1) = figure;
+                                        legstr = {};
+                                        %loop over available colors
+                                        %**************************************
+                                            for c1=1:ctotal(c0)
+
+                                        %**************************************
+                                        %for c1=1:ctotal(); %length(IOI.sess_res{s1}.fname) %or ctotal
+                                                try
+                                                    if include_flow || ~(IOI.color.eng(c1)==IOI.color.flow)
+                                                        if ~isempty(IOI.X{s1}.yf{r1,c1})
+                                                            if length(IOI.X{s1}.X)>1
+                                                                X = IOI.X{s1}.X{c1};
+                                                            else
+                                                                X = IOI.X{s1}.X{1};
+                                                            end
+                                                            %lp = linspace(0,(size(X,1)-spm_shift)*IOI.dev.TR,size(X,1)-spm_shift);
+                                                            lp = linspace(0,size(X,1)*IOI.dev.TR,size(X,1));
+                                                            %filtered data
+                                                            yf = IOI.X{s1}.yf{r1,c1};
+                                                            %reconstructed data
+                                                            yp = IOI.X{s1}.yp{r1,c1};
+                                                            if figure_rebase_to_zero_at_stim
+                                                                u0 = full(IOI.Sess(s1).U.u(33:end)');
+                                                                u0(u0==0) = NaN;
+                                                                for k0=1:length(u0)
+                                                                    if u0(k0) > 0
+                                                                        yf(k0:end) = yf(k0:end)-yf(k0);
+                                                                        yp(k0:end) = yp(k0:end)-yp(k0);
+                                                                    end
+                                                                end
+                                                            end
+
+                                                            t = IOI.X{s1}.t(r1,c1);
+                                                            if volt==2, t2 = IOI.X{s1}.t2(r1,c1); end
+                                                            %***********************
+                                                            %plot(lp,yf,[lp1{1} lp2{c1}]); hold on
+                                                            %*************************
+                                                            plot(lp,yp,[lp1{2} lp2{c1}]); hold on
+                                                            %*********************************
+%                                                             legstr = [legstr; [lp3{c1} 'f']];
+                                                            %************************************
+                                                            if show_mse
+                                                                mse_str = [',' sprintf('%2.3f',IOI.X{s1}.mse(r1,c1))];
+                                                            else
+                                                                mse_str = '';
+                                                            end
+
+                                                            if volt == 1
+                                                                legstr = [legstr; [lp3{c1} 'p(' sprintf('%2.1f',t) mse_str ')']];
+                                                            else
+                                                                legstr = [legstr; [lp3{c1} 'p(' sprintf('%2.1f',t) ',' sprintf('%2.1f',t2) mse_str ')']];
                                                             end
                                                         end
                                                     end
-                                                    
-                                                    t = IOI.X{s1}.t(r1,c1);
-                                                    if volt==2, t2 = IOI.X{s1}.t2(r1,c1); end
-                                                    plot(lp,yf,[lp1{1} lp2{c1}]); hold on
-                                                    plot(lp,yp,[lp1{2} lp2{c1}]); hold on
-                                                    legstr = [legstr; [lp3{c1} 'f']];
-                                                    if show_mse
-                                                        mse_str = [',' sprintf('%2.3f',IOI.X{s1}.mse(r1,c1))];
-                                                    else
-                                                        mse_str = '';
-                                                    end
-                                                        
-                                                    if volt == 1
-                                                        legstr = [legstr; [lp3{c1} 'p(' sprintf('%2.1f',t) mse_str ')']];
-                                                    else
-                                                        legstr = [legstr; [lp3{c1} 'p(' sprintf('%2.1f',t) ',' sprintf('%2.1f',t2) mse_str ')']];
-                                                    end
                                                 end
                                             end
+                                        %**********************************
+                                    end
+                                    %**************************************
+                                        %plot stims
+                                        if figure_show_stim
+                                            u0 = full(IOI.Sess(s1).U.u(33:end)');
+                                            u0(u0==0) = NaN;
+                                            stem(lp,u0,'k');
                                         end
-                                    end
-                                    %plot stims
-                                    if figure_show_stim
-                                        u0 = full(IOI.Sess(s1).U.u(33:end)');
-                                        u0(u0==0) = NaN;
-                                        stem(lp,u0,'k');
-                                    end
-                                    tit = ['Session ' int2str(s1) ', ROI ' int2str(r1)];
-                                    title(tit);
-                                    legend(gca,legstr);
-                                    ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
-                                end
+                                        tit = ['Session ' int2str(s1) ', ROI ' int2str(r1)];
+                                        title(tit);
+                                        legend(gca,legstr);
+                                        ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
+                                %end
                             end
                         end
                     end
