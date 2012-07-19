@@ -362,7 +362,7 @@ try
                             %Save the median
                             str1 = str_color(c1);
                             sess.fname_median{c1} = fullfile(dir_subj_res,sess_str, ...
-                                [subj_name '_' OD_label '_median_' str1 '_' sess_str '.nii']);
+                                [subj_name '_' OD_label '_median_' str1 '_' sess_str]);
                             %ioi_save_nifti(single(median0{c1}),sess.fname_median{c1},vx);
                             tit0 = [subj_name ' ' OD_label ' median ' str1 ' ' sess_str];
                             ioi_save_images(single(median0{c1}),sess.fname_median{c1},vx,[],tit0);
@@ -427,9 +427,6 @@ try
                     IOI.sess_res{sC}.hasRGY = hasRGY;
                     %sess_res =[sess_res sess];
                     disp(['Done processing session ' int2str(s1) ' images (' int2str(iC) ' images)']);
-                    if iC == 0
-                        a=1;
-                    end
                     clear im_obj;
                     delete('all_images.dat');
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

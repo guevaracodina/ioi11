@@ -93,8 +93,13 @@ for SubjIdx=1:length(job.IOImat)
                         if normalization_choice
                             %get median images
                             for i1=1:length(hasRGY)
-                                V0 = spm_vol(IOI.sess_res{selected_norm_session}.fname_median{hasRGY(i1)});
-                                V1 = spm_vol(IOI.sess_res{s1}.fname_median{hasRGY(i1)});
+                                try
+                                    V0 = spm_vol(IOI.sess_res{selected_norm_session}.fname_median{hasRGY(i1)});
+                                    V1 = spm_vol(IOI.sess_res{s1}.fname_median{hasRGY(i1)});
+                                catch
+                                    V0 = spm_vol([IOI.sess_res{selected_norm_session}.fname_median{hasRGY(i1)} '.nii']);
+                                    V1 = spm_vol([IOI.sess_res{s1}.fname_median{hasRGY(i1)} '.nii']);
+                                end
                                 med0(i1,:,:) = spm_read_vols(V0);
                                 med1(i1,:,:) = spm_read_vols(V1);
                             end

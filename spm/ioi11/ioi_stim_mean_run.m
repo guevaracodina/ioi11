@@ -193,13 +193,17 @@ for SubjIdx=1:length(job.IOImat)
                                             else
                                                 tmp_d = ROI{r1}{s1,c1};
                                             end
+                                            normalize_flow = 0;
+                                            if normalize_flow
                                             %normalize flow
                                             if isfield(IOI.color,'flow')
                                                 if IOI.color.eng(c1)==IOI.color.flow
                                                     tmp_d = tmp_d/mean(tmp_d); %or median
                                                 end
                                             end
-                                            
+                                            end
+                                            remove_jumps = 0;
+                                            if remove_jumps
                                             %remove jumps options:
                                             OP.Sb = 4; %number of standard deviations
                                             OP.Nr = 1/IOI.dev.TR; %number of points removed before and after
@@ -217,6 +221,7 @@ for SubjIdx=1:length(job.IOImat)
                                             end
                                             tmp_d = ioi_remove_jumps(tmp_d,OP);
                                             %end
+                                            end
                                         catch
                                             tmp_d = [];
                                         end
@@ -462,25 +467,25 @@ for SubjIdx=1:length(job.IOImat)
                 if generate_figures || save_figures
                     %line specification - ROI x color
                     lp1{1} = '-'; lp1{2} = ':'; lp1{3} = '--'; lp1{4} = '-.';
-                    if isfield(IOI.color,'HbO')
+                    if isfield(IOI.color,'HbO') && IC.include_HbO
                         lp2{IOI.color.eng==IOI.color.HbO} = 'r'; %HbO
-                        lp2{IOI.color.eng==IOI.color.HbR} = 'b'; %HbR
                         lp3{IOI.color.eng==IOI.color.HbO} = 'HbO'; %HbO
-                        lp3{IOI.color.eng==IOI.color.HbR} = 'HbR'; %HbR
-                        ctotal = [ctotal find(IOI.color.eng==IOI.color.HbO) ...
-                            find(IOI.color.eng==IOI.color.HbR)];
-                        if IC.include_HbT
-                            lp2{IOI.color.eng==IOI.color.HbT} = 'g';
-                            lp3{IOI.color.eng==IOI.color.HbT} = 'HbT'; %HbT
-                            ctotal = [ctotal find(IOI.color.eng==IOI.color.HbT)];
-                        end
+                        ctotal = [ctotal find(IOI.color.eng==IOI.color.HbO)];
                     end
-                    if IC.include_flow
-                        if isfield(IOI.color,'flow')
-                            lp2{IOI.color.eng==IOI.color.flow} = 'k'; %Flow
-                            lp3{IOI.color.eng==IOI.color.flow} = 'Flow';
-                            ctotal = [ctotal find(IOI.color.eng==IOI.color.flow)];
-                        end
+                    if isfield(IOI.color,'HbR') && IC.include_HbR
+                        lp2{IOI.color.eng==IOI.color.HbR} = 'b'; %HbR
+                        lp3{IOI.color.eng==IOI.color.HbR} = 'HbR'; %HbR
+                        ctotal = [ctotal find(IOI.color.eng==IOI.color.HbR)];
+                    end
+                    if IC.include_HbT
+                        lp2{IOI.color.eng==IOI.color.HbT} = 'g';
+                        lp3{IOI.color.eng==IOI.color.HbT} = 'HbT'; %HbT
+                        ctotal = [ctotal find(IOI.color.eng==IOI.color.HbT)];
+                    end
+                    if isfield(IOI.color,'flow') && IC.include_flow
+                        lp2{IOI.color.eng==IOI.color.flow} = 'k'; %Flow
+                        lp3{IOI.color.eng==IOI.color.flow} = 'Flow';
+                        ctotal = [ctotal find(IOI.color.eng==IOI.color.flow)];
                     end
                     if IC.include_OD
                         %to do...
@@ -561,15 +566,15 @@ for SubjIdx=1:length(job.IOImat)
                                                         plot(ls,F{r2,m1}{c1,s1}.yp,[lp1{2} lp2{c1}]); hold on
                                                         leg_str = [leg_str; [lp3{c1} '-NL']];
                                                     end
-%                                                     plot(ls,H{r2,m1}{c1,s1}.yp,[lp1{3} lp2{c1}]); hold on
-%                                                     leg_str = [leg_str; [lp3{c1} '-EM']];
-%***************************************change by cong on 06/28
+                                                    %                                                     plot(ls,H{r2,m1}{c1,s1}.yp,[lp1{3} lp2{c1}]); hold on
+                                                    %                                                     leg_str = [leg_str; [lp3{c1} '-EM']];
+                                                    %***************************************change by cong on 06/28
                                                     try
-                                                    plot(ls,H{r2,m1}{c1,s1}.yp,[lp1{3} lp2{c1}]); hold on
-                                                    leg_str = [leg_str; [lp3{c1} '-EM']];
+                                                        plot(ls,H{r2,m1}{c1,s1}.yp,[lp1{3} lp2{c1}]); hold on
+                                                        leg_str = [leg_str; [lp3{c1} '-EM']];
                                                     catch
                                                     end
-  %*****************************    end                                                 
+                                                    %*****************************    end
                                                 end
                                             end
                                             legend(leg_str);
@@ -627,13 +632,13 @@ for SubjIdx=1:length(job.IOImat)
                                             set(gca, 'ColorOrder', ColorSet);
                                             hold all
                                             for r1=1:size(Ma,1)
-                                                 plot(ls,Ma{r1,m1}{c1,s1}); %hold on
-         %****************************************** changed by Cong on 06/28
-%                                                 try
-%                                                 plot(ls,Ma{r1,m1}{c1,s1}); %hold on
-%                                                 catch 
-%                                                 end
-         %**********************************************fini
+                                                plot(ls,Ma{r1,m1}{c1,s1}); %hold on
+                                                %****************************************** changed by Cong on 06/28
+                                                %                                                 try
+                                                %                                                 plot(ls,Ma{r1,m1}{c1,s1}); %hold on
+                                                %                                                 catch
+                                                %                                                 end
+                                                %**********************************************fini
                                             end
                                             legend off
                                             set(gcf, 'Colormap', ColorSet);

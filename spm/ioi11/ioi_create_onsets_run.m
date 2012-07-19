@@ -12,10 +12,10 @@ if isfield(job.stim_choice,'electro_stims')
     %minimal distance between peaks in seconds
     E.dP = job.stim_choice.electro_stims.dP/1000;
     %HPF
-    if isfield(job.stim_choice.electro_stims.electro_hpf_butter,'electro_hpf_butter_On')
+    if isfield(job.stim_choice.electro_stims.hpf_butter,'electro_hpf_butter_On')
         E.electro_hpf_butter_On = 1;
-        E.hpf_butter_freq = job.stim_choice.electro_stims.electro_hpf_butter.electro_hpf_butter_On.electro_hpf_butter_freq;
-        E.hpf_butter_order = job.stim_choice.electro_stims.electro_hpf_butter.electro_hpf_butter_On.electro_hpf_butter_order;
+        E.hpf_butter_freq = job.stim_choice.electro_stims.hpf_butter.electro_hpf_butter_On.electro_hpf_butter_freq;
+        E.hpf_butter_order = job.stim_choice.electro_stims.hpf_butter.electro_hpf_butter_On.electro_hpf_butter_order;
     else
         E.electro_hpf_butter_On = 0;
     end
