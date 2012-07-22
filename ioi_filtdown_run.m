@@ -126,16 +126,17 @@ for SubjIdx=1:length(job.IOImat)
                                 end % End of filtering & downsampling whole images
                                 %skip laser - only extract for flow
                                 [all_ROIs selected_ROIs] = ioi_get_ROIs(job);
+                                nROI = 1:length(IOI.res.ROI); % All the ROIs
                                 msg_ColorNotOK = 1;
                                 % Initialize output filtNdownROI
-                                for r1 = length(ROIdata);
+                                for r1 = nROI;
                                     if all_ROIs || sum(r1==selected_ROIs)
                                         filtNdownROI{r1}{s1,c1} = [];
                                         filtNdownBrain{1}{s1,c1} = [];
                                     end
                                 end
                                 % Loop over ROIs
-                                for r1 = 1:length(ROIdata); % All the ROIs
+                                for r1 = nROI; % All the ROIs
                                     if all_ROIs || sum(r1==selected_ROIs)
                                         try
                                              % Retrieve time-series signal for
@@ -153,9 +154,9 @@ for SubjIdx=1:length(job.IOImat)
                                         catch
                                             if msg_ColorNotOK
                                                 msg = ['Problem extracting for color ' int2str(c1) ', session ' int2str(s1) ...
-                                                    ',region ' int2str(r1) ': size ROIcell= ' int2str(size(ROIcell{r1},1)) 'x' ...
-                                                    int2str(size(ROIcell{r1},2)) ', but size image= ' int2str(size(tmp_d,1)) 'x' ...
-                                                    int2str(size(tmp_d,2))];
+                                                    ',region ' int2str(r1) ': size ROIsignal= ' int2str(size(ROIsignal,1)) 'x' ...
+                                                    int2str(size(brainSignal,2)) ', but brainSignal= ' int2str(size(brainSignal,1)) 'x' ...
+                                                    int2str(size(brainSignal,2))];
                                                 IOI = disp_msg(IOI,msg);
                                                 msg_ColorNotOK = 0;
                                             end
