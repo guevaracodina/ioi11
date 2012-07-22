@@ -142,7 +142,7 @@ for SubjIdx=1:length(job.IOImat)
                                             for r1=1:length(IOI.res.ROI)
                                                 if all_ROIs || sum(r1==selected_ROIs)
                                                     ROIdir = [colorDir filesep 'ROI' sprintf('%02d',r1)];
-                                                    % if ~exist(ROIdir,'dir'),mkdir(ROIdir); end
+                                                    if ~exist(ROIdir,'dir'),mkdir(ROIdir); end
                                                     % Initialize y tilde (ROIregress)
                                                     ROIregress{r1}{s1,c1} = [];
                                                     %% GLM on ROI code

@@ -65,6 +65,8 @@ for SubjIdx=1:length(job.IOImat)
                     [IOI mask] = ioi_get_brain_mask(IOI,job);
                     % Extract brain mask here
                     [brainMaskSeries IOI] = ioi_extract_core(IOI,job,mask);
+                    % Reset flag
+                    job.extractingBrainMask = false;
                     % Brain mask time series extraction succesful!
                     IOI.fcIOS.mask.seriesOK = true;
                     if isfield(job.IOImatCopyChoice,'IOImatCopy')
