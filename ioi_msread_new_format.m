@@ -43,10 +43,11 @@ try
     vx = [1 1 1];
     % Is it not dangerous to let the user choose the acq_freq? //EGC
     if isfield(job,'acq_freq')
-        TR = job.color_number/job.acq_freq;
+        IOI.dev.TR = job.color_number/job.acq_freq;
     else
-        TR = 0.2;
+        IOI.dev.TR = 0.2;
     end
+    
     if isfield(job,'stim_cutoff')
         stim_cutoff = job.stim_cutoff;
     else
@@ -60,7 +61,7 @@ try
         IOI.color.yellow = str_yellow;
         IOI.color.laser = str_laser;
         IOI.res.shrinkageOn = 0; %no shrinkage of images
-        IOI.dev.TR = TR;
+%         IOI.dev.TR = TR;
     end
     
     if ~job.PartialRedo2
@@ -83,6 +84,13 @@ try
                     fclose(fid);
                     t0 = char(t0');
                     t0 = deblank(t0);
+                    % Get acquisition frequency directly from the file
+                    [startIndex endIndex]= regexp(t0, 'Frequency : ', 'once');
+                    tmpString = t0(endIndex:end);
+                    % Get acquisition frequency as a number
+                    [startIndex endIndex] = regexp(tmpString,'\d+','once');
+                    % Save repetition time in IOI
+                    IOI.dev.TR = job.color_number/str2double(tmpString(startIndex:endIndex));
                     color_order_french = t0(end-3:end);
                     if strcmp(color_order_french,'flat')
                         try
@@ -201,8 +209,12 @@ try
                     %acquisition, corrected for new acquisitions
                     [nx ny0] = size(images);
                     nxt = round(nx/2); nyt = round(ny0/2); %center of image
-                    %two tests should be enough... -- weaker test now
-                    if (images(nxt,nyt) == images(nxt,nyt+1)) || (images(nxt,nyt+1) == images(nxt,nyt+2))
+                    % Test 4 columns instead of 4 pixels, avoids flagging images
+                    % with saturated spots as images with duplicated pixels
+                    % //EGC
+                    if all((images(:,nyt) == images(:,nyt+1))) || all((images(:,nyt+1) == images(:,nyt+2)))
+                        %two tests should be enough... -- weaker test now
+                    % if (images(nxt,nyt) == images(nxt,nyt+1)) || (images(nxt,nyt+1) == images(nxt,nyt+2))
                         %(images(nxt,nyt) == images(nxt,nyt+1)) && (images(nxt+3,nyt+3) == images(nxt+3,nyt+4))
                         %if mod(ny,2) == 0
                         dupOn = 1;
@@ -218,8 +230,12 @@ try
                     %shrink if required
                     [shrinkage_choice SH] = ioi_get_shrinkage_choice(job); 
                     IOI.res.shrinkageOn = shrinkage_choice; 
-                    IOI.res.shrink_x = SH.shrink_x;
-                    IOI.res.shrink_y = SH.shrink_y;                    
+                    if shrinkage_choice
+                        % Only if shrinkage is chosen //EGC
+                        IOI.res.shrink_x = SH.shrink_x;
+                        IOI.res.shrink_y = SH.shrink_y;                    
+                    end
+                    
                     NX = nx;
                     NY = ny;
                     if shrinkage_choice
