@@ -121,9 +121,6 @@ for SubjIdx=1:length(job.IOImat)
                                                 seed_based_fcIOS_map{r1}{s1,c1}.pValue = pValuesMap;
                                                 
                                                 if job.generate_figures
-                                                    % Display plots on SPM graphics window
-                                                    h = spm_figure('GetWin', 'Graphics');
-                                                    spm_figure('Clear', 'Graphics');
                                                     
 %                                                     % --------------------------
 %                                                     % Compute image ranges to
@@ -157,6 +154,9 @@ for SubjIdx=1:length(job.IOImat)
                                                         end
                                                     end
                                                     
+                                                    % Display plots on SPM graphics window
+                                                    h = spm_figure('GetWin', 'Graphics');
+                                                    spm_figure('Clear', 'Graphics');
                                                     spm_figure('ColorMap','jet')
                                                     
                                                     % Correlation map
