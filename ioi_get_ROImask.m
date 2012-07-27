@@ -33,12 +33,15 @@ for r1=1:length(IOI.res.ROI)
             foundfile = 0;
             for c0=1:length(IOI.sess_res{s1}.fname)
                 if ~foundfile
-                    fname_list = IOI.sess_res{s1}.fname{c0};
-                    fname = fname_list{1}; %1st file in list
-                    try
-                        vols = spm_vol(fname);
-                        d = spm_read_vols(vols);
-                        foundfile = 1;
+                    % Check if laser is recorded
+                    if ~isempty(IOI.sess_res{s1}.fname{c0})
+                        fname_list = IOI.sess_res{s1}.fname{c0};
+                        fname = fname_list{1}; %1st file in list
+                        try
+                            vols = spm_vol(fname);
+                            d = spm_read_vols(vols);
+                            foundfile = 1;
+                        end
                     end
                 end
             end

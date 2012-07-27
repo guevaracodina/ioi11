@@ -29,6 +29,7 @@ try
     %to find images):
     str_color = [str_red str_green str_yellow str_laser]; %red, green, yellow and laser speckle -- this is the desired color order for processed images
     hasRGY = [str_red str_green str_yellow];
+    % nColors is not always necessarily equal to 4 //EGC
     nColors = length(str_color);
     OD_label = 'OD'; %label for optical density images
     suffix_for_anat_file = 'anat'; %to build anatomical image name
@@ -84,26 +85,70 @@ try
                     fclose(fid);
                     t0 = char(t0');
                     t0 = deblank(t0);
-                    % Get acquisition frequency directly from the file
-                    [startIndex endIndex]= regexp(t0, 'Frequency : ', 'once');
+                    % Get acquisition frequency directly from the file //EGC
+                    [startIndex endIndex]= regexp(t0, 'Frequency :', 'once');
                     tmpString = t0(endIndex:end);
-                    % Get acquisition frequency as a number
+                    % Get acquisition frequency as a number //EGC
                     [startIndex endIndex] = regexp(tmpString,'\d+','once');
-                    % Save repetition time in IOI
+                    % Save repetition time in IOI //EGC
                     IOI.dev.TR = job.color_number/str2double(tmpString(startIndex:endIndex));
-                    color_order_french = t0(end-3:end);
-                    if strcmp(color_order_french,'flat')
-                        try
-                             sp0 = strfind(t0,'Light : ');
-                             sr0 = t0((sp0+8):(sp0+19)); 
-                             color_order_french = [sr0(1) sr0(4) sr0(7) sr0(10)];
-                             %These are the number of frames for each color
-                             %not used currently, but will be for calcium
-                             %imaging
-                             color_numbers = [sr0(2) sr0(5) sr0(8) sr0(11)];
-                        catch
-                            color_order_french = 'RVJL';
-                        end
+                    % Find the phrase color order //EGC
+                    [startIndex endIndex] = regexp(t0, 'Color order : ', 'once');
+                    % Look for the remaining characters (more robust) //EGC
+                    color_order_french = t0(endIndex+1:end);
+                    % color_order_french = t0(end-3:end);
+                    % if strcmp(color_order_french,'flat')
+                    switch color_order_french
+                        case 'flat'
+                            try
+                                sp0 = strfind(t0,'Light : ');
+                                sr0 = t0((sp0+8):(sp0+19));
+                                color_order_french = [sr0(1) sr0(4) sr0(7) sr0(10)];
+                                %These are the number of frames for each color
+                                %not used currently, but will be for calcium
+                                %imaging
+                                color_numbers = [sr0(2) sr0(5) sr0(8) sr0(11)];
+                            catch
+                                color_order_french = 'RVJL';
+                            end
+                        case 'version1'
+                            % This means that the following lines have been
+                            % manually replaced in the info.txt file
+                            % Light : R1,V1,J1,L1
+                            % Color order : flat
+                            % By
+                            % Light : V1,J1,L1,R1
+                            % Color order : version1
+                        case 'Version2, Txt flash'
+                            % It is supossed to be the correct LabView code
+                            try
+                                % Find the phrase Light //EGC
+                                [startIndex endIndex] = regexp(t0, 'Light : ', 'once');
+                                tmpString = t0(endIndex:end);
+                                % Find the next end of line
+                                eolIndex = regexp(tmpString, '\r', 'once');
+                                % Get the colors string
+                                tmpString = strtrim(tmpString(1:eolIndex-1));
+                                % Find the letters
+                                letterIndex = regexp(tmpString, '[A-Z]');
+                                % Find the numbers
+                                numberIndex = regexp(tmpString, '[0-9]');
+                                color_order_french = tmpString(letterIndex);
+                                %These are the number of frames for each color
+                                %not used currently, but will be for calcium
+                                %imaging
+                                color_numbers = tmpString(numberIndex);
+                                tmpString = [];
+                                for iString = 1:numel(color_order_french)
+                                    tmpString = [ tmpString, repmat(color_order_french(iString), [1 str2double(color_numbers(iString))]) ];
+                                end
+                                % Now each character represents a color
+                                color_order_french = tmpString;
+                                % Get the real number of colors
+                                nColors = numel(color_order_french);
+                            catch
+                                color_order_french = 'RVJL';
+                            end
                     end
                     %color_order_french = color_order_french(1:4);
                     color_order = color_order_french;
@@ -196,7 +241,10 @@ try
                         end
                     end
                     iC = 0; %counter for number of images so far
-                    
+                    % Display stats of missing frames //EGC
+                    fprintf('%d missing frames out of %d frames (%0.2f%%)\n',...
+                        numel(missing_frames), n_frames*nColors, ...
+                        100*numel(missing_frames)/(n_frames*nColors));
                     for c1=1:nColors
                         sess.fname{c1} = {};
                     end
@@ -270,6 +318,7 @@ try
                     spm_progress_bar('Init', length(fileNo), sprintf('Multispectral reading. Subject %s, Session %d\n',IOI.subj_name,s1), 'Files');
                     % Loop over files
                     for f1 = 1:length(fileNo)
+                        % fprintf('Processing file %d\n',f1);
                         frames = frameReadOut(frameReadOut(:,3)==fileNo(f1),:);
                         % extract certain frame
                         images=LectureImageMultiFast(dirs{s1},'image',frames);
@@ -283,7 +332,8 @@ try
                         si = iC+1; %start index
                         ei = iC+nImages; %end index
                         %create an array for laser
-                        if shrinkage_choice
+                        if shrinkage_choice && ~isempty(regexp(color_order,'L','once'))
+                            % Check if laser is recorded
                             laser_array = zeros(NX,NY,nImages);
                         end
                         sess.si = [sess.si si];
@@ -313,7 +363,12 @@ try
                             tframe = ceil(fr1/nColors); %which image for this frame
                             if ~(any(fr1+iC*nColors == missing_frames))
                                 if ~(IOI.color.eng(tcol)==str_laser)
-                                    tmp_image{tcol} = images{frames(frames(:,1)==(fr1+iC*nColors),2)};
+                                    % fprintf('Processing file %d, frame %d...\n',f1,fr1);
+                                    if fr1+iC*nColors < frames(end,1)
+                                        tmp_image{tcol} = images{frames(frames(:,1)==(fr1+iC*nColors),2)};
+                                    else
+                                        % tmp_image{tcol} does not change
+                                    end
                                     if shrinkage_choice
                                         % ioi_MYimresize replaces imresize
                                         tmp_image{tcol} = ioi_MYimresize(tmp_image{tcol}, [nx ny]);
@@ -348,8 +403,11 @@ try
                                 % Correct assignment for the 3rd dimension //EGC
                                 im_obj.Data.image_total(:,:,1,tframe+iC,tcol) = tmp_image{tcol};
                             else
-                                %store laser data
-                                laser_array(:,:,tframe) = tmp_image{tcol}; %tframe???
+                                % Check if laser is recorded
+                                if ~isempty(regexp(color_order,'L','once'))
+                                    %store laser data
+                                    laser_array(:,:,tframe) = tmp_image{tcol}; %tframe???
+                                end
                             end
                             %image_total{tcol}(:,:,:,tframe) = tmp_image{tcol};
                             if f1==1 && (fr1 <= nColors) && strcmp(str_color(tcol),str_anat)
@@ -358,8 +416,11 @@ try
                         end
                         iC = iC + nImages;
                         if shrinkage_choice
-                            %save laser images
-                            ioi_save_nifti(single(laser_array),sess.fname{IOI.color.eng == str_laser}{f1},vx);
+                            % Check if laser is recorded
+                            if ~isempty(regexp(color_order,'L','once'))
+                                %save laser images
+                                ioi_save_nifti(single(laser_array),sess.fname{IOI.color.eng == str_laser}{f1},vx);
+                            end
                         end
                         % Update progress bar
                         spm_progress_bar('Set', f1);
@@ -441,6 +502,10 @@ try
                     %disp(['Done processing session: ' int2str(s1) ', color: ' str1]);
                     IOI.sess_res{sC} = sess;
                     IOI.sess_res{sC}.hasRGY = hasRGY;
+                    % Save available colors
+                    IOI.sess_res{sC}.availCol = color_order;
+                    % Stats on missing frames 
+                    IOI.sess_res{sC}.missingFrames = numel(missing_frames);
                     %sess_res =[sess_res sess];
                     disp(['Done processing session ' int2str(s1) ' images (' int2str(iC) ' images)']);
                     clear im_obj;

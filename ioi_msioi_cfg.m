@@ -49,7 +49,7 @@ redo1.help = {'Enter an array of 0 (do not force redo), 1 (force redo) or 2 (par
     'If 1 is entered and an IOI.mat exists, it will be ignored (no previous information kept);'
     'If 2 is entered and an IOI.mat exists, it will be loaded, and some of its fields will be modified'}';
 
-%path structure
+% Output path structure
 output_path_default         = cfg_branch;
 output_path_default.name     = 'Default output path';
 output_path_default.tag    = 'output_path_default';
@@ -57,16 +57,37 @@ output_path_default.val     = {};
 output_path_default.help    = {'Default output path: '
     'Directory will be created one level above top-level selected directory.'
     'For example, if path to subject raw data is ..\MyGroupExpt\Subj1'
-    'then a folder \Nifti\Subj1 will be created for the output'}';
+    'then a folder \Res\Subj1 will be created for the output'}';
 
-output_path         = cfg_entry; %path
-output_path.name    = 'path for .ioi output files';
-output_path.tag     = 'output_path';       
-output_path.strtype = 's';
-output_path.num     = [1 Inf];     
-%output_path.val     = {fullfile('D:/Users/')};
-output_path.def     = @(val)ioi_get_defaults('msioi1.output_path_select.output_path', val{:}); 
-output_path.help    = {'Choose path for .ioi output files'}; 
+%Select top level directory with .bin files
+top_bin_dir         = cfg_files;
+top_bin_dir.tag     = 'top_bin_dir';
+top_bin_dir.name    = 'Subject top level bin directory';
+top_bin_dir.filter = 'dir'; 
+top_bin_dir.num     = [1 Inf];
+top_bin_dir.help    = {'For each subject, select the top level directory'
+    'containing folders of .bin image files and folders of recording information'}';
+
+% Select top level directory with for .ioi output files. 
+% More user-friendly than entering a string //EGC
+output_path         = cfg_files;
+output_path.tag     = 'output_path';
+output_path.name    = 'Path for .ioi output files';
+output_path.filter  = 'dir';
+output_path.ufilter = '.*';
+output_path.num     = [0 1];
+output_path.val     = {};
+output_path.def     = @(val){ioi_get_defaults('msioi1.output_path_select.output_path', val{:})};
+output_path.help    = {'Choose path for .ioi output files'}';
+
+% output_path         = cfg_entry; %path
+% output_path.name    = 'path for .ioi output files';
+% output_path.tag     = 'output_path';       
+% output_path.strtype = 's';
+% output_path.num     = [1 Inf];     
+% %output_path.val     = {fullfile('D:/Users/')};
+% output_path.def     = @(val)ioi_get_defaults('msioi1.output_path_select.output_path', val{:}); 
+% output_path.help    = {'Choose path for .ioi output files'}; 
 
 output_path_select         = cfg_branch;
 output_path_select.tag     = 'output_path_select';
@@ -77,7 +98,7 @@ output_path_select.help    = {};
 output_path_choice        = cfg_choice;
 output_path_choice.name   = 'Choose output path method';
 output_path_choice.tag    = 'output_path_choice';
-output_path_choice.values = {output_path_default,output_path_select};
+output_path_choice.values = {output_path_default, output_path_select};
 output_path_choice.val    = {output_path_default};
 output_path_choice.help   = {'Choose output_path_choice'}';
 

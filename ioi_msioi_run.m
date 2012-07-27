@@ -34,9 +34,9 @@ for SubjIdx=1:length(job.top_bin_dir)
         dir_group_raw = dir_subj_raw(1:tmpsep(end-1)); %group level dir of raw data
         dir_group_all = dir_subj_raw(1:tmpsep(end-2)); %group level dir for all data
         subj_name = dir_subj_raw((tmpsep(end-1)+1):(tmpsep(end)-1)); %name of subject
-        %path configuration
+        % path configuration
         if isfield(job.output_path_choice, 'output_path_select')
-            dir_group_res = job.output_path_choice.output_path_select.output_path; %understood as group output path
+            dir_group_res = job.output_path_choice.output_path_select.output_path{:}; % understood as group output path
         else
             dir_group_res = fullfile(dir_group_all,dir_group_res_default); %group level dir of processed data
         end
@@ -102,7 +102,7 @@ for SubjIdx=1:length(job.top_bin_dir)
         end
         disp(['Elapsed time: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
         % disp(['Subject ' int2str(SubjIdx) ' complete']);
-        disp(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' 'complete']);
+        disp(['Subject ' int2str(SubjIdx) ' (' subj_name ')' 'complete']);
     catch exception
         disp(exception.identifier)
         disp(exception.stack(1))
