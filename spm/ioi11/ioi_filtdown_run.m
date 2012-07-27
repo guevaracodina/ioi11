@@ -51,10 +51,14 @@ for SubjIdx=1:length(job.IOImat)
             filterOrder = 4;
             
             % Retrieve data
-            ROIdata = load(IOI.ROI.ROIfname);
-            ROIdata = ROIdata.ROI;
-            brainMaskData = load(IOI.fcIOS.mask.fnameSeries);
-            brainMaskData = brainMaskData.brainMaskSeries;
+            if IOI.res.seriesOK
+                ROIdata = load(IOI.ROI.ROIfname);
+                ROIdata = ROIdata.ROI;
+            end
+            if job.wholeImage && IOI.fcIOS.mask.seriesOK
+                brainMaskData = load(IOI.fcIOS.mask.fnameSeries);
+                brainMaskData = brainMaskData.brainMaskSeries;
+            end
             
             [all_sessions selected_sessions] = ioi_get_sessions(job);
             
