@@ -48,7 +48,13 @@ for SubjIdx=1:length(job.IOImat)
             IOI.fcIOS.filtNdown(1).fs = fs/samples2skip;
             
             % Filter order
-            filterOrder = 4;
+            filterOrder = job.bpf.bpf_On.bpf_order;
+            
+            % Band-pass cut-off frequencies
+            BPFfreq = job.bpf.bpf_On.bpf_freq;
+            
+            % Filter type
+            fType = job.bpf.bpf_On.bpf_type;
             
             % Retrieve data
             if IOI.res.seriesOK
@@ -62,6 +68,7 @@ for SubjIdx=1:length(job.IOImat)
             
             [all_sessions selected_sessions] = ioi_get_sessions(job);
             
+            % Include colors
             IC = job.IC;
             % Loop over sessions
             for s1=1:length(IOI.sess_res)
@@ -87,21 +94,6 @@ for SubjIdx=1:length(job.IOImat)
                                     % Test if there was shrinkage
                                     if size(brainMask,1)~= size(y,1)|| size(brainMask,2)~= size(y,2)
                                         brainMask = ioi_MYimresize(brainMask, [size(y,1) size(y,2)]);
-%                                         try
-%                                             % Brain mask is resized to match
-%                                             brainMask = imresize(brainMask, [size(y,1) size(y,2)]);
-%                                         catch exception
-%                                             disp(exception.identifier)
-%                                             disp(exception.stack(1))
-%                                             K.radius = IOI.res.shrink_x;
-%                                             K.k1 = size(y,1);
-%                                             K.k2 = size(y,2);
-%                                             K = ioi_spatial_LPF('set', K);
-%                                             % first spatially filter the images
-%                                             brainMask = ioi_spatial_LPF('lpf', K, brainMask);
-%                                             % then downsample
-%                                             brainMask = brainMask((IOI.res.shrink_x/2+1):IOI.res.shrink_x:(end-(IOI.res.shrink_x/2)), (IOI.res.shrink_y/2+1):IOI.res.shrink_y:(end-(IOI.res.shrink_y/2)));
-%                                         end
                                     end
                                     % Color names
                                     colorNames = fieldnames(IOI.color);
@@ -113,7 +105,7 @@ for SubjIdx=1:length(job.IOImat)
                                             if brainMask(iX,iY) == 1
                                                 % Only non-masked pixels are
                                                 % band-passs filtered
-                                                filtY(iX,iY,1,:) = ButterBPF(fs,job.BPFfreq,filterOrder,squeeze(y(iX,iY,:)));
+                                                filtY(iX,iY,1,:) = temporalBPF(fType,fs,BPFfreq,filterOrder,squeeze(y(iX,iY,:)));
                                                 % Downsampling
                                                 filtNdownY(iX,iY,1,:) = downsample(squeeze(filtY(iX,iY,1,:)), samples2skip);
                                             end
@@ -126,6 +118,17 @@ for SubjIdx=1:length(job.IOImat)
                                     filtNdownfnameWholeImage = fullfile(sessionDir,[IOI.subj_name '_OD_' IOI.color.eng(c1) '_filtNdown_' sprintf('%05d',1) 'to' sprintf('%05d',IOI.sess_res{s1}.n_frames) '.nii']);
                                     ioi_save_nifti(filtNdownY, filtNdownfnameWholeImage, [1 1 samples2skip/fs]);
                                     IOI.fcIOS.filtNdown.fnameWholeImage{s1, c1} = filtNdownfnameWholeImage;
+                                    if IOI.fcIOS.mask.seriesOK
+                                        % Retrieve time-course
+                                        % signal for brain mask
+                                        brainSignal = brainMaskData{1}{s1, c1};
+                                        % Band-passs filtering
+                                        brainSignal = temporalBPF(fType,fs,BPFfreq,filterOrder,brainSignal);
+                                        % Downsampling
+                                        brainSignal = downsample(brainSignal, samples2skip);
+                                        % Update data cell
+                                        filtNdownBrain{1}{s1,c1} = brainSignal;
+                                    end
                                     fprintf('Filtering and downsampling whole images for session %d and color %d (%s) completed\n',s1,c1,colorNames{1+c1})
                                 end % End of filtering & downsampling whole images
                                 %skip laser - only extract for flow
@@ -136,25 +139,82 @@ for SubjIdx=1:length(job.IOImat)
                                 for r1 = nROI;
                                     if all_ROIs || sum(r1==selected_ROIs)
                                         filtNdownROI{r1}{s1,c1} = [];
-                                        filtNdownBrain{1}{s1,c1} = [];
                                     end
                                 end
                                 % Loop over ROIs
                                 for r1 = nROI; % All the ROIs
                                     if all_ROIs || sum(r1==selected_ROIs)
                                         try
-                                             % Retrieve time-series signal for
-                                             % given ROI, session and color
-                                             ROIsignal = ROIdata{r1}{s1, c1};
-                                             % Retrieve time-course
-                                             % signal for brain mask
-                                             brainSignal = brainMaskData{1}{s1, c1};
-                                             % Band-passs filtering
-                                             ROIsignal = ButterBPF(fs,job.BPFfreq,filterOrder,ROIsignal);
-                                             brainSignal = ButterBPF(fs,job.BPFfreq,filterOrder,brainSignal);
-                                             % Downsampling
-                                             ROIsignal = downsample(ROIsignal, samples2skip);
-                                             brainSignal = downsample(brainSignal, samples2skip);
+                                            % Retrieve time-series signal for
+                                            % given ROI, session and color
+                                            ROIsignal = ROIdata{r1}{s1, c1};
+                                            
+                                            % ---- Plotting results ----
+                                            % Display plots on SPM graphics window
+                                            h = spm_figure('GetWin', 'Graphics');
+                                            spm_figure('Clear', 'Graphics');
+                                            % Positive FFT
+                                            [X, freq] = ioi_positiveFFT(ROIsignal, fs);
+                                            % Time vector
+                                            t = 0:1/fs:(1/fs)*(numel(ROIsignal)-1);
+                                            
+                                            subplot(221)
+                                            plot(t, ROIsignal,'k-','LineWidth',2)
+                                            title(sprintf('%s_R%02d(%s)_S%02d_C%d(%s)\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none','FontSize',14);
+                                            xlabel('t [s]','FontSize',14)
+                                            set(gca,'FontSize',12)
+                                            
+                                            subplot(222)
+                                            set(gca,'FontSize',12)
+                                            semilogx(freq, abs(X),'k-','LineWidth',2);
+                                            title(sprintf('Unfiltered spectrum'),'interpreter', 'none','FontSize',14);
+                                            xlabel('f [Hz]','FontSize',14)
+                                            % --------------------------
+                                            
+                                            % Band-passs filtering
+                                            ROIsignal = temporalBPF(fType,fs,BPFfreq,filterOrder,ROIsignal);
+                                            
+                                            % ---- Plotting results ----
+                                            % Positive FFT
+                                            [X, freq] = ioi_positiveFFT(ROIsignal, fs);
+                                            subplot(223)
+                                            plot(t, ROIsignal,'k-','LineWidth',2)
+                                            title(sprintf('Filtered time-course\n'),'interpreter', 'none','FontSize',14);
+                                            xlabel('t [s]','FontSize',14)
+                                            set(gca,'FontSize',12)
+                                            hold on
+                                            
+                                            subplot(224)
+                                            set(gca,'FontSize',12)
+                                            semilogx(freq, abs(X),'k-','LineWidth',2);
+                                            % title(sprintf('%s_R%02d filtered spectrum S%d C%d (%s)\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none','FontSize',14);
+                                            title('Filtered spectrum','interpreter', 'none','FontSize',14);
+                                            xlabel('f [Hz]','FontSize',14)
+                                            hold on
+                                            % --------------------------
+                                            
+                                            % Downsampling
+                                            ROIsignal = downsample(ROIsignal, samples2skip);
+                                            
+                                            % ---- Plotting results ----
+                                            % Downsampled Time vector
+                                            t = 0:1/IOI.fcIOS.filtNdown(1).fs:(1/IOI.fcIOS.filtNdown(1).fs)*(numel(ROIsignal)-1);
+                                            % Positive FFT
+                                            [X, freq] = ioi_positiveFFT(ROIsignal, IOI.fcIOS.filtNdown(1).fs);
+                                            
+                                            subplot(223)
+                                            plot(t, ROIsignal,'r--','LineWidth',2)
+                                            legend({'Filt' 'Filt&Down'},'FontSize',14)
+                                            
+                                            subplot(224)
+                                            semilogx(freq, abs(X),'r--','LineWidth',2);
+                                            legend({'Filt' 'Filt&Down'},'FontSize',14)
+                                            
+                                            [oldDir, oldName, oldExt] = fileparts(IOI.res.ROI{1,1}.fname);
+                                            newName = [sprintf('%s_R%02d_S%02d_C%d',IOI.subj_name,r1,s1,c1) '_filtNdown'];
+                                            % Save as PNG
+                                            print(h, '-dpng', fullfile(newDir,newName), '-r300');
+                                            % --------------------------
                                         catch
                                             if msg_ColorNotOK
                                                 msg = ['Problem filtering/downsampling for color ' int2str(c1) ', session ' int2str(s1) ...
@@ -169,15 +229,74 @@ for SubjIdx=1:length(job.IOImat)
                                                     % Retrieve time-series signal for
                                                     % given ROI, session and color
                                                     ROIsignal = ROIdata{r1}{s1, c1};
-                                                    % Retrieve time-course
-                                                    % signal for brain mask
-                                                    brainSignal = brainMaskData{1}{s1, c1};
+                                                    
+                                                    % ---- Plotting results ----
+                                                    % Display plots on SPM graphics window
+                                                    h = spm_figure('GetWin', 'Graphics');
+                                                    spm_figure('Clear', 'Graphics');
+                                                    % Positive FFT
+                                                    [X, freq] = ioi_positiveFFT(ROIsignal, fs);
+                                                    % Time vector
+                                                    t = 0:1/fs:(1/fs)*(numel(ROIsignal)-1);
+                                                    
+                                                    subplot(221)
+                                                    plot(t, ROIsignal,'k-','LineWidth',2)
+                                                    title(sprintf('%s_R%02d(%s)_S%02d_C%d(%s)\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none','FontSize',14);
+                                                    xlabel('t [s]','FontSize',14)
+                                                    set(gca,'FontSize',12)
+                                                    
+                                                    subplot(222)
+                                                    set(gca,'FontSize',12)
+                                                    semilogx(freq, abs(X),'k-','LineWidth',2);
+                                                    title(sprintf('Unfiltered spectrum'),'interpreter', 'none','FontSize',14);
+                                                    xlabel('f [Hz]','FontSize',14)
+                                                    % --------------------------
+                                                    
                                                     % Band-passs filtering
-                                                    ROIsignal = ButterBPF(fs,job.BPFfreq,filterOrder,ROIsignal);
-                                                    brainSignal = ButterBPF(fs,job.BPFfreq,filterOrder,brainSignal);
+                                                    ROIsignal = temporalBPF(fType,fs,BPFfreq,filterOrder,ROIsignal);
+                                                    
+                                                    % ---- Plotting results ----
+                                                    % Positive FFT
+                                                    [X, freq] = ioi_positiveFFT(ROIsignal, fs);
+                                                    subplot(223)
+                                                    plot(t, ROIsignal,'k-','LineWidth',2)
+                                                    title(sprintf('Filtered time-course\n'),'interpreter', 'none','FontSize',14);
+                                                    xlabel('t [s]','FontSize',14)
+                                                    set(gca,'FontSize',12)
+                                                    hold on
+                                                    
+                                                    subplot(224)
+                                                    set(gca,'FontSize',12)
+                                                    semilogx(freq, abs(X),'k-','LineWidth',2);
+                                                    % title(sprintf('%s_R%02d filtered spectrum S%d C%d (%s)\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none','FontSize',14);
+                                                    title('Filtered spectrum','interpreter', 'none','FontSize',14);
+                                                    xlabel('f [Hz]','FontSize',14)
+                                                    hold on
+                                                    % --------------------------
+                                                    
                                                     % Downsampling
                                                     ROIsignal = downsample(ROIsignal, samples2skip);
-                                                    brainSignal = downsample(brainSignal, samples2skip);
+                                                    
+                                                    % ---- Plotting results ----
+                                                    % Downsampled Time vector
+                                                    t = 0:1/IOI.fcIOS.filtNdown(1).fs:(1/IOI.fcIOS.filtNdown(1).fs)*(numel(ROIsignal)-1);
+                                                    % Positive FFT
+                                                    [X, freq] = ioi_positiveFFT(ROIsignal, IOI.fcIOS.filtNdown(1).fs);
+                                                    
+                                                    subplot(223)
+                                                    plot(t, ROIsignal,'r--','LineWidth',2)
+                                                    legend({'Filt' 'Filt&Down'},'FontSize',14)
+                                                    
+                                                    subplot(224)
+                                                    semilogx(freq, abs(X),'r--','LineWidth',2);
+                                                    legend({'Filt' 'Filt&Down'},'FontSize',14)
+                                                    
+                                                    [oldDir, oldName, oldExt] = fileparts(IOI.res.ROI{1,1}.fname);
+                                                    newName = [sprintf('%s_R%02d_S%02d_C%d',IOI.subj_name,r1,s1,c1) '_filtNdown'];
+                                                    % Save as PNG
+                                                    print(h, '-dpng', fullfile(newDir,newName), '-r300');
+                                                    % --------------------------
+                                                    
                                                 catch
                                                     msg = ['Unable to extract color ' int2str(c1) ', session ' int2str(s1)];
                                                     IOI = disp_msg(IOI,msg);
@@ -220,16 +339,16 @@ for SubjIdx=1:length(job.IOImat)
             % Desired downsampling frequency, it could be different to real
             % downsampling frequency (filtNdown.fs)
             IOI.fcIOS.filtNdown.downFreq = job.downFreq;
-            IOI.fcIOS.filtNdown.BPFfreq = job.BPFfreq;
+            IOI.fcIOS.filtNdown.BPFfreq = job.bpf.bpf_On.bpf_freq;
             save(IOImat,'IOI');
         end
         out.IOImat{SubjIdx} = IOImat;
         disp(['Elapsed time: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
         disp(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ' complete']);
     catch exception
+        out.IOImat{SubjIdx} = job.IOImat{SubjIdx};
         disp(exception.identifier)
         disp(exception.stack(1))
-        out.IOImat{SubjIdx} = job.IOImat{SubjIdx};
     end % End of try
 end % End of main for
 end % End of function
