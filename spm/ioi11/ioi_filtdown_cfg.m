@@ -1,9 +1,9 @@
 function filtdown1 = ioi_filtdown_cfg
 % Graphical interface configuration function for ioi_filtdown_cfg
-%_______________________________________________________________________
+%_______________________________________________________________________________
 % Copyright (C) 2010 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
-%______________________________________________________________________
+%_______________________________________________________________________________
 
 % Select IOI.mat
 IOImat              = ioi_dfg_IOImat(1);
@@ -17,15 +17,17 @@ ROI_choice          = ioi_dfg_ROI_choice;
 session_choice      = ioi_dfg_session_choice;
 % Colors to include (OD,HbO,HbR,HbT,Flow)
 IC                  = ioi_dfg_include_colors(0,1,1,1,1);
-
 % Bandpass filtering
-BPFfreq             = cfg_entry;
-BPFfreq.name        = 'Band-pass filter cutoff frequencies';
-BPFfreq.tag         = 'BPFfreq';       
-BPFfreq.strtype     = 'r';
-BPFfreq.val         = {[0.009 0.08]};
-BPFfreq.num         = [1 2];     
-BPFfreq.help        = {'Enter Wn in Hz, a two-element vector, Wn = [W_1 W_2] for the bandpass filter with passband  W_1 < W < W_2'}';
+bpf                 = ioi_bpf_cfg(1, [0.009 0.08], 8, 'ellip');
+
+% % Bandpass filtering
+% BPFfreq             = cfg_entry;
+% BPFfreq.name        = 'Band-pass filter cutoff frequencies';
+% BPFfreq.tag         = 'BPFfreq';       
+% BPFfreq.strtype     = 'r';
+% BPFfreq.val         = {[0.009 0.08]};
+% BPFfreq.num         = [1 2];     
+% BPFfreq.help        = {'Enter Wn in Hz, a two-element vector, Wn = [W_1 W_2] for the bandpass filter with passband  W_1 < W < W_2'}';
 
 % Downsampling frequency
 downFreq            = cfg_entry;
@@ -49,7 +51,7 @@ wholeImage.help     = {'Filter and downsample whole image time-series. It create
 filtdown1           = cfg_exbranch; % This is the branch that has information about how to run this module
 filtdown1.name      = 'Temporal filtering & downsampling';             % The display name
 filtdown1.tag       = 'filtdown1'; %Very important: tag is used when calling for execution
-filtdown1.val       = {IOImat redo1 IOImatCopyChoice ROI_choice session_choice IC BPFfreq downFreq wholeImage};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+filtdown1.val       = {IOImat redo1 IOImatCopyChoice ROI_choice session_choice IC bpf downFreq wholeImage};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 filtdown1.prog      = @ioi_filtdown_run;  % A function handle that will be called with the harvested job to run the computation
 filtdown1.vout      = @ioi_cfg_vout_filtdown; % A function handle that will be called with the harvested job to determine virtual outputs
 filtdown1.help      = {'Temporal band-pass filtering and downsampling of a given time trace [HbO/HbR/Flow], either on a seed or on the whole image series.'};

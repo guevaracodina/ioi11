@@ -103,7 +103,7 @@ for SubjIdx=1:length(job.IOImat)
                                                 SPM.swd = colorDir;
                                                 if ~exist(SPM.swd,'dir'),mkdir(SPM.swd); end
                                                 
-                                                fprintf('Performing GLM on whole images, Session %d Color %d (%s)...\n',s1,c1,colorNames{1+c1})
+                                                fprintf('\nPerforming GLM on whole images, Session %d Color %d (%s)...\n',s1,c1,colorNames{1+c1})
                                                 try
                                                     % GLM is performed here
                                                     SPM = spm_spm(SPM);
@@ -123,7 +123,7 @@ for SubjIdx=1:length(job.IOImat)
                                                         ioi_save_nifti(yRegress, filtNdownfnameRegress, dim);
                                                         % Brain signal regression succesful!
                                                         IOI.fcIOS.SPM(1).wholeImageRegressOK{s1, c1} = true;
-                                                        fprintf('Global brain signal regressed from whole images in Session %d Color %d (%s) done!\n',s1,c1,colorNames{1+c1})
+                                                        fprintf('\nGlobal brain signal regressed from whole images in Session %d Color %d (%s) done!\n',s1,c1,colorNames{1+c1})
                                                     end
                                                     
                                                     % Update SPM matrix info
@@ -132,7 +132,7 @@ for SubjIdx=1:length(job.IOImat)
                                                 catch exception
                                                     % Brain signal regression failed!
                                                     IOI.fcIOS.SPM(1).wholeImageRegressOK{s1, c1} = false;
-                                                    fprintf('Global brain signal regressed from whole images in Session %d Color %d (%s) failed!\n',s1,c1,colorNames{1+c1})
+                                                    fprintf('\nGlobal brain signal regressed from whole images in Session %d Color %d (%s) failed!\n',s1,c1,colorNames{1+c1})
                                                     disp(exception.identifier)
                                                     disp(exception.stack(1))
                                                 end
@@ -155,9 +155,9 @@ for SubjIdx=1:length(job.IOImat)
                                                     spm_figure('GetWin', 'Graphics');
                                                     spm_figure('Clear', 'Graphics');
                                                     subplot(311); plot(y);
-                                                    title(sprintf('Seed %d time-course, S%d, C%d (%s)',r1,s1,c1,colorNames{1+c1}));
+                                                    title(sprintf('Seed %d time-course, S%d, C%d (%s)',r1,s1,c1,colorNames{1+c1}),'FontSize',14);
                                                     subplot(312); plot(brainSignal);
-                                                    title(sprintf('Mean global signal time-course, S%d, C%d (%s)',s1,c1,colorNames{1+c1}));
+                                                    title(sprintf('Mean global signal time-course, S%d, C%d (%s)',s1,c1,colorNames{1+c1}),'FontSize',14);
                                                     
                                                     % Creating nifti files to be able to use SPM later
                                                     % --------------------------
@@ -196,7 +196,7 @@ for SubjIdx=1:length(job.IOImat)
                                                     % img/hdr files
                                                     SPM.swd = ROIdir;
                                                     if ~exist(SPM.swd,'dir'),mkdir(SPM.swd); end
-                                                    fprintf('Performing GLM for ROI %d Session %d Color %d (%s)...\n',r1,s1,c1,colorNames{1+c1})
+                                                    fprintf('\nPerforming GLM for ROI %d Session %d Color %d (%s)...\n',r1,s1,c1,colorNames{1+c1})
                                                     try
                                                         % GLM is performed here
                                                         SPM = spm_spm(SPM);
@@ -214,10 +214,10 @@ for SubjIdx=1:length(job.IOImat)
                                                             
                                                             % Identify in IOI the file name of the time series
                                                             IOI.fcIOS.SPM(1).fnameROIregress = fnameROIregress;
-                                                            fprintf('Global brain signal regressed from ROI %d (%s) Session %d Color %d (%s) done!\n',r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1})
+                                                            fprintf('\nGlobal brain signal regressed from ROI %d (%s) Session %d Color %d (%s) done!\n',r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1})
                                                             spm_figure('GetWin', 'Graphics');
                                                             subplot(313); plot(ROIregress{r1}{s1, c1});
-                                                            title(sprintf('Global signal regressed from ROI time-course %d, S%d, C%d (%s)',r1,s1,c1,colorNames{1+c1}));
+                                                            title(sprintf('Global signal regressed from ROI time-course %d, S%d, C%d (%s)',r1,s1,c1,colorNames{1+c1}),'FontSize',14);
                                                         end
                                                         
                                                         % Update SPM matrix info
@@ -229,11 +229,11 @@ for SubjIdx=1:length(job.IOImat)
                                                         % SPM.xCon = xCon;
                                                         % [SPM,xSPM]=spm_getSPM(SPM,[]);
                                                         % --------------------------
-                                                        fprintf('GLM for ROI %d Session %d Color %d (%s) done!\n',r1,s1,c1,colorNames{1+c1})
+                                                        fprintf('\nGLM for ROI %d Session %d Color %d (%s) done!\n',r1,s1,c1,colorNames{1+c1})
                                                     catch exception
                                                         % Brain signal regression on ROI failed!
                                                         IOI.fcIOS.SPM(1).ROIregressOK{r1}{s1, c1} = false;
-                                                        fprintf('GLM for ROI %d Session %d Color %d (%s) failed!\n',r1,s1,c1,colorNames{1+c1})
+                                                        fprintf('\nGLM for ROI %d Session %d Color %d (%s) failed!\n',r1,s1,c1,colorNames{1+c1})
                                                         disp(exception.identifier)
                                                         disp(exception.stack(1))
                                                     end
