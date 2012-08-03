@@ -29,14 +29,21 @@ session_choice = ioi_dfg_session_choice;
 
 %****************************************************************
 
-electrophysiology_onset_name         = cfg_entry; 
-electrophysiology_onset_name.name    = 'Electrophysiology onset name';
-electrophysiology_onset_name.tag     = 'electrophysiology_onset_name';       
-electrophysiology_onset_name.strtype = 's';
-electrophysiology_onset_name.num     = [1 Inf];     
-electrophysiology_onset_name.val{1}  = 'Spk';
-electrophysiology_onset_name.help    = {'Specify the onset name.'};
+seizure_onset_name         = cfg_entry; 
+seizure_onset_name.name    = 'Seizure onset name';
+seizure_onset_name.tag     = 'seizure_onset_name';       
+seizure_onset_name.strtype = 's';
+seizure_onset_name.num     = [1 Inf];     
+seizure_onset_name.val{1}  = 'Sz';
+seizure_onset_name.help    = {'Specify the onset name.'};
 
+spike_onset_name         = cfg_entry; 
+spike_onset_name.name    = 'Spike onset name';
+spike_onset_name.tag     = 'spike_onset_name';       
+spike_onset_name.strtype = 's';
+spike_onset_name.num     = [1 Inf];     
+spike_onset_name.val{1}  = 'Spk';
+spike_onset_name.help    = {'Specify the onset name.'};
 
 electrophysiology_choice      = cfg_menu;
 electrophysiology_choice.tag  = 'electrophysiology_choice';
@@ -97,29 +104,55 @@ mbSD.help = {'Enter minimum standard deviation to be used for detection.'
     'standard deviation of the electrophysiological signal after filtering'
     'and the specified minimum standard deviation.'}';
 
-dP      = cfg_entry;
-dP.tag  = 'dP';
-dP.name = 'Enter minimal peak distance';
-dP.strtype  = 'r';
-dP.num = [1 1];
-dP.val{1} = 25;
-dP.help = {'Enter minimal distance allowed between peaks in milliseconds'}';
+seizure_dP      = cfg_entry;
+seizure_dP.tag  = 'dP';
+seizure_dP.name = 'Enter minimal distance between 2 seizures';
+seizure_dP.strtype  = 'r';
+seizure_dP.num = [1 1];
+seizure_dP.val{1} = 5;
+seizure_dP.help = {'Enter minimal distance allowed between 2 seizures in seconds'}';
 
-tb         = cfg_entry; 
-tb.name    = 'Time window before';
-tb.tag     = 'tb';       
-tb.strtype = 'r';
-tb.num     = [1 1];     
-tb.val{1}  = 0.2;
-tb.help    = {'Specify the time window before onset to use for display (in seconds).'}';
+spike_dP      = cfg_entry;
+spike_dP.tag  = 'spike_dP';
+spike_dP.name = 'Enter minimal distance between 2 spikes';
+spike_dP.strtype  = 'r';
+spike_dP.num = [1 1];
+spike_dP.val{1} = 25;
+spike_dP.help = {'Enter minimal distance allowed between 2 spikes in milliseconds'
+    'Only the first spike detected will be kept'}';
 
-ta         = cfg_entry; 
-ta.name    = 'Time window after';
-ta.tag     = 'ta';       
-ta.strtype = 'r';
-ta.num     = [1 1];     
-ta.val{1}  = 0.5;
-ta.help    = {'Specify the time window after onset to use for display (in seconds).'}';
+seizure_tb         = cfg_entry; 
+seizure_tb.name    = 'Time window before';
+seizure_tb.tag     = 'seizure_tb';       
+seizure_tb.strtype = 'r';
+seizure_tb.num     = [1 1];     
+seizure_tb.val{1}  = 3;
+seizure_tb.help    = {'Specify the time window before seizure to use for display (in seconds) or for baseline calcuation.'}';
+
+seizure_ta         = cfg_entry; 
+seizure_ta.name    = 'Time window after';
+seizure_ta.tag     = 'seizure_ta';       
+seizure_ta.strtype = 'r';
+seizure_ta.num     = [1 1];     
+seizure_ta.val{1}  = 0.5;
+seizure_ta.help    = {'Specify the time window after onset to use for display (in seconds).'}';
+
+
+spike_tb         = cfg_entry; 
+spike_tb.name    = 'Time window before';
+spike_tb.tag     = 'spike_tb';       
+spike_tb.strtype = 'r';
+spike_tb.num     = [1 1];     
+spike_tb.val{1}  = 0.2;
+spike_tb.help    = {'Specify the time window before onset to use for display (in seconds).'}';
+
+spike_ta         = cfg_entry; 
+spike_ta.name    = 'Time window after';
+spike_ta.tag     = 'spike_ta';       
+spike_ta.strtype = 'r';
+spike_ta.num     = [1 1];     
+spike_ta.val{1}  = 0.5;
+spike_ta.help    = {'Specify the time window after onset to use for display (in seconds).'}';
 
 %HPF
 electro_hpf_butter = ioi_dfg_hpf_butter(1,0.2,3);
@@ -182,12 +215,26 @@ write_pictures.help = {'Generate plots of electrophysiology.'}';
 
 %%%%%%%%%%%%%%%%%%%%
 
+seizure_detection         = cfg_branch;
+seizure_detection.tag     = 'seizure_detection';
+seizure_detection.name    = 'Seizure detection';
+seizure_detection.val     = {electrophysiology_choice seizure_onset_name ...
+    sf nSD mbSD seizure_dP seizure_tb seizure_ta electro_hpf_butter onsets_choice ...
+        write_pictures use_epilepsy_convention};
+seizure_detection.help    = {    'Choose parameters for seizure detection.'}';
+
+spike_detection         = cfg_branch;
+spike_detection.tag     = 'spike_detection';
+spike_detection.name    = 'spike detection';
+spike_detection.val     = {electrophysiology_choice spike_onset_name ...
+    sf nSD mbSD spike_dP spike_tb spike_ta electro_hpf_butter onsets_choice ...
+        write_pictures use_epilepsy_convention};
+spike_detection.help    = {    'Choose parameters for spike detection.'}';
+
 electro_stims         = cfg_branch;
 electro_stims.tag     = 'electro_stims';
 electro_stims.name    = 'Onsets from electrophysiology';
-electro_stims.val     = {electrophysiology_choice electrophysiology_onset_name ...
-    sf nSD mbSD dP tb ta electro_hpf_butter onsets_choice ...
-        write_pictures use_epilepsy_convention};
+electro_stims.val     = {seizure_detection spike_detection};
 electro_stims.help    = {    'Electrophysiology information'
     'Stimulations are assumed to last one data point.'
     'Information stored in IOI.Sess (not to be confused with protocol info in IOI.sess_res).'}';
