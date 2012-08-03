@@ -23,6 +23,8 @@ Z.save_figures = job.save_figures;
 Z.generate_figures = job.generate_figures;
 Z.normalize_choice = job.normalize_choice;
 Z.interactive_mode = job.interactive_mode;
+Z.superpose_anatomical = job.superpose_anatomical;
+Z.superpose_ROIs = job.superpose_ROIs;
 for SubjIdx=1:length(job.IOImat)
     try
         clear IOI ROI onsets_list M
@@ -124,6 +126,14 @@ for SubjIdx=1:length(job.IOImat)
                                     %fill structure to pass
                                     Z.ons = onsets_list{s1}{m1};
                                     Z.s1 = s1; Z.m1 = m1; Z.c1 = c1;
+                                    %include anatomical image
+                                    if Z.superpose_anatomical
+                                        Z.file_anat = IOI.res.file_anat; %.nii
+                                    end
+                                    %include ROIs
+                                    if Z.superpose_ROIs
+                                        Z.ROIname = IOI.ROIname;
+                                    end
                                     [IOI,D,Z] = ioi_average_image_core(IOI,y,Z);
                                     Ma = squeeze(reshape(D.Ma,[nx ny]));
                                     Da = squeeze(reshape(D.Da,[nx ny]));
@@ -164,8 +174,7 @@ for SubjIdx=1:length(job.IOImat)
                                         IOI.Avg.fname_filt_t{s1}{c1,m1} = fname;
                                         tit = ['FiltTstat, Session' int2str(s1) ', Color ' IOI.color.eng(c1) ', Stimulus ' int2str(m1)];
                                         ioi_save_images(Ta,fname,[1 1 1],Z,tit);
-                                    end
-                                    
+                                    end                                    
                                 end
                             end
                         end

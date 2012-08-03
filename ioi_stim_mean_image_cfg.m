@@ -66,6 +66,9 @@ shrinkage_choice = ioi_dfg_shrinkage_choice;
 spatial_LPF = ioi_dfg_spatial_LPF;
 %%%%%%%%%%%%%%%%%%%%%%
 IC = ioi_dfg_include_colors(0,1,1,1,1);
+%display options -- superpose activations on anatomical image
+superpose_anatomical = ioi_dfg_superpose_anatomical;
+superpose_ROIs = ioi_dfg_superpose_ROIs;
 
 % Executable Branch
 stim_mean_image1      = cfg_exbranch;       % This is the branch that has information about how to run this module
@@ -75,7 +78,8 @@ stim_mean_image1.val  = {IOImat redo1 IOImatCopyChoice interactive_mode shrinkag
     spatial_LPF session_choice window_start_delay ...
     window_after window_before window_offset normalize_choice hpf_butter ...
     lpf_choice IC which_onset_type remove_stims use_stims remove_stims_SD ...
-    generate_figures save_figures remove_segment_drift };    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    generate_figures save_figures remove_segment_drift ...
+    superpose_anatomical superpose_ROIs};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 stim_mean_image1.prog = @ioi_stim_mean_image_run;  % A function handle that will be called with the harvested job to run the computation
 stim_mean_image1.vout = @ioi_cfg_vout_stim_mean_image; % A function handle that will be called with the harvested job to determine virtual outputs
 stim_mean_image1.help = {'Calculate average over stimulations over full images.'};
