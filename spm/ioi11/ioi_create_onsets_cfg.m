@@ -105,7 +105,7 @@ mbSD.help = {'Enter minimum standard deviation to be used for detection.'
     'and the specified minimum standard deviation.'}';
 
 seizure_dP      = cfg_entry;
-seizure_dP.tag  = 'dP';
+seizure_dP.tag  = 'seizure_dP';
 seizure_dP.name = 'Enter minimal distance between 2 seizures';
 seizure_dP.strtype  = 'r';
 seizure_dP.num = [1 1];
@@ -231,11 +231,12 @@ spike_detection.val     = {electrophysiology_choice spike_onset_name ...
         write_pictures use_epilepsy_convention};
 spike_detection.help    = {    'Choose parameters for spike detection.'}';
 
-electro_stims         = cfg_branch;
-electro_stims.tag     = 'electro_stims';
-electro_stims.name    = 'Onsets from electrophysiology';
-electro_stims.val     = {seizure_detection spike_detection};
-electro_stims.help    = {    'Electrophysiology information'
+electro_stims        = cfg_choice;
+electro_stims.name   = 'Onsets from electrophysiology';
+electro_stims.tag    = 'electro_stims';
+electro_stims.values = {seizure_detection,spike_detection};
+electro_stims.val    = {seizure_detection};
+electro_stims.help   = { 'Electrophysiology information'
     'Stimulations are assumed to last one data point.'
     'Information stored in IOI.Sess (not to be confused with protocol info in IOI.sess_res).'}';
 
