@@ -27,6 +27,8 @@ session_choice = ioi_dfg_session_choice;
 % Electrophysiology detection options
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%****************************************************************
+
 electrophysiology_onset_name         = cfg_entry; 
 electrophysiology_onset_name.name    = 'Electrophysiology onset name';
 electrophysiology_onset_name.tag     = 'electrophysiology_onset_name';       
@@ -35,6 +37,37 @@ electrophysiology_onset_name.num     = [1 Inf];
 electrophysiology_onset_name.val{1}  = 'Spk';
 electrophysiology_onset_name.help    = {'Specify the onset name.'};
 
+
+electrophysiology_choice      = cfg_menu;
+electrophysiology_choice.tag  = 'electrophysiology_choice';
+electrophysiology_choice.name = 'Electrophysiology choice';
+electrophysiology_choice.labels = {'1','2'};
+electrophysiology_choice.values = {1,2};
+electrophysiology_choice.val  = {2};
+electrophysiology_choice.help = {'Choose which electrophysiology to detect onsets '
+        '1-electrophysiology from the micropipette'
+        '2-electrophysiology from the tungsten electrode'}';
+    
+% epilepsy_choice      = cfg_choice;
+% epilepsy_choice.tag  = 'epilepsy_choice';
+% epilepsy_choice.name = 'Epilepsy_choice';
+% epilepsy_choice.values = {spikes,seizures};
+% epilepsy_choice.val = {seizures};
+% epilepsy_choice.help = {'Choose what kind onsets to creat.' 
+%  'the onsets for the seizures or spikes'}';
+
+% stim_choice        = cfg_choice;
+% stim_choice.name   = 'Choose onset selection method';
+% stim_choice.tag    = 'stim_choice';
+% stim_choice.values = {default_stims,electro_stims,manual_stims};
+% stim_choice.val    = {default_stims};
+% stim_choice.help   = {'Choose onset selection method'
+%        'Manual: the user will be queried to enter onset times and durations.'
+%        'With default stims, nothing will be done, as stimulation times should '
+%        'have been found during the initial treatment of the images;'
+%        'However a check will be made that onsets are available.'
+%        'For electrophysiology, events will be detected on the electrophysiology file.'}';
+  
 sf      = cfg_entry;
 sf.tag  = 'sf';
 sf.name = 'Enter electrophysiology sampling frequency';
@@ -120,15 +153,15 @@ electro_lpf_butter_Off.name    = 'LP filter off';
 electro_lpf_butter_Off.val     = {}; 
 electro_lpf_butter_Off.help    = {'Low pass filter turned off.'};
 
-electro_lpf_butter      = cfg_choice;
-electro_lpf_butter.tag  = 'electro_lpf_butter';
-electro_lpf_butter.name = 'Butterworth Low Pass Filter';
-electro_lpf_butter.values = {electro_lpf_butter_On electro_lpf_butter_Off};
-electro_lpf_butter.val = {electro_lpf_butter_On};
-electro_lpf_butter.help = {'Choose whether to include a Butterworth Low Pass Filter.'
+onsets_choice      = cfg_choice;
+onsets_choice.tag  = 'electro_lpf_butter';
+onsets_choice.name = 'Butterworth Low Pass Filter';
+onsets_choice.values = {electro_lpf_butter_On electro_lpf_butter_Off};
+onsets_choice.val = {electro_lpf_butter_On};
+onsets_choice.help = {'Choose whether to include a Butterworth Low Pass Filter.'
         'Parameters are: order (e.g. 3) and frequency (e.g. 130 Hz)'}';
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 use_epilepsy_convention      = cfg_menu;
 use_epilepsy_convention.tag  = 'use_epilepsy_convention';
@@ -152,8 +185,8 @@ write_pictures.help = {'Generate plots of electrophysiology.'}';
 electro_stims         = cfg_branch;
 electro_stims.tag     = 'electro_stims';
 electro_stims.name    = 'Onsets from electrophysiology';
-electro_stims.val     = {electrophysiology_onset_name ...
-    sf nSD mbSD dP tb ta electro_hpf_butter electro_lpf_butter ...
+electro_stims.val     = {electrophysiology_choice electrophysiology_onset_name ...
+    sf nSD mbSD dP tb ta electro_hpf_butter onsets_choice ...
         write_pictures use_epilepsy_convention};
 electro_stims.help    = {    'Electrophysiology information'
     'Stimulations are assumed to last one data point.'

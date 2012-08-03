@@ -1,7 +1,17 @@
 function out = ioi_create_onsets_run(job)
 %select onsets, default is stimulation based
 stim_choice=0;
+
+
+
 if isfield(job.stim_choice,'electro_stims')
+    
+    
+%*************************************************************************
+
+     el_choice = job.stim_choice.electro_stims.electrophysiology_choice;
+
+%*************************************************************************
     stim_choice = 1;
     %sampling frequency
     E.sf = job.stim_choice.electro_stims.sf;
@@ -67,9 +77,20 @@ for SubjIdx=1:length(job.IOImat)
         catch
             load(job.IOImat{SubjIdx});
         end
+        
         if ~isfield(IOI.res,'OnsetsOK') || job.force_redo
             %loop over sessions
             for s1=1:length(IOI.sess_res)
+                
+%                 %**********************************************************
+%                     %stim choice
+%                     el_path = IOI.dir.dir_subj_res;
+%                     if el_choice == 1
+%                         %el_path = el_path + '\elS'+
+%                     else 
+%                     end;
+                %**********************************************************
+                
                 if all_sessions || sum(s1==selected_sessions)
                     if all_sessions
                         selected_sessions = 1:length(IOI.sess_res);
@@ -89,7 +110,7 @@ for SubjIdx=1:length(job.IOImat)
                                     elDir0 = elDir{SubjIdx};
                                 end
                             end
-                            [pkh ons] = ioi_get_onsets(IOI,s1,E,newDir,elDir0); %pk in seconds; pkh in arbitrary units
+                            [pkh ons] = ioi_get_onsets(IOI,s1,E,newDir,elDir0,el_choice); %pk in seconds; pkh in arbitrary units
                             ot = 1;
                             IOI.sess_res{s1}.E = E; %Electrophysiology structure used for detection
                             IOI.sess_res{s1}.names{ot} = E.electrophysiology_onset_name;
@@ -159,7 +180,7 @@ for SubjIdx=1:length(job.IOImat)
     end
 end
 end
-function [pkh pk] = ioi_get_onsets(IOI,s1,E,cdir,elDir)
+function [pkh pk] = ioi_get_onsets(IOI,s1,E,cdir,elDir,el_choice)
 try
     %sampling frequency
     sf = E.sf;
@@ -178,7 +199,13 @@ try
     %method = 1;
     %load raw electrophysiology vector
     try
-        load(IOI.res.el{s1});
+        if el_choice == 1
+            load(IOI.res.el{s1});
+        else
+%             [dir0 fil0 ext0] = fileparts(IOI.res.el{s1});
+             load(IOI.res.el2{s1});
+             el = el2;        
+        end
     catch
         [dir0 fil0 ext0] = fileparts(IOI.res.el{s1});
         fil = fullfile(elDir,[fil0 ext0]);
