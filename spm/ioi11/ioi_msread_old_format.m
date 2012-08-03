@@ -265,10 +265,10 @@ try
         %use first green colored image as the anatomy
         if ~expedite
             image_total=private_read_single_bin_image(sess_raw{1}.fnames{str_anat == str_color}{1,:});
-            fname = fullfile(dir_subj_res, [subj_name '_' suffix_for_anat_file '.nii']);
+            fname = fullfile(dir_subj_res, [subj_name '_' suffix_for_anat_file]);
             ioi_save_images(image_total, fname, vx_anat,[],'Anatomical image')
             %ioi_save_nifti(image_total, fname, vx_anat);
-            IOI.res.file_anat=fname;
+            IOI.res.file_anat=[fname '.nii'];
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %4- Functional images and electrophysiology
