@@ -305,9 +305,9 @@ try
                             if ~(str1 == str_laser) %OK to shrink contrast images though
                                 if shrinkage_choice
                                     %Keep same whatever value of PartialRedo2
-                                    IOI.res.shrink_x=shrink_x;
-                                    IOI.res.shrink_y=shrink_y;
-                                    vx=[shrink_x shrink_y 1];
+                                    IOI.res.shrink_x=SH.shrink_x;
+                                    IOI.res.shrink_y=SH.shrink_y;
+                                    vx=[SH.shrink_x SH.shrink_y 1];
                                 end
                             end
                             %loop over binary files for this session and color
