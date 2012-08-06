@@ -168,7 +168,7 @@ try
         if ~isempty(sess_raw)
             IOI.sess_raw = sess_raw;
         else
-            disp(['No sessions found... skipping subject ' int2str(SubjIdx) ' (namely: ' job.top_bin_dir{SubjIdx} ')']);
+            disp(['No sessions found... skipping subject ' int2str(job.SubjIdx) ' (namely: ' job.top_bin_dir{job.SubjIdx} ')']);
             subj_OK = 0;
             %return
         end

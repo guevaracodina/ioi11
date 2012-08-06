@@ -1,21 +1,19 @@
 function ioi_save_images(image, fname, voxel_size,Z,tit)
-try
-    Z.save_figures;
-catch
+if ~isfield(Z,'save_figures')
     Z.save_figures = 1;
     Z.generate_figures = 0;
 end
 if ~isfield(Z,'cbar')
     Z.cbar.colorbar_override = 0;
 end
-if Z.superpose_anatomical
+if isfield(Z,'superpose_anatomical') && Z.superpose_anatomical
     V = spm_vol(Z.file_anat); 
     Y = spm_read_vols(V); %this could be stored instead of reread each time
     %rescale values of anatomical image
     load split
     fcool = 64;
-fgray = 64;
-fhot = 64;
+    fgray = 64;
+    fhot = 64;
     thz = 1;
     %set a threshold
     index_over = image > thz;
@@ -29,7 +27,7 @@ fhot = 64;
     th_image(index_under) = image(index_under);
 end
 %include ROIs
-if Z.superpose_ROIs
+if isfield(Z,'superpose_ROIs') && Z.superpose_ROIs
     for r1=1:length(Z.ROIname)
         Vr{r1} = spm_vol(Z.ROIname{r1}); 
         Yr{r1} = spm_read_vols(Vr{r1}); %this could be stored instead of reread each time
