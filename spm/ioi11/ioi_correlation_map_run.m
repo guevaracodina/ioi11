@@ -167,7 +167,7 @@ for SubjIdx=1:length(job.IOImat)
                                                         'Curvature',[1,1],...
                                                         'LineWidth',2,'LineStyle','-');
                                                     set(gca,'Xtick',[]); set(gca,'Ytick',[]);
-                                                    xlabel('Left'); ylabel('Rostral');
+                                                    xlabel('Left', 'FontSize', 14); ylabel('Rostral', 'FontSize', 14);
                                                     title(sprintf('%s fcIOS map Seed %d (%s) S%d C%d (%s)\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none', 'FontSize', 14)
                                                     
                                                     % Show only significant
@@ -179,7 +179,7 @@ for SubjIdx=1:length(job.IOImat)
                                                         'Curvature',[1,1],...
                                                         'LineWidth',2,'LineStyle','-');
                                                     set(gca,'Xtick',[]); set(gca,'Ytick',[]);
-                                                    xlabel('Left'); ylabel('Rostral');
+                                                    xlabel('Left', 'FontSize', 14); ylabel('Rostral', 'FontSize', 14);
                                                     title(sprintf('%s significant pixels (p<%.2f) Seed %d (%s) S%d C%d (%s)\n',IOI.subj_name,job.pValue,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none', 'FontSize', 14)
                                                     
                                                     if job.save_figures
