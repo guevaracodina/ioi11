@@ -29,6 +29,7 @@ try
     OD_label = 'OD'; %label for optical density images
     suffix_for_anat_file = 'anat'; %to build anatomical image name
     sess_label = 'Sess'; %prefix for name of directories for each session
+    short_el_label = 'el'; %short name for output electro file
     %leave voxel size in arbitrary units for now, for anatomical image
     vx_anat = [1 1 1];
     %Variable changed meaning here - more convenient for user to specify
@@ -45,7 +46,7 @@ try
     [shrinkage_choice SH] = ioi_get_shrinkage_choice(job);
     %select a subset of sessions
     [all_sessions selected_sessions] = ioi_get_sessions(job);
-
+    
     %choose saving mode
     memmapfileOn = job.memmapfileOn;
     try
@@ -94,75 +95,90 @@ try
     if job.PartialRedo2
         sess_raw = IOI.sess_raw; %Keep previously found sessions
     else
-        sess_raw = {};
-        for i=1:(length(dirs)/2)
-            sess = [];
-            %Boolean to decide whether a session can be kept
-            sess_OK = 1;
-            %skip sessions not selected by user - careful, as this
-            %session order corresponds to raw session order, while
-            %in later modules, session order corresponds to
-            %processed session order
-            if all_sessions || sum(i==selected_sessions)
-                if ~strcmp([dirs{2*i-1,:} '_images'],dirs{2*i,:})
-                    IOI = disp_msg(IOI,['Missing directory: ' dirs{2*i,:}]);
-                else
-                    %check that text files are present
-                    [files_txt,dummy] = cfg_getfile('FPListRec',dirs{2*i-1,:},'.txt');
-                    if length(files_txt) == 3
-                        %Three files are required for each session,
-                        %and they need to be found and assigned in
-                        %the following order:
-                        sess.Frame = files_txt{1,:};
-                        sess.TTL = files_txt{2,:}; %TTLseuil
-                        sess.info = files_txt{3,:};
-                        [files_bin,dummy] = cfg_getfile('FPListRec',dirs{2*i,:},'.bin');
-                        sess.images = files_bin; %all images
-                        for c1=1:length(str_color)
-                            if sess_OK
-                                %str1 = str_color(c1);
-                                strf = str_color_french(c1);
-                                %separate images into various colors
-                                [files_bin,dummy] = cfg_getfile('FPListRec',dirs{2*i,:},[strf strf]);
-                                sess.fnames{c1} = files_bin;
-                                if c1 ==1
-                                    image_count = length(files_bin);
-                                    %approximate computation of length
-                                    %of session in seconds
-                                    if image_count*temp_ImNum*temp_TR < min_session_duration
-                                        sess_OK = 0;
-                                        IOI = disp_msg(IOI,['Insufficient number of images for ' dirs{2*i-1,:} ' ...skipping.']);
-                                    end
-                                else
-                                    %weaker criterion - number of image
-                                    %files might differ by 1 because
-                                    %one only one extra image
-                                    if abs(length(files_bin)- image_count)>= 1
-                                        if ~strcmp(strf,str_contrast) %OK if contrast files missing
+        if ~expedite
+            sess_raw = {};
+            for i=1:(length(dirs)/2)
+                sess = [];
+                %Boolean to decide whether a session can be kept
+                sess_OK = 1;
+                %skip sessions not selected by user - careful, as this
+                %session order corresponds to raw session order, while
+                %in later modules, session order corresponds to
+                %processed session order
+                if all_sessions || sum(i==selected_sessions)
+                    if ~strcmp([dirs{2*i-1,:} '_images'],dirs{2*i,:})
+                        IOI = disp_msg(IOI,['Missing directory: ' dirs{2*i,:}]);
+                    else
+                        %check that text files are present
+                        [files_txt,dummy] = cfg_getfile('FPListRec',dirs{2*i-1,:},'.txt');
+                        if length(files_txt) == 3
+                            %Three files are required for each session,
+                            %and they need to be found and assigned in
+                            %the following order:
+                            sess.Frame = files_txt{1,:};
+                            sess.TTL = files_txt{2,:}; %TTLseuil
+                            sess.info = files_txt{3,:};
+                            [files_bin,dummy] = cfg_getfile('FPListRec',dirs{2*i,:},'.bin');
+                            sess.images = files_bin; %all images
+                            for c1=1:length(str_color)
+                                if sess_OK
+                                    %str1 = str_color(c1);
+                                    strf = str_color_french(c1);
+                                    %separate images into various colors
+                                    [files_bin,dummy] = cfg_getfile('FPListRec',dirs{2*i,:},[strf strf]);
+                                    sess.fnames{c1} = files_bin;
+                                    if c1 ==1
+                                        image_count = length(files_bin);
+                                        %approximate computation of length
+                                        %of session in seconds
+                                        if image_count*temp_ImNum*temp_TR < min_session_duration
                                             sess_OK = 0;
-                                            IOI = disp_msg(IOI,['Problem with number of ' strf strf ' images for ' dirs{2*i-1,:}]);
+                                            IOI = disp_msg(IOI,['Insufficient number of images for ' dirs{2*i-1,:} ' ...skipping.']);
+                                        end
+                                    else
+                                        %weaker criterion - number of image
+                                        %files might differ by 1 because
+                                        %one only one extra image
+                                        if abs(length(files_bin)- image_count)>= 1
+                                            if ~strcmp(strf,str_contrast) %OK if contrast files missing
+                                                sess_OK = 0;
+                                                IOI = disp_msg(IOI,['Problem with number of ' strf strf ' images for ' dirs{2*i-1,:}]);
+                                            end
                                         end
                                     end
                                 end
                             end
-                        end
-                        [files_bin,dummy] = cfg_getfile('FPListRec',dirs{2*i,:},'electro');
-                        sess.electro = files_bin;
-                        if ~isempty(files_bin)
-                            sess.electroOK = 1;
+                            [files_bin,dummy] = cfg_getfile('FPListRec',dirs{2*i,:},'electro');
+                            sess.electro = files_bin;
+                            if ~isempty(files_bin)
+                                sess.electroOK = 1;
+                            else
+                                sess.electroOK = 0;
+                                IOI = disp_msg(IOI,['Problem with electro file for ' dirs{2*i-1,:}]);
+                            end
+                            %add found session to session list
+                            if forceProcessingOn
+                                sess_OK = 1; %ignore warnings, and include session anyway
+                            end
+                            if sess_OK, sess_raw = [sess_raw sess]; end
                         else
-                            sess.electroOK = 0;
-                            IOI = disp_msg(IOI,['Problem with electro file for ' dirs{2*i-1,:}]);
+                            IOI = disp_msg(IOI,['Problem with text files in ' dirs{2*i,:}]);
                         end
-                        %add found session to session list
-                        if forceProcessingOn
-                            sess_OK = 1; %ignore warnings, and include session anyway
-                        end
-                        if sess_OK, sess_raw = [sess_raw sess]; end
-                    else
-                        IOI = disp_msg(IOI,['Problem with text files in ' dirs{2*i,:}]);
                     end
                 end
+            end
+        else
+            sess_raw = {}; sess_OK = 1;
+            for i=1:(length(dirs)/2)
+                [files_bin,dummy] = cfg_getfile('FPListRec',dirs{2*i,:},'electro');
+                sess.electro = files_bin;
+                if ~isempty(files_bin)
+                    sess.electroOK = 1;
+                else
+                    sess.electroOK = 0;
+                    IOI = disp_msg(IOI,['Problem with electro file for ' dirs{2*i-1,:}]);
+                end
+                if sess_OK, sess_raw = [sess_raw sess]; end
             end
         end
         if ~isempty(sess_raw)
@@ -171,7 +187,7 @@ try
             disp(['No sessions found... skipping subject ' int2str(job.SubjIdx) ' (namely: ' job.top_bin_dir{job.SubjIdx} ')']);
             subj_OK = 0;
             %return
-        end
+        end       
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %2- Extract various info and stimuli if available
@@ -187,78 +203,89 @@ try
             %we normally process all the images in sess_raw, unless we are
             %recalculating a subset of the sessions, using option
             %Partial in force_redo, leading to PartialRedo2 == 1.
-            if ~PartialRedo2 || all_sessions || sum(s1==selected_sessions)
-                % First read all information concerning the experiment
-                try
-                    [scan_info, physio]=ioi_extract_info(IOI.info.expt,...
-                        sess_raw{s1}.info,sess_raw{s1}.TTL,sess_raw{s1}.Frame);
-                catch exception
-                    disp(exception.identifier)
-                    disp(exception.stack(1))
-                    IOI = disp_msg(IOI,['Problem with raw session ' int2str(i) ': could not extract info']);
-                    disp('Session will be kept, but this could lead to various problems later');
-                    disp('Best is to find out the problem with this session, and fix it or remove it from the raw data folder');
-                end
-                if s1==1 %assume acquisition frequency is unchanged for later sessions
-                    % Identifiy times for each frame and each color separately
-                    IOI.dev.acq_freq_hz=(scan_info.Frame(end,1)-scan_info.Frame(1,1))/scan_info.Frame(end,3);
-                    % Fix TR for everyone, the factor 6 comes from the fact that we need 6
-                    % camera frames to return to the same colors
-                    IOI.dev.TR=frames_per_cycle/IOI.dev.acq_freq_hz;
-                end
-                % 6 images make one frame, each frame is indexed, partial frames are
-                % counted as one frame - this is only approximate
-                n_frames = ceil((scan_info.Frame(end,1)-scan_info.Frame(1,1)+1)/frames_per_cycle);
-                sess = [];
-                sess.scan_info = scan_info;
-                sess.physio = physio;
-                sess.n_frames = n_frames;
-                %stimuli information
-                list_stim = {};
-                %for each type of onsets
-                for stim_index=1:size(scan_info.stim3,1)
-                    stim = [];
-                    %right hand side of == is number representing onset type
-                    %column 1 of stim2 is frame number sight after stimulation
-                    %select entries in column 1 of stim2
-                    %last column of stim1 is
-                    tmp = scan_info.stim1(:,end)==scan_info.stim3(stim_index,1);
-                    stim.onset_frame=scan_info.stim2(...
-                        tmp(1:size(scan_info.stim2,1)),1);
-                    stim.onset_frame=ceil(stim.onset_frame/frames_per_cycle);
-                    %Next 4 entries: Approximate info - do not use (??):
-                    stim.intensity=scan_info.stim3(stim_index,2);
-                    stim.train_period=scan_info.stim3(stim_index,3);
-                    stim.n_stim_in_train=scan_info.stim3(stim_index,4);
-                    stim.train_duration=scan_info.stim3(stim_index,5);
-                    list_stim = [list_stim stim];
-                end
-                clear names onsets durations
-                %Converted to seconds, rather than frame number
-                for stim_index=1:length(list_stim)
-                    names{stim_index}=['Stim_',num2str(stim_index)];
-                    onsets{stim_index}=list_stim{stim_index}.onset_frame'*IOI.dev.TR;
-                    durations{stim_index}=list_stim{stim_index}.train_duration;
-                end
-                %Store onset information
-                sess.list_stim = list_stim;
-                sess.names = names; %not quite the SPM format, need to put in Sess.U format
-                sess.onsets = onsets; %in seconds
-                sess.durations = durations; %in seconds
-                %frames for each color
-                for c1=1:length(str_color)
-                    sess.camera{c1}=scan_info.Frame(scan_info.FrameCouleur==str_color_french(c1),1);
-                    sess.fname{c1} = {}; %for later, to add nifti file names of images
-                end
-                if PartialRedo2
-                    sess_res{s1} = sess;
-                else
-                    sess_res =[sess_res sess];
+            if ~expedite
+                if ~PartialRedo2 || all_sessions || sum(s1==selected_sessions)
+                    % First read all information concerning the experiment
+                    try
+                        [scan_info, physio]=ioi_extract_info(IOI.info.expt,...
+                            sess_raw{s1}.info,sess_raw{s1}.TTL,sess_raw{s1}.Frame);
+                    catch exception
+                        disp(exception.identifier)
+                        disp(exception.stack(1))
+                        IOI = disp_msg(IOI,['Problem with raw session ' int2str(i) ': could not extract info']);
+                        disp('Session will be kept, but this could lead to various problems later');
+                        disp('Best is to find out the problem with this session, and fix it or remove it from the raw data folder');
+                    end
+                    if s1==1 %assume acquisition frequency is unchanged for later sessions
+                        % Identifiy times for each frame and each color separately
+                        %try
+                            IOI.dev.acq_freq_hz=(scan_info.Frame(end,1)-scan_info.Frame(1,1))/scan_info.Frame(end,3);
+                            % Fix TR for everyone, the factor 6 comes from the fact that we need 6
+                            % camera frames to return to the same colors
+                            IOI.dev.TR=frames_per_cycle/IOI.dev.acq_freq_hz;
+%                         catch
+%                             IOI.dev.acq_freq_hz = 5;
+%                             IOI.dev.TR=0.1999;
+%                         end
+                    end
+                    % 6 images make one frame, each frame is indexed, partial frames are
+                    % counted as one frame - this is only approximate
+                    n_frames = ceil((scan_info.Frame(end,1)-scan_info.Frame(1,1)+1)/frames_per_cycle);
+                    sess = [];
+                    sess.scan_info = scan_info;
+                    sess.physio = physio;
+                    sess.n_frames = n_frames;
+                    %stimuli information
+                    list_stim = {};
+                    %for each type of onsets
+                    for stim_index=1:size(scan_info.stim3,1)
+                        stim = [];
+                        %right hand side of == is number representing onset type
+                        %column 1 of stim2 is frame number sight after stimulation
+                        %select entries in column 1 of stim2
+                        %last column of stim1 is
+                        tmp = scan_info.stim1(:,end)==scan_info.stim3(stim_index,1);
+                        stim.onset_frame=scan_info.stim2(...
+                            tmp(1:size(scan_info.stim2,1)),1);
+                        stim.onset_frame=ceil(stim.onset_frame/frames_per_cycle);
+                        %Next 4 entries: Approximate info - do not use (??):
+                        stim.intensity=scan_info.stim3(stim_index,2);
+                        stim.train_period=scan_info.stim3(stim_index,3);
+                        stim.n_stim_in_train=scan_info.stim3(stim_index,4);
+                        stim.train_duration=scan_info.stim3(stim_index,5);
+                        list_stim = [list_stim stim];
+                    end
+                    clear names onsets durations
+                    %Converted to seconds, rather than frame number
+                    for stim_index=1:length(list_stim)
+                        names{stim_index}=['Stim_',num2str(stim_index)];
+                        onsets{stim_index}=list_stim{stim_index}.onset_frame'*IOI.dev.TR;
+                        durations{stim_index}=list_stim{stim_index}.train_duration;
+                    end
+                    %Store onset information
+                    sess.list_stim = list_stim;
+                    try
+                    sess.names = names; %not quite the SPM format, need to put in Sess.U format
+                    sess.onsets = onsets; %in seconds
+                    sess.durations = durations; %in seconds
+                    catch
+                        disp('No onsets found');
+                    end
+                    %frames for each color
+                    for c1=1:length(str_color)
+                        sess.camera{c1}=scan_info.Frame(scan_info.FrameCouleur==str_color_french(c1),1);
+                        sess.fname{c1} = {}; %for later, to add nifti file names of images
+                    end
+                    if PartialRedo2
+                        sess_res{s1} = sess;
+                    else
+                        sess_res =[sess_res sess];
+                    end
                 end
             end
+            IOI.sess_res = sess_res;
+            IOI.res.shrinkageOn = shrinkage_choice;
         end
-        IOI.sess_res = sess_res;
-        IOI.res.shrinkageOn = shrinkage_choice;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %3- Anatomical image
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -377,18 +404,21 @@ try
                                     'n_frames = ' int2str(n_frames) '; final number images = ' int2str(im_count)]);
                             end
                             %calculate median for whole image in time direction
-                            if ~(str1 == str_laser || str1 == str_contrast) %not laser speckle nor contrast
-                                if ~memmapfileOn
-                                    image_median = median(image_total,4);
+                            if ~memmapfileOn
+                                image_median = median(image_total,4);
+                                if ~(str1 == str_laser || str1 == str_contrast) %not laser speckle nor contrast
                                     image_total = -log(image_total./repmat(image_median,[1 1 1 n_frames]));
-                                else
-                                    image_median = median(im_obj.Data.image_total,4);
+                                end
+                            else
+                                image_median = median(im_obj.Data.image_total,4);
+                                if ~(str1 == str_laser || str1 == str_contrast) %not laser speckle nor contrast
                                     im_obj.Data.image_total = -log(im_obj.Data.image_total./repmat(image_median,[1 1 1 n_frames]));
                                 end
                             end
+                            
                             %Save the median
                             IOI.sess_res{s1}.fname_median{c1} = fullfile(dir_subj_res,sess_str, ...
-                                [subj_name '_' OD_label '_median_' str1 '_' sess_str '.nii']);
+                                [subj_name '_' OD_label '_median_' str1 '_' sess_str]);
                             %ioi_save_nifti(single(image_median),IOI.sess_res{s1}.fname_median{c1},vx);
                             tit0 = [subj_name ' ' OD_label ' median ' str1 ' ' sess_str];
                             ioi_save_images(single(image_median),IOI.sess_res{s1}.fname_median{c1},vx,[],tit0);
@@ -409,17 +439,17 @@ try
                                 change = single(max_image) ./single(min_image);
                                 change_90_10 = single(ninetiethpctle_image) ./ single(tenthpctle_image);
                                 sess.fname_min{c1} = fullfile(dir_subj_res,sess_str, ...
-                                    [subj_name '_' OD_label '_min_' str1 '_' sess_str '.nii']);
+                                    [subj_name '_' OD_label '_min_' str1 '_' sess_str]);
                                 sess.fname_max{c1} = fullfile(dir_subj_res,sess_str, ...
-                                    [subj_name '_' OD_label '_max_' str1 '_' sess_str '.nii']);
+                                    [subj_name '_' OD_label '_max_' str1 '_' sess_str]);
                                 sess.fname_10pctle{c1} = fullfile(dir_subj_res,sess_str, ...
-                                    [subj_name '_' OD_label '_10pctle_' str1 '_' sess_str '.nii']);
+                                    [subj_name '_' OD_label '_10pctle_' str1 '_' sess_str]);
                                 sess.fname_90pctle{c1} = fullfile(dir_subj_res,sess_str, ...
-                                    [subj_name '_' OD_label '_90pctle_' str1 '_' sess_str '.nii']);
+                                    [subj_name '_' OD_label '_90pctle_' str1 '_' sess_str]);
                                 sess.fname_change{c1} = fullfile(dir_subj_res,sess_str, ...
-                                    [subj_name '_' OD_label '_change_' str1 '_' sess_str '.nii']);
+                                    [subj_name '_' OD_label '_change_' str1 '_' sess_str]);
                                 sess.fname_change_90_10{c1} = fullfile(dir_subj_res,sess_str, ...
-                                    [subj_name '_' OD_label '_change_90_10_' str1 '_' sess_str '.nii']);
+                                    [subj_name '_' OD_label '_change_90_10_' str1 '_' sess_str]);
                                 tit1 = [subj_name ' ' OD_label ' min ' str1 ' ' sess_str];
                                 tit2 = [subj_name ' ' OD_label ' max ' str1 ' ' sess_str];
                                 tit3 = [subj_name ' ' OD_label ' 10pctle ' str1 ' ' sess_str];
@@ -438,6 +468,21 @@ try
                                 ioi_save_images(single(tenthpctle_image),sess.fname_10pctle{c1},vx,[],tit4);
                                 ioi_save_images(single(ninetiethpctle_image),sess.fname_90pctle{c1},vx,[],tit5);
                                 ioi_save_images(single(change_90_10),sess.fname_change_90_10{c1},vx,[],tit6);
+                            end
+                            
+                            %check that color order is OK
+                            if ~memmapfileOn
+                                [sts i0] = ioi_check_color_order(image_total,str1,str_laser);
+                            else
+                                [sts i0] = ioi_check_color_order(im_obj.Data.image_total,str1,str_laser);
+                            end
+                            IOI.bad_frames = i0;
+                            if ~sts
+                                try
+                                warning_message = ['Possible problem with color order for frame ' int2str(i0.bfr(1)) ...
+                                    ' and ' int2str(length(i0.bfr)-1) ' other frames, for session ' int2str(s1) ', for color ' int2str(c1)];
+                                IOI = disp_msg(IOI,warning_message);
+                                end
                             end
                             %vx currently not used in ioi_save_nifti
                             %and ioi_write_nifti, despite apparent dependency
@@ -498,13 +543,21 @@ try
                 if isfield(IOI.sess_raw{s1},'electroOK')
                     IOI = extract_electro(IOI,s1,IOI.sess_raw{s1}.electro{1});
                     IOI.res.electroOK = 1; %a bit early, but should be OK
-                    disp(['Done processing session: ' int2str(s1) ', electrophysiology']);                    
-                    if expedite
-                        el = load(IOI.res.el{s1});
-                        ioi_plot_LFP(IOI,el,s1);  
-                        %or
+                    
+                    dir_elfig = fullfile(dir_subj_res,'fig_el');
+                    if ~exist(dir_elfig,'dir'), mkdir(dir_elfig); end
+                    %if expedite
+                    el = load(IOI.res.el{s1});
+                    fname_el = fullfile(dir_elfig,[short_el_label '_' sess_label gen_num_str(s1,2)]);
+                    %fname_el2 = fullfile(dir_elfig,[short_el_label '2_' sess_label gen_num_str(s1,2)]);
+                    ioi_plot_LFP(IOI,el.el,s1,1,1,fname_el);
+                    %try ioi_plot_LFP2(IOI,el,s1,el2,1,1,fname_el2); end;
+                    disp(['Done processing session: ' int2str(s1) ', electrophysiology']);  
+                    
+                    %ioi_plot_LFP(IOI,el,s1);
+                    %or
                         %ioi_plot_LFP(IOI,el.el,s1);
-                    end
+                    %end
                 end
                 %toc
                 if ~expedite
