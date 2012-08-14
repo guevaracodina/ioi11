@@ -232,6 +232,7 @@ if size(info.Frame,1)~=0
     info.Tacq=info.Frame(end,3)/info.Frame(end,1);
     %déterminer la stim arrive dans quel bloc, et à quelle position dans le
     %bloc
+    try
     for i1=1:size(info.stim1,1)
         info.stim1(i1,6)=find(info.stim1(i1,3)>(info.bloc(:,3)-3),1,'last');
         info.stim1(i1,7)=sum(info.stim1(1:i1,6)==info.stim1(i1,6) & info.stim1(1:i1,5)~=0);
@@ -256,6 +257,13 @@ if size(info.Frame,1)~=0
         info.stim3(i1,5)= info.stim3(i1,3) *info.stim3(i1,4); %durée totale d'un bloc de stim
     end
     physio.stim2=info.stim2; 
+    catch %PP
+        info.ttl = [];
+        info.stim1 = [];
+        info.stim2 = [];
+        info.stim3 = [];
+        physio.stim2= [];
+    end
 end
 
 
