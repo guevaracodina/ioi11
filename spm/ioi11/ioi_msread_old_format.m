@@ -403,6 +403,20 @@ try
                                 IOI = disp_msg(IOI,['Session ' int2str(s1) ',color ' str1 ...
                                     'n_frames = ' int2str(n_frames) '; final number images = ' int2str(im_count)]);
                             end
+                            %check that color order is OK
+                            if ~memmapfileOn
+                                [sts i0] = ioi_check_color_order(image_total,str1,str_laser);
+                            else
+                                [sts i0] = ioi_check_color_order(im_obj.Data.image_total,str1,str_laser);
+                            end
+                            IOI.bad_frames{s1,c1} = i0;
+                            if ~sts
+                                try
+                                    warning_message = ['Possible problem with color order for frame ' int2str(i0.bfr(1)) ...
+                                        ' and ' int2str(length(i0.bfr)-1) ' other frames, for session ' int2str(s1) ', for color ' int2str(c1)];
+                                    IOI = disp_msg(IOI,warning_message);
+                                end
+                            end
                             %calculate median for whole image in time direction
                             if ~memmapfileOn
                                 image_median = median(image_total,4);
@@ -468,21 +482,6 @@ try
                                 ioi_save_images(single(tenthpctle_image),sess.fname_10pctle{c1},vx,[],tit4);
                                 ioi_save_images(single(ninetiethpctle_image),sess.fname_90pctle{c1},vx,[],tit5);
                                 ioi_save_images(single(change_90_10),sess.fname_change_90_10{c1},vx,[],tit6);
-                            end
-                            
-                            %check that color order is OK
-                            if ~memmapfileOn
-                                [sts i0] = ioi_check_color_order(image_total,str1,str_laser);
-                            else
-                                [sts i0] = ioi_check_color_order(im_obj.Data.image_total,str1,str_laser);
-                            end
-                            IOI.bad_frames = i0;
-                            if ~sts
-                                try
-                                warning_message = ['Possible problem with color order for frame ' int2str(i0.bfr(1)) ...
-                                    ' and ' int2str(length(i0.bfr)-1) ' other frames, for session ' int2str(s1) ', for color ' int2str(c1)];
-                                IOI = disp_msg(IOI,warning_message);
-                                end
                             end
                             %vx currently not used in ioi_save_nifti
                             %and ioi_write_nifti, despite apparent dependency

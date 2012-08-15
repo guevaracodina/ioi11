@@ -51,7 +51,7 @@ try
         order = E.hpf_butter_order;
         el = ButterHPF(sf,cutoff,order,el0);
         if E.write_pictures
-            h = figure; plot(lp,sgn*el0(1:ds:end),'k'); hold on; plot(lp,-el(1:ds:end),'r');
+            h = figure; plot(lp,sgn*el0(1:ds:end),'k'); hold on; plot(lp,sgn*el(1:ds:end),'r');
             xlabel('time (s)')
             ylabel('LFP (a.u.)')
             title('Detected onsets')
@@ -73,7 +73,7 @@ try
         el = ButterLPF(sf,cutoff,order,el);
         el = el(end:-1:1);
         if E.write_pictures
-            h = figure; plot(lp,sgn*el0(1:ds:end),'k'); hold on; plot(lp,-el(1:ds:end),'r'); hold off
+            h = figure; plot(lp,sgn*el0(1:ds:end),'k'); hold on; plot(lp,sgn*el(1:ds:end),'r'); hold off
             xlabel('time (s)')
             ylabel('LFP (a.u.)')
             title('Detected onsets')
@@ -92,7 +92,7 @@ try
     %find onsets peaks: pkh: peak height; pk: onset time at sf sampling frequency
     [pkh pk] = findpeaks(el,'MINPEAKHEIGHT',MN+nSD*max(SD0,mbSD),'MINPEAKDISTANCE',rs);
     if isempty(pk)
-        disp(['No onsets detected initially. Chosen minimum SD too high, setting it to zero']);
+        disp('No onsets detected initially. Chosen minimum SD too high, setting it to zero');
         [pkh pk] = findpeaks(el,'MINPEAKHEIGHT',MN+nSD*SD0,'MINPEAKDISTANCE',rs);
     end
     %[pkh2 pk2] = findpeaks(-el,'MINPEAKHEIGHT',MN+nSD*max(SD0,mbSD),'MINPEAKDISTANCE',rs);
@@ -108,7 +108,7 @@ try
         print(h, '-dtiffn', filen2);
         close(h);
     end
-    [npkh npk dur] = ioi_find_good_peaks(pk,dP,el,fast_pk,E);
+    [npkh npk dur] = ioi_find_good_peaks(pk,pkh,dP,el,fast_pk,E,MN,eSD);
     pk = npk/sf;
     pkh = npkh;
     if E.write_pictures

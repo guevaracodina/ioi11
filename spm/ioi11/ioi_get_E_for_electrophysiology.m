@@ -28,25 +28,23 @@ if isfield(job.stim_choice,'electro_stims')
     %number of standard deviations
     E.nSD = electro_stims.nSD;
     %minimum standard deviation imposed
-    E.mbSD = electro_stims.mbSD;
-    
+    E.mbSD = electro_stims.mbSD;    
     %HPF
-    if isfield(electro_stims.hpf_butter,'electro_hpf_butter_On')
+    if isfield(electro_stims.hpf_butter,'hpf_butter_On')
         E.electro_hpf_butter_On = 1;
-        E.hpf_butter_freq = electro_stims.hpf_butter.electro_hpf_butter_On.electro_hpf_butter_freq;
-        E.hpf_butter_order = electro_stims.hpf_butter.electro_hpf_butter_On.electro_hpf_butter_order;
+        E.hpf_butter_freq = electro_stims.hpf_butter.hpf_butter_On.hpf_butter_freq;
+        E.hpf_butter_order = electro_stims.hpf_butter.hpf_butter_On.hpf_butter_order;
     else
         E.electro_hpf_butter_On = 0;
     end
     %LPF
-    if isfield(electro_stims.electro_lpf_butter,'electro_lpf_butter_On')
+    if isfield(electro_stims.electro_lpf_butter,'lpf_butter_On')
         E.electro_lpf_butter_On = 1;
-        E.lpf_butter_freq = electro_stims.electro_lpf_butter.electro_lpf_butter_On.electro_lpf_butter_freq;
-        E.lpf_butter_order = electro_stims.electro_lpf_butter.electro_lpf_butter_On.electro_lpf_butter_order;
+        E.lpf_butter_freq = electro_stims.lpf_butter.lpf_butter_On.lpf_butter_freq;
+        E.lpf_butter_order = electro_stims.lpf_butter.lpf_butter_On.lpf_butter_order;
     else
         E.electro_lpf_butter_On = 0;
     end
     E.write_pictures = electro_stims.write_pictures;
-    E.use_epilepsy_convention = electro_stims.use_epilepsy_convention;
-    
+    E.use_epilepsy_convention = electro_stims.use_epilepsy_convention;   
 end
