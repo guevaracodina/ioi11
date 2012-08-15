@@ -428,8 +428,25 @@ try
                     % Clear progress bar
                     spm_progress_bar('Clear');
                     
-                    
-                    
+                    for_Cong_to_test = 0;
+                    if for_Cong_to_test
+                        for c1=1:nColors
+                            %check that color order is OK
+                            if ~memmapfileOn
+                                [sts i0] = ioi_check_color_order(squeeze(image_total(:,:,:,:,c1)),str1,str_laser);
+                            else
+                                [sts i0] = ioi_check_color_order(squeeze(im_obj.Data.image_total(:,:,:,:,c1)),str1,str_laser);
+                            end
+                            IOI.bad_frames{s1,c1} = i0;
+                            if ~sts
+                                try
+                                    warning_message = ['Possible problem with color order for frame ' int2str(i0.bfr(1)) ...
+                                        ' and ' int2str(length(i0.bfr)-1) ' other frames, for session ' int2str(s1) ', for color ' int2str(c1)];
+                                    IOI = disp_msg(IOI,warning_message);
+                                end
+                            end
+                        end
+                    end
                     %Compute median
                     for c1=1:nColors
                         %skip laser

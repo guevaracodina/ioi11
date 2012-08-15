@@ -1,4 +1,4 @@
-function [npkh npk dur] = ioi_find_good_peaks(pk,pkh,dP,el,E,MN,eSD)
+function [npkh npk dur] = ioi_find_good_peaks(pk,pkh,dP,el,fast_pk,E,MN,eSD)
 npk = [];
 npkh = [];
 tmpdur = [];
