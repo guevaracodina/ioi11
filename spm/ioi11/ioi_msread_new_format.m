@@ -64,7 +64,7 @@ try
         IOI.res.shrinkageOn = 0; %no shrinkage of images
 %         IOI.dev.TR = TR;
     end
-    
+
     if ~job.PartialRedo2
         [dummy,dirs] = cfg_getfile('FPListRec',dir_subj_raw,'.bin');
         sC = 0; %good session counter
@@ -208,6 +208,9 @@ try
                     elfile_info2 = fullfile(dir_subj_res,[short_el_label '2' el_info '_' sess_label gen_num_str(sC,2) '.mat']);
                     elfile2 = fullfile(dir_subj_res,[short_el_label '2_' sess_label gen_num_str(sC,2) '.mat']);
                     %save 2nd channel of electrophysiology
+                    %*****************************************************
+                    IOI.res.el2{sC} = elfile2;
+                    %*****************************************************
                     el2 = ConvertedData.Data.MeasuredData(12).Data;
                     save(elfile2,'el2');
                 end

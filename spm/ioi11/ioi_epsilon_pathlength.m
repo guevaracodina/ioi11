@@ -1,4 +1,4 @@
-function eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichSystem,whichCurve,baseline_hbt,debug)
+function eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichSystem,whichCurve,baseline_hbt,baseline_hbo,baseline_hbr,debug)
 
 %	This function estimates epsilon * D, it takes into account the camera
 %	response, the leds spectra and uses a pathlength factor either set from
@@ -39,8 +39,8 @@ end
 %Input basehbt1 not used...
 
 % Create vectors of values for the fits
-CHbO = 0.6*c_tot*(.5:.1:1.5);
-CHbR = 0.4*c_tot*(.5:.1:1.5);
+CHbO = baseline_hbo/baseline_hbt*c_tot*(.5:.1:1.5);
+CHbR = baseline_hbr/baseline_hbt*c_tot*(.5:.1:1.5);
 
 % In this computation below we neglect the fact that pathlength changes
 % with total concentration (it is fixed for a Ctot of 100e-6)

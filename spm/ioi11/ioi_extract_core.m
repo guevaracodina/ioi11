@@ -15,12 +15,10 @@ for s1=1:length(IOI.sess_res)
                     fname_list = IOI.sess_res{s1}.fname{c1};
                     %initialize
                     
-                    nROI = 1:length(IOI.res.ROI); % All the ROIs
-                    
-                    if isfield(job,'extractingBrainMask')
-                        if job.extractingBrainMask
-                            nROI = 1; % Only 1 brain mask
-                        end
+                    if job.extractBrainMask
+                        nROI = 1; % Only 1 brain mask
+                    else
+                        nROI = 1:length(IOI.res.ROI); % All the ROIs
                     end
 
                     for r1 = nROI
@@ -28,13 +26,8 @@ for s1=1:length(IOI.sess_res)
                             ROI{r1}{s1,c1} = [];
                         end
                     end
-                    % Color names
-                    colorNames = fieldnames(IOI.color);
-                    % Initialize progress bar
-                    spm_progress_bar('Init', length(fname_list), sprintf('ROI/seed extraction session %d, color %d (%s)\n',s1,c1,colorNames{1+c1}), 'Files');
                     %loop over files
                     for f1=1:length(fname_list)
-                        spm_progress_bar('Set', f1);
                         try
                             fname = fname_list{f1};
                             vols = spm_vol(fname);
@@ -51,15 +44,11 @@ for s1=1:length(IOI.sess_res)
                         %Loop over ROIs
                         [IOI ROI] = ioi_extract_main(IOI,ROI,job,d,d3,d4,c1,s1,colorOK,mask);
                     end
-                    % Clear progress bar
-                    spm_progress_bar('Clear');
                     if colorOK
-                        fprintf('ROIs/seeds time-course for session %d and color %d (%s) completed\n',s1,c1,colorNames{1+c1})
+                        disp(['ROIs for session ' int2str(s1) ' and color ' IOI.color.eng(c1) ' completed']);
                     end
                 end
             end
         end
     end
 end
-
-% EOF

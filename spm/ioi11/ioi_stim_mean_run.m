@@ -45,6 +45,18 @@ for SubjIdx=1:length(job.IOImat)
         if ~isfield(IOI,'dev')
             IOI.dev.TR = 0.2;
         end
+        if ~isfield(IOI,'conc')
+            baseline_hbt = 100;
+            baseline_hbo = 60;
+            baseline_hbr = 40;
+            IOI.conc.baseline_hbt = baseline_hbt;
+            IOI.conc.baseline_hbo = baseline_hbo;
+            IOI.conc.baseline_hbr = baseline_hbr;
+        else
+            baseline_hbt = IOI.conc.baseline_hbt;
+            baseline_hbo = IOI.conc.baseline_hbo;
+            baseline_hbr = IOI.conc.baseline_hbr;
+        end
         window_after = round(job.window_after/IOI.dev.TR);
         window_before = round(job.window_before/IOI.dev.TR);
         window_offset = round(window_offset/IOI.dev.TR);
@@ -67,8 +79,7 @@ for SubjIdx=1:length(job.IOImat)
                 else
                     try
                         load(IOI.ROI.ROIfname);
-                    catch
-                        
+                    catch                       
                         ts1 = strfind(dir_ioimat,'Res');
                         ts2 = strfind(dir_ioimat,filesep);
                         ts3 = ts2(ts2>ts1);
@@ -164,8 +175,8 @@ for SubjIdx=1:length(job.IOImat)
                         for r1=1:length(ROI)
                             if all_ROIs || sum(r1==selected_ROIs)
                                 r2 = r2 + 1;
-                                Gtmp_array_before = zeros(1,window_before);
-                                Gtmp_array_after = zeros(1,window_after);
+                                %Gtmp_array_before = zeros(1,window_before);
+                                %Gtmp_array_after = zeros(1,window_after);
                                 GSb{r2,m1}{c1} = [];
                                 GSa{r2,m1}{c1} = [];
                                 Gkb = 0; %counter of segments before onsets
@@ -175,12 +186,11 @@ for SubjIdx=1:length(job.IOImat)
                                 %loop over sessions
                                 for s1=1:length(IOI.sess_res)
                                     if all_sessions || sum(s1==selected_sessions)
-                                        tmp_array_before = zeros(1,window_before);
-                                        tmp_array_after = zeros(1,window_after);
                                         kb = 0; %counter of segments before onsets
                                         ka = 0; %counter of segments after onsets
                                         kb2 = 0; %counter of skipped segments before onsets
                                         ka2 = 0; %counter of skipped segments after onsets
+                                        
                                         %loop over sessions
                                         try
                                             if IC.include_HbT
@@ -193,15 +203,36 @@ for SubjIdx=1:length(job.IOImat)
                                             else
                                                 tmp_d = ROI{r1}{s1,c1};
                                             end
-                                            normalize_flow = 0;
-                                            if normalize_flow
-                                            %normalize flow
-                                            if isfield(IOI.color,'flow')
-                                                if IOI.color.eng(c1)==IOI.color.flow
-                                                    tmp_d = tmp_d/mean(tmp_d); %or median
-                                                end
+                                            switch IOI.color.eng(c1)
+                                                case 'T'
+                                                    norm1 = baseline_hbt;
+                                                    norm2 = norm1;
+                                                    %tmp_d = tmp_d/norm1;
+                                                case 'O'
+                                                    norm1 = baseline_hbo;
+                                                    norm2 = norm1;
+                                                    %tmp_d = tmp_d/norm1;
+                                                case 'D'
+                                                    norm1 = baseline_hbr;
+                                                    norm2 = norm1;
+                                                    %tmp_d = tmp_d/norm1;
+                                                otherwise
+                                                    norm1 = 0;
+                                                    norm2 = mean(tmp_d);
                                             end
-                                            end
+                                            
+%                                             normalize_flow = 0;
+%                                             if normalize_flow
+%                                             %normalize flow -- not correct
+%                                             %way to do it; instead
+%                                             %calculate changes with respect
+%                                             %to baseline flow
+%                                             if isfield(IOI.color,'flow')
+%                                                 if IOI.color.eng(c1)==IOI.color.flow
+%                                                     tmp_d = tmp_d/mean(tmp_d); %or median
+%                                                 end
+%                                             end
+%                                             end
                                             remove_jumps = 0;
                                             if remove_jumps
                                             %remove jumps options:
@@ -228,7 +259,9 @@ for SubjIdx=1:length(job.IOImat)
                                         
                                         if ~isempty(tmp_d)
                                             if HPF.hpf_butter_On
+                                                tmp_DC = median(tmp_d);
                                                 tmp_d = ButterHPF(1/IOI.dev.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,tmp_d);
+                                                tmp_d = tmp_d + tmp_DC; %add back the DC component
                                             end
                                             if LPF.lpf_gauss_On
                                                 K = get_K(1:length(tmp_d),LPF.fwhm1,IOI.dev.TR);
@@ -242,125 +275,146 @@ for SubjIdx=1:length(job.IOImat)
                                                 tmp_d = y;
                                             end
                                             
-                                            first_pass = 1;
-                                            second_pass = 0;
+                                            %first_pass = 1;
+                                            %second_pass = 0;
+                                            pass_twice = 1;
                                             removeSeg = [];
-                                            while first_pass
-                                                
-                                                Sb{r2,m1}{c1,s1} = [];
-                                                Sa{r2,m1}{c1,s1} = [];
-                                                %loop over onsets for that session
-                                                if ~isempty(onsets_list{s1}{m1})
-                                                    U = round(onsets_list{s1}{m1}/IOI.dev.TR)-window_offset; %in data points
-                                                    U0{s1} = ioi_get_U(IOI,[],U,0,s1); %only for plotting stims
-                                                    
-                                                    for u1=1:length(U)
-                                                        if ~any(u1==removeSeg)
-                                                            clear tmp_median;
-                                                            try
-                                                                tmp1 = tmp_d(U(u1)-window_before:U(u1)-1);
-                                                                switch normalize_choice
-                                                                    case 1
-                                                                        tmp_median = median(tmp1);
-                                                                    case 2
-                                                                        tmp_median = tmp1(end);
-                                                                    case 3
-                                                                        tmp_median = mean(tmp1);
-                                                                end
-                                                                tmp_array_before = tmp_array_before + tmp1-tmp_median;
-                                                                Gtmp_array_before = Gtmp_array_before + tmp1-tmp_median;
-                                                                kb = kb+1;
-                                                                Gkb = Gkb+1;
-                                                                Sb{r2,m1}{c1,s1} = [Sb{r2,m1}{c1,s1};tmp1-tmp_median];
-                                                                if global_M && m1 <= possible_global_M
-                                                                    GSb{r2,m1}{c1} = [GSb{r2,m1}{c1};tmp1-tmp_median];
-                                                                end
-                                                            catch
-                                                                kb2 = kb2+1;
-                                                                if kb2 < 3 && r2 == 1
-                                                                    disp(['Could not include segment before onset ' int2str(u1) ' at time ' num2str(U(u1)*IOI.dev.TR) ...
-                                                                        ' for session ' int2str(s1) ' for ROI ' int2str(r1) ...
-                                                                        ' for color ' int2str(c1) ' for onset type ' int2str(m1) ...
-                                                                        ' in global average over all sessions... skipping ' int2str(kb2) ' so far']);
-                                                                end
-                                                            end
-                                                            try
-                                                                tmp1 = tmp_d(U(u1):U(u1)+window_after-1);
-                                                                if ~exist('tmp_median','var') || normalize_choice == 2
-                                                                    tmp_median = tmp1(1);
-                                                                end
-                                                                if remove_segment_drift
+                                            for pass_cnt = 1:2
+                                                %while first_pass
+                                                if pass_cnt == 1 || (pass_cnt == 2 && pass_twice)
+                                                    %tmp_array_before = zeros(1,window_before);
+                                                    %tmp_array_after = zeros(1,window_after);
+                                                    kb = 0; %counter of segments before onsets
+                                                    ka = 0; %counter of segments after onsets
+                                                    kb2 = 0; %counter of skipped segments before onsets
+                                                    ka2 = 0; %counter of skipped segments after onsets
+                                                    Sb{r2,m1}{c1,s1} = [];
+                                                    Sa{r2,m1}{c1,s1} = [];
+                                                    %loop over onsets for that session
+                                                    if ~isempty(onsets_list{s1}{m1})
+                                                        U = round(onsets_list{s1}{m1}/IOI.dev.TR)-window_offset; %in data points
+                                                        U0{s1} = ioi_get_U(IOI,[],U,0,s1); %only for plotting stims
+                                                        
+                                                        for u1=1:length(U)
+                                                            if ~any(u1==removeSeg)
+                                                                clear tmp_median;
+                                                                try
+                                                                    tmp_median = tmp_d(U(u1)); %in case the following fails
+                                                                    tmp1 = tmp_d(U(u1)-window_before:U(u1)-1);
                                                                     switch normalize_choice
-                                                                        case {1,3}
-                                                                            %use the same length as window before to estimate end value of segment
-                                                                            tmp_end = mean(tmp1(end-window_before:end));
+                                                                        case 1
+                                                                            tmp_median = median(tmp1);
                                                                         case 2
-                                                                            tmp_end = tmp1(end);
+                                                                            tmp_median = tmp1(end);
+                                                                        case 3
+                                                                            tmp_median = mean(tmp1);
                                                                     end
-                                                                    slope = tmp_median + linspace(0,1,length(tmp1))*(tmp_end-tmp_median);
-                                                                    tmp1 = tmp1 - slope;
-                                                                else
-                                                                    tmp1 = tmp1-tmp_median;
+                                                                    %tmp_array_before = tmp_array_before + tmp1-tmp_median;
+                                                                    %Gtmp_array_before = Gtmp_array_before + tmp1-tmp_median;
+                                                                    kb = kb+1;
+                                                                    Gkb = Gkb+1;
+                                                                    Sb{r2,m1}{c1,s1} = [Sb{r2,m1}{c1,s1};tmp1-tmp_median];
+                                                                    if global_M && m1 <= possible_global_M
+                                                                        GSb{r2,m1}{c1} = [GSb{r2,m1}{c1};tmp1-tmp_median];
+                                                                    end
+                                                                catch
+                                                                    kb2 = kb2+1;
+                                                                    if kb2 < 3 && r2 == 1
+                                                                        disp(['Could not include segment before onset ' int2str(u1) ' at time ' num2str(U(u1)*IOI.dev.TR) ...
+                                                                            ' for session ' int2str(s1) ' for ROI ' int2str(r1) ...
+                                                                            ' for color ' int2str(c1) ' for onset type ' int2str(m1) ...
+                                                                            ' in global average over all sessions... skipping ' int2str(kb2) ' so far']);
+                                                                    end
                                                                 end
-                                                                tmp_array_after = tmp_array_after + tmp1;
-                                                                Gtmp_array_after = Gtmp_array_after + tmp1;
-                                                                ka = ka+1;
-                                                                Gka = Gka+1;
-                                                                Sa{r2,m1}{c1,s1} = [Sa{r2,m1}{c1,s1};tmp1];
-                                                                if global_M && m1 <= possible_global_M
-                                                                    GSa{r2,m1}{c1} = [GSa{r2,m1}{c1};tmp1];
+                                                                try
+                                                                    tmp1 = tmp_d(U(u1):U(u1)+window_after-1);
+                                                                    if ~exist('tmp_median','var') || normalize_choice == 2
+                                                                        tmp_median = tmp1(1);
+                                                                    end
+                                                                    if remove_segment_drift
+                                                                        switch normalize_choice
+                                                                            case {1,3}
+                                                                                %use the same length as window before to estimate end value of segment
+                                                                                tmp_end = mean(tmp1(end-window_before:end));
+                                                                            case 2
+                                                                                tmp_end = tmp1(end);
+                                                                        end
+                                                                        slope = tmp_median + linspace(0,1,length(tmp1))*(tmp_end-tmp_median);
+                                                                        tmp1 = tmp1 - slope;
+                                                                    else
+                                                                        tmp1 = tmp1-tmp_median;
+                                                                    end
+                                                                    %normalize to get percent change
+                                                                    if job.mult_normalize_choice
+                                                                        tmp1 = tmp1/norm2;
+                                                                    else
+                                                                        tmp1 = tmp1/(norm1+tmp_median); 
+                                                                    end
+%                                                                     if isfield(IOI.color,'flow')
+%                                                                         if IOI.color.eng(c1)==IOI.color.flow
+%                                                                             tmp1 = tmp1/tmp_median; %normalization -- %change of flow with respect to baseline
+%                                                                         end
+%                                                                     end
+                                                                    %tmp_array_after = tmp_array_after + tmp1;
+                                                                    %Gtmp_array_after = Gtmp_array_after + tmp1;
+                                                                    ka = ka+1;
+                                                                    Gka = Gka+1;
+                                                                    Sa{r2,m1}{c1,s1} = [Sa{r2,m1}{c1,s1};tmp1];
+                                                                    if global_M && m1 <= possible_global_M
+                                                                        GSa{r2,m1}{c1} = [GSa{r2,m1}{c1};tmp1];
+                                                                    end
+                                                                catch
+                                                                    ka2 = ka2+1;
+                                                                    if ka2<3 && r2 == 1
+                                                                        disp(['Could not include segment after onset ' int2str(u1) ' at time ' num2str(U(u1)*IOI.dev.TR) ...
+                                                                            ' for session ' int2str(s1) ' for ROI ' int2str(r1) ...
+                                                                            ' for color ' int2str(c1) ' for onset type ' int2str(m1) ...
+                                                                            ' in global average over all sessions... skipping ' int2str(ka2) ' so far']);
+                                                                        
+                                                                    end
                                                                 end
-                                                            catch
-                                                                ka2 = ka2+1;
-                                                                if ka2<3 && r2 == 1
-                                                                    disp(['Could not include segment after onset ' int2str(u1) ' at time ' num2str(U(u1)*IOI.dev.TR) ...
-                                                                        ' for session ' int2str(s1) ' for ROI ' int2str(r1) ...
-                                                                        ' for color ' int2str(c1) ' for onset type ' int2str(m1) ...
-                                                                        ' in global average over all sessions... skipping ' int2str(ka2) ' so far']);
-                                                                    
-                                                                end
+                                                                %                                                     if any(isnan(tmp_array_after))
+                                                                %                                                         a=1;
+                                                                %                                                     end
                                                             end
-                                                            %                                                     if any(isnan(tmp_array_after))
-                                                            %                                                         a=1;
-                                                            %                                                     end
+                                                            %                                             else
+                                                            %                                                 if ~isfield(IOI.color,'contrast') || (isfield(IOI.color,'contrast') && ~(IOI.color.eng(c1)==IOI.color.contrast))
+                                                            %                                                     disp(['Skipped session ' int2str(s1) ' for color ' IOI.color.eng(c1) ' for ROI ' int2str(r1)]);
+                                                            %
                                                         end
-                                                        %                                             else
-                                                        %                                                 if ~isfield(IOI.color,'contrast') || (isfield(IOI.color,'contrast') && ~(IOI.color.eng(c1)==IOI.color.contrast))
-                                                        %                                                     disp(['Skipped session ' int2str(s1) ' for color ' IOI.color.eng(c1) ' for ROI ' int2str(r1)]);
-                                                        %
-                                                    end
-                                                    
-                                                    Mb{r2,m1}{c1,s1} = tmp_array_before/kb; %global mean before
-                                                    Ma{r2,m1}{c1,s1} = tmp_array_after/ka; %global mean after
-                                                    Da{r2,m1}{c1,s1} = std(Sa{r2,m1}{c1,s1},0,1)/sqrt(ka); %SEM
-                                                    Db{r2,m1}{c1,s1} = std(Sb{r2,m1}{c1,s1},0,1)/sqrt(kb); %SEM
-                                                    Dma{r2,m1}{c1,s1} = mean(Da{r2,m1}{c1,s1});
-                                                    Dmb{r2,m1}{c1,s1} = mean(Db{r2,m1}{c1,s1});
-                                                    Rs{r2,m1}{c1,s1} = removeSeg;
-                                                    
-                                                    if remove_stims_SD
-                                                        if second_pass
-                                                            first_pass = 0;
-                                                        else
-                                                            %removeSeg = [];
-                                                            if ~isempty(tmp_array_after)
-                                                                meanA = mean(Ma{r2,m1}{c1,s1});
-                                                                tmpSeg = Sa{r2,m1}{c1,s1};
-                                                                meanSeg = mean(tmpSeg,2);
-                                                                meanSd = std(tmpSeg(:));
-                                                                for a0=1:length(meanSeg)
-                                                                    if abs(meanSeg(a0)-meanA) > 1.5*meanSd %very strong criterion perhaps better to keep it at 2*meanSd
-                                                                        removeSeg = [removeSeg a0];
+                                                        
+                                                        Mb{r2,m1}{c1,s1} = mean(Sb{r2,m1}{c1,s1},1); %global mean before
+                                                        Ma{r2,m1}{c1,s1} = mean(Sa{r2,m1}{c1,s1},1); %global mean after
+                                                        Da{r2,m1}{c1,s1} = std(Sa{r2,m1}{c1,s1},0,1)/sqrt(ka); %SEM
+                                                        Db{r2,m1}{c1,s1} = std(Sb{r2,m1}{c1,s1},0,1)/sqrt(kb); %SEM
+                                                        Dma{r2,m1}{c1,s1} = mean(Da{r2,m1}{c1,s1});
+                                                        Dmb{r2,m1}{c1,s1} = mean(Db{r2,m1}{c1,s1});
+                                                        Rs{r2,m1}{c1,s1} = removeSeg;
+                                                        
+                                                        if remove_stims_SD
+                                                            if pass_cnt == 1
+%                                                                 first_pass = 0;
+%                                                             else
+%                                                                 %removeSeg = [];
+                                                                %if ~isempty(tmp_array_after)
+                                                                    meanA = mean(Ma{r2,m1}{c1,s1});
+                                                                    tmpSeg = Sa{r2,m1}{c1,s1};
+                                                                    meanSeg = mean(tmpSeg,2);
+                                                                    meanSd = std(tmpSeg(:));
+                                                                    for a0=1:length(meanSeg)
+                                                                        if abs(meanSeg(a0)-meanA) > job.std_choice*meanSd %very strong criterion perhaps better to keep it at 2*meanSd
+                                                                            removeSeg = [removeSeg a0];
+                                                                        end
                                                                     end
-                                                                end
+                                                                %end
+                                                                %second_pass = 1;
                                                             end
-                                                            second_pass = 1;
+                                                        else
+                                                            pass_twice = 0;
                                                         end
                                                     else
-                                                        first_pass = 0;
+                                                        pass_twice = 0;
                                                     end
-                                                else
-                                                    first_pass = 0;
                                                 end
                                             end
                                         end
@@ -368,8 +422,8 @@ for SubjIdx=1:length(job.IOImat)
                                 end
                                 
                                 if global_M && m1 <= possible_global_M
-                                    GMb{r2,m1}{c1} = tmp_array_before/Gkb; %global mean before
-                                    GMa{r2,m1}{c1} = tmp_array_after/Gka; %global mean after
+                                    GMb{r2,m1}{c1} = mean(GSb{r2,m1}{c1},1); %tmp_array_before/Gkb; %global mean before
+                                    GMa{r2,m1}{c1} = mean(GSa{r2,m1}{c1},1); %tmp_array_after/Gka; %global mean after
                                     GDa{r2,m1}{c1} = std(GSa{r2,m1}{c1},0,1)/sqrt(Gka); %SEM
                                     GDb{r2,m1}{c1} = std(GSb{r2,m1}{c1},0,1)/sqrt(Gkb); %SEM
                                     GDma{r2,m1}{c1} = mean(GDa{r2,m1}{c1});
