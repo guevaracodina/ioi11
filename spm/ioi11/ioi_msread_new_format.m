@@ -54,6 +54,13 @@ try
     else
         stim_cutoff = 5;
     end
+    if isfield(job,'minTimeBetweenStim')
+        minTimeBetweenStim = job.minTimeBetweenStim;
+    else
+        minTimeBetweenStim = 1.001;
+    end
+    
+    
     %subj_OK = 1; %Boolean to exit loop if subject data is too corrupted
     if ~job.PartialRedo2
         IOI.color.eng = str_color;
@@ -174,25 +181,30 @@ try
                 stims = ConvertedData.Data.MeasuredData(6).Data;
                 stims_dt= ConvertedData.Data.MeasuredData(6).Property(3).Value;
                 ons0 = stims_dt*find(stims>stim_cutoff);
-                ons1 = find(diff(ons0)>=1);
+                ons1 = find(diff(ons0)>=minTimeBetweenStim);
                 if ~isempty(ons1)
                     ons = ons0([1 1+ons1']);
                 else
                     ons = []; %in case we have a rest session
                 end
-                clear names onsets durations
+                clear names onsets durations parameters
                 %Converted to seconds, rather than frame number
                 for stim_index=1:1
                     names{stim_index}=['Stim_',num2str(stim_index)];
                     onsets{stim_index}=ons;
                     durations{stim_index}=ones(1,length(ons));
+                    try
+                        parameters{stim_index}=stims(round(ons0/stims_dt));
+                    catch
+                        parameters{stim_index}=[];
+                    end
                 end
                 %Store onset information
                 %sess.list_stim = list_stim;
                 sess.names = names; %not quite the SPM format, need to put in Sess.U format
                 sess.onsets = onsets; %in seconds
                 sess.durations = durations; %in seconds
-                
+                sess.parameters = parameters;
                 %copy and remove
                 %IOI.sess_res{sC} = {};
                 elfile_info = fullfile(dir_subj_res,[short_el_label el_info '_' sess_label gen_num_str(sC,2) '.mat']);

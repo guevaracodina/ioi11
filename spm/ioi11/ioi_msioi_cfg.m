@@ -131,6 +131,14 @@ stim_cutoff.help    = {'Enter voltage cutoff. Sometimes it is 5 V, but 0.5 V '
     'is also possible'
     'Only applicable for new recording system.'}'; 
 
+minTimeBetweenStim         = cfg_entry; 
+minTimeBetweenStim.name    = 'min Time Between Stims';
+minTimeBetweenStim.tag     = 'minTimeBetweenStim';       
+minTimeBetweenStim.strtype = 'r';
+minTimeBetweenStim.num     = [1 1];
+minTimeBetweenStim.val     = {1};
+minTimeBetweenStim.help    = {'Enter minimum time Between Stims.  ' }'; 
+
 acq_freq         = cfg_entry; 
 acq_freq.name    = 'Acquisition frequency (of all colors) in Hz';
 acq_freq.tag     = 'acq_freq';       
@@ -192,7 +200,7 @@ msioi1.name = 'Read Multi-Spectral IOI';             % The display name
 msioi1.tag  = 'msioi1'; %Very important: tag is used when calling for execution
 msioi1.val  = {top_bin_dir treatment_mode redo1 shrinkage_choice output_path_choice ...
     session_choice save_choice memmapfileOn sess_min_image_files ...
-    color_number stim_cutoff acq_freq forceProcessingOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    color_number stim_cutoff minTimeBetweenStim acq_freq forceProcessingOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 msioi1.prog = @ioi_msioi_run;  % A function handle that will be called with the harvested job to run the computation
 msioi1.vout = @ioi_cfg_vout_msioi; % A function handle that will be called with the harvested job to determine virtual outputs
 msioi1.help = {'Module to create .nifti images from .bin images'
