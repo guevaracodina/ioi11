@@ -79,7 +79,7 @@ for SubjIdx=1:length(job.IOImat)
                 else
                     try
                         load(IOI.ROI.ROIfname);
-                    catch                       
+                    catch
                         ts1 = strfind(dir_ioimat,'Res');
                         ts2 = strfind(dir_ioimat,filesep);
                         ts3 = ts2(ts2>ts1);
@@ -221,37 +221,37 @@ for SubjIdx=1:length(job.IOImat)
                                                     norm2 = mean(tmp_d);
                                             end
                                             
-%                                             normalize_flow = 0;
-%                                             if normalize_flow
-%                                             %normalize flow -- not correct
-%                                             %way to do it; instead
-%                                             %calculate changes with respect
-%                                             %to baseline flow
-%                                             if isfield(IOI.color,'flow')
-%                                                 if IOI.color.eng(c1)==IOI.color.flow
-%                                                     tmp_d = tmp_d/mean(tmp_d); %or median
-%                                                 end
-%                                             end
-%                                             end
+                                            %                                             normalize_flow = 0;
+                                            %                                             if normalize_flow
+                                            %                                             %normalize flow -- not correct
+                                            %                                             %way to do it; instead
+                                            %                                             %calculate changes with respect
+                                            %                                             %to baseline flow
+                                            %                                             if isfield(IOI.color,'flow')
+                                            %                                                 if IOI.color.eng(c1)==IOI.color.flow
+                                            %                                                     tmp_d = tmp_d/mean(tmp_d); %or median
+                                            %                                                 end
+                                            %                                             end
+                                            %                                             end
                                             remove_jumps = 0;
                                             if remove_jumps
-                                            %remove jumps options:
-                                            OP.Sb = 4; %number of standard deviations
-                                            OP.Nr = 1/IOI.dev.TR; %number of points removed before and after
-                                            OP.Mp = 10/IOI.dev.TR; %size of gaps to be filled
-                                            OP.sf = 1/IOI.dev.TR; %sampling frequency
-                                            OP.ubf = 1; %use Butterworth filter
-                                            OP.bf = 0.01; %Butterworth HPF cutoff
-                                            OP.bo = 2; %Butterworth order
-                                            
-                                            %if ~isempty(rmi{i0})
-                                            if IOI.color.eng(c1) == IOI.color.flow
-                                                OP.ubf = 0;
-                                            else
-                                                OP.ubf = 1;
-                                            end
-                                            tmp_d = ioi_remove_jumps(tmp_d,OP);
-                                            %end
+                                                %remove jumps options:
+                                                OP.Sb = 4; %number of standard deviations
+                                                OP.Nr = 1/IOI.dev.TR; %number of points removed before and after
+                                                OP.Mp = 10/IOI.dev.TR; %size of gaps to be filled
+                                                OP.sf = 1/IOI.dev.TR; %sampling frequency
+                                                OP.ubf = 1; %use Butterworth filter
+                                                OP.bf = 0.01; %Butterworth HPF cutoff
+                                                OP.bo = 2; %Butterworth order
+                                                
+                                                %if ~isempty(rmi{i0})
+                                                if IOI.color.eng(c1) == IOI.color.flow
+                                                    OP.ubf = 0;
+                                                else
+                                                    OP.ubf = 1;
+                                                end
+                                                tmp_d = ioi_remove_jumps(tmp_d,OP);
+                                                %end
                                             end
                                         catch
                                             tmp_d = [];
@@ -263,18 +263,19 @@ for SubjIdx=1:length(job.IOImat)
                                                 tmp_d = ButterHPF(1/IOI.dev.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,tmp_d);
                                                 tmp_d = tmp_d + tmp_DC; %add back the DC component
                                             end
-                                            if LPF.lpf_gauss_On
-                                                K = get_K(1:length(tmp_d),LPF.fwhm1,IOI.dev.TR);
-                                                y = tmp_d;
-                                                %forward
-                                                y = ioi_filter_HPF_LPF_WMDL(K,y')';
-                                                %backward
-                                                %                                                 y = y(end:-1:1);
-                                                %                                                 y = ioi_filter_HPF_LPF_WMDL(K,y')';
-                                                %                                                 y = y(end:-1:1);
-                                                tmp_d = y;
+                                            if ~apply_lpf_on_flow_only || (apply_lpf_on_flow_only && IOI.color.eng(c1) == IOI.color.flow)
+                                                if LPF.lpf_gauss_On
+                                                    K = get_K(1:length(tmp_d),LPF.fwhm1,IOI.dev.TR);
+                                                    y = tmp_d;
+                                                    %forward
+                                                    y = ioi_filter_HPF_LPF_WMDL(K,y')';
+                                                    %backward
+                                                    %                                                 y = y(end:-1:1);
+                                                    %                                                 y = ioi_filter_HPF_LPF_WMDL(K,y')';
+                                                    %                                                 y = y(end:-1:1);
+                                                    tmp_d = y;
+                                                end
                                             end
-                                            
                                             %first_pass = 1;
                                             %second_pass = 0;
                                             pass_twice = 1;
@@ -348,13 +349,13 @@ for SubjIdx=1:length(job.IOImat)
                                                                     if job.mult_normalize_choice
                                                                         tmp1 = tmp1/norm2;
                                                                     else
-                                                                        tmp1 = tmp1/(norm1+tmp_median); 
+                                                                        tmp1 = tmp1/(norm1+tmp_median);
                                                                     end
-%                                                                     if isfield(IOI.color,'flow')
-%                                                                         if IOI.color.eng(c1)==IOI.color.flow
-%                                                                             tmp1 = tmp1/tmp_median; %normalization -- %change of flow with respect to baseline
-%                                                                         end
-%                                                                     end
+                                                                    %                                                                     if isfield(IOI.color,'flow')
+                                                                    %                                                                         if IOI.color.eng(c1)==IOI.color.flow
+                                                                    %                                                                             tmp1 = tmp1/tmp_median; %normalization -- %change of flow with respect to baseline
+                                                                    %                                                                         end
+                                                                    %                                                                     end
                                                                     %tmp_array_after = tmp_array_after + tmp1;
                                                                     %Gtmp_array_after = Gtmp_array_after + tmp1;
                                                                     ka = ka+1;
@@ -393,19 +394,19 @@ for SubjIdx=1:length(job.IOImat)
                                                         
                                                         if remove_stims_SD
                                                             if pass_cnt == 1
-%                                                                 first_pass = 0;
-%                                                             else
-%                                                                 %removeSeg = [];
+                                                                %                                                                 first_pass = 0;
+                                                                %                                                             else
+                                                                %                                                                 %removeSeg = [];
                                                                 %if ~isempty(tmp_array_after)
-                                                                    meanA = mean(Ma{r2,m1}{c1,s1});
-                                                                    tmpSeg = Sa{r2,m1}{c1,s1};
-                                                                    meanSeg = mean(tmpSeg,2);
-                                                                    meanSd = std(tmpSeg(:));
-                                                                    for a0=1:length(meanSeg)
-                                                                        if abs(meanSeg(a0)-meanA) > job.std_choice*meanSd %very strong criterion perhaps better to keep it at 2*meanSd
-                                                                            removeSeg = [removeSeg a0];
-                                                                        end
+                                                                meanA = mean(Ma{r2,m1}{c1,s1});
+                                                                tmpSeg = Sa{r2,m1}{c1,s1};
+                                                                meanSeg = mean(tmpSeg,2);
+                                                                meanSd = std(tmpSeg(:));
+                                                                for a0=1:length(meanSeg)
+                                                                    if abs(meanSeg(a0)-meanA) > job.std_choice*meanSd %very strong criterion perhaps better to keep it at 2*meanSd
+                                                                        removeSeg = [removeSeg a0];
                                                                     end
+                                                                end
                                                                 %end
                                                                 %second_pass = 1;
                                                             end
