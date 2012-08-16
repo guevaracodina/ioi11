@@ -18,7 +18,7 @@ session_choice      = ioi_dfg_session_choice;
 % Colors to include (OD,HbO,HbR,HbT,Flow)
 IC                  = ioi_dfg_include_colors(0,1,1,1,1);
 % Bandpass filtering
-bpf                 = ioi_bpf_cfg(1, [0.009 0.08], 8, 'ellip');
+bpf                 = ioi_bpf_cfg(1, [0.009 0.08], 4, 'butter');
 
 % % Bandpass filtering
 % BPFfreq             = cfg_entry;
