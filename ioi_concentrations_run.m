@@ -9,6 +9,8 @@ tmp_str_HbO = ['_' str_HbO '_'];
 tmp_str_HbR = ['_' str_HbR '_'];
 %basehbt1 = job.basehbt1;
 baseline_hbt = job.configuration.HbT0;
+baseline_hbo = job.configuration.HbO0;
+baseline_hbr = job.configuration.HbR0;
 RemoveRGY = job.RemoveRGY;
 try
     if isfield(job.normalization_choice,'select_norm_session')
@@ -25,7 +27,6 @@ for SubjIdx=1:length(job.IOImat)
         tic
         clear IOI
         [all_sessions selected_sessions] = ioi_get_sessions(job);
-        
         %Load IOI.mat information
         IOImat = job.IOImat{SubjIdx};
         [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
@@ -44,7 +45,9 @@ for SubjIdx=1:length(job.IOImat)
         end
         
         if ~isfield(IOI.res,'concOK') || job.force_redo
-            
+            IOI.conc.baseline_hbt = baseline_hbt;
+            IOI.conc.baseline_hbo = baseline_hbo;
+            IOI.conc.baseline_hbr = baseline_hbr;
             IOI.color.HbO = str_HbO;
             IOI.color.HbR = str_HbR;
             if ~(IOI.color.eng==str_HbO)
@@ -66,7 +69,7 @@ for SubjIdx=1:length(job.IOImat)
             else
                 whichSystem = 1; %new
             end
-            eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichSystem,whichCurve,baseline_hbt);
+            eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichSystem,whichCurve,baseline_hbt,baseline_hbo,baseline_hbr);
             
             %Loop over sessions
             if isfield(IOI,'sess_res')

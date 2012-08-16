@@ -41,10 +41,27 @@ basehbt1.num = [1 1];
 basehbt1.def  = @(val)ioi_get_defaults('conc1.baseline_hbt', val{:});
 basehbt1.help = {'Baseline total hemoglobin, in microM, default 100 microM.'};
 
+basehbr1      = cfg_entry;
+basehbr1.tag  = 'HbR0';
+basehbr1.name = 'HbR0';
+basehbr1.strtype  = 'r';
+basehbr1.num = [1 1];
+basehbr1.def  = @(val)ioi_get_defaults('conc1.baseline_hbr', val{:});
+basehbr1.help = {'Baseline deoxyhemoglobin, in microM, default 40 microM.'};
+
+basehbo1      = cfg_entry;
+basehbo1.tag  = 'HbO0';
+basehbo1.name = 'HbO0';
+basehbo1.strtype  = 'r';
+basehbo1.num = [1 1];
+basehbo1.def  = @(val)ioi_get_defaults('conc1.baseline_hbo', val{:});
+basehbo1.help = {'Baseline oxyhemoglobin, in microM, default 60 microM.'};
+
+
 configuration         = cfg_branch;
 configuration.tag     = 'configuration';
 configuration.name    = 'Configuration options';
-configuration.val     = {pathlength1 camera1 led1 basehbt1};
+configuration.val     = {pathlength1 camera1 led1 basehbt1 basehbo1 basehbr1};
 configuration.help    = {'Select values.'};
 
 IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('Conc');

@@ -67,6 +67,7 @@ HRF_session_choice.values = {HRF_global,HRF_select_session};
 HRF_session_choice.val    = {HRF_select_session};
 HRF_session_choice.help   = {'Choose session selection method'}';
 
+
 %%%%%%%%%%%%%
 
 HRF_respective         = cfg_branch;

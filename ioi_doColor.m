@@ -17,7 +17,7 @@ try
 end
 try
     if IOI.color.eng(c1) == IOI.color.laser
-        doColor = 0;
+        doColor = 1; %for debugging, will turn it off eventually
     end
 end
 try

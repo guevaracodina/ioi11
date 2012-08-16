@@ -13,7 +13,7 @@ session_choice = ioi_dfg_session_choice;
 
 normalize_choice      = cfg_menu;
 normalize_choice.tag  = 'normalize_choice';
-normalize_choice.name = 'Normalization choice';
+normalize_choice.name = 'Additive normalization choice';
 normalize_choice.labels = {'Median over window before','Time zero','Mean'};
 normalize_choice.values = {1,2,3};
 normalize_choice.val  = {1};
@@ -21,6 +21,18 @@ normalize_choice.help = {'Normalization choice. In one test,'
     'The mean standard deviation was higher by 10% or more'
     'when using time zero as the baseline, compared to taking '
     'an average (median) over the window before.'}';
+
+mult_normalize_choice      = cfg_menu;
+mult_normalize_choice.tag  = 'mult_normalize_choice';
+mult_normalize_choice.name = 'Multiplicative normalization choice';
+mult_normalize_choice.labels = {'Divide by constant','Divide by baseline of individual stim'};
+mult_normalize_choice.values = {1,0};
+mult_normalize_choice.val  = {0};
+mult_normalize_choice.help = {'For oxy, deoxy and total hemoglobin only, '
+    'choose to divide by a constant (e.g. 40, 60 or 100 microMolar'
+    'or to divide by a different value for each stim, '
+    'namely its baseline value in microMolar,'
+    'however, this value may be too volatile and give nonsensical results.'}';
 
 which_onset_type = ioi_dfg_which_onset_type;
 remove_stims = ioi_dfg_remove_stims;
@@ -91,6 +103,14 @@ remove_stims_SD.val  = {0};
 remove_stims_SD.help = {'Remove stims on SD criterion.'
     'This works in addition to and after other stims having been removed.'}';
 
+std_choice         = cfg_entry; 
+std_choice.name    = 'Choice of standard deviation threshold';
+std_choice.tag     = 'std_choice';       
+std_choice.strtype = 'r';
+std_choice.num     = [1 1];     
+std_choice.val     = {1};
+std_choice.help    = {'Choice of standard deviation threshold.'}';
+
 IC = ioi_dfg_include_colors(0,1,1,1,0);
 
 % Executable Branch
@@ -98,9 +118,10 @@ stim_mean1      = cfg_exbranch;       % This is the branch that has information 
 stim_mean1.name = 'Average stimulations';             % The display name
 stim_mean1.tag  = 'stim_mean1'; %Very important: tag is used when calling for execution
 stim_mean1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ...
-    ROI_choice window_after window_before window_offset normalize_choice hpf_butter ...
+    ROI_choice window_after window_before window_offset normalize_choice ...
+    mult_normalize_choice hpf_butter ...
     lpf_choice IC which_onset_type ...
-    remove_stims use_stims remove_stims_SD extract_HRF fit_3_gamma include_nlinfit ...
+    remove_stims use_stims remove_stims_SD std_choice extract_HRF fit_3_gamma include_nlinfit ...
     generate_global generate_figures save_figures add_error_bars ...
     remove_segment_drift };    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 stim_mean1.prog = @ioi_stim_mean_run;  % A function handle that will be called with the harvested job to run the computation
