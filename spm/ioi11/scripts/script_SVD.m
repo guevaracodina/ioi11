@@ -1,10 +1,10 @@
 %% Singular Value Decomposition script
 % loading data
 tic
-IOImat = 'E:\Edgar\Data\IOS_Results\12_07_17,CC01\GLMfcIOS\IOI.mat';
+IOImat = 'E:\Edgar\Data\IOS_Results\12_07_17,NC01\IOI.mat';
 load(IOImat)
 % Session number
-s1 = 2;
+s1 = 1;
 % HbO (5) HbR (6) Flow (7)
 c1 = 7;
 % Get colors to iIOI.fcIOS.masknclude information
@@ -127,7 +127,7 @@ disp(['Data written to disk in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 % load(fullfile(pathName,sprintf('corrMatrix_S%02d_C%d.mat',s1,c1)),'rMatrix');
 % disp(['Correlation matrix loaded in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 % cleanup
-clear y vol
+% clear y vol
 
 %% Create memory/mapped objects
 % only the nSVD largest vectors
