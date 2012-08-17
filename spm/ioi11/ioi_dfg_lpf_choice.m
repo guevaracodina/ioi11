@@ -10,10 +10,19 @@ fwhm1.strtype = 'r';
 fwhm1.num     = [1 1];
 fwhm1.help    = {'FWHM in seconds.'};
 
+apply_lpf_on_flow_only      = cfg_menu;
+apply_lpf_on_flow_only.tag  = 'apply_lpf_on_flow_only';
+apply_lpf_on_flow_only.name = 'Apply low pass filter on flow only';
+apply_lpf_on_flow_only.labels = {'Yes','No'};
+apply_lpf_on_flow_only.values = {1,0};
+apply_lpf_on_flow_only.val  = {1};
+apply_lpf_on_flow_only.help = {'Apply low pass filter on flow only.'
+    'If choose No, and an LPF is chosen, it will be applied to all variables.'}';
+
 lpf_gauss_On         = cfg_branch;
 lpf_gauss_On.tag     = 'lpf_gauss_On';
 lpf_gauss_On.name    = 'Gaussian LP filter';
-lpf_gauss_On.val     = {fwhm1};
+lpf_gauss_On.val     = {fwhm1 apply_lpf_on_flow_only};
 lpf_gauss_On.help    = {'Gaussian low-pass filter '}';
 % '(applied forward then backward so that it does not create a time shift)'}';
 

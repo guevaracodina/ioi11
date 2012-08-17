@@ -87,8 +87,10 @@ for SubjIdx=1:length(job.IOImat)
                                     y = ButterHPF(1/IOI.dev.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,y);
                                 end
                                 if LPF.lpf_gauss_On
-                                    K = get_K(1:nt,LPF.fwhm1,IOI.dev.TR);
-                                    y = ioi_filter_HPF_LPF_WMDL(K,y);
+                                    if ~LPF.apply_lpf_on_flow_only || (LPF.apply_lpf_on_flow_only && IOI.color.eng(c1) == IOI.color.flow)                                       
+                                        K = get_K(1:nt,LPF.fwhm1,IOI.dev.TR);
+                                        y = ioi_filter_HPF_LPF_WMDL(K,y);
+                                    end
                                 end
                                 
                                 %

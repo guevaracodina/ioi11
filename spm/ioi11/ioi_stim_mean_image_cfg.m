@@ -30,7 +30,7 @@ use_stims = ioi_dfg_use_stims;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 hpf_butter = ioi_dfg_hpf_butter(1,0.01,3);
-lpf_choice = ioi_dfg_lpf_choice(0,0.67);
+lpf_choice = ioi_dfg_lpf_choice(1,0.67);
    
 remove_segment_drift      = cfg_menu;
 remove_segment_drift.tag  = 'remove_segment_drift';

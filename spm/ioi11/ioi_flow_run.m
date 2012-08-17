@@ -62,7 +62,11 @@ for SubjIdx=1:length(job.IOImat)
                                     vol = spm_vol(fname);
                                     nx = vol(1).dim(1);
                                     ny = vol(1).dim(2);
-                                    nt = vol(1).dim(3);
+                                    if length(vol) == 1
+                                        nt = vol(1).dim(3);
+                                    else
+                                        nt = length(vol); 
+                                    end
                                     % NOTE: nt is not necessarily the largest
                                     % dimension of vol //EGC
                                     % nt = length(vol); 
