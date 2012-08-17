@@ -263,8 +263,8 @@ for SubjIdx=1:length(job.IOImat)
                                                 tmp_d = ButterHPF(1/IOI.dev.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,tmp_d);
                                                 tmp_d = tmp_d + tmp_DC; %add back the DC component
                                             end
-                                            if ~apply_lpf_on_flow_only || (apply_lpf_on_flow_only && IOI.color.eng(c1) == IOI.color.flow)
-                                                if LPF.lpf_gauss_On
+                                            if LPF.lpf_gauss_On
+                                                if ~LPF.apply_lpf_on_flow_only || (LPF.apply_lpf_on_flow_only && IOI.color.eng(c1) == IOI.color.flow)
                                                     K = get_K(1:length(tmp_d),LPF.fwhm1,IOI.dev.TR);
                                                     y = tmp_d;
                                                     %forward

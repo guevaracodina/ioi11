@@ -1,4 +1,5 @@
-function eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichSystem,whichCurve,baseline_hbt,baseline_hbo,baseline_hbr,debug)
+function eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,...
+    whichSystem,whichCurve,baseline_hbt,baseline_hbo,baseline_hbr,debug)
 
 %	This function estimates epsilon * D, it takes into account the camera
 %	response, the leds spectra and uses a pathlength factor either set from
@@ -26,7 +27,7 @@ c_led(3,:) = private_reinterpolate_lambda(lambda1, lambda2, npoints, hardware.le
 c_pathlength = ioi_path_length_factor(lambda1, lambda2, npoints, c_tot*1000, whichCurve);
 [c_ext_hbo,c_ext_hbr] = ioi_get_extinctions(lambda1,lambda2,npoints);
 
-if nargin>6
+if nargin==9
     figure;
     subplot(2,2,1)
     plot(lambda_vec,c_led(1,:),'r')

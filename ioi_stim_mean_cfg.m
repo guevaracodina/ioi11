@@ -85,15 +85,6 @@ add_error_bars.help = {'Add error bars.'}';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hpf_butter = ioi_dfg_hpf_butter(1,0.01,3);
 lpf_choice = ioi_dfg_lpf_choice(0,0.67);
-
-apply_lpf_on_flow_only      = cfg_menu;
-apply_lpf_on_flow_only.tag  = 'apply_lpf_on_flow_only';
-apply_lpf_on_flow_only.name = 'Apply low pass filter on flow only';
-apply_lpf_on_flow_only.labels = {'Yes','No'};
-apply_lpf_on_flow_only.values = {1,0};
-apply_lpf_on_flow_only.val  = {0};
-apply_lpf_on_flow_only.help = {'Apply low pass filter on flow only.'
-    'If choose No, and an LPF is chosen, it will be applied to all variables.'}';
     
 remove_segment_drift      = cfg_menu;
 remove_segment_drift.tag  = 'remove_segment_drift';
@@ -129,7 +120,7 @@ stim_mean1.tag  = 'stim_mean1'; %Very important: tag is used when calling for ex
 stim_mean1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ...
     ROI_choice window_after window_before window_offset normalize_choice ...
     mult_normalize_choice hpf_butter ...
-    lpf_choice apply_lpf_on_flow_only IC which_onset_type ...
+    lpf_choice IC which_onset_type ...
     remove_stims use_stims remove_stims_SD std_choice extract_HRF fit_3_gamma include_nlinfit ...
     generate_global generate_figures save_figures add_error_bars ...
     remove_segment_drift };    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
