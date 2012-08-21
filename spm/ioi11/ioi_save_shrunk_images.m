@@ -18,6 +18,9 @@ for s1=1:length(IOI.sess_res)
             for c1=1:length(IOI.color.eng)
                 doColor = ioi_doColor(IOI,c1,IC);
                 fname0 = {};
+                if IOI.color.eng(c1) == 'F'
+                    test = 0;
+                end
                 if doColor
                     if IOI.color.eng(c1) == 'T'
                         doHbT = 1;

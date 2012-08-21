@@ -13,23 +13,9 @@ function out = ioi_correlation_map_run(job)
 for SubjIdx=1:length(job.IOImat)
     try
         tic
-        clear IOI
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-        if isfield(job.IOImatCopyChoice,'IOImatCopy')
-            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-            newDir = fullfile(dir_ioimat,newDir);
-            if ~exist(newDir,'dir'),mkdir(newDir); end
-            IOImat = fullfile(newDir,'IOI.mat');
-        else
-            newDir = dir_ioimat;
-        end
-        try
-            load(IOImat);
-        catch
-            load(job.IOImat{SubjIdx});
-        end
+        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);  
+
         if ~isfield(IOI.fcIOS.SPM, 'GLMOK') % GLM OK
             disp(['No GLM regression available for subject ' int2str(SubjIdx) ' ... skipping correlation map']);
         else
@@ -45,7 +31,7 @@ for SubjIdx=1:length(job.IOImat)
                 end
                 
                 % File name where correlation data is saved
-                IOI.fcIOS.corr(1).fname = fullfile(newDir,'seed_based_fcIOS_map.mat');
+                IOI.fcIOS.corr(1).fname = fullfile(dir_ioimat,'seed_based_fcIOS_map.mat');
                 
                 % Loop over sessions
                 for s1=1:length(IOI.sess_res)
@@ -186,12 +172,12 @@ for SubjIdx=1:length(job.IOImat)
                                                         [~, oldName, oldExt] = fileparts(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
                                                         newName = [oldName '_fcIOS_map'];
                                                         % Save as EPS
-                                                        spm_figure('Print', 'Graphics', fullfile(newDir,newName));
+                                                        spm_figure('Print', 'Graphics', fullfile(dir_ioimat,newName));
                                                         % Save as PNG
-                                                        print(h, '-dpng', fullfile(newDir,newName), '-r300');
+                                                        print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
                                                         % Save as nifti
-                                                        ioi_save_nifti(tempCorrMap, fullfile(newDir,[newName oldExt]), vx);
-                                                        IOI.fcIOS.corr(1).corrMapName{r1}{s1, c1} = fullfile(newDir,[newName oldExt]);
+                                                        ioi_save_nifti(tempCorrMap, fullfile(dir_ioimat,[newName oldExt]), vx);
+                                                        IOI.fcIOS.corr(1).corrMapName{r1}{s1, c1} = fullfile(dir_ioimat,[newName oldExt]);
                                                     end
                                                 end
                                                 

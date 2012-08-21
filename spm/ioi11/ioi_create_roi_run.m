@@ -52,23 +52,9 @@ end
 
 for SubjIdx=1:length(job.IOImat)
     try
-        clear IOI
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-        if isfield(job.IOImatCopyChoice,'IOImatCopy')
-            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-            newDir = fullfile(dir_ioimat,newDir);
-            if ~exist(newDir,'dir'),mkdir(newDir); end
-            IOImat = fullfile(newDir,'IOI.mat');
-        else
-            newDir = dir_ioimat;
-        end
-        try
-            load(IOImat);
-        catch
-            load(job.IOImat{SubjIdx});
-        end
+        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);        
+        
         if ~isfield(IOI.res,'ROIOK') || job.force_redo
             if job.RemovePreviousROI
                 try
@@ -233,7 +219,7 @@ for SubjIdx=1:length(job.IOImat)
                         if index < 10, str0 = '0'; else str0 = ''; end
                         str = [str0 int2str(index)];
                         % Save nifti files in ROI sub-folder //EGC
-                        fname_mask = fullfile(newDir,[fil1 '_ROI_' str '.nii']);
+                        fname_mask = fullfile(dir_ioimat,[fil1 '_ROI_' str '.nii']);
                         IOI.res.ROI{index}.fname = fname_mask;
                         ioi_save_nifti(mask, fname_mask, vx);
                     end
@@ -264,7 +250,7 @@ for SubjIdx=1:length(job.IOImat)
                         if index < 10, str0 = '0'; else str0 = ''; end
                         str = [str0 int2str(index)];
                         % Save nifti files in ROI sub-folder //EGC
-                        fname_mask = fullfile(newDir,[fil1 '_ROI_' str '_' int2str(i1) 'x' int2str(i2) '.nii']);
+                        fname_mask = fullfile(dir_ioimat,[fil1 '_ROI_' str '_' int2str(i1) 'x' int2str(i2) '.nii']);
                         IOI.res.ROI{index}.fname = fname_mask;
                         ioi_save_nifti(mask, fname_mask, vx);
                     end
@@ -279,12 +265,6 @@ for SubjIdx=1:length(job.IOImat)
                 end
             end
             IOI.res.ROIOK = 1;
-            if isfield(job.IOImatCopyChoice,'IOImatCopy')
-                newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-                newDir = fullfile(dir_ioimat,newDir);
-                if ~exist(newDir,'dir'),mkdir(newDir); end
-                IOImat = fullfile(newDir,'IOI.mat');
-            end
             save(IOImat,'IOI');
         end
         disp(['Subject ' int2str(SubjIdx) ' complete']);

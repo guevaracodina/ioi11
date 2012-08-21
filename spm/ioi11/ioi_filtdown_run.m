@@ -9,26 +9,8 @@ function out = ioi_filtdown_run(job)
 for SubjIdx=1:length(job.IOImat)
     try
         tic
-        clear IOI
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        load(IOImat);
-        
-        % IOI copy/overwrite
-        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-        if isfield(job.IOImatCopyChoice,'IOImatCopy')
-            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-            newDir = fullfile(dir_ioimat,newDir);
-            if ~exist(newDir,'dir'),mkdir(newDir); end
-            IOImat = fullfile(newDir,'IOI.mat');
-        else
-            newDir = dir_ioimat;
-        end
-        try
-            load(IOImat);
-        catch
-            load(job.IOImat{SubjIdx});
-        end
+        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);
         
         if ~isfield(IOI.fcIOS.filtNdown,'filtNdownOK') || job.force_redo
             % Get shrinkage options
@@ -113,7 +95,7 @@ for SubjIdx=1:length(job.IOImat)
                                     end
                                     spm_progress_bar('Clear');
                                     % Saving images
-                                    sessionDir = [newDir filesep 'S' sprintf('%02d',s1)];
+                                    sessionDir = [dir_ioimat filesep 'S' sprintf('%02d',s1)];
                                     if ~exist(sessionDir,'dir'),mkdir(sessionDir); end
                                     filtNdownfnameWholeImage = fullfile(sessionDir,[IOI.subj_name '_OD_' IOI.color.eng(c1) '_filtNdown_' sprintf('%05d',1) 'to' sprintf('%05d',IOI.sess_res{s1}.n_frames) '.nii']);
                                     ioi_save_nifti(filtNdownY, filtNdownfnameWholeImage, [1 1 samples2skip/fs]);
@@ -213,7 +195,7 @@ for SubjIdx=1:length(job.IOImat)
                                             [oldDir, oldName, oldExt] = fileparts(IOI.res.ROI{1,1}.fname);
                                             newName = [sprintf('%s_R%02d_S%02d_C%d',IOI.subj_name,r1,s1,c1) '_filtNdown'];
                                             % Save as PNG
-                                            print(h, '-dpng', fullfile(newDir,newName), '-r300');
+                                            print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
                                             % --------------------------
                                         catch
                                             if msg_ColorNotOK
@@ -294,7 +276,7 @@ for SubjIdx=1:length(job.IOImat)
                                                     [oldDir, oldName, oldExt] = fileparts(IOI.res.ROI{1,1}.fname);
                                                     newName = [sprintf('%s_R%02d_S%02d_C%d',IOI.subj_name,r1,s1,c1) '_filtNdown'];
                                                     % Save as PNG
-                                                    print(h, '-dpng', fullfile(newDir,newName), '-r300');
+                                                    print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
                                                     % --------------------------
                                                     
                                                 catch
@@ -325,15 +307,7 @@ for SubjIdx=1:length(job.IOImat)
             % Filter and Downsampling succesful!
             IOI.fcIOS.filtNdown(1).filtNdownOK = true;
             
-            % IOI copy/overwrite
-            if isfield(job.IOImatCopyChoice,'IOImatCopy')
-                newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-                newDir = fullfile(dir_ioimat,newDir);
-                if ~exist(newDir,'dir'),mkdir(newDir); end
-                IOImat = fullfile(newDir,'IOI.mat');
-            end
-            [dir1 dummy] = fileparts(IOImat);
-            filtNdownfname = fullfile(dir1,'filtNdown.mat');
+            filtNdownfname = fullfile(dir_ioimat,'filtNdown.mat');
             save(filtNdownfname,'filtNdownROI','filtNdownBrain');
             IOI.fcIOS.filtNdown.fname = filtNdownfname;
             % Desired downsampling frequency, it could be different to real

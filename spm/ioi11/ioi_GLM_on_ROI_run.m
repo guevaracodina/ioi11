@@ -22,23 +22,10 @@ show_mse = job.show_mse;
 for SubjIdx=1:length(job.IOImat)
     try
         tic
-        clear IOI ROI SPM
+        clear ROI SPM
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};               
-        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-        if isfield(job.IOImatCopyChoice,'IOImatCopy')
-            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-            newDir = fullfile(dir_ioimat,newDir);
-            if ~exist(newDir,'dir'),mkdir(newDir); end
-            IOImat = fullfile(newDir,'IOI.mat');
-        else
-            newDir = dir_ioimat;
-        end
-        try
-            load(IOImat);
-        catch
-            load(job.IOImat{SubjIdx});
-        end
+        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);
+        
         if ~isfield(IOI.res,'ROIOK')
             disp(['No ROI available for subject ' int2str(SubjIdx) ' ... skipping series extraction']);
         else
@@ -48,7 +35,7 @@ for SubjIdx=1:length(job.IOImat)
                 if ~isfield(IOI.res,'GLMOK') || job.force_redo
                     if isfield(IOI,'X'), IOI = rmfield(IOI,'X'); end
                     if save_figures
-                        dir_fig = fullfile(newDir,'fig');
+                        dir_fig = fullfile(dir_ioimat,'fig');
                         if ~exist(dir_fig,'dir'),mkdir(dir_fig);end
                     end
                     %loop over sessions

@@ -19,23 +19,8 @@ elDir = job.elDir;
 for SubjIdx=1:length(job.IOImat)
     try
         tic
-        clear IOI
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-        if isfield(job.IOImatCopyChoice,'IOImatCopy')
-            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-            newDir = fullfile(dir_ioimat,newDir);
-            if ~exist(newDir,'dir'),mkdir(newDir); end
-            IOImat = fullfile(newDir,'IOI.mat');
-        else
-            newDir = dir_ioimat;
-        end
-        try
-            load(IOImat);
-        catch
-            load(job.IOImat{SubjIdx});
-        end
+        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);  
         
         if ~isfield(IOI.res,'OnsetsOK') || job.force_redo
             %loop over sessions
@@ -59,7 +44,7 @@ for SubjIdx=1:length(job.IOImat)
                                     elDir0 = elDir{SubjIdx};
                                 end
                             end
-                            [pkh ons dur] = ioi_get_onsets_from_electrophysiology(IOI,s1,E,newDir,elDir0); %pk in seconds; pkh in arbitrary units
+                            [pkh ons dur] = ioi_get_onsets_from_electrophysiology(IOI,s1,E,dir_ioimat,elDir0); %pk in seconds; pkh in arbitrary units
                             ot = 1;
                             IOI.sess_res{s1}.E = E; %Electrophysiology structure used for detection
                             IOI.sess_res{s1}.names{ot} = E.electrophysiology_onset_name;

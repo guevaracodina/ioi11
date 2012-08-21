@@ -14,23 +14,9 @@ function out = ioi_fc_GLM_on_ROI_run(job)
 for SubjIdx=1:length(job.IOImat)
     try
         tic
-        clear IOI ROI SPM
+        clear ROI SPM
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-        if isfield(job.IOImatCopyChoice,'IOImatCopy')
-            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-            newDir = fullfile(dir_ioimat,newDir);
-            if ~exist(newDir,'dir'),mkdir(newDir); end
-            IOImat = fullfile(newDir,'IOI.mat');
-        else
-            newDir = dir_ioimat;
-        end
-        try
-            load(IOImat);
-        catch
-            load(job.IOImat{SubjIdx});
-        end
+        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);
         
         if ~isfield(IOI.res,'ROIOK')
             disp(['No ROI available for subject ' int2str(SubjIdx) ' ... skipping series extraction']);
@@ -51,11 +37,11 @@ for SubjIdx=1:length(job.IOImat)
                         colorNames = fieldnames(IOI.color);
                         % Load filtered downsampled signals
                         filtNdownData = load(IOI.fcIOS.filtNdown.fname);
-                        fnameROIregress = fullfile(newDir,'ROIregress.mat');
+                        fnameROIregress = fullfile(dir_ioimat,'ROIregress.mat');
                         % Loop over sessions
                         for s1=1:length(IOI.sess_res)
                             if all_sessions || sum(s1==selected_sessions)
-                                sessionDir = [newDir filesep 'S' sprintf('%02d',s1)];
+                                sessionDir = [dir_ioimat filesep 'S' sprintf('%02d',s1)];
                                 if ~exist(sessionDir,'dir'),mkdir(sessionDir); end
                                 % Loop over available colors
                                 for c1=1:length(IOI.sess_res{s1}.fname)

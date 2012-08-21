@@ -25,24 +25,9 @@ end
 for SubjIdx=1:length(job.IOImat)
     try
         tic
-        clear IOI
         [all_sessions selected_sessions] = ioi_get_sessions(job);
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-        if isfield(job.IOImatCopyChoice,'IOImatCopy')
-            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-            newDir = fullfile(dir_ioimat,newDir);
-            if ~exist(newDir,'dir'),mkdir(newDir); end
-            IOImat = fullfile(newDir,'IOI.mat');
-        else
-            newDir = dir_ioimat;
-        end
-        try
-            load(IOImat);
-        catch
-            load(job.IOImat{SubjIdx});
-        end
+        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);
         
         if ~isfield(IOI.res,'concOK') || job.force_redo
             IOI.conc.baseline_hbt = baseline_hbt;
@@ -180,7 +165,7 @@ for SubjIdx=1:length(job.IOImat)
                                 fname = IOI.sess_res{s1}.fname{hasRGY(1)}{f1};
                                 if isfield(job.IOImatCopyChoice,'IOImatCopy')
                                     [dir0 fil0 ext0] = fileparts(fname);
-                                    fdir = fullfile(newDir,['S' gen_num_str(s1,2)]);
+                                    fdir = fullfile([dir_ioimat,['S' gen_num_str(s1,2)]);
                                     if ~exist(fdir,'dir'), mkdir(fdir); end
                                     fname = fullfile(fdir,[fil0 ext0]);
                                 end

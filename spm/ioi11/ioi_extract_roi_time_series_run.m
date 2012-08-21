@@ -10,25 +10,9 @@ function out = ioi_extract_roi_time_series_run(job)
 for SubjIdx=1:length(job.IOImat)
     try
         tic
-        clear IOI ROI
+        clear ROI
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        
-        % IOI copy/overwrite
-        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-        if isfield(job.IOImatCopyChoice,'IOImatCopy')
-            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-            newDir = fullfile(dir_ioimat,newDir);
-            if ~exist(newDir,'dir'),mkdir(newDir); end
-            IOImat = fullfile(newDir,'IOI.mat');
-        else
-            newDir = dir_ioimat;
-        end
-        try
-            load(IOImat);
-        catch
-            load(job.IOImat{SubjIdx});
-        end
+        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);  
         
         if ~isfield(IOI.res,'ROIOK')
             disp(['No ROI available for subject ' int2str(SubjIdx) ' ... skipping series extraction']);
@@ -39,14 +23,8 @@ for SubjIdx=1:length(job.IOImat)
                 % Extract ROI
                 [ROI IOI] = ioi_extract_core(IOI,job,mask);
                 IOI.res.seriesOK = 1;
-                if isfield(job.IOImatCopyChoice,'IOImatCopy')
-                    newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-                    newDir = fullfile(dir_ioimat,newDir);
-                    if ~exist(newDir,'dir'),mkdir(newDir); end
-                    IOImat = fullfile(newDir,'IOI.mat');
-                end
-                [dir1 dummy] = fileparts(IOImat);
-                ROIfname = fullfile(dir1,'ROI.mat');
+                
+                ROIfname = fullfile(dir_ioimat,'ROI.mat');
                 save(ROIfname,'ROI');
                 IOI.ROI.ROIfname = ROIfname;
                 save(IOImat,'IOI');
@@ -69,14 +47,8 @@ for SubjIdx=1:length(job.IOImat)
                     job.extractingBrainMask = false;
                     % Brain mask time series extraction succesful!
                     IOI.fcIOS.mask.seriesOK = true;
-                    if isfield(job.IOImatCopyChoice,'IOImatCopy')
-                        newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-                        newDir = fullfile(dir_ioimat,newDir);
-                        if ~exist(newDir,'dir'),mkdir(newDir); end
-                        IOImat = fullfile(newDir,'IOI.mat');
-                    end
-                    [dir1 dummy] = fileparts(IOImat);
-                    fnameSeries = fullfile(dir1,'brainMaskSeries.mat');
+
+                    fnameSeries = fullfile(dir_ioimat,'brainMaskSeries.mat');
                     save(fnameSeries,'brainMaskSeries');
                     % identify in IOI the file name of the time series
                     IOI.fcIOS.mask.fnameSeries = fnameSeries;

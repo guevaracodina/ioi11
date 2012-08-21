@@ -19,14 +19,13 @@ which_ons = 1; %which onset type to use
 for SubjIdx=1:length(job.IOImat)
     try
         tic
-        clear IOI ROI onsets_list M
+        clear ROI onsets_list M
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        load(IOImat);
+        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);  
+
         window_after = round(job.window_after/IOI.dev.TR);
         window_before = round(job.window_before/IOI.dev.TR);
         
-             [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
             if save_figures
                 dir_fig = fullfile(dir_ioimat,'fig');
                 if ~exist(dir_fig,'dir'),mkdir(dir_fig);end
@@ -251,12 +250,6 @@ for SubjIdx=1:length(job.IOImat)
                 % %                     else
                 % %
                 % %                     end
-            end
-            if isfield(job.IOImatCopyChoice,'IOImatCopy')
-                newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-                newDir = fullfile(dir_ioimat,newDir);
-                if ~exist(newDir,'dir'),mkdir(newDir); end
-                IOImat = fullfile(newDir,'IOI.mat');
             end
             save(IOImat,'IOI');
         %end

@@ -25,26 +25,12 @@ skip_overlap = job.skip_overlap;
 for SubjIdx=1:length(job.IOImat)
     try
         tic
-        clear IOI onsets_list M
+        clear onsets_list M
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-        if isfield(job.IOImatCopyChoice,'IOImatCopy')
-            newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-            newDir = fullfile(dir_ioimat,newDir);
-            if ~exist(newDir,'dir'),mkdir(newDir); end
-            IOImat = fullfile(newDir,'IOI.mat');
-        else
-            newDir = dir_ioimat;
-        end
-        try
-            load(IOImat);
-        catch
-            load(job.IOImat{SubjIdx});
-        end
-        
+        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);  
+                
         if ~isfield(IOI.res,'cineOK') || job.force_redo
-            cineDir = fullfile(newDir,dir_cine);
+            cineDir = fullfile(dir_ioimat,dir_cine);
             if ~exist(cineDir,'dir'), mkdir(cineDir); end
             %get stimulation information - Careful, here onset duration is ignored!
             if IC.include_HbT

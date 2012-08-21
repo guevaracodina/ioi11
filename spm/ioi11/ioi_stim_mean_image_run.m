@@ -23,28 +23,25 @@ Z.save_figures = job.save_figures;
 Z.generate_figures = job.generate_figures;
 Z.normalize_choice = job.normalize_choice;
 Z.interactive_mode = job.interactive_mode;
-Z.superpose_anatomical = job.superpose_anatomical;
+if isfield(job.superpose_anatomical, 'SuperposeOn')
+   Z.superpose_anatomical = 1;
+   Z.superpose_threshold = job.superpose_anatomical.SuperposeOn.threshold;
+else
+    Z.superpose_anatomical = 0;
+end
 Z.superpose_ROIs = job.superpose_ROIs;
 for SubjIdx=1:length(job.IOImat)
     try
+        tic
         clear IOI ROI onsets_list M
         %Load IOI.mat information
-        IOImat = job.IOImat{SubjIdx};
-        load(IOImat);
+        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);
         %check whether to skip any calculations, and create new IOI directory
         if ~isfield(IOI.res,'meanimageOK') || job.force_redo
-            [dir_ioimat dummy] = fileparts(job.IOImat{SubjIdx});
-            if isfield(job.IOImatCopyChoice,'IOImatCopy')
-                newDir = job.IOImatCopyChoice.IOImatCopy.NewIOIdir;
-                newDir = fullfile(dir_ioimat,newDir);
-                if ~exist(newDir,'dir'),mkdir(newDir); end
-                IOImat = fullfile(newDir,'IOI.mat');
-            else
-                newDir = dir_ioimat;
-            end
+            
             %create directory for figures
             if Z.save_figures
-                dir_fig = fullfile(newDir,'fig');
+                dir_fig = fullfile(dir_ioimat,'fig');
                 if ~exist(dir_fig,'dir'),mkdir(dir_fig);end
             end
             if ~isfield(IOI,'dev')
@@ -93,33 +90,33 @@ for SubjIdx=1:length(job.IOImat)
                                     end
                                 end
                                 
-                                %
-                                %                                              %normalize flow
-                                %                                              if isfield(IOI.color,'flow')
-                                %                                                  if IOI.color.eng(c1)==IOI.color.flow
-                                %                                                      tmp_d = tmp_d/mean(tmp_d); %or median
-                                %                                                  end
-                                %                                              end
-                                
-                                %                                             %remove jumps options:
-                                %                                             OP.Sb = 4; %number of standard deviations
-                                %                                             OP.Nr = 1/IOI.dev.TR; %number of points removed before and after
-                                %                                             OP.Mp = 10/IOI.dev.TR; %size of gaps to be filled
-                                %                                             OP.sf = 1/IOI.dev.TR; %sampling frequency
-                                %                                             OP.ubf = 1; %use Butterworth filter
-                                %                                             OP.bf = 0.01; %Butterworth HPF cutoff
-                                %                                             OP.bo = 2; %Butterworth order
-                                %
-                                %                                             %if ~isempty(rmi{i0})
-                                %                                             if IOI.color.eng(c1) == IOI.color.flow
-                                %                                                 OP.ubf = 0;
-                                %                                             else
-                                %                                                 OP.ubf = 1;
-                                %                                             end
-                                %                                             tmp_d = ioi_remove_jumps(tmp_d,OP);
-                                %end
-                                
-                                %y = permute(reshape(y,nt,nx,ny),[2 3 1]);
+% 
+%                          %normalize flow
+%                          if isfield(IOI.color,'flow')
+%                              if IOI.color.eng(c1)==IOI.color.flow
+%                                  tmp_d = tmp_d/mean(tmp_d); %or median
+%                              end
+%                          end
+% 
+%                         %remove jumps options:
+%                         OP.Sb = 4; %number of standard deviations
+%                         OP.Nr = 1/IOI.dev.TR; %number of points removed before and after
+%                         OP.Mp = 10/IOI.dev.TR; %size of gaps to be filled
+%                         OP.sf = 1/IOI.dev.TR; %sampling frequency
+%                         OP.ubf = 1; %use Butterworth filter
+%                         OP.bf = 0.01; %Butterworth HPF cutoff
+%                         OP.bo = 2; %Butterworth order
+% 
+%                         %if ~isempty(rmi{i0})
+%                         if IOI.color.eng(c1) == IOI.color.flow
+%                             OP.ubf = 0;
+%                         else
+%                             OP.ubf = 1;
+%                         end
+%                         tmp_d = ioi_remove_jumps(tmp_d,OP);
+% end
+% 
+% y = permute(reshape(y,nt,nx,ny),[2 3 1]);
                                 
                             end
                             %loop over onset types
@@ -133,8 +130,12 @@ for SubjIdx=1:length(job.IOImat)
                                         Z.file_anat = IOI.res.file_anat; %.nii
                                     end
                                     %include ROIs
-                                    if Z.superpose_ROIs
-                                        Z.ROIname = IOI.ROIname;
+                                    try
+                                        if Z.superpose_ROIs
+                                            Z.ROI = IOI.res.ROI;
+                                        end
+                                    catch
+                                        disp('Could not find ROIname');
                                     end
                                     [IOI,D,Z] = ioi_average_image_core(IOI,y,Z);
                                     Ma = squeeze(reshape(D.Ma,[nx ny]));
@@ -144,24 +145,30 @@ for SubjIdx=1:length(job.IOImat)
                                     IOI.Avg.kb{s1}{c1,m1} = D.kb;
                                     IOI.Avg.ka2{s1}{c1,m1} = D.ka2;
                                     IOI.Avg.kb2{s1}{c1,m1} = D.kb2;
-                                    fname = fullfile(dir_fig,['Avg_S' int2str(s1) IOI.color.eng(c1) int2str(m1)]);
-                                    IOI.Avg.fname{s1}{c1,m1} = fname;                                    
-                                    tit = ['Average, Session' int2str(s1) ', Color ' IOI.color.eng(c1) ', Stimulus ' int2str(m1)];
-                                    ioi_save_images(Ma,fname,[1 1 1],Z,tit);
-                                    fname = fullfile(dir_fig,['Std_S' int2str(s1) IOI.color.eng(c1) int2str(m1)]);
-                                    IOI.Avg.fname_std{s1}{c1,m1} = fname;                                    
-                                    tit = ['Std, Session' int2str(s1) ', Color ' IOI.color.eng(c1) ', Stimulus ' int2str(m1)];
-                                    ioi_save_images(Da,fname,[1 1 1],Z,tit);
-                                    fname = fullfile(dir_fig,['T_S' int2str(s1) IOI.color.eng(c1) int2str(m1)]);
-                                    IOI.Avg.fname_t{s1}{c1,m1} = fname;                                    
-                                    tit = ['Tstat, Session' int2str(s1) ', Color ' IOI.color.eng(c1) ', Stimulus ' int2str(m1)];
-                                    ioi_save_images(Ta,fname,[1 1 1],Z,tit);
-%                                     try
-%                                         %Superpose onto anatomical image
-%                                         vol = spm_vol(IOI.res.file_anat);
-%                                         A.im_anat = spm_read_vols(vol);
-%                                         ioi_save_images_anat(Ta,fname,[1 1 1],Z,tit,A);
-%                                     end
+                                    Z.do_superpose = 0;
+                                    if isfield(IOI, 'subj_name')
+                                        sname = [IOI.subj_name '_'];
+                                    else
+                                        sname = '';
+                                    end
+                                    if job.output_avg_std
+                                        fname = fullfile(dir_fig,[sname 'Avg_S' int2str(s1) IOI.color.eng(c1) int2str(m1)]);
+                                        IOI.Avg.fname{s1}{c1,m1} = fname;
+                                        tit = [sname 'Average, Session' int2str(s1) ', Color ' IOI.color.eng(c1) ', Stimulus ' int2str(m1)];
+                                        ioi_save_images(Ma,fname,[1 1 1],Z,tit);
+                                        Z.do_superpose = 0;
+                                        fname = fullfile(dir_fig,[sname 'Std_S' int2str(s1) IOI.color.eng(c1) int2str(m1)]);
+                                        IOI.Avg.fname_std{s1}{c1,m1} = fname;
+                                        tit = [sname 'Std, Session' int2str(s1) ', Color ' IOI.color.eng(c1) ', Stimulus ' int2str(m1)];
+                                        ioi_save_images(Da,fname,[1 1 1],Z,tit);
+                                    end
+                                    if job.output_avg_std || ~spatial_LPF
+                                        Z.do_superpose = 1;
+                                        fname = fullfile(dir_fig,[sname 'T_S' int2str(s1) IOI.color.eng(c1) int2str(m1)]);
+                                        IOI.Avg.fname_t{s1}{c1,m1} = fname;
+                                        tit = [sname 'Tstat, Session' int2str(s1) ', Color ' IOI.color.eng(c1) ', Stimulus ' int2str(m1)];
+                                        ioi_save_images(Ta,fname,[1 1 1],Z,tit);
+                                    end
                                     %Filtered images
                                     if spatial_LPF
                                         Ks.k1 = nx;
@@ -172,9 +179,10 @@ for SubjIdx=1:length(job.IOImat)
                                         Ma = ioi_spatial_LPF('lpf',Ks,Ma);
                                         Da = ioi_spatial_LPF('lpf',Ks,Da);
                                         Ta = Ma./(Da/sqrt(D.ka));
-                                        fname = fullfile(dir_fig,['FiltT_S' int2str(s1) IOI.color.eng(c1) int2str(m1)]);
+                                        Z.do_superpose = 1;
+                                        fname = fullfile(dir_fig,[sname 'FiltT_S' int2str(s1) IOI.color.eng(c1) int2str(m1)]);
                                         IOI.Avg.fname_filt_t{s1}{c1,m1} = fname;
-                                        tit = ['FiltTstat, Session' int2str(s1) ', Color ' IOI.color.eng(c1) ', Stimulus ' int2str(m1)];
+                                        tit = [sname 'FiltTstat, Session' int2str(s1) ', Color ' IOI.color.eng(c1) ', Stimulus ' int2str(m1)];
                                         ioi_save_images(Ta,fname,[1 1 1],Z,tit);
                                     end                                    
                                 end
@@ -182,12 +190,11 @@ for SubjIdx=1:length(job.IOImat)
                         end
                     end
                 end
-            end
-            
+            end            
             IOI.res.meanimageOK = 1;            
             save(IOImat,'IOI');
-        end
-        
+        end    
+        toc
         disp(['Subject ' int2str(SubjIdx) ' complete']);
         out.IOImat{SubjIdx} = IOImat;
     catch exception
