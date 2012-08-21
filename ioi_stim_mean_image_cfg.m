@@ -60,6 +60,14 @@ interactive_mode.help = {'Interactive mode - let''s user choose stims.'
     'The user can try a different set of stims, move ahead'
     'to the next image, or return to the automatic mode.'}';
 
+output_avg_std      = cfg_menu;
+output_avg_std.tag  = 'output_avg_std';
+output_avg_std.name = 'Detailed output';
+output_avg_std.labels = {'Yes','No'};
+output_avg_std.values = {1,0};
+output_avg_std.val  = {0};
+output_avg_std.help = {'Produce detailed output: average, standard deviation.'}';
+
 %%%%%%%%%%%%%%%%%%
 shrinkage_choice = ioi_dfg_shrinkage_choice;
 %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,7 +86,7 @@ stim_mean_image1.val  = {IOImat redo1 IOImatCopyChoice interactive_mode shrinkag
     spatial_LPF session_choice window_start_delay ...
     window_after window_before window_offset normalize_choice hpf_butter ...
     lpf_choice IC which_onset_type remove_stims use_stims remove_stims_SD ...
-    generate_figures save_figures remove_segment_drift ...
+    generate_figures save_figures remove_segment_drift output_avg_std ...
     superpose_anatomical superpose_ROIs};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 stim_mean_image1.prog = @ioi_stim_mean_image_run;  % A function handle that will be called with the harvested job to run the computation
 stim_mean_image1.vout = @ioi_cfg_vout_stim_mean_image; % A function handle that will be called with the harvested job to determine virtual outputs
