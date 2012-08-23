@@ -66,7 +66,7 @@ for SubjIdx=1:length(job.IOImat)
                 IOI = ioi_save_shrunk_images(IOI,job,SH,dir_ioimat);
             end
             %restric onsets
-            [IOI onsets_list] = ioi_restrict_onsets(IOI,job,Z.rmi,Z.ust);
+            [IOI onsets_list pars_list] = ioi_restrict_onsets(IOI,job,Z.rmi,Z.ust);
             %Loop over sessions
             for s1=1:length(IOI.sess_res)
                 if all_sessions || sum(s1==selected_sessions)

@@ -22,6 +22,20 @@ normalize_choice.help = {'Normalization choice. In one test,'
     'when using time zero as the baseline, compared to taking '
     'an average (median) over the window before.'}';
 
+%***************byCong**************
+Weigh_amplitude_of_threshold      = cfg_menu;
+Weigh_amplitude_of_threshold.tag  = 'Weigh_amplitude_of_threshold';
+Weigh_amplitude_of_threshold.name = 'Weigh_threshold';
+Weigh_amplitude_of_threshold.labels = {'Yes','No'};
+Weigh_amplitude_of_threshold.values = {1,0};
+Weigh_amplitude_of_threshold.val  = {0};
+Weigh_amplitude_of_threshold.help = {'Note: this is done when the amplitude of thrshold was changed during one session.'
+    'When the amplitude of the threshold was changed slect Yes'
+    'When the amplitude of the threshold was not changed select No'}';
+%***************end
+
+
+
 mult_normalize_choice      = cfg_menu;
 mult_normalize_choice.tag  = 'mult_normalize_choice';
 mult_normalize_choice.name = 'Multiplicative normalization choice';
@@ -118,7 +132,7 @@ stim_mean1      = cfg_exbranch;       % This is the branch that has information 
 stim_mean1.name = 'Average stimulations';             % The display name
 stim_mean1.tag  = 'stim_mean1'; %Very important: tag is used when calling for execution
 stim_mean1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ...
-    ROI_choice window_after window_before window_offset normalize_choice ...
+    ROI_choice window_after window_before window_offset normalize_choice Weigh_amplitude_of_threshold ...
     mult_normalize_choice hpf_butter ...
     lpf_choice IC which_onset_type ...
     remove_stims use_stims remove_stims_SD std_choice extract_HRF fit_3_gamma include_nlinfit ...

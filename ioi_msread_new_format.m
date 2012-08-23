@@ -181,11 +181,15 @@ try
                 stims = ConvertedData.Data.MeasuredData(6).Data;
                 stims_dt= ConvertedData.Data.MeasuredData(6).Property(3).Value;
                 ons0 = stims_dt*find(stims>stim_cutoff);
+                par0 = stims(stims>stim_cutoff);
                 ons1 = find(diff(ons0)>=minTimeBetweenStim);
+                %par1 = par0(ons1);
                 if ~isempty(ons1)
                     ons = ons0([1 1+ons1']);
+                    par = par0([1 1+ons1']);
                 else
                     ons = []; %in case we have a rest session
+                    par = [];
                 end
                 clear names onsets durations parameters
                 %Converted to seconds, rather than frame number
@@ -194,7 +198,7 @@ try
                     onsets{stim_index}=ons;
                     durations{stim_index}=ones(1,length(ons));
                     try
-                        parameters{stim_index}=stims(round(ons0/stims_dt));
+                        parameters{stim_index}=par;
                     catch
                         parameters{stim_index}=[];
                     end

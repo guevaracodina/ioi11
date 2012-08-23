@@ -20,6 +20,7 @@ if isfield(job,'remove_stims_SD')
 else
     remove_stims_SD = 1;
 end
+Weigh_amplitude_of_threshold = job.Weigh_amplitude_of_threshold;
 remove_segment_drift = job.remove_segment_drift;
 fit_3_gamma = job.fit_3_gamma;
 extract_HRF = job.extract_HRF;
@@ -93,7 +94,7 @@ for SubjIdx=1:length(job.IOImat)
                     end
                 end
                 %restric onsets
-                [IOI onsets_list] = ioi_restrict_onsets(IOI,job,rmi,ust);
+                [IOI onsets_list pars_list] = ioi_restrict_onsets(IOI,job,rmi,ust);
                 %                 onsets_list=onsets_list{2};
                 %Check whether there is the same number of onset types in
                 %each session; this is a
@@ -337,6 +338,11 @@ for SubjIdx=1:length(job.IOImat)
                                                                     else
                                                                         tmp1 = tmp1-tmp_median;
                                                                     end
+                                                                    
+                                                                    if Weigh_amplitude_of_threshold
+                                                                        tmp1 = tmp1/pars_list{s1}{m1}(u1);
+                                                                    end
+                                                                    
                                                                     %normalize to get percent change
                                                                     if job.mult_normalize_choice
                                                                         tmp1 = tmp1/norm2;
