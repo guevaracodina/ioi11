@@ -165,7 +165,7 @@ for SubjIdx=1:length(job.IOImat)
                                 fname = IOI.sess_res{s1}.fname{hasRGY(1)}{f1};
                                 if isfield(job.IOImatCopyChoice,'IOImatCopy')
                                     [dir0 fil0 ext0] = fileparts(fname);
-                                    fdir = fullfile([dir_ioimat,['S' gen_num_str(s1,2)]);
+                                    fdir = fullfile(dir_ioimat,['S' gen_num_str(s1,2)]);
                                     if ~exist(fdir,'dir'), mkdir(fdir); end
                                     fname = fullfile(fdir,[fil0 ext0]);
                                 end
