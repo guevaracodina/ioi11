@@ -20,6 +20,8 @@ for SubjIdx=1:length(job.IOImat)
             if ~isfield(IOI.res,'seriesOK') || job.force_redo
                 % Get mask for each ROI
                 [IOI mask] = ioi_get_ROImask(IOI,job);
+                % We are not extracting brain mask here
+                job.extractingBrainMask = false;
                 % Extract ROI
                 [ROI IOI] = ioi_extract_core(IOI,job,mask);
                 IOI.res.seriesOK = 1;

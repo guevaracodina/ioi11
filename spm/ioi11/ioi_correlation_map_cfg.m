@@ -20,7 +20,8 @@ session_choice          = ioi_dfg_session_choice;
 % Colors to include (OD,HbO,HbR,HbT,Flow)
 IC                      = ioi_dfg_include_colors(0,1,1,1,1);
 % Generate / save figures
-[generate_figures save_figures] = ioi_dfg_generate_figures;
+[generate_figures ...
+    save_figures]       = ioi_dfg_generate_figures;
 
 % p-Values
 pValue                  = cfg_entry;
@@ -52,11 +53,20 @@ fisherZ.values          = {0, 1};
 fisherZ.val             = {1};                              % Default value
 fisherZ.help            = {'Choose whether to perform a Fisher''s z transform of correlation coefficients. The correlation coefficient need to be transformed to the normal distribution by Fisher''s z transform before performing the random effect t-tests'}';
 
+% Seeds correlation matrix
+seed2seedCorrMat        = cfg_menu;
+seed2seedCorrMat.tag    = 'seed2seedCorrMat';
+seed2seedCorrMat.name   = 'seed2seedCorrMat';
+seed2seedCorrMat.labels = {'No', 'Yes'};
+seed2seedCorrMat.values = {0, 1};
+seed2seedCorrMat.val    = {1};                              % Default value
+seed2seedCorrMat.help   = {'Choose whether to compute a seed-to-seed correlation matrix'}';
+
 % Executable Branch
 correlation_map1        = cfg_exbranch; % This is the branch that has information about how to run this module
 correlation_map1.name   = 'Functional connectivity (fcIOS) map'; % The display name
 correlation_map1.tag    = 'correlation_map1'; %Very important: tag is used when calling for execution
-correlation_map1.val    = {IOImat redo1 IOImatCopyChoice ROI_choice session_choice IC pValue fisherZ generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+correlation_map1.val    = {IOImat redo1 IOImatCopyChoice ROI_choice session_choice IC pValue fisherZ seed2seedCorrMat generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 correlation_map1.prog   = @ioi_correlation_map_run; % A function handle that will be called with the harvested job to run the computation
 correlation_map1.vout   = @ioi_cfg_vout_correlation_map; % A function handle that will be called with the harvested job to determine virtual outputs
 correlation_map1.help   = {'A functional connectivity (fcIOS) map is made by correlating the seed/ROI with all other brain (non-masked) pixels'}';
