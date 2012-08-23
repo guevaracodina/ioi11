@@ -15,7 +15,7 @@ for s1=1:length(IOI.sess_res)
                     fname_list = IOI.sess_res{s1}.fname{c1};
                     %initialize
                     
-                    if job.extractBrainMask
+                    if job.extractBrainMask && job.extractingBrainMask
                         nROI = 1; % Only 1 brain mask
                     else
                         nROI = 1:length(IOI.res.ROI); % All the ROIs
