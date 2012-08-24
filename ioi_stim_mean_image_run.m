@@ -119,11 +119,26 @@ for SubjIdx=1:length(job.IOImat)
 % y = permute(reshape(y,nt,nx,ny),[2 3 1]);
                                 
                             end
+                            
+                            if job.avg_over_onset_types
+                                last_m1 = 1;
+                                tmp_ons = [];
+                                for m2 = 1:length(onsets_list{s1})
+                                    if isempty(job.which_onset_type) || any(m2==job.which_onset_type)
+                                        tmp_ons = [tmp_ons  onsets_list{s1}{m2}];
+                                    end
+                                end
+                                Z.ons = tmp_ons;
+                            else
+                                last_m1 = length(onsets_list{s1});
+                            end
                             %loop over onset types
-                            for m1=1:length(onsets_list{s1})
-                                if isempty(job.which_onset_type) || any(m1==job.which_onset_type)
+                            for m1=1:last_m1
+                                if isempty(job.which_onset_type) || any(m1==job.which_onset_type) || job.avg_over_onset_types
                                     %fill structure to pass
-                                    Z.ons = onsets_list{s1}{m1};
+                                    if ~job.avg_over_onset_types
+                                        Z.ons = onsets_list{s1}{m1};
+                                    end
                                     Z.s1 = s1; Z.m1 = m1; Z.c1 = c1;
                                     %include anatomical image
                                     if Z.superpose_anatomical
