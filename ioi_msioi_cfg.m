@@ -103,6 +103,9 @@ output_path_choice.val    = {output_path_default};
 output_path_choice.help   = {'Choose output_path_choice'}';
 
 shrinkage_choice = ioi_dfg_shrinkage_choice;
+%****************by Cong on 12/08/23
+flow_shrinkage_choice=ioi_dfg_flow_shrinkage_choice;
+%***********end
 session_choice = ioi_dfg_session_choice;
 
 sess_min_image_files         = cfg_entry; 
@@ -198,7 +201,7 @@ forceProcessingOn.help   = {'Force processing of bad sessions: attempt will be'
 msioi1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 msioi1.name = 'Read Multi-Spectral IOI';             % The display name
 msioi1.tag  = 'msioi1'; %Very important: tag is used when calling for execution
-msioi1.val  = {top_bin_dir treatment_mode redo1 shrinkage_choice output_path_choice ...
+msioi1.val  = {top_bin_dir treatment_mode redo1 shrinkage_choice flow_shrinkage_choice output_path_choice ...
     session_choice save_choice memmapfileOn sess_min_image_files ...
     color_number stim_cutoff minTimeBetweenStim acq_freq forceProcessingOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 msioi1.prog = @ioi_msioi_run;  % A function handle that will be called with the harvested job to run the computation
