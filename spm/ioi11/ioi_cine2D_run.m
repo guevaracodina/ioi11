@@ -1,4 +1,5 @@
 function out = ioi_cine2D_run(job)
+interactive_mode = 1;
 [all_sessions selected_sessions] = ioi_get_sessions(job);
 %filters
 HPF = ioi_get_HPF(job);
@@ -17,6 +18,10 @@ IC = job.IC;
 
 normalize_choice = job.normalize_choice;
 show_movie = job.show_movie;
+%*************by Cong on 12/08/28
+show_images=job.generate_images;
+save_images=job.save_images;
+%**************end
 dir_cine = 'Cine_movies';
 high_limit = job.high_limit/100;
 low_limit = job.low_limit/100;
@@ -27,8 +32,8 @@ for SubjIdx=1:length(job.IOImat)
         tic
         clear onsets_list M
         %Load IOI.mat information
-        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);  
-                
+        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);
+        
         if ~isfield(IOI.res,'cineOK') || job.force_redo
             cineDir = fullfile(dir_ioimat,dir_cine);
             if ~exist(cineDir,'dir'), mkdir(cineDir); end
@@ -76,7 +81,7 @@ for SubjIdx=1:length(job.IOImat)
                     if group_onset_types
                         tmp = [];
                         for m1=1:length(onsets_list{s1})
-                             %if any(m1==which_onset_type)
+                            %if any(m1==which_onset_type)
                             tmp = [tmp onsets_list{s1}{m1}];
                             %    end
                         end
@@ -88,19 +93,19 @@ for SubjIdx=1:length(job.IOImat)
                         %loop over onset types
                         for m1=1:length(onsets_list{s1})
                             if any(m1==which_onset_type)
-                            if length(onsets_list{s1}{m1}) > 1
-                                tmp = [];
-                                for o1=1:(length(onsets_list{s1}{m1})-1)
-                                    if onsets_list{s1}{m1}(o1+1)-onsets_list{s1}{m1}(o1) > job.window_after+job.window_before %in seconds
-                                        tmp = [tmp onsets_list{s1}{m1}(o1)];
-                                    else
-                                        skipped = skipped + 1;
+                                if length(onsets_list{s1}{m1}) > 1
+                                    tmp = [];
+                                    for o1=1:(length(onsets_list{s1}{m1})-1)
+                                        if onsets_list{s1}{m1}(o1+1)-onsets_list{s1}{m1}(o1) > job.window_after+job.window_before %in seconds
+                                            tmp = [tmp onsets_list{s1}{m1}(o1)];
+                                        else
+                                            skipped = skipped + 1;
+                                        end
                                     end
+                                    %always keep the last one
+                                    tmp = [tmp onsets_list{s1}{m1}(end)];
+                                    onsets_list{s1}{m1} = tmp;
                                 end
-                                %always keep the last one
-                                tmp = [tmp onsets_list{s1}{m1}(end)];
-                                onsets_list{s1}{m1} = tmp;
-                            end    
                             end
                         end
                     end
@@ -108,7 +113,7 @@ for SubjIdx=1:length(job.IOImat)
                     cnt = [];
                     for m1=1:length(onsets_list{s1})
                         if any(m1==which_onset_type)
-                        cnt = [cnt length(onsets_list{s1}{m1})];
+                            cnt = [cnt length(onsets_list{s1}{m1})];
                         end
                     end
                     disp(['Onset counts, session ' int2str(s1)]);
@@ -218,7 +223,6 @@ for SubjIdx=1:length(job.IOImat)
                                         end
                                     end
                                     %divide by number of found segments (ka = kb always in this module)
-                                    
                                     %save movie
                                     d = tmp_array_after/ka;
                                     if job.downFact > 1
@@ -226,6 +230,51 @@ for SubjIdx=1:length(job.IOImat)
                                         tmpd = zeros(size(d,1),size(d,2),nT);
                                         for j0=1:nT
                                             tmpd(:,:,j0) = mean(d(:,:,(1:job.downFact)+job.downFact*(j0-1)),3);
+                                            %*******by Cong on 12/08/28
+                                            if show_images
+                                                Images=figure; imagesc(tmpd(:,:,j0)); colorbar;
+                                                tit=['Cine images' gen_num_str(s1,2) ' ' IOI.color.eng(c1) ' onset' int2str(m1)];
+                                                title(tit);
+                                                close(Images);
+                                            end
+                                            if save_images
+                                                if j0 == 1
+                                                    keep_going = 1;
+                                                    first_pass = 1;
+                                                end
+                                                other_first_pass = 1;
+                                                while keep_going || (other_first_pass && j0 > 1)
+                                                    Images=figure;
+                                                    if first_pass
+                                                        imagesc(tmpd(:,:,j0));
+                                                        first_pass = 0;
+                                                    else
+                                                        imagesc(tmpd(:,:,j0),clims);
+                                                        other_first_pass = 0;
+                                                    end
+                                                    colorbar;
+                                                    tit1=['Cine images' gen_num_str(s1,2) ' ' IOI.color.eng(c1) ' onset' int2str(m1) ' frame' int2str(j0)];
+                                                    title(tit1);
+                                                    tit=['Cine_images' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '_frame' int2str(j0)];
+                                                    filename=[cineDir,tit];
+                                                    print(Images, '-dpng', [filename '.png'], '-r300');
+                                                    %saveas(Images,filename, 'tif');
+                                                    saveas(Images,filename, 'fig');
+                                                    if keep_going && interactive_mode
+                                                        keep_going = spm_input('Change clims ',1,'y/n',[1 0]);
+                                                        if keep_going
+                                                            clims1 = spm_input('Enter min value ','+1');
+                                                            clims2 = spm_input('Enter max value ','+1');
+                                                        end
+                                                        clims = [clims1 clims2];
+                                                        
+                                                        interactive_mode = ~spm_input('Leave interactive mode ','+1','y/n',[1 0]);
+                                                    end
+                                                    close(Images);
+                                                end
+                                                
+                                            end
+                                            %************end
                                         end
                                         d = tmpd;
                                     end

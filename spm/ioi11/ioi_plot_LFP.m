@@ -5,7 +5,7 @@ lp0 = linspace(0,n0/(IOI.res.sfel),n0/DS);
 h = figure; plot(lp0,el(1:DS:end)/IOI.res.sfel,'k');
 xlabel('time (s)')
 ylabel('LFP (mV)')
-title(['LFP: Session ' int2str(s1)'])
+title(['LFP: Session ' int2str(s1)])
 if save
     print(h, '-dpng', [fname '.png'], '-r300');
     saveas(h,[fname '.fig']);

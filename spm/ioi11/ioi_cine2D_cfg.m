@@ -110,6 +110,25 @@ show_movie.values = {1,0};
 show_movie.val  = {1};
 show_movie.help = {'Show movie. In either case, the movie will be saved.'}';
 
+%*********by Cong on 12/08/28
+generate_images      = cfg_menu;
+generate_images.tag  = 'generate_images';
+generate_images.name = 'Show images';
+generate_images.labels = {'Yes','No'};
+generate_images.values = {1,0};
+generate_images.val  = {0};
+generate_images.help = {'Show images.'}';
+
+save_images      = cfg_menu;
+save_images.tag  = 'save_images';
+save_images.name = 'Save images';
+save_images.labels = {'Yes','No'};
+save_images.values = {1,0};
+save_images.val  = {1};
+save_images.help = {'Save images.'}';
+
+%**********************end
+
 downFact      = cfg_entry;
 downFact.tag  = 'downFact';
 downFact.name = 'Downsampling factor';
@@ -126,7 +145,7 @@ cine2D1.val  = {IOImat redo1 IOImatCopyChoice session_choice shrinkage_choice do
     stim_choice window_after window_before window_offset skip_overlap ...
     normalize_choice group_onset_types which_onset_type ...
     high_limit low_limit IC ...
-    hpf_butter lpf_choice show_movie };    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    hpf_butter lpf_choice show_movie generate_images save_images};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 cine2D1.prog = @ioi_cine2D_run;  % A function handle that will be called with the harvested job to run the computation
 cine2D1.vout = @ioi_cfg_vout_cine2D; % A function handle that will be called with the harvested job to determine virtual outputs
 cine2D1.help = {'Generate a 2D movie'

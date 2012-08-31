@@ -69,6 +69,7 @@ try
         IOI.color.yellow = str_yellow;
         IOI.color.laser = str_laser;
         IOI.res.shrinkageOn = 0; %no shrinkage of images
+        IOI.res.flowShrinkageOn = 0; %no flow shrinkage of images
 %         IOI.dev.TR = TR;
     end
 
@@ -317,6 +318,32 @@ try
                         K.k2 = NY;
                         K = ioi_spatial_LPF('set', K);
                     end
+%                     %************by Cong on 12/08/24                
+%                     %flow shrink if required                
+%                     [flow_shrinkage_choice SH] = ioi_get_flow_shrinkage_choice(job);
+%                      IOI.res.flowShrinkageOn = flow_shrinkage_choice; 
+%                     if flow_shrinkage_choice
+%                         % Only if shrinkage is chosen //EGC
+%                         IOI.res.flow_shrink_x = SH.shrink_x;
+%                         IOI.res.flow_shrink_y = SH.shrink_y;                    
+%                     end
+%                     
+%                     NX = nx;
+%                     NY = ny;
+%                     if flow_shrinkage_choice
+%                         nx = floor(NX/SH.shrink_x);
+%                         if dupOn
+%                             ny = floor(NY/(SH.shrink_y/2));
+%                         else
+%                             ny = floor(NY/SH.shrink_y);
+%                         end
+%                         K.radius = SH.shrink_x;
+%                         K.k1 = NX;
+%                         K.k2 = NY;
+%                         K = ioi_spatial_LPF('set', K);
+%                     end
+%                     
+%                     %*****************end
                     
                     %create large memmapfile for Y, R, G images (several GB)
                     fmem_name = 'all_images.dat';
@@ -351,10 +378,39 @@ try
                         si = iC+1; %start index
                         ei = iC+nImages; %end index
                         %create an array for laser
+                        [flow_shrinkage_choice SH] = ioi_get_flow_shrinkage_choice(job);
+                        IOI.res.flowShrinkageOn = flow_shrinkage_choice;
                         if shrinkage_choice && ~isempty(regexp(color_order,'L','once'))
                             % Check if laser is recorded
-                            laser_array = zeros(NX,NY,nImages);
+                            %************by Cong on 12/08/24
+                            %flow shrink if required
+
+                            if flow_shrinkage_choice
+                                %                     if flow_shrinkage_choice
+                                % Only if shrinkage is chosen //EGC
+                                IOI.res.flow_shrink_x = SH.shrink_x;
+                                IOI.res.flow_shrink_y = SH.shrink_y;
+                            end
+                            
+                            %                             NX = nx;
+                            %                             NY = ny;
+                            if flow_shrinkage_choice
+                                flow_nx = floor(NX/SH.shrink_x);
+                                if dupOn
+                                    flow_ny = floor(NY/(SH.shrink_y/2));
+                                else
+                                    flow_ny = floor(NY/SH.shrink_y);
+                                end
+                                K.radius = SH.shrink_x;
+                                K.k1 = NX;
+                                K.k2 = NY;
+                                K = ioi_spatial_LPF('set', K);
+                                laser_array = zeros(flow_nx,flow_ny,nImages);
+                            else
+                                laser_array = zeros(NX,NY,nImages);
+                            end
                         end
+                        %**********end
                         sess.si = [sess.si si];
                         sess.ei = [sess.ei ei];
                         image_str_start = gen_num_str(si,nzero_padding);
@@ -388,7 +444,7 @@ try
                                     else
                                         % tmp_image{tcol} does not change
                                     end
-                                    if shrinkage_choice
+                                    if shrinkage_choice 
                                         % ioi_MYimresize replaces imresize
                                         tmp_image{tcol} = ioi_MYimresize(tmp_image{tcol}, [nx ny]);
                                         %                                         try
@@ -409,9 +465,18 @@ try
 %                                             tmp_image{tcol} = tmp_image{tcol}((SH.shrink_x/2+1):SH.shrink_x:(end-(SH.shrink_x/2)),(SH.shrink_y/2+1):SH.shrink_y:(end-(SH.shrink_y/2)));
 %                                         end
                                     end
+%*********************************************By Cong on 12/08/29
                                 else
+                                    if flow_shrinkage_choice 
+%                                      tmp_image{tcol} = ioi_MYimresize(tmp_image{tcol}, [flow_nx flow_ny]);
+                                     tmp_image{tcol} = ioi_MYimresize(images{frames(frames(:,1)==(fr1+iC*nColors),2)},[flow_nx flow_ny]);
+                                    else 
+                                        %****************end
+                                      tmp_image{tcol} = images{frames(frames(:,1)==(fr1+iC*nColors),2)};
+                                    end
+ 
                                     %laser -- do not shrink now
-                                    tmp_image{tcol} = images{frames(frames(:,1)==(fr1+iC*nColors),2)};
+                                    
                                 end
                             else
                                 %missing frame: tmp_image{tcol} does not change, so the
