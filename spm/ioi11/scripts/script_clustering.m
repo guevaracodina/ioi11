@@ -1,12 +1,13 @@
-%% Singular Value Decomposition script
+%% Clustering/linkage script
+addpath(genpath('D:\spm8\toolbox\ioi11'))
 % loading data
 tic
-IOImat = 'E:\Edgar\Data\IOS_Results\12_07_17,CC01\GLMfcIOS\IOI.mat';
+IOImat = 'E:\Edgar\Data\IOS_Results\12_07_24,RS01\IOI.mat';
 load(IOImat)
 % Session number
 s1 = 1;
 % HbO (5) HbR (6) Flow (7)
-c1 = 5;
+c1 = 6;
 % Get colors to iIOI.fcIOS.masknclude information
 colorNames = fieldnames(IOI.color);
 
@@ -57,7 +58,7 @@ clear y vol
 
 %% k-means clustering
 % Number of clusters to form
-nClusters       = 10;
+nClusters       = 12;
 % Number of iterations
 nRep            = 10;
 % Type of distance metric
@@ -65,53 +66,48 @@ distanceType    = 'correlation';
 % Linkage method
 linkageMethod   = 'weighted';
 % Number of independent runs
-nIter = 20;
+nIter = 1;
 
-IDX = zeros([size(yMatrix,1) nIter]);
-groupsK = zeros([nIter, nClusters]);
-
-for i = 1:nIter,
-    fprintf('Computing k-means clustering for subject %s, session: %02d (%s)...\n',...
-        IOI.subj_name,s1,colorNames{1+c1})
-    tic
-    IDX(:,i) = kmeans(yMatrix, nClusters, 'distance', distanceType, 'replicates', nRep);
-    IDX(:,i) = ioi_sort_clusters(IDX(:,i));
-    for j = 1:nClusters,
-        groupsK(i,j)=numel(find(IDX(:,i)==j));
-    end
-    groupsK(i,:) = sort(groupsK(i,:));
-    fprintf('k-means iter%d computed in: %s\n', i, datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS'));
-end
+% IDX = zeros([size(yMatrix,1) nIter]);
+% groupsK = zeros([nIter, nClusters]);
+% 
+% for i = 1:nIter,
+%     fprintf('Computing k-means clustering for subject %s, session: %02d (%s)...\n',...
+%         IOI.subj_name,s1,colorNames{1+c1})
+%     tic
+%     IDX(:,i) = kmeans(yMatrix, nClusters, 'distance', distanceType, 'replicates', nRep);
+%     IDX(:,i) = ioi_sort_clusters(IDX(:,i));
+%     for j = 1:nClusters,
+%         groupsK(i,j)=numel(find(IDX(:,i)==j));
+%     end
+%     groupsK(i,:) = sort(groupsK(i,:));
+%     fprintf('k-means iter%d computed in: %s\n', i, datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS'));
+% end
 
 %% Display k-means clustering
-h = figure; 
-set(gcf,'color','w')
-set(gcf,'name',sprintf('%s S%02d C%d (%s) k-means\n',...
-    IOI.subj_name,s1,c1,colorNames{1+c1}))
-colormap([0 0 0; hsv(nClusters)]); 
-for i = 1:nIter,
-    yTmp = zeros(size(ySlice));
-    yTmp(brainMask) = IDX(:,i);
-    subplot(ceil(sqrt(nIter)), round(nIter/sqrt(nIter)), i)
-    imagesc(yTmp); axis image; axis off
-%     title(sprintf('%s S%02d C%d (%s) k-means\n',...
-%         IOI.subj_name,s1,c1,colorNames{1+c1}),...
-%         'interpreter', 'none', 'FontSize', 14)
-    title(sprintf('Run: %d',i))
-        if i == nIter
-        colorbar
-    end
-end
-newName = sprintf('%s_S%02d_C%d_(%s)_kMeansRuns.PNG',IOI.subj_name,s1,c1,colorNames{1+c1});
-    % Save as PNG
-print(h, '-dpng', '-r300', fullfile(pathName,newName));
+% h = figure; 
+% set(gcf,'color','w')
+% set(gcf,'name',sprintf('%s S%02d C%d (%s) k-means\n',...
+%     IOI.subj_name,s1,c1,colorNames{1+c1}))
+% colormap([0 0 0; hsv(nClusters)]); 
+% for i = 1:nIter,
+%     yTmp = zeros(size(ySlice));
+%     yTmp(brainMask) = IDX(:,i);
+%     subplot(ceil(sqrt(nIter)), round(nIter/sqrt(nIter)), i)
+%     imagesc(yTmp); axis image; axis off
+%     title(sprintf('Run: %d',i))
+%         if i == nIter
+%             colorbar
+%         end
+% end
+% newName = sprintf('%s_S%02d_C%d_(%s)_kMeansRuns.PNG',IOI.subj_name,s1,c1,colorNames{1+c1});
+%     % Save as PNG
+% print(h, '-dpng', '-r300', fullfile(pathName,newName));
     
 
 %% Using clusterdata (hierarchical clustering)
 % (performs all of the necessary steps for you. You do not need to execute the
 % pdist, linkage, or cluster functions separately.)
-addpath(genpath('D:\spm8\toolbox\ioi11'))
-
 T2 = zeros([size(yMatrix,1) nIter]);
 Z2 = zeros([size(yMatrix,1)-1 3 nIter]);
 groupsClusterData = zeros([nIter, nClusters]);
@@ -131,19 +127,20 @@ for i = 1:nIter,
 end
 
 %% Display dendogram
-h = figure;
-set(h, 'color', 'w')
-[H2, T3] = dendrogram(Z2, nClusters);
-title('Dendrogram','interpreter', 'none', 'FontSize', 14)
-set(H2, 'LineWidth', 2);
-set(gca, 'FontSize', 12);
-xlabel('Cluster', 'FontSize', 12)
-ylabel('Distance', 'FontSize', 12)
-newName = sprintf('%s_S%02d_C%d_(%s)_HierarClustDendogram.PNG',IOI.subj_name,s1,c1,colorNames{1+c1});
-% Save as PNG
-print(h, '-dpng', '-r300', fullfile(pathName,newName));
+% h = figure;
+% set(h, 'color', 'w')
+% [H2, T3] = dendrogram(Z2, nClusters);
+% title('Dendrogram','interpreter', 'none', 'FontSize', 14)
+% set(H2, 'LineWidth', 2);
+% set(gca, 'FontSize', 12);
+% xlabel('Cluster', 'FontSize', 12)
+% ylabel('Distance', 'FontSize', 12)
+% newName = sprintf('%s_S%02d_C%d_(%s)_HierarClustDendogram.PNG',IOI.subj_name,s1,c1,colorNames{1+c1});
+% % Save as PNG
+% print(h, '-dpng', '-r300', fullfile(pathName,newName));
 
 %% Display hierarchical clustering
+newName = sprintf('%s_S%02d_C%d_(%s)_HierarClustRuns.PNG',IOI.subj_name,s1,c1,colorNames{1+c1});
 h = figure; 
 set(h,'color','w')
 set(h,'name',sprintf('%s S%02d C%d (%s) hierarchical clustering\n',...
@@ -154,12 +151,16 @@ for i = 1:nIter,
     yTmp(brainMask) = T2(:,i);
     subplot(ceil(sqrt(nIter)), round(nIter/sqrt(nIter)), i)
     imagesc(yTmp); axis image; axis off
-    title(sprintf('Run: %d',i))
+    if nIter == 1
+        title(newName, 'interpreter', 'none');
+    else
+        title(sprintf('Run: %d',i))
+    end
     if i == nIter
         colorbar
     end
 end
-newName = sprintf('%s_S%02d_C%d_(%s)_HierarClustRuns.PNG',IOI.subj_name,s1,c1,colorNames{1+c1});
+
 % Save as PNG
 print(h, '-dpng', '-r300', fullfile(pathName,newName));
 
