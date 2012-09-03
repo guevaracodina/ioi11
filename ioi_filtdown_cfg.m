@@ -19,6 +19,9 @@ session_choice      = ioi_dfg_session_choice;
 IC                  = ioi_dfg_include_colors(0,1,1,1,1);
 % Bandpass filtering
 bpf                 = ioi_bpf_cfg(1, [0.009 0.08], 4, 'butter');
+% Generate / save figures
+[generate_figures ...
+    save_figures]       = ioi_dfg_generate_figures;
 
 % % Bandpass filtering
 % BPFfreq             = cfg_entry;
@@ -51,7 +54,7 @@ wholeImage.help     = {'Filter and downsample whole image time-series. It create
 filtdown1           = cfg_exbranch; % This is the branch that has information about how to run this module
 filtdown1.name      = 'Temporal filtering & downsampling';             % The display name
 filtdown1.tag       = 'filtdown1'; %Very important: tag is used when calling for execution
-filtdown1.val       = {IOImat redo1 IOImatCopyChoice ROI_choice session_choice IC bpf downFreq wholeImage};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+filtdown1.val       = {IOImat redo1 IOImatCopyChoice ROI_choice session_choice IC bpf downFreq wholeImage generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 filtdown1.prog      = @ioi_filtdown_run;  % A function handle that will be called with the harvested job to run the computation
 filtdown1.vout      = @ioi_cfg_vout_filtdown; % A function handle that will be called with the harvested job to determine virtual outputs
 filtdown1.help      = {'Temporal band-pass filtering and downsampling of a given time trace [HbO/HbR/Flow], either on a seed or on the whole image series.'};

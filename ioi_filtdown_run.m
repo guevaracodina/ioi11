@@ -131,72 +131,75 @@ for SubjIdx=1:length(job.IOImat)
                                             % given ROI, session and color
                                             ROIsignal = ROIdata{r1}{s1, c1};
                                             
-                                            % ---- Plotting results ----
-                                            % Display plots on SPM graphics window
-                                            h = spm_figure('GetWin', 'Graphics');
-                                            spm_figure('Clear', 'Graphics');
-                                            % Positive FFT
-                                            [X, freq] = ioi_positiveFFT(ROIsignal, fs);
-                                            % Time vector
-                                            t = 0:1/fs:(1/fs)*(numel(ROIsignal)-1);
-                                            
-                                            subplot(221)
-                                            plot(t, ROIsignal,'k-','LineWidth',2)
-                                            title(sprintf('%s_R%02d(%s)_S%02d_C%d(%s)\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none','FontSize',14);
-                                            xlabel('t [s]','FontSize',14)
-                                            set(gca,'FontSize',12)
-                                            
-                                            subplot(222)
-                                            set(gca,'FontSize',12)
-                                            semilogx(freq, abs(X),'k-','LineWidth',2);
-                                            title(sprintf('Unfiltered spectrum'),'interpreter', 'none','FontSize',14);
-                                            xlabel('f [Hz]','FontSize',14)
-                                            % --------------------------
-                                            
                                             % Band-passs filtering
                                             ROIsignal = temporalBPF(fType,fs,BPFfreq,filterOrder,ROIsignal);
-                                            
-                                            % ---- Plotting results ----
-                                            % Positive FFT
-                                            [X, freq] = ioi_positiveFFT(ROIsignal, fs);
-                                            subplot(223)
-                                            plot(t, ROIsignal,'k-','LineWidth',2)
-                                            title(sprintf('Filtered time-course\n'),'interpreter', 'none','FontSize',14);
-                                            xlabel('t [s]','FontSize',14)
-                                            set(gca,'FontSize',12)
-                                            hold on
-                                            
-                                            subplot(224)
-                                            set(gca,'FontSize',12)
-                                            semilogx(freq, abs(X),'k-','LineWidth',2);
-                                            % title(sprintf('%s_R%02d filtered spectrum S%d C%d (%s)\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none','FontSize',14);
-                                            title('Filtered spectrum','interpreter', 'none','FontSize',14);
-                                            xlabel('f [Hz]','FontSize',14)
-                                            hold on
-                                            % --------------------------
                                             
                                             % Downsampling
                                             ROIsignal = downsample(ROIsignal, samples2skip);
                                             
-                                            % ---- Plotting results ----
-                                            % Downsampled Time vector
-                                            t = 0:1/IOI.fcIOS.filtNdown(1).fs:(1/IOI.fcIOS.filtNdown(1).fs)*(numel(ROIsignal)-1);
-                                            % Positive FFT
-                                            [X, freq] = ioi_positiveFFT(ROIsignal, IOI.fcIOS.filtNdown(1).fs);
-                                            
-                                            subplot(223)
-                                            plot(t, ROIsignal,'r--','LineWidth',2)
-                                            legend({'Filt' 'Filt&Down'},'FontSize',14)
-                                            
-                                            subplot(224)
-                                            semilogx(freq, abs(X),'r--','LineWidth',2);
-                                            legend({'Filt' 'Filt&Down'},'FontSize',14)
+                                            if job.generate_figures
+                                                % ---- Plotting results ----
+                                                % Display plots on SPM graphics window
+                                                h = spm_figure('GetWin', 'Graphics');
+                                                spm_figure('Clear', 'Graphics');
+                                                % Positive FFT
+                                                [X, freq] = ioi_positiveFFT(ROIsignal, fs);
+                                                % Time vector
+                                                t = 0:1/fs:(1/fs)*(numel(ROIsignal)-1);
+                                                
+                                                subplot(221)
+                                                plot(t, ROIsignal,'k-','LineWidth',2)
+                                                title(sprintf('%s_R%02d(%s)_S%02d_C%d(%s)\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none','FontSize',14);
+                                                xlabel('t [s]','FontSize',14)
+                                                set(gca,'FontSize',12)
+                                                
+                                                subplot(222)
+                                                set(gca,'FontSize',12)
+                                                semilogx(freq, abs(X),'k-','LineWidth',2);
+                                                title(sprintf('Unfiltered spectrum'),'interpreter', 'none','FontSize',14);
+                                                xlabel('f [Hz]','FontSize',14)
+                                                % --------------------------
+                                                % ---- Plotting results ----
+                                                % Positive FFT
+                                                [X, freq] = ioi_positiveFFT(ROIsignal, fs);
+                                                subplot(223)
+                                                plot(t, ROIsignal,'k-','LineWidth',2)
+                                                title(sprintf('Filtered time-course\n'),'interpreter', 'none','FontSize',14);
+                                                xlabel('t [s]','FontSize',14)
+                                                set(gca,'FontSize',12)
+                                                hold on
+                                                
+                                                subplot(224)
+                                                set(gca,'FontSize',12)
+                                                semilogx(freq, abs(X),'k-','LineWidth',2);
+                                                % title(sprintf('%s_R%02d filtered spectrum S%d C%d (%s)\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none','FontSize',14);
+                                                title('Filtered spectrum','interpreter', 'none','FontSize',14);
+                                                xlabel('f [Hz]','FontSize',14)
+                                                hold on
+                                                % --------------------------
+                                                % ---- Plotting results ----
+                                                % Downsampled Time vector
+                                                t = 0:1/IOI.fcIOS.filtNdown(1).fs:(1/IOI.fcIOS.filtNdown(1).fs)*(numel(ROIsignal)-1);
+                                                % Positive FFT
+                                                [X, freq] = ioi_positiveFFT(ROIsignal, IOI.fcIOS.filtNdown(1).fs);
+                                                
+                                                subplot(223)
+                                                plot(t, ROIsignal,'r--','LineWidth',2)
+                                                legend({'Filt' 'Filt&Down'},'FontSize',14)
+                                                
+                                                subplot(224)
+                                                semilogx(freq, abs(X),'r--','LineWidth',2);
+                                                legend({'Filt' 'Filt&Down'},'FontSize',14)
+                                            end
                                             
                                             [oldDir, oldName, oldExt] = fileparts(IOI.res.ROI{1,1}.fname);
                                             newName = [sprintf('%s_R%02d_S%02d_C%d',IOI.subj_name,r1,s1,c1) '_filtNdown'];
-                                            % Save as PNG
-                                            print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
-                                            % --------------------------
+                                            
+                                            if job.save_figures
+                                                % Save as PNG
+                                                print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
+                                                % --------------------------
+                                            end
                                         catch
                                             if msg_ColorNotOK
                                                 msg = ['Problem filtering/downsampling for color ' int2str(c1) ', session ' int2str(s1) ...
@@ -212,72 +215,75 @@ for SubjIdx=1:length(job.IOImat)
                                                     % given ROI, session and color
                                                     ROIsignal = ROIdata{r1}{s1, c1};
                                                     
-                                                    % ---- Plotting results ----
-                                                    % Display plots on SPM graphics window
-                                                    h = spm_figure('GetWin', 'Graphics');
-                                                    spm_figure('Clear', 'Graphics');
-                                                    % Positive FFT
-                                                    [X, freq] = ioi_positiveFFT(ROIsignal, fs);
-                                                    % Time vector
-                                                    t = 0:1/fs:(1/fs)*(numel(ROIsignal)-1);
-                                                    
-                                                    subplot(221)
-                                                    plot(t, ROIsignal,'k-','LineWidth',2)
-                                                    title(sprintf('%s_R%02d(%s)_S%02d_C%d(%s)\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none','FontSize',14);
-                                                    xlabel('t [s]','FontSize',14)
-                                                    set(gca,'FontSize',12)
-                                                    
-                                                    subplot(222)
-                                                    set(gca,'FontSize',12)
-                                                    semilogx(freq, abs(X),'k-','LineWidth',2);
-                                                    title(sprintf('Unfiltered spectrum'),'interpreter', 'none','FontSize',14);
-                                                    xlabel('f [Hz]','FontSize',14)
-                                                    % --------------------------
-                                                    
                                                     % Band-passs filtering
                                                     ROIsignal = temporalBPF(fType,fs,BPFfreq,filterOrder,ROIsignal);
-                                                    
-                                                    % ---- Plotting results ----
-                                                    % Positive FFT
-                                                    [X, freq] = ioi_positiveFFT(ROIsignal, fs);
-                                                    subplot(223)
-                                                    plot(t, ROIsignal,'k-','LineWidth',2)
-                                                    title(sprintf('Filtered time-course\n'),'interpreter', 'none','FontSize',14);
-                                                    xlabel('t [s]','FontSize',14)
-                                                    set(gca,'FontSize',12)
-                                                    hold on
-                                                    
-                                                    subplot(224)
-                                                    set(gca,'FontSize',12)
-                                                    semilogx(freq, abs(X),'k-','LineWidth',2);
-                                                    % title(sprintf('%s_R%02d filtered spectrum S%d C%d (%s)\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none','FontSize',14);
-                                                    title('Filtered spectrum','interpreter', 'none','FontSize',14);
-                                                    xlabel('f [Hz]','FontSize',14)
-                                                    hold on
-                                                    % --------------------------
-                                                    
+                                                        
                                                     % Downsampling
                                                     ROIsignal = downsample(ROIsignal, samples2skip);
                                                     
-                                                    % ---- Plotting results ----
-                                                    % Downsampled Time vector
-                                                    t = 0:1/IOI.fcIOS.filtNdown(1).fs:(1/IOI.fcIOS.filtNdown(1).fs)*(numel(ROIsignal)-1);
-                                                    % Positive FFT
-                                                    [X, freq] = ioi_positiveFFT(ROIsignal, IOI.fcIOS.filtNdown(1).fs);
-                                                    
-                                                    subplot(223)
-                                                    plot(t, ROIsignal,'r--','LineWidth',2)
-                                                    legend({'Filt' 'Filt&Down'},'FontSize',14)
-                                                    
-                                                    subplot(224)
-                                                    semilogx(freq, abs(X),'r--','LineWidth',2);
-                                                    legend({'Filt' 'Filt&Down'},'FontSize',14)
+                                                    if job.generate_figures
+                                                        % ---- Plotting results ----
+                                                        % Display plots on SPM graphics window
+                                                        h = spm_figure('GetWin', 'Graphics');
+                                                        spm_figure('Clear', 'Graphics');
+                                                        % Positive FFT
+                                                        [X, freq] = ioi_positiveFFT(ROIsignal, fs);
+                                                        % Time vector
+                                                        t = 0:1/fs:(1/fs)*(numel(ROIsignal)-1);
+                                                        
+                                                        subplot(221)
+                                                        plot(t, ROIsignal,'k-','LineWidth',2)
+                                                        title(sprintf('%s_R%02d(%s)_S%02d_C%d(%s)\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none','FontSize',14);
+                                                        xlabel('t [s]','FontSize',14)
+                                                        set(gca,'FontSize',12)
+                                                        
+                                                        subplot(222)
+                                                        set(gca,'FontSize',12)
+                                                        semilogx(freq, abs(X),'k-','LineWidth',2);
+                                                        title(sprintf('Unfiltered spectrum'),'interpreter', 'none','FontSize',14);
+                                                        xlabel('f [Hz]','FontSize',14)
+                                                        % --------------------------
+                                                        % ---- Plotting results ----
+                                                        % Positive FFT
+                                                        [X, freq] = ioi_positiveFFT(ROIsignal, fs);
+                                                        subplot(223)
+                                                        plot(t, ROIsignal,'k-','LineWidth',2)
+                                                        title(sprintf('Filtered time-course\n'),'interpreter', 'none','FontSize',14);
+                                                        xlabel('t [s]','FontSize',14)
+                                                        set(gca,'FontSize',12)
+                                                        hold on
+                                                        
+                                                        subplot(224)
+                                                        set(gca,'FontSize',12)
+                                                        semilogx(freq, abs(X),'k-','LineWidth',2);
+                                                        % title(sprintf('%s_R%02d filtered spectrum S%d C%d (%s)\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none','FontSize',14);
+                                                        title('Filtered spectrum','interpreter', 'none','FontSize',14);
+                                                        xlabel('f [Hz]','FontSize',14)
+                                                        hold on
+                                                        % --------------------------
+                                                        % ---- Plotting results ----
+                                                        % Downsampled Time vector
+                                                        t = 0:1/IOI.fcIOS.filtNdown(1).fs:(1/IOI.fcIOS.filtNdown(1).fs)*(numel(ROIsignal)-1);
+                                                        % Positive FFT
+                                                        [X, freq] = ioi_positiveFFT(ROIsignal, IOI.fcIOS.filtNdown(1).fs);
+                                                        
+                                                        subplot(223)
+                                                        plot(t, ROIsignal,'r--','LineWidth',2)
+                                                        legend({'Filt' 'Filt&Down'},'FontSize',14)
+                                                        
+                                                        subplot(224)
+                                                        semilogx(freq, abs(X),'r--','LineWidth',2);
+                                                        legend({'Filt' 'Filt&Down'},'FontSize',14)
+                                                    end
                                                     
                                                     [oldDir, oldName, oldExt] = fileparts(IOI.res.ROI{1,1}.fname);
                                                     newName = [sprintf('%s_R%02d_S%02d_C%d',IOI.subj_name,r1,s1,c1) '_filtNdown'];
-                                                    % Save as PNG
-                                                    print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
-                                                    % --------------------------
+                                                    
+                                                    if job.save_figures
+                                                        % Save as PNG
+                                                        print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
+                                                        % --------------------------
+                                                    end
                                                     
                                                 catch
                                                     msg = ['Unable to extract color ' int2str(c1) ', session ' int2str(s1)];
