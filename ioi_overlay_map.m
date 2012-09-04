@@ -48,6 +48,16 @@ end
 
 % Create overlay object
 slObj = slover(char(imagesOverlay));
+
+% vol = spm_vol(anatomical);
+% im_anat = spm_read_vols(vol);
+% vol = spm_vol(positiveMap);
+% im_pos = spm_read_vols(vol);
+% vol = spm_vol(negativeMap);
+% im_neg = spm_read_vols(vol);
+% 
+% vol1 = slover('matrix2vol', anatomical, vol.mat);
+
 slObj.slices = 1;                           % For IOI images only 1 slice (2D)
                                             % Automatic range for image 1 (anatomy)
 slObj.img(2).range = mapRange;              % Range for positive map
