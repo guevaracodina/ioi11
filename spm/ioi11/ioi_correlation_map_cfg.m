@@ -25,24 +25,12 @@ IC                      = ioi_dfg_include_colors(0,1,1,1,1);
 
 % p-Values
 pValue                  = cfg_entry;
-pValue.name             = 'p-value';                        % The displayed name
-pValue.tag              = 'pValue';                         % file names
-pValue.strtype          = 'r';                              % Real numbers
-pValue.num              = [1 1];                            % Number of inputs required
-pValue.val              = {0.05};                           % Default value
+pValue.name             = 'p-value';                % The displayed name
+pValue.tag              = 'pValue';                 % file names
+pValue.strtype          = 'r';                      % Real numbers
+pValue.num              = [1 1];                    % Number of inputs required
+pValue.val              = {0.05};                   % Default value
 pValue.help             = {'p-value for testing the hypothesis of no correlation against the alternative that there is a nonzero correlation. If p-value is small, say less than 0.05, then the correlation r is significantly different from zero.'};
-
-% fisherZ_On              = cfg_branch;
-% fisherZ_On.tag          = 'fisherZ_On';
-% fisherZ_On.name         = 'Enable Fisher''s z transform';
-% fisherZ_On.val          = {1}; 
-% fisherZ_On.help         = {'Fisher''s z transform'};
-% 
-% fisherZ_Off             = cfg_branch;
-% fisherZ_Off.tag         = 'fisherZ_Off';
-% fisherZ_Off.name        = 'Fisher''s z transform off';
-% fisherZ_Off.val         = {0}; 
-% fisherZ_Off.help        = {'Fisher''s z transform off'};
 
 % Fisher's z transform
 fisherZ                 = cfg_menu;
@@ -50,7 +38,7 @@ fisherZ.tag             = 'fisherZ';
 fisherZ.name            = 'Fisher''s z transform';
 fisherZ.labels          = {'No', 'Yes'};
 fisherZ.values          = {0, 1};
-fisherZ.val             = {1};                              % Default value
+fisherZ.val             = {1};                      % Default value
 fisherZ.help            = {'Choose whether to perform a Fisher''s z transform of correlation coefficients. The correlation coefficient need to be transformed to the normal distribution by Fisher''s z transform before performing the random effect t-tests'}';
 
 % Seeds correlation matrix
@@ -59,7 +47,7 @@ seed2seedCorrMat.tag    = 'seed2seedCorrMat';
 seed2seedCorrMat.name   = 'seed2seedCorrMat';
 seed2seedCorrMat.labels = {'No', 'Yes'};
 seed2seedCorrMat.values = {0, 1};
-seed2seedCorrMat.val    = {1};                              % Default value
+seed2seedCorrMat.val    = {1};                      % Default value
 seed2seedCorrMat.help   = {'Choose whether to compute a seed-to-seed correlation matrix'}';
 
 % Executable Branch
@@ -75,10 +63,9 @@ return
 
 % Make IOI.mat available as a dependency
 function vout = ioi_cfg_vout_correlation_map(job)
-vout                    = cfg_dep;                     % The dependency object
-vout.sname              = 'IOI.mat';       % Displayed dependency name
-vout.src_output         = substruct('.','IOImat'); %{1}); %,'IOImat');
-%substruct('()',{1}); % The output subscript reference. This could be any reference into the output variable created during computation
+vout                    = cfg_dep;                  % The dependency object
+vout.sname              = 'IOI.mat';                % Displayed dependency name
+vout.src_output         = substruct('.','IOImat');  %{1}); %,'IOImat');
 vout.tgt_spec           = cfg_findspec({{'filter','mat','strtype','e'}});
 
 % EOF
