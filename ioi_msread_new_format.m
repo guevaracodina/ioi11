@@ -134,9 +134,9 @@ try
                                 [startIndex endIndex] = regexp(t0, 'Light : ', 'once');
                                 tmpString = t0(endIndex:end);
                                 % Find the next end of line
-                                eolIndex = regexp(tmpString, '\r', 'once');
-                                % Get the colors string
-                                tmpString = strtrim(tmpString(1:eolIndex-1));
+                                eolIndex = regexp(tmpString, '\n', 'once');
+                                % Get the colors string if \r eolIndex-1
+                                tmpString = strtrim(tmpString(1:eolIndex));
                                 % Find the letters
                                 letterIndex = regexp(tmpString, '[A-Z]');
                                 % Find the numbers

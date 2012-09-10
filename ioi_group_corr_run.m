@@ -1,7 +1,8 @@
 function out = ioi_group_corr_run(job)
-% SYNTAX
-% INPUTS
-% OUTPUTS
+% Performs a group comparison based on bilateral correlation between seeds
+% time-courses, though a paired t-test data on the correlation before the 4-AP
+% injection and its value after the epileptogenic injection. Performs the t-test
+% for each pair of seeds.
 %_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
@@ -9,259 +10,136 @@ function out = ioi_group_corr_run(job)
 
 % For each subject:
 % - Display resumeexp.txt in figures windows (to check which sessions are
-% control/treatment)
-% - choose the control sessions (batch)
-% - choose the post-injection sessions (batch)
+%   control/treatment)
 % - choose the pairs of ROIs (1-2, 3-4, ..., 11-12 by default) (batch)
-% - get the seed-to-seed correlation matrix (6 values for each mouse, each color)
-% - transform Pearson's r to Fisher's z
+% - choose the control sessions
+% - choose the post-injection sessions
+% for each color
+%   - get the seed-to-seed correlation matrix
+%   - transform Pearson's r to Fisher's z
+%   - choose only 6 values for each mouse, each color
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % For all the subjects
 % - Choose parent folder (batch)
 % - Do a separate paired t-test for each seed data
 % - Display a graph with ROI labels
 % - Save a .csv file in parent folder
 
-% Get sessions info
-[all_sessions selected_sessions] = ioi_get_sessions(job);
+
+% Initialize cell to hold group data
+groupCorrData = cell([length(job.paired_seeds) 7]);
+groupCorrIdx  = cell([length(job.paired_seeds) 7]);
+
 
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
         tic
         %Load IOI.mat information
-        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);  
-
-        if ~isfield(IOI.fcIOS.SPM, 'corrOK') % correlation OK
-            disp(['No GLM regression available for subject ' int2str(SubjIdx) ' ... skipping correlation map']);
+        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);
+        
+        if ~isfield(IOI.fcIOS.corr,'corrMatrixOK') % correlation matrix OK
+            disp(['No seed-to-seed correlation matrix available for subject ' int2str(SubjIdx) ' ... skipping correlation map']);
         else
             if ~isfield(IOI.fcIOS.corr,'corrGroupOK') || job.force_redo
                 % Get colors to include information
                 IC = job.IC;
                 colorNames = fieldnames(IOI.color);
                 
-                if IOI.res.shrinkageOn
-                    vx = [IOI.res.shrink_x IOI.res.shrink_y 1];
-                else
-                    vx = [1 1 1];
-                end
-                
                 % File name where correlation data is saved
-                IOI.fcIOS.corr(1).fname = fullfile(dir_ioimat,'seed_based_fcIOS_map.mat');
+                IOI.fcIOS.corr(1).fnameGroup = fullfile(job.parent_results_dir{1},'group_corr_pair_seeds.mat');
                 
-                % Loop over sessions
-                for s1=1:length(IOI.sess_res)
-                    if all_sessions || sum(s1==selected_sessions)
-                        % Loop over available colors
-                        for c1=1:length(IOI.sess_res{s1}.fname)
-                            doColor = ioi_doColor(IOI,c1,IC);
-                            if doColor
-                                colorOK = true;
-                                %skip laser - only extract for flow
-                                if ~(IOI.color.eng(c1)==IOI.color.laser)
-                                    %% Do my stuff here!
-                                    [all_ROIs selected_ROIs] = ioi_get_ROIs(job);
-                                    nROI = 1:length(IOI.res.ROI); % All the ROIs
-                                    
-                                    % Initialize progress bar
-                                    spm_progress_bar('Init', numel(nROI), sprintf('fcIOS map S%d C%d (%s)\n',s1,c1,colorNames{1+c1}), 'Seeds');
-                                    % Load regressed ROI data in cell ROIregress
-                                    load(IOI.fcIOS.SPM.fnameROIregress)
-                                    % Loop over ROI/seeds
-                                    for r1 = nROI,
-                                        if all_ROIs || sum(r1==selected_ROIs)
-                                            
-                                            % Checking if regression was
-                                            % succesful for both the seeds and
-                                            % the brain pixels time-courses
-                                            if IOI.fcIOS.SPM.wholeImageRegressOK{s1, c1} && IOI.fcIOS.SPM.ROIregressOK{r1}{s1, c1}
-                                                fprintf('Loading data, seed %d (%s) session %d C%d (%s)...\n',r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1});
-                                                % Load brain pixels time-course
-                                                % already filtered/downsampled &
-                                                % regressed
-                                                vol = spm_vol(IOI.fcIOS.SPM.fname{s1, c1});
-                                                y = spm_read_vols(vol);
-                                                % Load ROI time-course already
-                                                % filtered/downsampled &
-                                                % regressed (column vector)
-                                                % ROIvol = spm_vol(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
-                                                % ROI = spm_read_vols(ROIvol);
-                                                ROI = ROIregress{r1}{s1, c1}';
-                                                % Load brain mask
-                                                brainMaskVol = spm_vol(IOI.fcIOS.mask.fname);
-                                                brainMask = logical(spm_read_vols(brainMaskVol));
-                                                if size(brainMask,1)~= size(y,1)|| size(brainMask,2)~= size(y,2)
-                                                    brainMask = ioi_MYimresize(brainMask, [size(y,1) size(y,2)]);
-                                                end
-                                                % Load anatomical image
-                                                % anatVol = spm_vol(IOI.res.file_anat);
-                                                % anat = spm_read_vols(anatVol);
-                                                % if size(anat,1)~= size(y,1)|| size(anat,2)~= size(y,2)
-                                                %     anat = ioi_MYimresize(anat, [size(y,1) size(y,2)]);
-                                                % end
-                                                % Load ROI mask
-                                                % ROImaskVol = spm_vol(IOI.res.ROI{r1}.fname);
-                                                % ROImask = spm_read_vols(ROImaskVol);
-                                                % if size(ROImask,1)~= size(y,1)|| size(ROImask,2)~= size(y,2)
-                                                %     ROImask = ioi_MYimresize(ROImask, [size(y,1) size(y,2)]);
-                                                % end
-                                                % Preallocate
-                                                tempCorrMap = zeros([size(y,1) size(y,2)]);
-                                                pValuesMap =  zeros([size(y,1) size(y,2)]);
-                                                % Find Pearson's correlation coefficient
-                                                fprintf('Computing Pearson''s correlation map...\n');
-                                                for iX = 1:size(y,1),
-                                                    for iY = 1:size(y,2),
-                                                        if brainMask(iX, iY)
-                                                            [tempCorrMap(iX, iY) pValuesMap(iX, iY)]= corr(squeeze(ROI), squeeze(y(iX, iY, 1, :)));
-                                                        end
-                                                    end
-                                                end
-                                                % Assign data to be saved to
-                                                % .mat file
-                                                seed_based_fcIOS_map{r1}{s1,c1}.pearson = tempCorrMap;
-                                                seed_based_fcIOS_map{r1}{s1,c1}.pValue = pValuesMap;
-                                                
-                                                % Convert Pearson's correlation
-                                                % coeff. r to Fisher's z value.
-                                                if job.fisherZ
-                                                    % Find Pearson's correlation coefficient
-                                                    fprintf('Computing Fisher''s Z statistic...\n');
-                                                    [~, oldName, oldExt] = fileparts(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
-                                                        newName = [oldName '_fcIOS_Zmap'];
-                                                    seed_based_fcIOS_map{r1}{s1,c1}.fisher = fisherz(tempCorrMap .* (pValuesMap < job.pValue));
-                                                    % Save as nifti
-                                                    ioi_save_nifti(seed_based_fcIOS_map{r1}{s1,c1}.fisher, fullfile(dir_ioimat,[newName oldExt]), vx);
-                                                    IOI.fcIOS.corr(1).zMapName{r1}{s1, c1} = fullfile(dir_ioimat,[newName oldExt]);
-                                                    
-                                                    if job.generate_figures
-                                                        % Find 1st positive
-                                                        % value
-                                                        z1 = sort(seed_based_fcIOS_map{r1}{s1,c1}.fisher(:),1,'ascend');
-                                                        idx1  = find(z1>0, 1, 'first');
-                                                        minPosVal = z1(idx1);
-                                                        
-                                                        % Find 1st negative
-                                                        % value
-                                                        z2 = sort(seed_based_fcIOS_map{r1}{s1,c1}.fisher(:),1,'descend');
-                                                        idx2  = find(z2<0, 1, 'first');
-                                                        minNegVal = z2(idx2);
-                                                        anatomical      = IOI.res.file_anat;
-                                                        positiveMap     = IOI.fcIOS.corr.zMapName{r1}{s1, c1};
-                                                        negativeMap     = IOI.fcIOS.corr.zMapName{r1}{s1, c1};
-                                                        colorNames      = fieldnames(IOI.color);
-                                                        mapRange        = [max(abs([minNegVal minPosVal])) max(z1)];
-                                                        titleString     = sprintf('%s seed%d S%d(%s)Z-map',IOI.subj_name,r1,s1,colorNames{1+c1});
-                                                        % Display plots on SPM graphics window
-                                                        h = spm_figure('GetWin', 'Graphics');
-                                                        spm_figure('Clear', 'Graphics');
-                                                        h = ioi_overlay_map(anatomical, positiveMap, negativeMap, mapRange, titleString);
-                                                        if job.save_figures
-                                                            % Save as PNG
-                                                            print(h, '-dpng', fullfile(dir_ioimat,newName), '-r150');
-                                                            % Save as EPS
-                                                            spm_figure('Print', 'Graphics', fullfile(dir_ioimat,newName));
-                                                        end
-                                                    end
-                                                end
- 
-                                                if job.generate_figures
-                                                    % Improve display
-                                                    tempCorrMap(~brainMask) = median(tempCorrMap(:));
-                                                    % Seed annotation dimensions
-                                                    % the lower left corner of
-                                                    % the bounding rectangle at
-                                                    % the point seedX, seedY
-                                                    seedX = IOI.res.ROI{r1}.center(2) - IOI.res.ROI{r1}.radius;
-                                                    seedY = IOI.res.ROI{r1}.center(1) - IOI.res.ROI{r1}.radius;
-                                                    % Seed width
-                                                    seedW = 2*IOI.res.ROI{r1}.radius;
-                                                    % Seed height
-                                                    seedH = 2*IOI.res.ROI{r1}.radius;
-                                                    if isfield(IOI.res,'shrinkageOn')
-                                                        if IOI.res.shrinkageOn == 1
-                                                            seedX = seedX / IOI.res.shrink_x;
-                                                            seedY = seedY / IOI.res.shrink_y;
-                                                            seedW = seedW / IOI.res.shrink_x;
-                                                            seedH = seedH / IOI.res.shrink_y;
-                                                        end
-                                                    end
-                                                    
-                                                    % Display plots on SPM graphics window
-                                                    h = spm_figure('GetWin', 'Graphics');
-                                                    spm_figure('Clear', 'Graphics');
-                                                    spm_figure('ColorMap','jet')
-                                                    
-                                                    % Correlation map
-                                                    subplot(211)
-                                                    imagesc(tempCorrMap); colorbar; axis image; 
-                                                    % Display ROI
-                                                    rectangle('Position',[seedX seedY seedW seedH],...
-                                                        'Curvature',[1,1],...
-                                                        'LineWidth',2,'LineStyle','-');
-                                                    set(gca,'Xtick',[]); set(gca,'Ytick',[]);
-                                                    xlabel('Left', 'FontSize', 14); ylabel('Rostral', 'FontSize', 14);
-                                                    title(sprintf('%s fcIOS map Seed %d (%s) S%d C%d (%s)\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none', 'FontSize', 14)
-                                                    
-                                                    % Show only significant
-                                                    % pixels
-                                                    subplot(212)
-                                                    imagesc(tempCorrMap .* (pValuesMap <= job.pValue), [-1 1]); colorbar; axis image;
-                                                    % Display ROI
-                                                    rectangle('Position',[seedX seedY seedW seedH],...
-                                                        'Curvature',[1,1],...
-                                                        'LineWidth',2,'LineStyle','-');
-                                                    set(gca,'Xtick',[]); set(gca,'Ytick',[]);
-                                                    xlabel('Left', 'FontSize', 14); ylabel('Rostral', 'FontSize', 14);
-                                                    title(sprintf('%s significant pixels (p<%.2f) Seed %d (%s) S%d C%d (%s)\n',IOI.subj_name,job.pValue,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none', 'FontSize', 14)
-                                                    
-                                                    if job.save_figures
-                                                        [~, oldName, oldExt] = fileparts(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
-                                                        newName = [oldName '_fcIOS_map'];
-                                                        % Save as EPS
-                                                        spm_figure('Print', 'Graphics', fullfile(dir_ioimat,newName));
-                                                        % Save as PNG
-                                                        print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
-                                                        % Save as nifti
-                                                        ioi_save_nifti(tempCorrMap, fullfile(dir_ioimat,[newName oldExt]), vx);
-                                                        IOI.fcIOS.corr(1).corrMapName{r1}{s1, c1} = fullfile(dir_ioimat,[newName oldExt]);
-                                                    end
-                                                end
-                                                
-                                                % correlation map succesful!
-                                                fprintf('Pearson''s correlation coefficient computed. Seed %d (%s) session %d C%d (%s)\n',r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1});
-                                                IOI.fcIOS.corr(1).corrMapOK{r1}{s1, c1} = true;
-                                            else
-                                                % correlation map failed!
-                                                IOI.fcIOS.corr(1).corrMapOK{r1}{s1, c1} = false;
-                                                fprintf('Pearson''s correlation coefficient failed! Seed %d (%s) S%d C%d (%s)\n',r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1});
-                                            end
-                                        end
-                                        % Update progress bar
-                                        spm_progress_bar('Set', r1);
-                                    end % ROI/seeds loop
-                                    % Clear progress bar
-                                    spm_progress_bar('Clear');
-                                end
-                            end
-                        end % colors loop
-                    end
-                end % Sessions Loop
-                % correlation group analysis succesful!
-                IOI.fcIOS.corr(1).corrGroupOK = true;
-                % Compute seed to seed correlation matrix
-                if job.seed2seedCorrMat
-                    [seed2seedCorrMat IOI.fcIOS.corr(1).corrMatrixFname] = ioi_roi_corr(job, SubjIdx);
-                    % seed-to-seed correlation succesful!
-                    IOI.fcIOS.corr(1).corrMatrixOK = true;
-                    % Save seed-to-seed correlation data
-                    save(IOI.fcIOS.corr(1).corrMatrixFname,'seed2seedCorrMat')
+                % - Display resumeexp.txt in command window (to check which sessions are
+                %   control/treatment)
+                % fileread(fullfile(IOI.dir.dir_subj_raw,'resumeExp.txt'))
+                
+                % - choose the control sessions
+                [ctrlSessList, sts] = cfg_getfile(Inf,'dir','Select control sessions',[], IOI.dir.dir_subj_res, 'S[0-9]+');
+                
+                % - choose the post-injection sessions
+                [treatSessList, sts] = cfg_getfile(Inf,'dir','Select 4-AP sessions',[], IOI.dir.dir_subj_res, 'S[0-9]+');
+                
+                ctrlSessVec = [];
+                % Get control session numbers
+                for iSess = 1:numel(ctrlSessList)
+                    sessString = regexp(ctrlSessList{iSess},'\\S[0-9]+\\','match','once');
+                    sessString = regexp(sessString,'[0-9]+','match','once');
+                    ctrlSessVec(iSess) = str2double(sessString);
                 end
-                % Save fcIOS data
-                save(IOI.fcIOS.corr(1).fname,'seed_based_fcIOS_map')
+                
+                treatSessVec = [];
+                % Get treatment session numbers
+                for iSess = 1:numel(treatSessList)
+                    sessString = regexp(treatSessList{iSess},'\\S[0-9]+\\','match','once');
+                    sessString = regexp(sessString,'[0-9]+','match','once');
+                    treatSessVec(iSess) = str2double(sessString);
+                end
+                
+                % Get indices for the paired sessions
+                idxSess = CombVec(ctrlSessVec, treatSessVec)';
+                
+                %   - get the seed-to-seed correlation matrix
+                load(IOI.fcIOS.corr.corrMatrixFname)
+                
+                % Initialize cell to hold paired seeds correlation data
+                pairedSeeds = cell([length(job.paired_seeds) 1]);
+                for iCell = 1:length(job.paired_seeds),
+                    pairedSeeds{iCell} = cell([length(ctrlSessVec)+length(treatSessVec) 7]);
+                end
+
+                % Loop over available colors
+                for c1=1:length(IOI.fcIOS.corr.corrMapName{1})
+                    doColor = ioi_doColor(IOI,c1,IC);
+                    if doColor
+                        colorOK = true;
+                        %skip laser - only extract for flow
+                        if ~(IOI.color.eng(c1)==IOI.color.laser)
+                            % Loop over sessions
+                            for s1 = [ctrlSessVec treatSessVec],
+                                %% Do my stuff here!
+                                % Get current correlation matrix
+                                currCorrMat = seed2seedCorrMat{1}{s1,c1};
+                                %   - transform Pearson's r to Fisher's z
+                                currCorrMat = fisherz(currCorrMat);
+                                if isnan(currCorrMat)
+                                    for iROI = 1:length(job.paired_seeds)
+                                        pairedSeeds{iROI}{s1,c1} = NaN;
+                                    end
+                                else
+                                    %   - choose only 6 values for each mouse, each color
+                                    for iROI = 1:length(job.paired_seeds)
+                                        pairedSeeds{iROI}{s1,c1} = currCorrMat(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2));
+                                    end
+                                end
+                                % Group comparison of bilateral correlation succesful!
+                                % fprintf('Paired seeds correlation analysis succesful! C%d (%s)...\n', c1,colorNames{1+c1});
+                            end % sessions loop
+                        end
+                        % Arrange the paired seeds according to idxSessions
+                        fprintf('Arranging data C%d (%s)...\n',c1,colorNames{1+c1});
+                        tmpArray = zeros([length(job.paired_seeds), size(idxSess)]);
+                        for iROI = 1:length(job.paired_seeds)
+                            for iSess = 1:length(idxSess)
+                                tmpArray(iROI,iSess,1) = pairedSeeds{iROI}{idxSess(iSess,1), c1};
+                                tmpArray(iROI,iSess,2) = pairedSeeds{iROI}{idxSess(iSess,2), c1};
+                            end
+                        end
+                        for iROI = 1:length(job.paired_seeds)
+                            groupCorrData{iROI,c1} = [groupCorrData{iROI,c1}; squeeze(tmpArray(iROI,:,:))];
+                            groupCorrIdx{iROI,c1} = [groupCorrIdx{iROI,c1}; idxSess];
+                        end
+                    % else
+                        % correlation map failed!
+                        % IOI.fcIOS.corr(1).corrGroupOK{1}{1, c1} = false;
+                        % fprintf('Paired seeds correlation analysis failed! C%d (%s)...\n',c1,colorNames{1+c1});
+                    end
+                end % colors loop
+                % Save group correlation data data
+                save(IOI.fcIOS.corr(1).fnameGroup,'groupCorrData','groupCorrIdx')
                 % Save IOI matrix
                 save(IOImat,'IOI');
             end % correlation OK or redo job
-        end % GLM OK
+        end % corrMap OK
         disp(['Elapsed time: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
         disp(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ' complete']);
         out.IOImat{SubjIdx} = IOImat;
@@ -271,5 +149,70 @@ for SubjIdx=1:length(job.IOImat)
         disp(exception.stack(1))
     end
 end % Big loop over subjects
+
+% For all the subjects
+% - Choose parent folder (batch)
+% Loop over available colors
+for c1=1:length(IOI.fcIOS.corr.corrMapName{1})
+    doColor = ioi_doColor(IOI,c1,IC);
+    if doColor
+        colorOK = true;
+        %skip laser - only extract for flow
+        if ~(IOI.color.eng(c1)==IOI.color.laser)
+            % - Do a separate paired t-test for each seed data
+            for iSeeds = 1:length(job.paired_seeds)
+                meanCorr{iSeeds,c1}(1) = nanmean(groupCorrData{iSeeds,c1}(:,1));
+                meanCorr{iSeeds,c1}(2) = nanmean(groupCorrData{iSeeds,c1}(:,2));
+                stdCorr{iSeeds,c1}(1) = nanstd(groupCorrData{iSeeds,c1}(:,1));
+                stdCorr{iSeeds,c1}(2) = nanstd(groupCorrData{iSeeds,c1}(:,2));
+                y(iSeeds,:) = meanCorr{iSeeds,c1};
+                e(iSeeds,:) = stdCorr{iSeeds,c1};
+                 
+                [H{iSeeds,c1},P{iSeeds,c1},CI{iSeeds,c1},STATS{iSeeds,c1}] = ttest(...
+                    groupCorrData{iSeeds,c1}(:,1), groupCorrData{iSeeds,c1}(:,2),...
+                    job.alpha,'both');
+            end
+            % std error bars: sigma/sqrt(N)
+            e=e/sqrt(length(groupCorrData{iSeeds,c1}));
+            % - Display a graph with ROI labels
+            if job.generate_figures
+                % Display plots on SPM graphics window
+                h = spm_figure('GetWin', 'Graphics');
+                set(gcf,'color','w')
+                barwitherr(e,y)
+                % Display colormap according to the contrast
+                switch(c1)
+                    case 5
+                        colormap([1 0 0; 1 1 1]);
+                    case 6
+                        colormap([0 0 1; 1 1 1]);
+                    case 7 
+                        colormap(gray)
+                    otherwise
+                        colormap(gray)
+                end
+                title(sprintf('%s Bilateral correlation before/after 4-AP C%d(%s)',IOI.subj_name,c1,colorNames{1+c1}),'interpreter','none','FontSize',12)
+                ylabel('functional correlation z(r)','FontSize',12)
+                set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'})
+                set(gca,'FontSize',12)
+                legend({'Control' '4-AP'},'FontSize',12)
+                if job.save_figures
+                    newName = sprintf('%s_groupCorr_C%d_(%s)',IOI.subj_name,c1,colorNames{1+c1});
+                    % Save as EPS
+                    spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1},newName));
+                    % Save as PNG
+                    print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), '-r300');
+                end
+            end
+            % - Save a .csv file in parent folder
+            save(IOI.fcIOS.corr(1).fnameGroup,'groupCorrData','groupCorrIdx',...
+                'meanCorr','H','P','CI','STATS');
+        end
+    end
+end % loop over colors
+% correlation group analysis succesful!
+% IOI.fcIOS.corr(1).corrGroupOK = true;
+% Group comparison of bilateral correlation succesful!
+fprintf('Group comparison of bilateral correlation succesful!\n');
 
 % EOF
