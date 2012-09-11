@@ -26,7 +26,36 @@ for SubjIdx=1:length(job.IOImat)
             end
             
             IOI.res.flow.window_size=wsize;
-            IOI.res.flow.T=job.configuration.integ_time;
+            
+            % Get integration time directly from the info.txt file //EGC
+            try
+                % Get the raw data folder
+                [dummy,dirs] = cfg_getfile('FPListRec',IOI.dir.dir_subj_raw,'dir');
+                % Get the info.txt from the 1st session as a string
+                [file_info,dummy] = cfg_getfile('FPList',dirs{1},'info.txt');
+                t0 = fileread(file_info{1});
+                % Find the exposure time
+                [startIndex endIndex]= regexp(t0, 'Exposure time', 'once');
+                tmpString = t0(endIndex:end);
+                % Find the time units prefix
+                tFactorStr = regexp(tmpString, '\(..\)', 'match', 'once');
+                switch tFactorStr
+                    case '(us)'
+                        tFactor = 1e6;
+                    case '(ms)'
+                        tFactor = 1e3;
+                    otherwise
+                end
+                % Gets the first number in the string as integration time
+                intTimeStr = regexp(tmpString,'\d+','match', 'once');
+                % Save repetition time in job
+                job.configuration.integ_time = str2double(intTimeStr)/tFactor;
+                % Update value in IOI matrix
+                IOI.res.flow.T = job.configuration.integ_time;
+            catch
+                % Do as usual, use whatever value the user entered
+                IOI.res.flow.T = job.configuration.integ_time;
+            end
             
             %Loop over sessions
             if isfield(IOI,'sess_res')
