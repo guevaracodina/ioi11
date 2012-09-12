@@ -21,18 +21,18 @@ function out = ioi_group_corr_run(job)
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % For all the subjects
 % - Choose parent folder (batch)
-% - Do a separate paired t-test for each seed data
+% - Do a separate statistical for each seed data (paired t-test, wil)
 % - Display a graph with ROI labels
 % - Save a .csv file in parent folder
 
 
 % Initialize cell to hold group data
-groupCorrData = cell([length(job.paired_seeds) 7]);
-groupCorrIdx  = cell([length(job.paired_seeds) 7]);
+groupCorrData = cell([size(job.paired_seeds, 1) 7]);
+groupCorrIdx  = cell([size(job.paired_seeds, 1) 7]);
 
 
 %Big loop over subjects
-for SubjIdx=1:length(job.IOImat)
+for SubjIdx = 1:size(job.IOImat, 1)
     try
         tic
         %Load IOI.mat information
@@ -53,78 +53,88 @@ for SubjIdx=1:length(job.IOImat)
                 %   control/treatment)
                 % fileread(fullfile(IOI.dir.dir_subj_raw,'resumeExp.txt'))
                 
-                % - choose the control sessions
-                [ctrlSessList, sts] = cfg_getfile(Inf,'dir','Select control sessions',[], IOI.dir.dir_subj_res, 'S[0-9]+');
-                
-                % - choose the post-injection sessions
-                [treatSessList, sts] = cfg_getfile(Inf,'dir','Select 4-AP sessions',[], IOI.dir.dir_subj_res, 'S[0-9]+');
-                
-                ctrlSessVec = [];
-                % Get control session numbers
-                for iSess = 1:numel(ctrlSessList)
-                    sessString = regexp(ctrlSessList{iSess},'\\S[0-9]+\\','match','once');
-                    sessString = regexp(sessString,'[0-9]+','match','once');
-                    ctrlSessVec(iSess) = str2double(sessString);
-                end
-                
-                treatSessVec = [];
-                % Get treatment session numbers
-                for iSess = 1:numel(treatSessList)
-                    sessString = regexp(treatSessList{iSess},'\\S[0-9]+\\','match','once');
-                    sessString = regexp(sessString,'[0-9]+','match','once');
-                    treatSessVec(iSess) = str2double(sessString);
+                if isfield(job.AutoSessionChoice, 'ManualSessions')
+                    % - choose the control sessions
+                    [ctrlSessList, sts] = cfg_getfile(Inf,'dir','Select control sessions',[], IOI.dir.dir_subj_res, 'S[0-9]+');
+                    
+                    % - choose the post-injection sessions
+                    [treatSessList, sts] = cfg_getfile(Inf,'dir','Select 4-AP sessions',[], IOI.dir.dir_subj_res, 'S[0-9]+');
+                    
+                    ctrlSessVec = [];
+                    % Get control session numbers
+                    for iSess = 1:numel(ctrlSessList)
+                        sessString = regexp(ctrlSessList{iSess},'\\S[0-9]+\\','match','once');
+                        sessString = regexp(sessString,'[0-9]+','match','once');
+                        ctrlSessVec(iSess) = str2double(sessString);
+                    end
+                    
+                    treatSessVec = [];
+                    % Get treatment session numbers
+                    for iSess = 1:numel(treatSessList)
+                        sessString = regexp(treatSessList{iSess},'\\S[0-9]+\\','match','once');
+                        sessString = regexp(sessString,'[0-9]+','match','once');
+                        treatSessVec(iSess) = str2double(sessString);
+                    end
+                elseif isfield(job.AutoSessionChoice, 'AutoSessions')
+                    % Retrieve sessions
+                    ctrlSessVec = job.AutoSessionChoice.AutoSessions.control_sessions{SubjIdx};
+                    treatSessVec = job.AutoSessionChoice.AutoSessions.treatment_sessions{SubjIdx};
+                else
+                    % Do nothing for the moment
                 end
                 
                 % Get indices for the paired sessions
+                % 1st column contains the indices to the control sessions
+                % 2nd column contains the indices to the 4-AP sessions
                 idxSess = CombVec(ctrlSessVec, treatSessVec)';
+                
+                % Additional 3rd column with subject index
+                idxSess(:,3) = SubjIdx;
                 
                 %   - get the seed-to-seed correlation matrix
                 load(IOI.fcIOS.corr.corrMatrixFname)
                 
                 % Initialize cell to hold paired seeds correlation data
-                pairedSeeds = cell([length(job.paired_seeds) 1]);
-                for iCell = 1:length(job.paired_seeds),
-                    pairedSeeds{iCell} = cell([length(ctrlSessVec)+length(treatSessVec) 7]);
+                pairedSeeds = cell([size(job.paired_seeds, 1) 1]);
+                for iCell = 1:size(job.paired_seeds, 1),
+                    pairedSeeds{iCell} = cell([size(ctrlSessVec,1) + size(treatSessVec, 1) 7]);
                 end
 
                 % Loop over available colors
-                for c1=1:length(IOI.fcIOS.corr.corrMapName{1})
+                for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
                     doColor = ioi_doColor(IOI,c1,IC);
                     if doColor
-                        colorOK = true;
                         %skip laser - only extract for flow
                         if ~(IOI.color.eng(c1)==IOI.color.laser)
                             % Loop over sessions
                             for s1 = [ctrlSessVec treatSessVec],
-                                %% Do my stuff here!
                                 % Get current correlation matrix
                                 currCorrMat = seed2seedCorrMat{1}{s1,c1};
-                                %   - transform Pearson's r to Fisher's z
+                                % transform Pearson's r to Fisher's z
                                 currCorrMat = fisherz(currCorrMat);
                                 if isnan(currCorrMat)
-                                    for iROI = 1:length(job.paired_seeds)
+                                    for iROI = 1:size(job.paired_seeds, 1)
                                         pairedSeeds{iROI}{s1,c1} = NaN;
                                     end
                                 else
-                                    %   - choose only 6 values for each mouse, each color
-                                    for iROI = 1:length(job.paired_seeds)
+                                    % choose only 6 values for each mouse, each color
+                                    for iROI = 1:size(job.paired_seeds, 1)
                                         pairedSeeds{iROI}{s1,c1} = currCorrMat(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2));
                                     end
                                 end
-                                % Group comparison of bilateral correlation succesful!
-                                % fprintf('Paired seeds correlation analysis succesful! C%d (%s)...\n', c1,colorNames{1+c1});
+                                % fprintf('Paired seeds correlation analysis retrieved! %s C%d (%s)...\n', IOI.subj_name, c1,colorNames{1+c1});
                             end % sessions loop
                         end
                         % Arrange the paired seeds according to idxSessions
-                        fprintf('Arranging data C%d (%s)...\n',c1,colorNames{1+c1});
-                        tmpArray = zeros([length(job.paired_seeds), size(idxSess)]);
-                        for iROI = 1:length(job.paired_seeds)
-                            for iSess = 1:length(idxSess)
+                        fprintf('Retrieving data %s C%d (%s)...\n',IOI.subj_name, c1,colorNames{1+c1});
+                        tmpArray = zeros([size(job.paired_seeds, 1), size(idxSess)]);
+                        for iROI = 1:size(job.paired_seeds, 1)
+                            for iSess = 1:size(idxSess, 1)
                                 tmpArray(iROI,iSess,1) = pairedSeeds{iROI}{idxSess(iSess,1), c1};
                                 tmpArray(iROI,iSess,2) = pairedSeeds{iROI}{idxSess(iSess,2), c1};
                             end
                         end
-                        for iROI = 1:length(job.paired_seeds)
+                        for iROI = 1:size(job.paired_seeds, 1)
                             groupCorrData{iROI,c1} = [groupCorrData{iROI,c1}; squeeze(tmpArray(iROI,:,:))];
                             groupCorrIdx{iROI,c1} = [groupCorrIdx{iROI,c1}; idxSess];
                         end
@@ -134,7 +144,7 @@ for SubjIdx=1:length(job.IOImat)
                         % fprintf('Paired seeds correlation analysis failed! C%d (%s)...\n',c1,colorNames{1+c1});
                     end
                 end % colors loop
-                % Save group correlation data data
+                % Save group correlation data data (data is appended for more subjects)
                 save(IOI.fcIOS.corr(1).fnameGroup,'groupCorrData','groupCorrIdx')
                 % Save IOI matrix
                 save(IOImat,'IOI');
@@ -151,68 +161,183 @@ for SubjIdx=1:length(job.IOImat)
 end % Big loop over subjects
 
 % For all the subjects
-% - Choose parent folder (batch)
-% Loop over available colors
-for c1=1:length(IOI.fcIOS.corr.corrMapName{1})
+% Choose parent folder (batch)
+% Loop over available colors and paired seeds
+% Do group statistical tests
+% Plot/print graphics
+for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
     doColor = ioi_doColor(IOI,c1,IC);
     if doColor
         colorOK = true;
         %skip laser - only extract for flow
         if ~(IOI.color.eng(c1)==IOI.color.laser)
-            % - Do a separate paired t-test for each seed data
-            for iSeeds = 1:length(job.paired_seeds)
+            
+            % Do a separate paired t-test for each seed data
+            for iSeeds = 1:size(job.paired_seeds, 1)
+                % Average of control group
                 meanCorr{iSeeds,c1}(1) = nanmean(groupCorrData{iSeeds,c1}(:,1));
+                % Average of treatment group
                 meanCorr{iSeeds,c1}(2) = nanmean(groupCorrData{iSeeds,c1}(:,2));
+                % Standard deviation of control group
                 stdCorr{iSeeds,c1}(1) = nanstd(groupCorrData{iSeeds,c1}(:,1));
+                % Standard deviation oftreatment group
                 stdCorr{iSeeds,c1}(2) = nanstd(groupCorrData{iSeeds,c1}(:,2));
+                
+                % Used to plot bar graphs with errorbars
                 y(iSeeds,:) = meanCorr{iSeeds,c1};
                 e(iSeeds,:) = stdCorr{iSeeds,c1};
+
+                % Paired-sample t-test
+                if job.ttest1
+                    [statTest(1).t(1).H{iSeeds,c1}, statTest(1).t(1).P{iSeeds,c1}, ...
+                        statTest(1).t(1).CI{iSeeds,c1}, statTest(1).t(1).STATS{iSeeds,c1}] ...
+                        = ttest(...
+                        groupCorrData{iSeeds,c1}(:,1), groupCorrData{iSeeds,c1}(:,2),...
+                        job.alpha,'both');
+                    statTest(1).t(1).id = 'Paired-sample t-test';
+                end % t-test
+                
+                % Wilcoxon rank sum test
+                if job.wilcoxon1
+                    ctrlGroup = groupCorrData{iSeeds,c1}(:,1);
+                    % ignore NaN values
+                    ctrlGroup = ctrlGroup(~isnan(ctrlGroup));
+                    treatmentlGroup = groupCorrData{iSeeds,c1}(:,2);
+                    % ignore NaN values
+                    treatmentlGroup = treatmentlGroup(~isnan(treatmentlGroup));
+                    % Perform such test
+                    [statTest(1).w(1).P{iSeeds,c1}, statTest(1).w(1).H{iSeeds,c1},...
+                        statTest(1).w(1).STATS{iSeeds,c1}] = ranksum...
+                        (ctrlGroup, treatmentlGroup, 'alpha', job.alpha);
+                    statTest(1).w(1).id = 'Wilcoxon rank sum test';
+                 end % Wilcoxon test
                  
-                [H{iSeeds,c1},P{iSeeds,c1},CI{iSeeds,c1},STATS{iSeeds,c1}] = ttest(...
-                    groupCorrData{iSeeds,c1}(:,1), groupCorrData{iSeeds,c1}(:,2),...
-                    job.alpha,'both');
+            end % paired-seeds loop
+            
+            % Show standard error bars instead of standard deviation
+            if job.stderror
+                % std error bars: sigma/sqrt(N)
+                e = e / sqrt(size(groupCorrData{iSeeds,c1}, 1));
             end
-            % std error bars: sigma/sqrt(N)
-            e=e/sqrt(length(groupCorrData{iSeeds,c1}));
-            % - Display a graph with ROI labels
-            if job.generate_figures
-                % Display plots on SPM graphics window
-                h = spm_figure('GetWin', 'Graphics');
-                set(gcf,'color','w')
-                barwitherr(e,y)
-                % Display colormap according to the contrast
-                switch(c1)
-                    case 5
-                        colormap([1 0 0; 1 1 1]);
-                    case 6
-                        colormap([0 0 1; 1 1 1]);
-                    case 7 
-                        colormap(gray)
-                    otherwise
-                        colormap(gray)
-                end
-                title(sprintf('%s Bilateral correlation before/after 4-AP C%d(%s)',IOI.subj_name,c1,colorNames{1+c1}),'interpreter','none','FontSize',12)
-                ylabel('functional correlation z(r)','FontSize',12)
-                set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'})
-                set(gca,'FontSize',12)
-                legend({'Control' '4-AP'},'FontSize',12)
-                if job.save_figures
-                    newName = sprintf('%s_groupCorr_C%d_(%s)',IOI.subj_name,c1,colorNames{1+c1});
-                    % Save as EPS
-                    spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1},newName));
-                    % Save as PNG
-                    print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), '-r300');
-                end
-            end
-            % - Save a .csv file in parent folder
+            
+            % Plot results
+            private_plot_group_corr_test(job, IOI, c1, e, y, statTest);
+            
+            % Save results in .mat file
             save(IOI.fcIOS.corr(1).fnameGroup,'groupCorrData','groupCorrIdx',...
-                'meanCorr','H','P','CI','STATS');
+                'meanCorr','stdCorr','statTest');
+            % Save a .csv file in parent folder % TO DO...
+            
         end
     end
 end % loop over colors
-% correlation group analysis succesful!
-% IOI.fcIOS.corr(1).corrGroupOK = true;
 % Group comparison of bilateral correlation succesful!
 fprintf('Group comparison of bilateral correlation succesful!\n');
+
+function private_plot_group_corr_test(job, IOI, c1, e, y, statTest)
+% Plots statistical analysis group results
+colorNames = fieldnames(IOI.color);
+% Positioning factor for the * mark, depends on max data value at the given seed
+starPosFactor = 1.05;
+
+if job.ttest1
+    % Display a graph with ROI labels
+    if job.generate_figures
+        % Display plots on SPM graphics window
+        h = spm_figure('GetWin', 'Graphics');
+        spm_figure('Clear', 'Graphics');
+        % Custom bar graphs with error bars (1st arg: error)
+        barwitherr(e, y)
+        % Display colormap according to the contrast
+        switch(c1)
+            case 5
+                % HbO contrast
+                colormap([1 0 0; 1 1 1]);
+            case 6
+                % HbR contrast
+                colormap([0 0 1; 1 1 1]);
+            case 7
+                % Flow contrast
+                colormap([0.5 0.5 0.5; 1 1 1])
+            otherwise
+                colormap(gray)
+        end
+        title(sprintf('Regional Bilateral Correlation before/after 4-AP C%d(%s)',...
+            c1,colorNames{1+c1}),'interpreter','none','FontSize',12)
+        ylabel('Functional correlation z(r)','FontSize',18)
+        set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b')
+        set(gca,'FontSize',14)
+        legend({'Control' '4-AP'},'FontSize',12)
+        % Show a * when a significant difference is found.
+        for iSeeds = 1:size(job.paired_seeds, 1)
+            if statTest(1).t(1).H{iSeeds,c1}
+                if max(y(iSeeds,:))>=0
+                    yPos = starPosFactor*(max(y(iSeeds,:)) + max(e(iSeeds,:)));
+                else
+                    yPos = starPosFactor*(min(y(iSeeds,:)) - max(e(iSeeds,:)));
+                end
+                xPos = iSeeds;
+                text(xPos, yPos, '*', 'FontSize', 24, 'FontWeight', 'b');
+            end
+        end
+        if job.save_figures
+            newName = sprintf('groupCorr_Ttest_C%d_(%s)',c1,colorNames{1+c1});
+            % Save as EPS
+            spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1}, newName));
+            % Save as PNG
+            print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), '-r300');
+        end
+    end % end generate figures
+end
+
+if job.wilcoxon1
+    % Display a graph with ROI labels
+    if job.generate_figures
+        % Display plots on SPM graphics window
+        h = spm_figure('GetWin', 'Graphics');
+        spm_figure('Clear', 'Graphics');
+        % Custom bar graphs with error bars (1st arg: error)
+        barwitherr(e, y)
+        % Display colormap according to the contrast
+        switch(c1)
+            case 5
+                % HbO contrast
+                colormap([1 0 0; 1 1 1]);
+            case 6
+                % HbR contrast
+                colormap([0 0 1; 1 1 1]);
+            case 7
+                % Flow contrast
+                colormap([0.5 0.5 0.5; 1 1 1])
+            otherwise
+                colormap(gray)
+        end
+        title(sprintf('Regional Bilateral Correlation before/after 4-AP C%d(%s)',...
+            c1,colorNames{1+c1}),'interpreter','none','FontSize',12)
+        ylabel('Functional correlation z(r)','FontSize',18)
+        set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b')
+        set(gca,'FontSize',14)
+        legend({'Control' '4-AP'},'FontSize',12)
+        % Show a * when a significant difference is found.
+        for iSeeds = 1:size(job.paired_seeds, 1)
+            if statTest(1).w(1).H{iSeeds,c1}
+                if max(y(iSeeds,:))>=0
+                    yPos = starPosFactor*(max(y(iSeeds,:)) + max(e(iSeeds,:)));
+                else
+                    yPos = starPosFactor*(min(y(iSeeds,:)) - max(e(iSeeds,:)));
+                end
+                xPos = iSeeds;
+                text(xPos,yPos,'*', 'FontSize', 24, 'FontWeight', 'b');
+            end
+        end
+        if job.save_figures
+            newName = sprintf('groupCorr_Wtest_C%d_(%s)',c1,colorNames{1+c1});
+            % Save as EPS
+            spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1},newName));
+            % Save as PNG
+            print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), '-r300');
+        end
+    end % End generate figures
+end
 
 % EOF

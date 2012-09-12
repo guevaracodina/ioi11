@@ -85,7 +85,13 @@ pointNclickROI          = cfg_branch;
 pointNclickROI.tag      = 'pointNclickROI';
 pointNclickROI.name     = 'Manual ROI selection: point & click'; 
 pointNclickROI.val      = {ManualROIradius};
-pointNclickROI.help     = {'Manual ROI selection: point & click the center of circular ROI/seed'}';
+pointNclickROI.help     = {'Manual ROI selection: point & click the center of circular ROI/seed. Usually'
+                                '  1,2: Frontal'
+                                '  3,4: Motor'
+                                '  5,6: Cingulate'
+                                '  7,8: Somatosensory'
+                                ' 9,10: Retrosplenial'
+                                '11,12: Visual'}';
 
 AutoROIchoice           = cfg_choice;
 AutoROIchoice.name      = 'Choose ROI generation method';
