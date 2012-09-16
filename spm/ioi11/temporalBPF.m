@@ -3,7 +3,11 @@ function Yfilt = temporalBPF(type, fs, cutoff, FilterOrder, Y)
 % SYNTAX
 % function Yfilt = ButterBPF(fs, cutoff, FilterOrder, Y)
 % INPUTS
-% type          String specifying the type of filter to use: 
+% type          String specifying the type of filter to use:
+%               'butter'
+%               'cheby1'
+%               'cheby2'
+%               'ellip'
 % fs            Sampling frequency(in seconds)
 % cutoff        A two-element vector fn (in Hz) that must be 0.0 < fn < fs/2
 % FilterOrder   An integer (usually N=4)
@@ -19,7 +23,7 @@ try
     
     switch type
         case 'butter'                   % Butterworth filter
-            [z, p, k] = butter(FilterOrder, Wn, 'bandpass');	
+            [z, p, k] = butter(FilterOrder, Wn, 'bandpass');
         case 'cheby1'                   % Chebyshev I filter
             % R dB of peak-to-peak ripple in the passband
             R = 0.5;
@@ -34,7 +38,7 @@ try
             Rp = .1; Rs = 80;
             % [b,a] = ellip(FilterOrder, Rp, Rs, Wn, 'bandpass');
             % Due to edge artifacts, one should use the [z,p,k] syntax to design
-            % IIR filters. 
+            % IIR filters.
             [z, p, k] = ellip(FilterOrder, Rp, Rs, Wn, 'bandpass');
         case 'yulewalk'                 % Recursive digital filter design
             f = [0 Wn 1];
@@ -45,17 +49,20 @@ try
             Yfilt = Y;
             return
     end
-    % Zero-phase forward and reverse digital filtering
-    % Yfilt = filtfilt(b, a, Y);
     
-    % Convert zero-pole-gain filter parameters to second-order sections
-    % form
+    % Yfilt = filtfilt(b, a, Y);
+    % Zero-phase forward and reverse digital filtering filtfilt disabled because
+    % the method is not implemented in the dfilt object, only filter is.
+    
+    % Convert zero-pole-gain filter parameters to second-order sections form
     [sos, g] = zp2sos(z,p,k);
     % Create a dicrete-time filter object
-    hFilt = dfilt.df2sos(sos,g);
-    % filtfilt disabled because the method is not implemented in the dfilt
-    % object, only filter is.
-    Yfilt = filter(hFilt, Y);
+    %       hFilt = dfilt.df2sos(sos,g);
+    %     % Perform the filtering
+    %     Yfilt = filter(hFilt, Y);
+    
+    Yfilt = ioi_filtfilt(sos, g, Y);
+    
 catch exception
     Yfilt = Y;
     disp(exception.identifier)
