@@ -1,4 +1,4 @@
-function [corrMatrix corrMatrixFname] = ioi_roi_corr(job,SubjIdx)
+function [corrMatrix corrMatrixDiff corrMatrixFname corrMatrixDiffFname] = ioi_roi_corr(job,SubjIdx)
 % Gets the correlation matrix for every seed/ROI time trace.
 %_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
@@ -34,6 +34,9 @@ else
                         if IOI.fcIOS.SPM.ROIregressOK{r1}{s1,c1}
                             % Preallocate map for the seed-to-seed correlation matrix
                             tVector = numel(ROIregress{r1}{s1,c1});
+                            if isfield (job,'derivative')
+                                tVectorDiff = numel(ROIregress{r1}{s1,c1})-1;
+                            end
                             % fprintf('time vector size found for seed
                             % %d\n',r1);
                             roiOK = true;
@@ -44,19 +47,30 @@ else
                         end
                     end
                     if roiOK
+                        % Preallocate
                         roiMatrix = zeros([tVector numel(nROI)]);
+                        if isfield (job,'derivative')
+                            roiMatrixDiff = zeros([tVectorDiff numel(nROI)]);
+                        end
                         % Loop over ROI/seeds
                         for r1 = nROI,
                             if all_ROIs || sum(r1==selected_ROIs)
                                 if IOI.fcIOS.SPM.ROIregressOK{r1}{s1,c1}
                                     roiMatrix(:, r1) = ROIregress{r1}{s1,c1};
+                                    if isfield (job,'derivative')
+                                        roiMatrixDiff(:, r1) = diff(ROIregress{r1}{s1,c1});
+                                    end
                                 else
                                     roiMatrix = [];
+                                    roiMatrixDiff = [];
                                 end
                             end
                         end % loop over sessions
                         % Compute seed-to-seed correlation matrix
                         corrMatrix{1}{s1,c1} = corrcoef(roiMatrix);
+                        if isfield (job,'derivative')
+                            corrMatrixDiff{1}{s1,c1} = corrcoef(roiMatrixDiff);
+                        end
                         if IOI.fcIOS.SPM.ROIregressOK{r1}{s1,c1}
                             if job.generate_figures
                                 h = figure; set(gcf,'color','w')
@@ -74,6 +88,23 @@ else
                                     print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
                                 end
                                 close(h)
+                                if isfield (job,'derivative')
+                                    h = figure; set(gcf,'color','w')
+                                    imagesc(corrMatrixDiff{1}{s1,c1},[-1 1]); axis image; colorbar
+                                    colormap(get_colormaps('rwbdoppler'));
+                                    set(gca,'yTick',1:numel(IOI.res.ROI))
+                                    set(gca,'yTickLabel',IOI.ROIname)
+                                    set(gca,'xTickLabel',[])
+                                    newName = sprintf('%s_S%d_C%d(%s)_s2sCorrMatDiff',IOI.subj_name,s1,c1,colorNames{1+c1});
+                                    title(newName,'interpreter','none')
+                                    if job.save_figures
+                                        % Save as EPS
+                                        spm_figure('Print', 'Graphics', fullfile(dir_ioimat,newName));
+                                        % Save as PNG
+                                        print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
+                                    end
+                                    close(h)
+                                end
                             end
                         else
                             % Do not plot (empty matrix)
@@ -81,12 +112,14 @@ else
                     else
                         % No ROIs are correctly regressed
                         corrMatrix{1}{s1,c1} = [];
+                        corrMatrixDiff{1}{s1,c1} = [];
                     end
                 end
             end % loop over colors
         end
     end % loop over sessions
     corrMatrixFname = fullfile(dir_ioimat,'s2sCorrMat.mat');
+    corrMatrixDiffFname = fullfile(dir_ioimat,'s2sCorrMatDiff.mat');
 end % GLM regression ok
 
 % EOF

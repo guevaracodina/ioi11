@@ -52,7 +52,7 @@ AutoSessionChoice           = cfg_choice;
 AutoSessionChoice.name      = 'Choose session selection mode';
 AutoSessionChoice.tag       = 'AutoSessionChoice';
 AutoSessionChoice.values    = {ManualSessions AutoSessions}; 
-AutoSessionChoice.val       = {ManualSessions}; 
+AutoSessionChoice.val       = {AutoSessions}; 
 AutoSessionChoice.help      = {'Choose whether to select sessions manually or automatically'}'; 
 
 % Paired seeds
@@ -98,6 +98,15 @@ alpha.val                   = {0.05};               % Default value
 alpha.help                  = {'Performs the test at the significance level (100*alpha)%.' 
     'alpha must be a scalar'};
 
+% Correlation on 1st derivative
+derivative              = cfg_menu;
+derivative.tag          = 'derivative';
+derivative.name         = '1st derivative';
+derivative.labels       = {'No', 'Yes'};
+derivative.values       = {0, 1};
+derivative.val          = {1};                      % Default value
+derivative.help         = {'Choose whether to perform correlation analysis on 1st derivative of seeds/pixels time-course'}';
+
 % Show standard error bar
 stderror                   = cfg_menu;
 stderror.tag               = 'stderror';
@@ -123,7 +132,7 @@ parent_results_dir.help     = {'Select the directory where consolidated results 
 group_corr1                 = cfg_exbranch; % This is the branch that has information about how to run this module
 group_corr1.name            = 'Bilateral correlation group comparison'; % The display name
 group_corr1.tag             = 'group_corr1'; %Very important: tag is used when calling for execution
-group_corr1.val             = {IOImat redo1 IOImatCopyChoice IC AutoSessionChoice paired_seeds ttest1 wilcoxon1 alpha stderror parent_results_dir generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+group_corr1.val             = {IOImat redo1 IOImatCopyChoice IC AutoSessionChoice paired_seeds ttest1 wilcoxon1 alpha derivative stderror parent_results_dir generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 group_corr1.prog            = @ioi_group_corr_run; % A function handle that will be called with the harvested job to run the computation
 group_corr1.vout            = @ioi_cfg_vout_group_corr; % A function handle that will be called with the harvested job to determine virtual outputs
 group_corr1.help            = {'Gets the correlation between each seed and its contralateral homologue. Then performs a paired t-test for each seed set, to have a group comparison.'}';
