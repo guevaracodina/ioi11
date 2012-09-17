@@ -158,7 +158,7 @@ for SubjIdx=1:length(job.IOImat)
                                                     
                                                     % Band-passs filtering
                                                     ROIsignal = temporalBPF(fType,fs,BPFfreq,filterOrder,ROIsignal);
-                                                        
+                                                    
                                                     % Downsampling
                                                     ROIsignal = downsample(ROIsignal, samples2skip);
                                                     
@@ -277,20 +277,21 @@ if job.generate_figures
     xlabel('f [Hz]','FontSize',14)
     set(gca,'FontSize',12)
     xlim([0 max(freq)]);
-end
-[oldDir, oldName, oldExt] = fileparts(IOI.res.ROI{1,1}.fname);
-newName = [sprintf('%s_R%02d_S%02d_C%d',IOI.subj_name,r1,s1,c1) '_filtNdown'];
-
-if job.save_figures
-    if isfield(job.IOImatCopyChoice,'IOImatCopy')
-        dir_filtfig = fullfile(dir_ioimat,strcat('fig_',job.IOImatCopyChoice.IOImatCopy.NewIOIdir));
-    else
-        dir_filtfig = fullfile(dir_ioimat,'fig_FiltNDown');
-    end
-    if ~exist(dir_filtfig,'dir'), mkdir(dir_filtfig); end
-    % Save as PNG
-    print(h, '-dpng', fullfile(dir_filtfig,newName), '-r300');
-    % --------------------------
-end
-end
+    
+    [oldDir, oldName, oldExt] = fileparts(IOI.res.ROI{1,1}.fname);
+    newName = [sprintf('%s_R%02d_S%02d_C%d',IOI.subj_name,r1,s1,c1) '_filtNdown'];
+    
+    if job.save_figures
+        if isfield(job.IOImatCopyChoice,'IOImatCopy')
+            dir_filtfig = fullfile(dir_ioimat,strcat('fig_',job.IOImatCopyChoice.IOImatCopy.NewIOIdir));
+        else
+            dir_filtfig = fullfile(dir_ioimat,'fig_FiltNDown');
+        end
+        if ~exist(dir_filtfig,'dir'), mkdir(dir_filtfig); end
+        % Save as PNG
+        print(h, '-dpng', fullfile(dir_filtfig,newName), '-r300');
+        % --------------------------
+    end % Save figures
+end % Generate figures
+end % private_plot_filtNdown_data
 % EOF

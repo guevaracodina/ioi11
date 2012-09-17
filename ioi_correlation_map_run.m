@@ -43,7 +43,7 @@ for SubjIdx=1:length(job.IOImat)
                                 colorOK = true;
                                 %skip laser - only extract for flow
                                 if ~(IOI.color.eng(c1)==IOI.color.laser)
-                                    %% Do my stuff here!
+                                    %% Main processing loop
                                     [all_ROIs selected_ROIs] = ioi_get_ROIs(job);
                                     nROI = 1:length(IOI.res.ROI); % All the ROIs
                                     
@@ -77,27 +77,23 @@ for SubjIdx=1:length(job.IOImat)
                                                 if size(brainMask,1)~= size(y,1)|| size(brainMask,2)~= size(y,2)
                                                     brainMask = ioi_MYimresize(brainMask, [size(y,1) size(y,2)]);
                                                 end
-                                                % Load anatomical image
-                                                % anatVol = spm_vol(IOI.res.file_anat);
-                                                % anat = spm_read_vols(anatVol);
-                                                % if size(anat,1)~= size(y,1)|| size(anat,2)~= size(y,2)
-                                                %     anat = ioi_MYimresize(anat, [size(y,1) size(y,2)]);
-                                                % end
-                                                % Load ROI mask
-                                                % ROImaskVol = spm_vol(IOI.res.ROI{r1}.fname);
-                                                % ROImask = spm_read_vols(ROImaskVol);
-                                                % if size(ROImask,1)~= size(y,1)|| size(ROImask,2)~= size(y,2)
-                                                %     ROImask = ioi_MYimresize(ROImask, [size(y,1) size(y,2)]);
-                                                % end
+                                                
                                                 % Preallocate
                                                 tempCorrMap = zeros([size(y,1) size(y,2)]);
                                                 pValuesMap =  zeros([size(y,1) size(y,2)]);
+                                                if isfield (job,'derivative')
+                                                    tempCorrMapDiff = zeros([size(y,1) size(y,2)]);
+                                                    pValuesMapDiff =  zeros([size(y,1) size(y,2)]);
+                                                end
                                                 % Find Pearson's correlation coefficient
                                                 fprintf('Computing Pearson''s correlation map...\n');
                                                 for iX = 1:size(y,1),
                                                     for iY = 1:size(y,2),
                                                         if brainMask(iX, iY)
                                                             [tempCorrMap(iX, iY) pValuesMap(iX, iY)]= corr(squeeze(ROI), squeeze(y(iX, iY, 1, :)));
+                                                            if isfield (job,'derivative')
+                                                                [tempCorrMapDiff(iX, iY) pValuesMapDiff(iX, iY)]= corr(diff(squeeze(ROI)), diff(squeeze(y(iX, iY, 1, :))));
+                                                            end
                                                         end
                                                     end
                                                 end
@@ -106,49 +102,81 @@ for SubjIdx=1:length(job.IOImat)
                                                 seed_based_fcIOS_map{r1}{s1,c1}.pearson = tempCorrMap;
                                                 seed_based_fcIOS_map{r1}{s1,c1}.pValue = pValuesMap;
                                                 
-                                                % Convert Pearson's correlation
-                                                % coeff. r to Fisher's z value.
-                                                if job.fisherZ
-                                                    % Find Pearson's correlation coefficient
-                                                    fprintf('Computing Fisher''s Z statistic...\n');
-                                                    [~, oldName, oldExt] = fileparts(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
-                                                        newName = [oldName '_fcIOS_Zmap'];
-                                                    seed_based_fcIOS_map{r1}{s1,c1}.fisher = fisherz(tempCorrMap .* (pValuesMap < job.pValue));
-                                                    % Save as nifti
-                                                    ioi_save_nifti(seed_based_fcIOS_map{r1}{s1,c1}.fisher, fullfile(dir_ioimat,[newName oldExt]), vx);
-                                                    IOI.fcIOS.corr(1).zMapName{r1}{s1, c1} = fullfile(dir_ioimat,[newName oldExt]);
-                                                    
+                                                if isfield (job,'derivative')
+                                                    seed_based_fcIOS_map{r1}{s1,c1}.pearsonDiff = tempCorrMapDiff;
+                                                    seed_based_fcIOS_map{r1}{s1,c1}.pValueDiff = pValuesMapDiff;
+                                                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
                                                     if job.generate_figures
-                                                        % Find 1st positive
-                                                        % value
-                                                        z1 = sort(seed_based_fcIOS_map{r1}{s1,c1}.fisher(:),1,'ascend');
-                                                        idx1  = find(z1>0, 1, 'first');
-                                                        minPosVal = z1(idx1);
+                                                        % Improve display
+                                                        tempCorrMapDiff(~brainMask) = median(tempCorrMapDiff(:));
+                                                        % Seed annotation dimensions
+                                                        % the lower left corner of
+                                                        % the bounding rectangle at
+                                                        % the point seedX, seedY
+                                                        seedX = IOI.res.ROI{r1}.center(2) - IOI.res.ROI{r1}.radius;
+                                                        seedY = IOI.res.ROI{r1}.center(1) - IOI.res.ROI{r1}.radius;
+                                                        % Seed width
+                                                        seedW = 2*IOI.res.ROI{r1}.radius;
+                                                        % Seed height
+                                                        seedH = 2*IOI.res.ROI{r1}.radius;
+                                                        if isfield(IOI.res,'shrinkageOn')
+                                                            if IOI.res.shrinkageOn == 1
+                                                                seedX = seedX / IOI.res.shrink_x;
+                                                                seedY = seedY / IOI.res.shrink_y;
+                                                                seedW = seedW / IOI.res.shrink_x;
+                                                                seedH = seedH / IOI.res.shrink_y;
+                                                            end
+                                                        end
                                                         
-                                                        % Find 1st negative
-                                                        % value
-                                                        z2 = sort(seed_based_fcIOS_map{r1}{s1,c1}.fisher(:),1,'descend');
-                                                        idx2  = find(z2<0, 1, 'first');
-                                                        minNegVal = z2(idx2);
-                                                        anatomical      = IOI.res.file_anat;
-                                                        positiveMap     = IOI.fcIOS.corr.zMapName{r1}{s1, c1};
-                                                        negativeMap     = IOI.fcIOS.corr.zMapName{r1}{s1, c1};
-                                                        colorNames      = fieldnames(IOI.color);
-                                                        mapRange        = [max(abs([minNegVal minPosVal])) max(z1)];
-                                                        titleString     = sprintf('%s seed%d S%d(%s)Z-map',IOI.subj_name,r1,s1,colorNames{1+c1});
                                                         % Display plots on SPM graphics window
                                                         h = spm_figure('GetWin', 'Graphics');
                                                         spm_figure('Clear', 'Graphics');
-                                                        h = ioi_overlay_map(anatomical, positiveMap, negativeMap, mapRange, titleString);
+                                                        spm_figure('ColorMap','jet')
+                                                        
+                                                        % Correlation map
+                                                        subplot(211)
+                                                        imagesc(tempCorrMapDiff); colorbar; axis image;
+                                                        % Display ROI
+                                                        rectangle('Position',[seedX seedY seedW seedH],...
+                                                            'Curvature',[1,1],...
+                                                            'LineWidth',2,'LineStyle','-');
+                                                        set(gca,'Xtick',[]); set(gca,'Ytick',[]);
+                                                        xlabel('Left', 'FontSize', 14); ylabel('Rostral', 'FontSize', 14);
+                                                        title(sprintf('%s fcIOS map Seed %d (%s) S%d C%d (%s) Diff\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none', 'FontSize', 14)
+                                                        
+                                                        % Show only significant
+                                                        % pixels
+                                                        subplot(212)
+                                                        imagesc(tempCorrMapDiff .* (pValuesMapDiff <= job.pValue), [-1 1]); colorbar; axis image;
+                                                        % Display ROI
+                                                        rectangle('Position',[seedX seedY seedW seedH],...
+                                                            'Curvature',[1,1],...
+                                                            'LineWidth',2,'LineStyle','-');
+                                                        set(gca,'Xtick',[]); set(gca,'Ytick',[]);
+                                                        xlabel('Left', 'FontSize', 14); ylabel('Rostral', 'FontSize', 14);
+                                                        title(sprintf('%s significant pixels (p<%.2f) Seed %d (%s) S%d C%d (%s) Diff\n',IOI.subj_name,job.pValue,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none', 'FontSize', 14)
+                                                        
                                                         if job.save_figures
+                                                            [~, oldName, oldExt] = fileparts(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
+                                                            % newName = [oldName '_fcIOS_map'];
+                                                            newName = [sprintf('%s_R%02d_S%02d_C%d',IOI.subj_name,r1,s1,c1) '_fcIOS_map_diff'];
+                                                            dir_corrfigDiff = fullfile(dir_ioimat,'fig_corrMapDiff');
+                                                            if ~exist(dir_corrfigDiff,'dir'), mkdir(dir_corrfigDiff); end
                                                             % Save as PNG
-                                                            print(h, '-dpng', fullfile(dir_ioimat,newName), '-r150');
+                                                            print(h, '-dpng', fullfile(dir_corrfigDiff,newName), '-r300');
                                                             % Save as EPS
-                                                            spm_figure('Print', 'Graphics', fullfile(dir_ioimat,newName));
+                                                            spm_figure('Print', 'Graphics', fullfile(dir_corrfigDiff,newName));
+                                                            % Save as PNG
+                                                            % print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
+                                                            % Save as nifti
+                                                            ioi_save_nifti(tempCorrMap, fullfile(dir_corrfigDiff,[newName oldExt]), vx);
+                                                            IOI.fcIOS.corr(1).corrMapName{r1}{s1, c1} = fullfile(dir_corrfigDiff,[newName oldExt]);
                                                         end
                                                     end
+                                                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
                                                 end
- 
+                                                
+                                                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                                                 if job.generate_figures
                                                     % Improve display
                                                     tempCorrMap(~brainMask) = median(tempCorrMap(:));
@@ -201,17 +229,78 @@ for SubjIdx=1:length(job.IOImat)
                                                     
                                                     if job.save_figures
                                                         [~, oldName, oldExt] = fileparts(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
-                                                        newName = [oldName '_fcIOS_map'];
-                                                        % Save as EPS
-                                                        spm_figure('Print', 'Graphics', fullfile(dir_ioimat,newName));
+                                                        % newName = [oldName '_fcIOS_map'];
+                                                        newName = [sprintf('%s_R%02d_S%02d_C%d',IOI.subj_name,r1,s1,c1) '_fcIOS_map'];
+                                                        if isfield(job.IOImatCopyChoice,'IOImatCopy')
+                                                            dir_corrfig = fullfile(dir_ioimat,strcat('fig_',job.IOImatCopyChoice.IOImatCopy.NewIOIdir));
+                                                        else
+                                                            dir_corrfig = fullfile(dir_ioimat,'fig_corrMap');
+                                                        end
+                                                        if ~exist(dir_corrfig,'dir'), mkdir(dir_corrfig); end
                                                         % Save as PNG
-                                                        print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
+                                                        print(h, '-dpng', fullfile(dir_corrfig,newName), '-r300');
+                                                        % Save as EPS
+                                                        spm_figure('Print', 'Graphics', fullfile(dir_corrfig,newName));
+                                                        % Save as PNG
+                                                        % print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
                                                         % Save as nifti
-                                                        ioi_save_nifti(tempCorrMap, fullfile(dir_ioimat,[newName oldExt]), vx);
-                                                        IOI.fcIOS.corr(1).corrMapName{r1}{s1, c1} = fullfile(dir_ioimat,[newName oldExt]);
+                                                        ioi_save_nifti(tempCorrMap, fullfile(dir_corrfig,[newName oldExt]), vx);
+                                                        IOI.fcIOS.corr(1).corrMapName{r1}{s1, c1} = fullfile(dir_corrfig,[newName oldExt]);
                                                     end
                                                 end
+                                                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                                                 
+                                                % Convert Pearson's correlation
+                                                % coeff. r to Fisher's z value.
+                                                if job.fisherZ
+                                                    % Find Pearson's correlation coefficient
+                                                    fprintf('Computing Fisher''s Z statistic...\n');
+                                                    [~, oldName, oldExt] = fileparts(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
+                                                    % newName = [oldName '_fcIOS_Zmap'];
+                                                    newName = [sprintf('%s_R%02d_S%02d_C%d',IOI.subj_name,r1,s1,c1) '_fcIOS_Zmap'];
+                                                    dir_fisherZfig = fullfile(dir_ioimat,'fig_fisherZ');
+                                                    if ~exist(dir_fisherZfig,'dir'), mkdir(dir_fisherZfig); end
+                                                    seed_based_fcIOS_map{r1}{s1,c1}.fisher = fisherz(tempCorrMap .* (pValuesMap < job.pValue));
+                                                    
+                                                    
+                                                    if job.generate_figures
+                                                        % Save as nifti
+                                                        ioi_save_nifti(seed_based_fcIOS_map{r1}{s1,c1}.fisher, fullfile(dir_fisherZfig,[newName oldExt]), vx);
+                                                        IOI.fcIOS.corr(1).zMapName{r1}{s1, c1} = fullfile(dir_fisherZfig,[newName oldExt]);
+                                                        % Find 1st positive
+                                                        % value
+                                                        z1 = sort(seed_based_fcIOS_map{r1}{s1,c1}.fisher(:),1,'ascend');
+                                                        idx1  = find(z1>0, 1, 'first');
+                                                        minPosVal = z1(idx1);
+                                                        
+                                                        % Find 1st negative
+                                                        % value
+                                                        z2 = sort(seed_based_fcIOS_map{r1}{s1,c1}.fisher(:),1,'descend');
+                                                        idx2  = find(z2<0, 1, 'first');
+                                                        minNegVal = z2(idx2);
+                                                        
+                                                        % Get parameters for
+                                                        % overlay
+                                                        anatomical      = IOI.res.file_anat;
+                                                        positiveMap     = IOI.fcIOS.corr.zMapName{r1}{s1, c1};
+                                                        negativeMap     = IOI.fcIOS.corr.zMapName{r1}{s1, c1};
+                                                        colorNames      = fieldnames(IOI.color);
+                                                        mapRange        = [max(abs([minNegVal minPosVal])) max(z1)];
+                                                        titleString     = sprintf('%s seed%d S%d(%s)Z-map',IOI.subj_name,r1,s1,colorNames{1+c1});
+                                                        % Display plots on SPM graphics window
+                                                        h = spm_figure('GetWin', 'Graphics');
+                                                        spm_figure('Clear', 'Graphics');
+                                                        h = ioi_overlay_map(anatomical, positiveMap, negativeMap, mapRange, titleString);
+                                                        if job.save_figures
+                                                            % Save as PNG
+                                                            print(h, '-dpng', fullfile(dir_fisherZfig,newName), '-r150');
+                                                            % Save as EPS
+                                                            spm_figure('Print', 'Graphics', fullfile(dir_fisherZfig,newName));
+                                                        end
+                                                    end
+                                                end
+ 
+                                               
                                                 % correlation map succesful!
                                                 fprintf('Pearson''s correlation coefficient computed. Seed %d (%s) session %d C%d (%s)\n',r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1});
                                                 IOI.fcIOS.corr(1).corrMapOK{r1}{s1, c1} = true;
@@ -235,11 +324,13 @@ for SubjIdx=1:length(job.IOImat)
                 IOI.fcIOS.corr(1).corrOK = true;
                 % Compute seed to seed correlation matrix
                 if job.seed2seedCorrMat
-                    [seed2seedCorrMat IOI.fcIOS.corr(1).corrMatrixFname] = ioi_roi_corr(job, SubjIdx);
+                    [seed2seedCorrMat seed2seedCorrMatDiff IOI.fcIOS.corr(1).corrMatrixFname IOI.fcIOS.corr(1).corrMatrixDiffFname] = ioi_roi_corr(job, SubjIdx);
                     % seed-to-seed correlation succesful!
                     IOI.fcIOS.corr(1).corrMatrixOK = true;
                     % Save seed-to-seed correlation data
                     save(IOI.fcIOS.corr(1).corrMatrixFname,'seed2seedCorrMat')
+                    % Save seed-to-seed derivatives correlation data
+                    save(IOI.fcIOS.corr(1).corrMatrixDiffFname,'seed2seedCorrMatDiff')
                 end
                 % Save fcIOS data
                 save(IOI.fcIOS.corr(1).fname,'seed_based_fcIOS_map')
