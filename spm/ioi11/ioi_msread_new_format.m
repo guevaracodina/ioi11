@@ -215,7 +215,11 @@ try
                 elfile_info = fullfile(dir_subj_res,[short_el_label el_info '_' sess_label gen_num_str(sC,2) '.mat']);
                 elfile = fullfile(dir_subj_res,[short_el_label '_' sess_label gen_num_str(sC,2) '.mat']);
                 IOI.res.el{sC} = elfile;
-                %IOI.res.elinfo{sC} = elfile_info; %not used in later modules as did not exist in earlier reading module
+                % I uncommented the following line because I think it is
+                % important to keep elinfo file names in IOI structure to
+                % retrieve data laterin the pipeline; for example blood pressure
+                % or ECG-derived cardiac rythm. //EGC
+                IOI.res.elinfo{sC} = elfile_info; %not used in later modules as did not exist in earlier reading module
                 copyfile(fil_loc, elfile_info);
                 delete(fil_loc);
                 %save electrophysiological data
