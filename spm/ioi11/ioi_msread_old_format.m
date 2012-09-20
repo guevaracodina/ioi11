@@ -255,12 +255,13 @@ try
                         stim.train_duration=scan_info.stim3(stim_index,5);
                         list_stim = [list_stim stim];
                     end
-                    clear names onsets durations
+                    clear names onsets durations parameters
                     %Converted to seconds, rather than frame number
                     for stim_index=1:length(list_stim)
                         names{stim_index}=['Stim_',num2str(stim_index)];
                         onsets{stim_index}=list_stim{stim_index}.onset_frame'*IOI.dev.TR;
                         durations{stim_index}=list_stim{stim_index}.train_duration;
+                        parameters{stim_index}=stim_index;
                     end
                     %Store onset information
                     sess.list_stim = list_stim;
@@ -268,6 +269,7 @@ try
                     sess.names = names; %not quite the SPM format, need to put in Sess.U format
                     sess.onsets = onsets; %in seconds
                     sess.durations = durations; %in seconds
+                    sess.parameters = parameters;
                     catch
                         disp('No onsets found');
                     end

@@ -6,7 +6,7 @@ switch str1
         thr = 10; %threshold
     case 'Y'
         thr = 10; %threshold
-    case 'L'
+    case {'L','C'}
         thr = 1; %threshold
 end
 [nx ny nn nt] = size(image_total);

@@ -5,6 +5,18 @@ function [IOI onsets_list pars_list] = ioi_restrict_onsets(IOI,job,rmi,ust)
 %loop over sessions
 for s1=1:length(IOI.sess_res)
     if all_sessions || sum(s1==selected_sessions)
+        if ~isfield(IOI.sess_res{s1},'parameters')
+            for i0=1:length(IOI.sess_res{s1}.onsets)
+                IOI.sess_res{s1}.parameters{i0} = ones(1,length(IOI.sess_res{s1}.onsets{i0}));
+            end
+        else
+            for i0=1:length(IOI.sess_res{s1}.onsets)
+                if length(IOI.sess_res{s1}.parameters{i0}) == 1
+                    IOI.sess_res{s1}.parameters{i0} = IOI.sess_res{s1}.parameters{i0}*...
+                        ones(1,length(IOI.sess_res{s1}.onsets{i0}));
+                end
+            end
+        end
         tmp_onsets = IOI.sess_res{s1}.onsets;
         tmp_pars = IOI.sess_res{s1}.parameters;
         %remove onsets
