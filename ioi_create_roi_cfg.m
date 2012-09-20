@@ -118,12 +118,23 @@ use_gray_contrast.values = {0,1};
 use_gray_contrast.val  = {1};
 use_gray_contrast.help = {'Use gray contrast.'}';
 
+% Choose whether interface should ask whether to use a previously saved list of ROI
+SelectPreviousROI       = cfg_menu;
+SelectPreviousROI.tag   = 'SelectPreviousROI';
+SelectPreviousROI.name  = 'Select whether interface should ask for a possible previous list of ROIs';
+SelectPreviousROI.labels = {'No','Yes'};
+SelectPreviousROI.values = {0,1};
+SelectPreviousROI.val   = {0};
+SelectPreviousROI.help  = {'If this option is selected, then before manual selection of ROIs,'
+    'The interface will ask the user if they want to use an ROI list from elsewhere.'
+    'This ROI list can then be selected by locating the IOI.mat structure that contains the information.'}';
+
 % Executable Branch
 create_roi1             = cfg_exbranch;       % This is the branch that has information about how to run this module
 create_roi1.name        = 'Create ROI/seed';             % The display name
 create_roi1.tag         = 'create_roi1'; %Very important: tag is used when calling for execution
 create_roi1.val         = {IOImat redo1 RemovePreviousROI IOImatCopyChoice ...
-    select_names AutoROIchoice displayBrainmask use_gray_contrast};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    select_names AutoROIchoice displayBrainmask use_gray_contrast SelectPreviousROI};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 create_roi1.prog        = @ioi_create_roi_run;  % A function handle that will be called with the harvested job to run the computation
 create_roi1.vout        = @ioi_cfg_vout_create_roi; % A function handle that will be called with the harvested job to determine virtual outputs
 create_roi1.help        = {'Create regions of interest/seeds.'};

@@ -4,6 +4,11 @@ try
 catch
     use_gray_contrast = 0;
 end
+try
+    SelectPreviousROI = job.SelectPreviousROI;
+catch
+    SelectPreviousROI = 0;
+end
 % Manual/automatic selection of ROIs/seeds (pointNclickROI ManualROIspline)
 
 % if isfield(job.AutoROIchoice,'AutoROI')
@@ -53,7 +58,7 @@ end
 for SubjIdx=1:length(job.IOImat)
     try
         %Load IOI.mat information
-        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);        
+        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);
         
         if ~isfield(IOI.res,'ROIOK') || job.force_redo
             if job.RemovePreviousROI
@@ -99,16 +104,52 @@ for SubjIdx=1:length(job.IOImat)
             spm_figure('Clear', 'Graphics');
             
             if isfield(job,'displayBrainmask')
-                if job.displayBrainmask == 1
+                if job.displayBrainmask == 1 && isfield(IOI,'fcIOS') && isfield(IOI.fcIOS,'mask') && isfield(IOI.fcIOS.mask,'fname')
                     % Display only brain pixels mask
                     vol = spm_vol(IOI.fcIOS.mask.fname);
                     full_mask = logical(spm_read_vols(vol));
                 else
                     % Display all the image
                     full_mask = ones(size(im_anat));
+                    if job.displayBrainmask
+                        disp('Could not find brain mask')
+                    end
                 end
             else
                 full_mask = ones(size(im_anat));
+            end
+            if SelectPreviousROI
+                % Goto interactive window
+                h2 = spm_figure('GetWin', 'Interactive');
+                spm_input(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ],'-1','d');
+                SelPrevROI = spm_input('Select a previous list of ROIs?',1,'y/n');
+                if SelPrevROI == 'y'
+                    [tPrevROI stsPrevROI] = spm_select(1,'mat','Select IOI.mat structure containing information on desired ROIs','',dir_ioimat,'IOI.mat',1);
+                    if stsPrevROI
+                        IOI0 = IOI; %Store current IOI
+                        try
+                            load(tPrevROI);
+                            IOI_withROIs = IOI;
+                            IOI = IOI0; 
+                            try
+                                if ~isfield(IOI.res,'ROI')
+                                    IOI.ROIname = IOI_withROIs.ROIname;
+                                    IOI.res.ROI = IOI_withROIs.res.ROI;
+                                else
+                                    IOI.ROIname = [IOI.ROIname; IOI_withROIs.ROIname];
+                                    IOI.res.ROI = [IOI.res.ROI IOI_withROIs.res.ROI];                                   
+                                end
+                                index = index+length(IOI.res.ROI);
+                                clear IOI_withROIs
+                            catch
+                                IOI = IOI0;
+                                disp('Specified IOI.mat structure does not contain valid ROI information')
+                            end
+                        catch
+                            disp('Could not load IOI.mat structure containing desired ROIs')
+                        end
+                    end
+                end
             end
             
             if ~autoROI
@@ -219,7 +260,7 @@ for SubjIdx=1:length(job.IOImat)
                         if index < 10, str0 = '0'; else str0 = ''; end
                         str = [str0 int2str(index)];
                         % Save nifti files in ROI sub-folder //EGC
-                        fname_mask = fullfile(dir_ioimat,[fil1 '_ROI_' str '.nii']);
+                        fname_mask = fullfile(dir_ioimat,[fil1 '_ROI_' str '_' name '.nii']);
                         IOI.res.ROI{index}.fname = fname_mask;
                         ioi_save_nifti(mask, fname_mask, vx);
                     end
@@ -264,6 +305,7 @@ for SubjIdx=1:length(job.IOImat)
                     IOI.ROIname = [IOI.ROIname; ['ROI' gen_num_str(i0,3)]];
                 end
             end
+            
             IOI.res.ROIOK = 1;
             save(IOImat,'IOI');
         end
