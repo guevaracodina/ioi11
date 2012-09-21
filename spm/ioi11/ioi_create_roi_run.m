@@ -1,56 +1,35 @@
 function out = ioi_create_roi_run(job)
-try
-    use_gray_contrast = job.use_gray_contrast;
-catch
-    use_gray_contrast = 0;
-end
+use_gray_contrast = job.use_gray_contrast;
 try
     SelectPreviousROI = job.SelectPreviousROI;
 catch
     SelectPreviousROI = 0;
 end
 % Manual/automatic selection of ROIs/seeds (pointNclickROI ManualROIspline)
-
-% if isfield(job.AutoROIchoice,'AutoROI')
-%     ROIsize = job.AutoROIchoice.AutoROI.ArrayROI;
-%     autoROI = 1;
-% else
-%     autoROI = 0;
-%     if isfield(job.AutoROIchoice,'ManualROI')
-%         graphicalROI = 1;
-%     else
-%         graphicalROI = 0;
-%     end
-% end
+activMask = 0; %Boolean to use activation mask
 fNamesROIchoice = fieldnames(job.AutoROIchoice);
+autoROI         = 0;
+graphicalROI    = 0;
+ManualROIspline = 0;
+pointNclickROI  = 0;
+pointNclickROIsquare  = 0;
 switch(fNamesROIchoice{1})
     case 'AutoROI'
         autoROI         = 1;
-        graphicalROI    = 0;
-        ManualROIspline = 0;
-        pointNclickROI  = 0;
         ROIsize         = job.AutoROIchoice.AutoROI.ArrayROI;
     case 'ManualROI'
-        autoROI         = 0;
         graphicalROI    = 1;
-        ManualROIspline = 0;
-        pointNclickROI  = 0;
     case 'ManualROIspline'
-        autoROI         = 0;
-        graphicalROI    = 0;
         ManualROIspline = 1;
-        pointNclickROI  = 0;
     case 'pointNclickROI'
-        autoROI         = 0;
-        graphicalROI    = 0;
-        ManualROIspline = 0;
         pointNclickROI  = 1;
         radius          = job.AutoROIchoice.pointNclickROI.ManualROIradius;
+    case 'pointNclickSquare'
+        pointNclickROIsquare  = 1;
+        ManualROIwidth  = job.AutoROIchoice.pointNclickSquare.ManualROIwidth;
+        ManualROIheight = job.AutoROIchoice.pointNclickSquare.ManualROIheight;
     case 'ManualEnterROI'
-        autoROI         = 0;
-        graphicalROI    = 0;
-        ManualROIspline = 0;
-        pointNclickROI  = 0;
+        % Do nothing
     otherwise
         % Do nothing
 end
@@ -99,6 +78,23 @@ for SubjIdx=1:length(job.IOImat)
             if use_gray_contrast
                 cmap = contrast(im_anat);
             end
+            
+            if isfield(job.activMask_choice,'activMask')
+                try
+                    mask_image = job.activMask_choice.activMask.mask_image{1};
+                    %                     threshold = job.activMask_choice.activMask.threshold;
+                    %                     two_sided = job.activMask_choice.activMask.two_sided;
+                    hM=hgload(mask_image);
+                    %                     ch=get(hM,'Children');
+                    %                     l=get(ch,'Children');
+                    %                     z=get(l{3},'cdata');
+                    close(hM);
+                    activMask = 1;
+                catch
+                    disp('Could not mask by specified mask -- ROI creation failed')
+                end
+            end
+            
             % Goto figures window
             spm_figure('GetWin', 'Graphics');
             spm_figure('Clear', 'Graphics');
@@ -130,14 +126,14 @@ for SubjIdx=1:length(job.IOImat)
                         try
                             load(tPrevROI);
                             IOI_withROIs = IOI;
-                            IOI = IOI0; 
+                            IOI = IOI0;
                             try
                                 if ~isfield(IOI.res,'ROI')
                                     IOI.ROIname = IOI_withROIs.ROIname;
                                     IOI.res.ROI = IOI_withROIs.res.ROI;
                                 else
                                     IOI.ROIname = [IOI.ROIname; IOI_withROIs.ROIname];
-                                    IOI.res.ROI = [IOI.res.ROI IOI_withROIs.res.ROI];                                   
+                                    IOI.res.ROI = [IOI.res.ROI IOI_withROIs.res.ROI];
                                 end
                                 index = index+length(IOI.res.ROI);
                                 clear IOI_withROIs
@@ -167,7 +163,12 @@ for SubjIdx=1:length(job.IOImat)
                         tmp_image = spm_read_vols(V);
                         figure(hs);
                         subplot(nRows, nCols, i0);
-                        imagesc(tmp_image); axis image
+                        if ~activMask
+                            imagesc(tmp_image); axis image
+                        else
+                            hM = hgload(mask_image);
+                            movegui(hM,'center');
+                        end
                         title(['Session ' int2str(i0) ': ratio of 90th to 10th percentile']);
                     end
                 end
@@ -176,6 +177,16 @@ for SubjIdx=1:length(job.IOImat)
                 h2 = spm_figure('GetWin', 'Interactive');
                 spm_input(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ],'-1','d');
                 linecount = 0;
+                if activMask
+                    if length(job.activMask_choice.activMask.mask_image) == 2
+                        oxyOn = spm_input('Y = oxy, N = deoxy)',1,'y/n');
+                        if oxyOn == 'y'
+                            mask_image = job.activMask_choice.activMask.mask_image{1};
+                        else
+                            mask_image = job.activMask_choice.activMask.mask_image{2};
+                        end
+                    end
+                end
                 while oneMoreROI
                     figure(h2);
                     oneMoreROI = spm_input('Add an ROI?',2*linecount+2,'y/n');
@@ -185,13 +196,19 @@ for SubjIdx=1:length(job.IOImat)
                         % Display anatomical image on SPM graphics window
                         spm_figure('GetWin', 'Graphics');
                         spm_figure('Clear', 'Graphics');
-                        imagesc(im_anat .* full_mask);
-                        if use_gray_contrast
-                            colormap(cmap);
+                        if ~activMask
+                            imagesc(im_anat .* full_mask);
+                            if use_gray_contrast
+                                colormap(cmap);
+                            else
+                                colormap(gray);
+                            end
+                            axis image;
                         else
-                            colormap(gray);
+                            hM = hgload(mask_image);
+                            movegui(hM,'center');
                         end
-                        axis image;
+                        
                         if graphicalROI
                             % Specify polygonal region of interest (ROI)
                             title('Make ROI polygon, then double click in it to create ROI.');
@@ -222,27 +239,49 @@ for SubjIdx=1:length(job.IOImat)
                                 IOI.res.ROI{index+1}.center = [y0 x0];
                                 IOI.res.ROI{index+1}.radius = radius;
                             else
-                                % Manual ROI coordinate entry
-                                linecount = linecount + 1;
-                                rc = spm_input('Enter [row,column] of center',2*linecount+1,'e',[],2);
-                                linecount = linecount + 1;
-                                radius = spm_input('Enter radius in pixels',2*linecount+1,'e',[],1);
-                                radius = round(radius);
-                                if radius < 0, radius = 0; end
-                                mask = zeros(size(im_anat));
-                                for x1=-radius:radius
-                                    for y1=-radius:radius
-                                        if x1^2+y1^2 <= radius^2
-                                            try %will skip pixels outside the image
-                                                mask(rc(1)+y1,rc(2)+x1) = 1;
+                                if pointNclickROIsquare
+                                    % Specify center of a square ROI/seed with mouse
+                                    % point & click on the anatomical image
+                                    title('Click the center of square ROI/seed')
+                                    % Square setup
+                                    hR = imrect(gca,[0 0 ManualROIwidth ManualROIheight]);
+                                    pR = wait(hR);
+                                    xi = [pR(1) pR(1)+pR(3) pR(1)+pR(3) pR(1)];
+                                    yi = [pR(2) pR(2)       pR(2)+pR(4) pR(2)+pR(4)];
+                                    pRr = round(pR);
+                                    disp(['Width = ' int2str(pRr(3)) ', Height = ' int2str(pRr(4)) ...
+                                        ', Center(x) = ' int2str(round(pRr(1)+pRr(3)/2)) ...
+                                        ', Center(y) = ' int2str(round(pRr(2)+pRr(4)/2))])
+                                    % Create the mask
+                                    mask = poly2mask(xi, yi, size(im_anat,1), size(im_anat,2));
+                                  
+                                    % Save coordinates of seed for later display.
+                                    % NOTE: Row is 1st coordinate, Column is 2nd
+                                    %IOI.res.ROI{index+1}.center = [y0 x0];
+                                    %IOI.res.ROI{index+1}.radius = radius;
+                                else
+                                    % Manual ROI coordinate entry
+                                    linecount = linecount + 1;
+                                    rc = spm_input('Enter [row,column] of center',2*linecount+1,'e',[],2);
+                                    linecount = linecount + 1;
+                                    radius = spm_input('Enter radius in pixels',2*linecount+1,'e',[],1);
+                                    radius = round(radius);
+                                    if radius < 0, radius = 0; end
+                                    mask = zeros(size(im_anat));
+                                    for x1=-radius:radius
+                                        for y1=-radius:radius
+                                            if x1^2+y1^2 <= radius^2
+                                                try %will skip pixels outside the image
+                                                    mask(rc(1)+y1,rc(2)+x1) = 1;
+                                                end
                                             end
                                         end
                                     end
+                                    % Save coordinates of seed for later display
+                                    % NOTE: Row is 1st coordinate, Column is 2nd
+                                    IOI.res.ROI{index+1}.center = rc;
+                                    IOI.res.ROI{index+1}.radius = radius;
                                 end
-                                % Save coordinates of seed for later display
-                                % NOTE: Row is 1st coordinate, Column is 2nd
-                                IOI.res.ROI{index+1}.center = rc;
-                                IOI.res.ROI{index+1}.radius = radius;
                             end
                         end
                         
@@ -297,6 +336,7 @@ for SubjIdx=1:length(job.IOImat)
                     end
                 end
             end
+            if activMask, try close(hM); end, end
             IOI.ROIname = {};
             for i0=1:length(IOI.res.ROI)
                 if isfield(IOI.res.ROI{i0},'name')

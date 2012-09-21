@@ -83,7 +83,7 @@ ManualROIradius.help    = {'Enter radius of the ROIs/seeds in pixels.'}';
 
 pointNclickROI          = cfg_branch;
 pointNclickROI.tag      = 'pointNclickROI';
-pointNclickROI.name     = 'Manual ROI selection: point & click'; 
+pointNclickROI.name     = 'Manual ROI selection: point & click (circle)'; 
 pointNclickROI.val      = {ManualROIradius};
 pointNclickROI.help     = {'Manual ROI selection: point & click the center of circular ROI/seed. Usually'
                                 '  1,2: Frontal'
@@ -92,11 +92,36 @@ pointNclickROI.help     = {'Manual ROI selection: point & click the center of ci
                                 '  7,8: Somatosensory'
                                 ' 9,10: Retrosplenial'
                                 '11,12: Visual'}';
+                            
+ManualROIwidth         = cfg_entry;
+ManualROIwidth.name    = 'Width of square';
+ManualROIwidth.tag     = 'ManualROIwidth';       
+ManualROIwidth.strtype = 'r';
+ManualROIwidth.val{1}  = 50;                   
+ManualROIwidth.num     = [1 1];     
+ManualROIwidth.help    = {'Enter width of square in pixels.'}'; 
+
+ManualROIheight         = cfg_entry;
+ManualROIheight.name    = 'Height of square';
+ManualROIheight.tag     = 'ManualROIheight';       
+ManualROIheight.strtype = 'r';
+ManualROIheight.val{1}  = 50;                   
+ManualROIheight.num     = [1 1];     
+ManualROIheight.help    = {'Enter height of square in pixels.'}'; 
+
+pointNclickSquare          = cfg_branch;
+pointNclickSquare.tag      = 'pointNclickSquare';
+pointNclickSquare.name     = 'Manual ROI selection: point & click (square)'; 
+pointNclickSquare.val      = {ManualROIwidth ManualROIheight};
+pointNclickSquare.help     = {'Manual ROI selection: point & click the center of square ROI.'
+    'The position and shape of the square can then be adjusted.'}';                            
+                            
 
 AutoROIchoice           = cfg_choice;
 AutoROIchoice.name      = 'Choose ROI generation method';
 AutoROIchoice.tag       = 'AutoROIchoice';
-AutoROIchoice.values    = {ManualROI ManualROIspline ManualEnterROI pointNclickROI AutoROI}; 
+AutoROIchoice.values    = {ManualROI ManualROIspline ManualEnterROI ...
+     pointNclickROI pointNclickSquare AutoROI}; 
 AutoROIchoice.val       = {ManualROI}; 
 AutoROIchoice.help      = {'Choose whether to generate ROI manually or'
         'automatically'}'; 
@@ -129,12 +154,17 @@ SelectPreviousROI.help  = {'If this option is selected, then before manual selec
     'The interface will ask the user if they want to use an ROI list from elsewhere.'
     'This ROI list can then be selected by locating the IOI.mat structure that contains the information.'}';
 
+% Extract mean signal (from the brain mask pixels) -- this time using an
+% activation map
+activMask_choice = ioi_dfg_activation_mask_choice(0);
+
 % Executable Branch
 create_roi1             = cfg_exbranch;       % This is the branch that has information about how to run this module
 create_roi1.name        = 'Create ROI/seed';             % The display name
 create_roi1.tag         = 'create_roi1'; %Very important: tag is used when calling for execution
 create_roi1.val         = {IOImat redo1 RemovePreviousROI IOImatCopyChoice ...
-    select_names AutoROIchoice displayBrainmask use_gray_contrast SelectPreviousROI};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    select_names AutoROIchoice displayBrainmask use_gray_contrast ...
+    SelectPreviousROI activMask_choice};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 create_roi1.prog        = @ioi_create_roi_run;  % A function handle that will be called with the harvested job to run the computation
 create_roi1.vout        = @ioi_cfg_vout_create_roi; % A function handle that will be called with the harvested job to determine virtual outputs
 create_roi1.help        = {'Create regions of interest/seeds.'};
