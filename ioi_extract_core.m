@@ -1,4 +1,4 @@
-function [ROI IOI] = ioi_extract_core(IOI,job,mask)
+function [ROI IOI] = ioi_extract_core(IOI,job,mask,Amask)
 [all_sessions selected_sessions] = ioi_get_sessions(job);
 [all_ROIs selected_ROIs] = ioi_get_ROIs(job);
 IC = job.IC;
@@ -42,7 +42,7 @@ for s1=1:length(IOI.sess_res)
                         %time dimension in 3rd dimension for colors
                         %R, G, Y, but in 4th dimension for O, D, F
                         %Loop over ROIs
-                        [IOI ROI] = ioi_extract_main(IOI,ROI,job,d,d3,d4,c1,s1,colorOK,mask);
+                        [IOI ROI] = ioi_extract_main(IOI,ROI,job,d,d3,d4,c1,s1,colorOK,mask,Amask);
                     end
                     if colorOK
                         disp(['ROIs for session ' int2str(s1) ' and color ' IOI.color.eng(c1) ' completed']);

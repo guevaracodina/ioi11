@@ -82,12 +82,7 @@ for SubjIdx=1:length(job.IOImat)
             if isfield(job.activMask_choice,'activMask')
                 try
                     mask_image = job.activMask_choice.activMask.mask_image{1};
-                    %                     threshold = job.activMask_choice.activMask.threshold;
-                    %                     two_sided = job.activMask_choice.activMask.two_sided;
                     hM=hgload(mask_image);
-                    %                     ch=get(hM,'Children');
-                    %                     l=get(ch,'Children');
-                    %                     z=get(l{3},'cdata');
                     close(hM);
                     activMask = 1;
                 catch
@@ -96,9 +91,10 @@ for SubjIdx=1:length(job.IOImat)
             end
             
             % Goto figures window
-            spm_figure('GetWin', 'Graphics');
-            spm_figure('Clear', 'Graphics');
-            
+            if ~activMask
+                spm_figure('GetWin', 'Graphics');
+                spm_figure('Clear', 'Graphics');
+            end
             if isfield(job,'displayBrainmask')
                 if job.displayBrainmask == 1 && isfield(IOI,'fcIOS') && isfield(IOI.fcIOS,'mask') && isfield(IOI.fcIOS.mask,'fname')
                     % Display only brain pixels mask
@@ -194,9 +190,9 @@ for SubjIdx=1:length(job.IOImat)
                     if oneMoreROI
                         % h1 = figure('Position',[20 50 3*size(im_anat,1) 3*size(im_anat,2)]);
                         % Display anatomical image on SPM graphics window
-                        spm_figure('GetWin', 'Graphics');
-                        spm_figure('Clear', 'Graphics');
                         if ~activMask
+                            spm_figure('GetWin', 'Graphics');
+                            spm_figure('Clear', 'Graphics');
                             imagesc(im_anat .* full_mask);
                             if use_gray_contrast
                                 colormap(cmap);
@@ -242,7 +238,7 @@ for SubjIdx=1:length(job.IOImat)
                                 if pointNclickROIsquare
                                     % Specify center of a square ROI/seed with mouse
                                     % point & click on the anatomical image
-                                    title('Click the center of square ROI/seed')
+                                    title('Click the center of rectangular ROI/seed')
                                     % Square setup
                                     hR = imrect(gca,[0 0 ManualROIwidth ManualROIheight]);
                                     pR = wait(hR);

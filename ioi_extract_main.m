@@ -1,4 +1,4 @@
-function [IOI ROI] = ioi_extract_main(IOI,ROI,job,d,d3,d4,c1,s1,colorOK,mask)
+function [IOI ROI] = ioi_extract_main(IOI,ROI,job,d,d3,d4,c1,s1,colorOK,mask,Amask)
 [all_ROIs selected_ROIs] = ioi_get_ROIs(job);
 msg_ColorNotOK = 1;
 
@@ -7,6 +7,9 @@ if isfield(job,'extractingBrainMask')
     if job.extractingBrainMask
         nROI = 1; % Only 1 brain mask
     end
+end
+if ~isempty(Amask)
+    mask = mask .* Amask;
 end
 
 for r1 = nROI,

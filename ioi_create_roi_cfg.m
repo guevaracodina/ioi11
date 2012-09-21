@@ -94,27 +94,27 @@ pointNclickROI.help     = {'Manual ROI selection: point & click the center of ci
                                 '11,12: Visual'}';
                             
 ManualROIwidth         = cfg_entry;
-ManualROIwidth.name    = 'Width of square';
+ManualROIwidth.name    = 'Width of rectangle';
 ManualROIwidth.tag     = 'ManualROIwidth';       
 ManualROIwidth.strtype = 'r';
 ManualROIwidth.val{1}  = 50;                   
 ManualROIwidth.num     = [1 1];     
-ManualROIwidth.help    = {'Enter width of square in pixels.'}'; 
+ManualROIwidth.help    = {'Enter width of rectangle in pixels.'}'; 
 
 ManualROIheight         = cfg_entry;
-ManualROIheight.name    = 'Height of square';
+ManualROIheight.name    = 'Height of rectangle';
 ManualROIheight.tag     = 'ManualROIheight';       
 ManualROIheight.strtype = 'r';
 ManualROIheight.val{1}  = 50;                   
 ManualROIheight.num     = [1 1];     
-ManualROIheight.help    = {'Enter height of square in pixels.'}'; 
+ManualROIheight.help    = {'Enter height of rectangle in pixels.'}'; 
 
 pointNclickSquare          = cfg_branch;
 pointNclickSquare.tag      = 'pointNclickSquare';
-pointNclickSquare.name     = 'Manual ROI selection: point & click (square)'; 
+pointNclickSquare.name     = 'Manual ROI selection: point & click (rectangle)'; 
 pointNclickSquare.val      = {ManualROIwidth ManualROIheight};
-pointNclickSquare.help     = {'Manual ROI selection: point & click the center of square ROI.'
-    'The position and shape of the square can then be adjusted.'}';                            
+pointNclickSquare.help     = {'Manual ROI selection: point & click the center of rectangle ROI.'
+    'The position and shape of the rectangle can then be adjusted.'}';                            
                             
 
 AutoROIchoice           = cfg_choice;
