@@ -12,7 +12,7 @@ for SubjIdx=1:length(job.IOImat)
         tic
         clear ROI
         %Load IOI.mat information
-        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);  
+        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);
         
         if ~isfield(IOI.res,'ROIOK')
             disp(['No ROI available for subject ' int2str(SubjIdx) ' ... skipping series extraction']);
@@ -20,6 +20,21 @@ for SubjIdx=1:length(job.IOImat)
             if ~isfield(IOI.res,'seriesOK') || job.force_redo
                 % Get mask for each ROI
                 [IOI mask] = ioi_get_ROImask(IOI,job);
+                if isfield(job.activMask_choice,'activMask')
+                    try
+                        mask_image = job.activMask_choice.activMask.mask_image;
+                        threshold = job.activMask_choice.activMask.threshold;
+                        two_sided = job.activMask_choice.activMask.two_sided;
+                        
+                        h=hgload('VM56E01 2X_FiltT_S1O1.fig');
+                        ch=get(h,'Children');
+                        l=get(ch,'Children');
+                        z=get(l{3},'cdata');
+                        close(h);
+                    catch
+                        disp('Could not mask by specified mask -- series extraction failed')
+                    end
+                end
                 % We are not extracting brain mask here
                 job.extractingBrainMask = false;
                 % Extract ROI
@@ -49,7 +64,7 @@ for SubjIdx=1:length(job.IOImat)
                     job.extractingBrainMask = false;
                     % Brain mask time series extraction succesful!
                     IOI.fcIOS.mask.seriesOK = true;
-
+                    
                     fnameSeries = fullfile(dir_ioimat,'brainMaskSeries.mat');
                     save(fnameSeries,'brainMaskSeries');
                     % identify in IOI the file name of the time series
