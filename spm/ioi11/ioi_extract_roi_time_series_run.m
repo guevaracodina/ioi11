@@ -23,7 +23,7 @@ for SubjIdx=1:length(job.IOImat)
                 Amask = []; %Initialize activation mask                
                 if isfield(job.activMask_choice,'activMask')
                     try
-                        mask_image = job.activMask_choice.activMask.mask_image;
+                        mask_image = job.activMask_choice.activMask.mask_image{1};
                         threshold = job.activMask_choice.activMask.threshold;
                         two_sided = job.activMask_choice.activMask.two_sided;
                         
@@ -32,7 +32,7 @@ for SubjIdx=1:length(job.IOImat)
                         l=get(ch,'Children');
                         z=get(l{3},'cdata');
                         if two_sided
-                            Amask = z > abs(threshold) & z < -abs(threshold);
+                            Amask = z > abs(threshold) | z < -abs(threshold);
                         else
                             if z > 0
                                 Amask = z > threshold;
@@ -43,7 +43,7 @@ for SubjIdx=1:length(job.IOImat)
                         close(h);
                         clear z l ch threshold two_sided mask_image
                     catch
-                        disp('Could not mask by specified mask -- series extraction failed')
+                        disp('Could not mask by specified mask -- no masking by activation will be done')
                         Amask = [];
                     end
                 end
