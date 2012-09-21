@@ -9,7 +9,10 @@ if isfield(job,'extractingBrainMask')
     end
 end
 if ~isempty(Amask)
-    mask = mask .* Amask;
+    Amask = ioi_MYimresize(Amask, size(mask{nROI(1)}));
+    for r1 = nROI
+        mask{r1} = logical(mask{r1} .* Amask);
+    end
 end
 
 for r1 = nROI,
