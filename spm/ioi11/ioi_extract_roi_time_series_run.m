@@ -7,6 +7,14 @@ function out = ioi_extract_roi_time_series_run(job)
 %                    École Polytechnique de Montréal
 %_______________________________________________________________________________
 
+if isfield(job,'save_figures')
+    %save_figures
+    save_figures = job.save_figures;
+    generate_figures = job.generate_figures;
+else
+    save_figures = 0;
+    generate_figures = 0;
+end
 for SubjIdx=1:length(job.IOImat)
     try
         tic
@@ -86,6 +94,9 @@ for SubjIdx=1:length(job.IOImat)
                     save(IOImat,'IOI');
                 end
             end
+        end
+        if generate_figures || save_figures
+            ioi_plot_roi_time_series(IOI,ROI,generate_figures,save_figures);
         end
         disp(['Elapsed time: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
         disp(['Subject ' int2str(SubjIdx) ' complete']);
