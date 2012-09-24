@@ -1,10 +1,9 @@
 function ioi_save_figures(save_figures,generate_figures,h,tit,dir_fig)
 try
+    fname = fullfile(dir_fig,tit);
     if save_figures
-        filen = fullfile(dir_fig,[tit '.tiff']); %save as .tiff
-        print(h, '-dtiffn', filen);
-        filen2 = fullfile(dir_fig,[tit '.fig']); %save as .fig
-        saveas(h,filen2,'fig');
+        print(h, '-dpng', [fname '.png'], '-r300');
+        saveas(h,[fname '.fig']);
     end
     if ~generate_figures, close(h); end
 end
