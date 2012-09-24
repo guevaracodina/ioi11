@@ -546,10 +546,7 @@ if isfield(M,'HDM_str')
         %     leg_str = [leg_str;  'Filtered hemodynamic data'];
         %     legend(leg_str);
     end
-    
-    filen2 = fullfile(M.dir1,['HDM' HDM_str 'fit_large.fig']);
-    filen4 = fullfile(M.dir1,['HDM' HDM_str 'fit_large.tiff']);
-    saveas(Ffit,filen2,'fig');
-    print(Ffit, '-dtiffn', filen4);
-    close(Ffit)
+    save_figures = M.DO.save_figures;
+    HDMdisplay = M.DO.generate_figures;
+    ioi_save_figures(save_figures,HDMdisplay,Ffit,['HDM' HDM_str 'fit_large'],M.dir1)
 end
