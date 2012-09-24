@@ -27,7 +27,7 @@ M.plot_separate_figures = 1;
 
 %-display results
 %==========================================================================
-t       = [1:M.N]*M.dt;
+t = [1:M.N]*M.dt;
 if HDMdisplay || save_figures
     Fhdm    = spm_figure;
     header = get(Fhdm,'Name');
@@ -120,7 +120,7 @@ if HDMdisplay || save_figures
                 'Gain parameter',...
                 sprintf('%0.3f *10 seconds',P(7)),''},'FontSize',8)
         case 2 %Huppert1
-               set(gca,'YTickLabel',{  'Flow signal decay',...
+            set(gca,'YTickLabel',{  'Flow signal decay',...
                 sprintf('%0.2f per sec',P(1)),'',...
                 'Flow feedback',...
                 sprintf('%0.2f per sec',P(2)),'',...
@@ -177,7 +177,7 @@ if HDMdisplay || save_figures
     axis square
     title({['1st order kernels for ' U.name{j}];...
         'state variables'},'FontSize',9)
-    ylabel('normalized values')    
+    ylabel('normalized values')
     grid on
     legend(leg_str,0);
     
@@ -205,7 +205,13 @@ if HDMdisplay || save_figures
     
     subplot(3,2,6)
     axis square
-    imagesc(t,t,K2(:,:,1,j,j))
+    if isreal(K2)
+        imagesc(t,t,K2(:,:,1,j,j))
+    else
+        disp('K2 is not real, only plotting the real part')
+        imagesc(t,t,real(K2(:,:,1,j,j)))
+    end
+    
     title({ '2nd order kernel';'output: first modality'},'FontSize',9)
     xlabel({'time {seconds} for'; U.name{j}})
     grid on
@@ -239,7 +245,7 @@ if HDMdisplay || save_figures
     %axis square
     title({['1st order kernels for ' U.name{j}];...
         'state variables'},'FontSize',9)
-    ylabel('normalized values')    
+    ylabel('normalized values')
     %grid on
     legend(leg_str,0);
     xlabel('time (s)')
@@ -255,7 +261,7 @@ if HDMdisplay || save_figures
             tY = [tY(:,1:2) -tY(:,1)+tY(:,2) tY(:,3:end)];
         end
     end
-            
+    
     plot(t,tY);
     %axis square
     modalities = [];
@@ -267,13 +273,13 @@ if HDMdisplay || save_figures
     if M.O.includeHbT
         modalities = [modalities 'HbT; '];
         leg_str0 = [leg_str0 'HbT'];
-    end 
+    end
     if show_HbO
         if M.O.includeHbR && M.O.includeHbT
             modalities = [modalities 'HbO; '];
             leg_str0 = [leg_str0 'HbO'];
         end
-    end            
+    end
     if M.O.includeFlow
         modalities = [modalities 'Flow'];
         leg_str0 = [leg_str0 'Flow'];
@@ -282,8 +288,8 @@ if HDMdisplay || save_figures
     ylabel('normalized measure response')
     legend(leg_str0)
     xlabel('time (s)')
-    %grid on    
-       
+    %grid on
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     
@@ -291,10 +297,11 @@ if HDMdisplay || save_figures
     %Add output of prediction of other variables
     
     %Loop over the measures -- this depends on the model
-    M.g     = 'ioi_gx_get_states'; 
+    M.g     = 'ioi_gx_get_states';
     %generate forward model with estimated values
     M.pE = M.Ep;
     M.pC = zeros(size(M.Cp)); %should not be used
+    M.l = 4; %?
     cH1 = ioi_direct_model(M,M.U,M.Y);
     
     if plot_algebraic_CMRO2
@@ -307,9 +314,9 @@ if HDMdisplay || save_figures
     x    = (1:size(M.Y.y,1))*M.dt;
     u0 = full(M.U.u);
     u0(u0==0) = NaN;
-    leg_str = ['Stim'; leg_str];      
+    leg_str = ['Stim'; leg_str];
     for i0=0:size(cH1,2)
-        Fhdm_pred{i0+1} = figure; 
+        Fhdm_pred{i0+1} = figure;
         stem(x,height_stems*u0,'k'); hold on
         if i0==0
             title('Hemodynamic predictions');
@@ -318,7 +325,7 @@ if HDMdisplay || save_figures
         else
             title(['Hemodynamic prediction: ' leg_str{i0+1}]);
             plot(x,cH1(:,i0)); hold on
-        end       
+        end
         %axis square
         ylabel('normalized values')
         grid on
@@ -330,46 +337,21 @@ if HDMdisplay || save_figures
     spm('FigName',header);
     spm('Pointer','Arrow')
     spm_input('Thank you',1,'d')
-    if save_figures
-        HDM_str = ['_' M.HDM_str];
-        %Save figure
-        filen1 = fullfile(dir1,['HDM' HDM_str '_kernels.fig']);
-        filen2 = fullfile(dir1,['HDM' HDM_str '_kernels.tiff']);
-        saveas(Fhdm,filen1,'fig');
-        print(Fhdm, '-dtiffn', filen2);
+    HDM_str = ['_' M.HDM_str];
+    ioi_save_figures(save_figures,HDMdisplay,Fhdm,['HDM' HDM_str '_kernels'],dir1)
+    if ~O.only_display
         Fsi = spm_figure('GetWin','SI');
-        filen2 = fullfile(dir1,['HDM' HDM_str 'fit.fig']);
-        filen4 = fullfile(dir1,['HDM' HDM_str 'fit.tiff']);
-        saveas(Fsi,filen2,'fig');
-        print(Fsi, '-dtiffn', filen4);
-        for i0=0:size(cH1,2)
-            if i0 == 0
-                filen5 = fullfile(dir1,['HDM' HDM_str '_predictions_less1_all.fig']);
-                filen6 = fullfile(dir1,['HDM' HDM_str '_predictions_less1_all.tiff']);
-            else
-                filen5 = fullfile(dir1,['HDM' HDM_str '_' leg_str{i0+1} '_predictions_less1.fig']);
-                filen6 = fullfile(dir1,['HDM' HDM_str '_' leg_str{i0+1} '_predictions_less1.tiff']);
-            end
-            saveas(Fhdm_pred{i0+1},filen5,'fig');
-            print(Fhdm_pred{i0+1}, '-dtiffn', filen6);
-        end
-        %extract some of the subpblots and put in full plots
-        filen1 = fullfile(dir1,['HDM' HDM_str '_kernels_large.fig']);
-        filen2 = fullfile(dir1,['HDM' HDM_str '_kernels_large.tiff']);
-        saveas(h3,filen1,'fig');
-        print(h3, '-dtiffn', filen2);
-        filen1 = fullfile(dir1,['HDM' HDM_str '_output_large.fig']);
-        filen2 = fullfile(dir1,['HDM' HDM_str '_output_large.tiff']);
-        saveas(h4,filen1,'fig');
-        print(h4, '-dtiffn', filen2);
-        if ~HDMdisplay
-            try close(Fhdm); end
-            for i0=0:size(cH1,2)
-                try close(Fhdm_pred{i0+1}); end
-            end
-        end
-        try close(h3); end
-        try close(h4); end
+        ioi_save_figures(save_figures,1,Fsi,['HDM' HDM_str 'fit'],dir1)
     end
-end
+    for i0=0:size(cH1,2)
+        if i0 == 0
+            strA = ['HDM' HDM_str '_predictions_less1_all'];
+        else
+            strA = ['HDM' HDM_str '_' leg_str{i0+1} '_predictions_less1'];
+        end
+        ioi_save_figures(save_figures,HDMdisplay,Fhdm_pred{i0+1},strA,dir1)
+    end
+    %extract some of the subpblots and put in full plots
+    ioi_save_figures(save_figures,HDMdisplay,h3,['HDM' HDM_str '_kernels_large'],dir1)
+    ioi_save_figures(save_figures,HDMdisplay,h4,['HDM' HDM_str '_output_large'],dir1)
 end

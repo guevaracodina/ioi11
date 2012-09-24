@@ -172,7 +172,6 @@ for SubjIdx=1:length(job.IOImat)
                                             IOI.HDM{s1,r1}.Cp = HDM0.Cp;
                                             IOI.HDM{s1,r1}.K1 = HDM0.K1;
                                             IOI.HDM{s1,r1}.H1 = HDM0.H1;
-                                            
                                             IOI.HDM{s1,r1}.F  = HDM0.F;
                                         else
                                             save(HDMfname,'SHDM');
@@ -196,5 +195,4 @@ for SubjIdx=1:length(job.IOImat)
         disp(exception.stack(1))
         out.IOImat{SubjIdx} = job.IOImat{SubjIdx};
     end
-end
 end
