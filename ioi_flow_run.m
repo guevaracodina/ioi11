@@ -45,10 +45,11 @@ for SubjIdx=1:length(job.IOImat)
                     case '(ms)'
                         tFactor = 1e3;
                     otherwise
+                        tFactor = 1;
                 end
                 % Gets the first number in the string as integration time
                 intTimeStr = regexp(tmpString,'\d+','match', 'once');
-                % Save repetition time in job
+                % Save integration time in job (in seconds)
                 job.configuration.integ_time = str2double(intTimeStr)/tFactor;
                 % Update value in IOI matrix
                 IOI.res.flow.T = job.configuration.integ_time;
