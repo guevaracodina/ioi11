@@ -1,4 +1,4 @@
-function Yfilt = temporalBPF(type, fs, cutoff, FilterOrder, Y)
+function Yfilt = temporalBPF(type, fs, cutoff, FilterOrder, Y, varargin)
 % Butterworth type Band-pass filter (1-D)
 % SYNTAX
 % function Yfilt = ButterBPF(fs, cutoff, FilterOrder, Y)
@@ -12,6 +12,8 @@ function Yfilt = temporalBPF(type, fs, cutoff, FilterOrder, Y)
 % cutoff        A two-element vector fn (in Hz) that must be 0.0 < fn < fs/2
 % FilterOrder   An integer (usually N=4)
 % Y             The 1-D signal to be filtered
+% [Rp Rs]       OPTIONAL: 2-element vector with Rp dB of ripple in the passband,
+%               and a stopband Rs dB down from the peak value in the passband.
 % OUTPUTS
 % Yfilt         The filtered 1-D signal
 %_______________________________________________________________________________
@@ -19,48 +21,75 @@ function Yfilt = temporalBPF(type, fs, cutoff, FilterOrder, Y)
 %                    École Polytechnique de Montréal
 %_______________________________________________________________________________
 try
+    % only want 1 optional input at most
+    numVarArgs = length(varargin);
+    if numVarArgs > 1
+        error('ioi_bpf_cfg:TooManyInputs', ...
+            'requires at most 1 optional input: [Rp Rs]');
+    end
+    
+    % set defaults for optional inputs ()
+    optArgs = {[.5 80]};
+    
+    % now put these defaults into the optArgs cell array,
+    % and overwrite the ones specified in varargin.
+    optArgs(1:numVarArgs) = varargin;
+    % or ...
+    % [optargs{1:numvarargs}] = varargin{:};
+    
+    % Place optional args in memorable variable names
+    [Rp_Rs] = optArgs{:};
+    Rp = Rp_Rs(1); Rs = Rp_Rs(2); 
+
     Wn = cutoff*2 / fs;                 % Normalised cut-off frequency
     
     switch type
         case 'butter'                   % Butterworth filter
             [z, p, k] = butter(FilterOrder, Wn, 'bandpass');
         case 'cheby1'                   % Chebyshev I filter
-            % R dB of peak-to-peak ripple in the passband
-            R = 0.5;
-            [z, p, k] = cheby1(FilterOrder, R, Wn, 'bandpass');
+            % RP dB of peak-to-peak ripple in the passband
+            [z, p, k] = cheby1(FilterOrder, Rp, Wn, 'bandpass');
         case 'cheby2'                   % Chebyshev II filter
-            % stopband ripple R dB down from the peak passband value
-            R = 80;
-            [z, p, k] = cheby2(FilterOrder, R, Wn, 'bandpass');
+            % stopband ripple RS dB down from the peak passband value
+            [z, p, k] = cheby2(FilterOrder, Rs, Wn, 'bandpass');
         case 'ellip'                    % Elliptic filter
             % Rp dB of ripple in the passband, and a stopband Rs dB down from
             % the peak value in the passband
-            Rp = .1; Rs = 80;
+                        
+            % Following lines deprecated, kept just in case //EGC
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % [b,a] = ellip(FilterOrder, Rp, Rs, Wn, 'bandpass');
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            
             % Due to edge artifacts, one should use the [z,p,k] syntax to design
             % IIR filters.
             [z, p, k] = ellip(FilterOrder, Rp, Rs, Wn, 'bandpass');
-        case 'yulewalk'                 % Recursive digital filter design
-            f = [0 Wn 1];
-            m = [0 1 1 0];
-            [b,a] = yulewalk(FilterOrder, f, m);
         otherwise
             fprintf('Filter %s not available \n',type);
             Yfilt = Y;
             return
     end
     
+    % Following lines deprecated, kept just in case //EGC
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Yfilt = filtfilt(b, a, Y);
     % Zero-phase forward and reverse digital filtering filtfilt disabled because
     % the method is not implemented in the dfilt object, only filter is.
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     % Convert zero-pole-gain filter parameters to second-order sections form
     [sos, g] = zp2sos(z,p,k);
-    % Create a dicrete-time filter object
-    %       hFilt = dfilt.df2sos(sos,g);
-    %     % Perform the filtering
-    %     Yfilt = filter(hFilt, Y);
     
+    % Following lines deprecated, kept just in case //EGC
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Create a dicrete-time filter object
+    % hFilt = dfilt.df2sos(sos,g);
+    % % Perform the filtering
+    % Yfilt = filter(hFilt, Y);
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    % Zero-phase forward and reverse digital IIR filtering using digital filter
+    % object to keep maximum numerical accuracy. //EGC
     Yfilt = ioi_filtfilt(sos, g, Y);
     
 catch exception
