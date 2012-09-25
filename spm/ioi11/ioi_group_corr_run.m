@@ -360,8 +360,8 @@ if job.ttest1
             otherwise
                 colormap(gray)
         end
-        title(sprintf('Regional Bilateral Correlation before/after 4-AP C%d(%s)',...
-            c1,colorNames{1+c1}),'interpreter','none','FontSize',12)
+        title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s). T-test (*p<%.2g)',...
+            c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',12)
         ylabel('Functional correlation z(r)','FontSize',18)
         set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b')
         set(gca,'FontSize',14)
@@ -410,8 +410,8 @@ if job.wilcoxon1
             otherwise
                 colormap(gray)
         end
-        title(sprintf('Regional Bilateral Correlation before/after 4-AP C%d(%s)',...
-            c1,colorNames{1+c1}),'interpreter','none','FontSize',12)
+        title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s). Wilcoxon *(p<%.2g)',...
+            c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',12)
         ylabel('Functional correlation z(r)','FontSize',18)
         set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b')
         set(gca,'FontSize',14)
@@ -467,8 +467,8 @@ if isfield (job,'derivative')
                 otherwise
                     colormap(gray)
             end
-            title(sprintf('Regional Bilateral Correlation before/after 4-AP C%d(%s) Diff',...
-                c1,colorNames{1+c1}),'interpreter','none','FontSize',12)
+            title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Diff. T-test (*p<%.2g)',...
+                c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',12)
             ylabel('Functional correlation z(r)','FontSize',18)
             set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b')
             set(gca,'FontSize',14)
@@ -517,8 +517,8 @@ if isfield (job,'derivative')
                 otherwise
                     colormap(gray)
             end
-            title(sprintf('Regional Bilateral Correlation before/after 4-AP C%d(%s) Diff',...
-                c1,colorNames{1+c1}),'interpreter','none','FontSize',12)
+            title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Diff. Wilcoxon (*p<%.2g)',...
+                c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',12)
             ylabel('Functional correlation z(r)','FontSize',18)
             set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b')
             set(gca,'FontSize',14)

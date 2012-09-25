@@ -1,4 +1,4 @@
-function group_corr1 = ioi_group_corr_cfg
+function group_corr1        = ioi_group_corr_cfg
 % Graphical interface configuration function for ioi_group_corr_run
 %_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
@@ -21,7 +21,13 @@ control_sessions            = cfg_entry;
 control_sessions.name       = 'Control sessions';	% The displayed name
 control_sessions.tag        = 'control_sessions';	% file names
 control_sessions.strtype    = 'e';                  % Real numbers
-control_sessions.val        = { {[1 2 3]; [1 2]; [1 2]; [1 2]; [1 2]; [1 2]} }; % Default value
+control_sessions.val        = { {[1 2 3];           % 1 subject per line
+                                [1 2]; 
+                                [1 2]; 
+                                [1 2]; 
+                                [1 2]; 
+                                [1 2]; 
+                                [1 2]} };           % Default values
 control_sessions.help       = {'Choose the number of control sessions (Before 4-AP injection).' 
     'Enter the control session numbers as a cell of vectors.'  
     'For more info see [IOI.dir.dir_subj_raw ''resumeExp.txt'']'};
@@ -31,7 +37,13 @@ treatment_sessions          = cfg_entry;
 treatment_sessions.name     = 'Treatment sessions'; % The displayed name
 treatment_sessions.tag      = 'treatment_sessions'; % file names
 treatment_sessions.strtype  = 'e';                  % Real numbers
-treatment_sessions.val      = { {[4 5]; [3 4]; [3]; [3 4]; [3 4]; [3 4]} }; % Default value
+treatment_sessions.val      = { {[4 5];             % 1 subject per line
+                                [3 4]; 
+                                [3]; 
+                                [3 4]; 
+                                [3 4]; 
+                                [3 4]; 
+                                [3 4]} };           % Default values
 treatment_sessions.help     = {'Choose the treatment sessions (After 4-AP injection).'
     'Enter the 4-AP session numbers as a cell of vectors.' 
     'For more info see [IOI.dir.dir_subj_raw ''resumeExp.txt'']'};
@@ -99,22 +111,22 @@ alpha.help                  = {'Performs the test at the significance level (100
     'alpha must be a scalar'};
 
 % Correlation on 1st derivative
-derivative              = cfg_menu;
-derivative.tag          = 'derivative';
-derivative.name         = '1st derivative';
-derivative.labels       = {'No', 'Yes'};
-derivative.values       = {0, 1};
-derivative.val          = {1};                      % Default value
-derivative.help         = {'Choose whether to perform correlation analysis on 1st derivative of seeds/pixels time-course'}';
+derivative                  = cfg_menu;
+derivative.tag              = 'derivative';
+derivative.name             = '1st derivative';
+derivative.labels           = {'No', 'Yes'};
+derivative.values           = {0, 1};
+derivative.val              = {1};                      % Default value
+derivative.help             = {'Choose whether to perform correlation analysis on 1st derivative of seeds/pixels time-course'}';
 
 % Show standard error bar
-stderror                   = cfg_menu;
-stderror.tag               = 'stderror';
-stderror.name              = 'Std. error bars';
-stderror.labels            = {'No','Yes'};
-stderror.values            = {0,1};
-stderror.val               = {1};
-stderror.help              = {'Show standard error bars: sigma/sqrt(N)'}';
+stderror                    = cfg_menu;
+stderror.tag                = 'stderror';
+stderror.name               = 'Std. error bars';
+stderror.labels             = {'No','Yes'};
+stderror.values             = {0,1};
+stderror.val                = {1};
+stderror.help               = {'Show standard error bars: sigma/sqrt(N)'}';
 
 % Select directory to save global results
 parent_results_dir          = cfg_files;
@@ -141,9 +153,9 @@ return
 
 % Make IOI.mat available as a dependency
 function vout = ioi_cfg_vout_group_corr(job)
-vout                    = cfg_dep;                  % The dependency object
-vout.sname              = 'IOI.mat';                % Displayed dependency name
-vout.src_output         = substruct('.','IOImat');  %{1}); %,'IOImat');
-vout.tgt_spec           = cfg_findspec({{'filter','mat','strtype','e'}});
+vout                        = cfg_dep;                  % The dependency object
+vout.sname                  = 'IOI.mat';                % Displayed dependency name
+vout.src_output             = substruct('.','IOImat');  %{1}); %,'IOImat');
+vout.tgt_spec               = cfg_findspec({{'filter','mat','strtype','e'}});
 
 % EOF

@@ -39,6 +39,9 @@ for SubjIdx=1:length(job.IOImat)
             % Filter type
             fType = job.bpf.bpf_On.bpf_type;
             
+            % Passband/Stopband ripple in dB
+            Rp_Rs = [job.bpf.bpf_On.bpf_Rp job.bpf.bpf_On.bpf_Rs];
+            
             % Retrieve data
             if IOI.res.seriesOK
                 ROIdata = load(IOI.ROI.ROIfname);
@@ -88,7 +91,7 @@ for SubjIdx=1:length(job.IOImat)
                                             if brainMask(iX,iY) == 1
                                                 % Only non-masked pixels are
                                                 % band-passs filtered
-                                                filtY(iX,iY,1,:) = temporalBPF(fType,fs,BPFfreq,filterOrder,squeeze(y(iX,iY,:)));
+                                                filtY(iX,iY,1,:) = temporalBPF(fType, fs, BPFfreq, filterOrder, squeeze(y(iX,iY,:)), Rp_Rs);
                                                 % Downsampling
                                                 filtNdownY(iX,iY,1,:) = downsample(squeeze(filtY(iX,iY,1,:)), samples2skip);
                                             end
@@ -106,7 +109,7 @@ for SubjIdx=1:length(job.IOImat)
                                         % signal for brain mask
                                         brainSignal = brainMaskData{1}{s1, c1};
                                         % Band-passs filtering
-                                        brainSignal = temporalBPF(fType,fs,BPFfreq,filterOrder,brainSignal);
+                                        brainSignal = temporalBPF(fType, fs, BPFfreq, filterOrder, brainSignal, Rp_Rs);
                                         % Downsampling
                                         brainSignal = downsample(brainSignal, samples2skip);
                                         % Update data cell
@@ -133,7 +136,7 @@ for SubjIdx=1:length(job.IOImat)
                                             ROIsignal = ROIdata{r1}{s1, c1};
                                             
                                             % Band-passs filtering
-                                            ROIsignal = temporalBPF(fType,fs,BPFfreq,filterOrder,ROIsignal);
+                                            ROIsignal = temporalBPF(fType, fs, BPFfreq, filterOrder, ROIsignal, Rp_Rs);
                                             
                                             % Downsampling
                                             ROIsignal = downsample(ROIsignal, samples2skip);
@@ -157,7 +160,7 @@ for SubjIdx=1:length(job.IOImat)
                                                     ROIsignal = ROIdata{r1}{s1, c1};
                                                     
                                                     % Band-passs filtering
-                                                    ROIsignal = temporalBPF(fType,fs,BPFfreq,filterOrder,ROIsignal);
+                                                    ROIsignal = temporalBPF(fType, fs, BPFfreq, filterOrder, ROIsignal, Rp_Rs);
                                                     
                                                     % Downsampling
                                                     ROIsignal = downsample(ROIsignal, samples2skip);

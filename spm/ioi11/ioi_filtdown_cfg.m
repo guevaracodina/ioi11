@@ -23,15 +23,6 @@ bpf                 = ioi_bpf_cfg(1, [0.009 0.08], 4, 'butter');
 [generate_figures ...
     save_figures]       = ioi_dfg_generate_figures;
 
-% % Bandpass filtering
-% BPFfreq             = cfg_entry;
-% BPFfreq.name        = 'Band-pass filter cutoff frequencies';
-% BPFfreq.tag         = 'BPFfreq';       
-% BPFfreq.strtype     = 'r';
-% BPFfreq.val         = {[0.009 0.08]};
-% BPFfreq.num         = [1 2];     
-% BPFfreq.help        = {'Enter Wn in Hz, a two-element vector, Wn = [W_1 W_2] for the bandpass filter with passband  W_1 < W < W_2'}';
-
 % Downsampling frequency
 downFreq            = cfg_entry;
 downFreq.name       = 'Downsampling frequency in Hz';   % The displayed name
