@@ -114,7 +114,7 @@ for SubjIdx=1:length(job.IOImat)
                 % Goto interactive window
                 h2 = spm_figure('GetWin', 'Interactive');
                 spm_input(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ],'-1','d');
-                SelPrevROI = spm_input('Select a previous list of ROIs?',1,'y/n');
+                SelPrevROI = spm_input('Select a previous list of ROIs?','+1','y/n');
                 if SelPrevROI == 'y'
                     [tPrevROI stsPrevROI] = spm_select(1,'mat','Select IOI.mat structure containing information on desired ROIs','',dir_ioimat,'IOI.mat',1);
                     if stsPrevROI

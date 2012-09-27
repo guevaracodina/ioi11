@@ -95,9 +95,9 @@ for SubjIdx=1:length(job.IOImat)
                 end
             end
         end
-        if generate_figures || save_figures
-            ioi_plot_roi_time_series(IOI,ROI,generate_figures,save_figures);
-        end
+%         if generate_figures || save_figures %NOT CODED UP YET
+%             ioi_plot_roi_time_series(IOI,ROI,generate_figures,save_figures);
+%         end
         disp(['Elapsed time: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
         disp(['Subject ' int2str(SubjIdx) ' complete']);
         out.IOImat{SubjIdx} = IOImat;
