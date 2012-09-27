@@ -11,7 +11,7 @@ fcIOS.name   = 'Functional connectivity mapping (fcIOS)';
 fcIOS.tag    = 'fcIOS';
 fcIOS.values = {ioi_brainmask_cfg ioi_create_roi_cfg ioi_spatial_LPF_cfg...
     ioi_extract_roi_time_series_cfg ioi_filtdown_cfg ioi_fc_GLM_on_ROI_cfg ...
-    ioi_correlation_map_cfg ioi_group_corr_cfg};
+    ioi_correlation_map_cfg ioi_group_corr_cfg ioi_update_elinfo_cfg};
 fcIOS.help   = {'These modules perform resting-state functional connectivity mapping with intrinsic optical signal (fcIOS).'
     'They should be run after the first 3 pre-processing modules, i.e. '
     '1) Read multi-spectral IOI data'
