@@ -21,6 +21,7 @@ for s1=1:length(IOI.sess_res)
         tmp_pars = IOI.sess_res{s1}.parameters;
         %remove onsets
         if ~isempty(rmi)
+            rmi = sort(rmi);
             IOI.rmi = rmi;
             for k0=1:length(tmp_onsets)
                 r_onsets = round(tmp_onsets{k0});
