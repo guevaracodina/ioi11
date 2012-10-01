@@ -51,7 +51,7 @@ mult_normalize_choice.help = {'For oxy, deoxy and total hemoglobin only, '
 which_onset_type = ioi_dfg_which_onset_type;
 remove_stims = ioi_dfg_remove_stims;
 use_stims = ioi_dfg_use_stims;
-[generate_figures save_figures] = ioi_dfg_generate_figures;
+[generate_figures make_stim_figures] = ioi_dfg_generate_figures;
 
 extract_HRF      = cfg_menu;
 extract_HRF.tag  = 'extract_HRF';
@@ -127,6 +127,30 @@ std_choice.help    = {'Choice of standard deviation threshold.'}';
 
 IC = ioi_dfg_include_colors(0,1,1,1,0);
 
+make_stim_figures      = cfg_menu;
+make_stim_figures.tag  = 'make_stim_figures';
+make_stim_figures.name = 'Make figures with all stims on the same figure';
+make_stim_figures.labels = {'Yes','No'};
+make_stim_figures.values = {1,0};
+make_stim_figures.val  = {1};
+make_stim_figures.help = {'Make figures with all stims on the same figure.'}';
+
+make_timeCourse_figures      = cfg_menu;
+make_timeCourse_figures.tag  = 'make_timeCourse_figures';
+make_timeCourse_figures.name = 'Make figures of time courses';
+make_timeCourse_figures.labels = {'Yes','No'};
+make_timeCourse_figures.values = {1,0};
+make_timeCourse_figures.val  = {1};
+make_timeCourse_figures.help = {'Make figures of time courses.'}';
+
+make_eachStim_figures      = cfg_menu;
+make_eachStim_figures.tag  = 'make_eachStim_figures';
+make_eachStim_figures.name = 'Make a figure for each stim';
+make_eachStim_figures.labels = {'Yes','No'};
+make_eachStim_figures.values = {1,0};
+make_eachStim_figures.val  = {1};
+make_eachStim_figures.help = {'Make a figure for each stim.'}';
+
 % Executable Branch
 stim_mean1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 stim_mean1.name = 'Average stimulations';             % The display name
@@ -136,7 +160,8 @@ stim_mean1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ...
     mult_normalize_choice hpf_butter ...
     lpf_choice IC which_onset_type ...
     remove_stims use_stims remove_stims_SD std_choice extract_HRF fit_3_gamma include_nlinfit ...
-    generate_global generate_figures save_figures add_error_bars ...
+    generate_global generate_figures save_figures make_timeCourse_figures ...
+    make_stim_figures make_eachStim_figures add_error_bars ...
     remove_segment_drift };    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 stim_mean1.prog = @ioi_stim_mean_run;  % A function handle that will be called with the harvested job to run the computation
 stim_mean1.vout = @ioi_cfg_vout_stim_mean; % A function handle that will be called with the harvested job to determine virtual outputs

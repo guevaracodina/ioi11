@@ -134,6 +134,55 @@ for s1=1:length(IOI.sess_res)
                             title(tit);
                             ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                         end
+                        
+                        %Generate a figure for each stim
+                        lsp{1} = '-r'; lsp{2} = '-b'; lsp{3} = '-g';
+                        if job.make_eachStim_figures
+                            d = IOI.res.Sa{r1,m1}{ctotal(1),1};
+                            [nst n] = size(d);
+                            for sn1=1:nst
+                                h = figure; hold on
+                                lp0 = linspace(0,n*IOI.dev.TR,n);
+                                cc1 = 0;
+                                for c1 = ctotal %[6 7 9]
+                                    cc1 = cc1+1;
+                                    d = IOI.res.Sa{r1,m1}{c1,1};
+                                    try
+                                        plot(lp0,d(sn1,:),lsp{cc1});
+                                    catch
+                                        disp(['Problem: ' IOI.subj_name ', Session ' int2str(s1) ', ROI ' int2str(r1) ', Stim type ' int2str(m1) ', Color: ' IOI.color.eng(c1) ', Stim number:' gen_num_str(sn1,2)])
+                                    end
+                                end
+                                tit = [IOI.subj_name ', Session ' int2str(s1) ', ROI ' int2str(r1) ', Stim type ' int2str(m1) ', Stim number ' gen_num_str(sn1,2)];
+                                title(tit)
+                                xlabel('Time (s)');
+                                ylabel('Changes (%)');
+                                pathGF4 = fullfile(dir_fig,'StimEach');
+                                if ~exist(pathGF4,'dir'), mkdir(pathGF4); end
+                                ioi_save_figures(save_figures,generate_figures,h,tit,pathGF4);
+                            end
+                        end
+                    end
+                end
+                
+                %Generate a combined figure for all stims
+                if job.make_stim_figures
+                    for c1 = ctotal
+                        for r1=1:length(ROI)
+                            if all_ROIs || sum(r1==selected_ROIs)
+                                d = IOI.res.Sa{r1,m1}{c1,1};
+                                [nst n] = size(d);
+                                lp0 = linspace(0,n*IOI.dev.TR,n);
+                                h = figure; plot(lp0,d);
+                                tit = [IOI.subj_name ', Session ' int2str(s1) ', Stim type ' int2str(m1) ', Color ' aIOI{1}.IOI.color.eng(c1) ', ROI ' int2str(r1)];
+                                title(tit)
+                                xlabel('Time (s)');
+                                ylabel('Changes (%)');
+                                pathGF3 = fullfile(dir_fig,'StimGroup');
+                                if ~exist(pathGF3,'dir'), mkdir(pathGF3); end
+                                ioi_save_figures(save_figures,generate_figures,h,tit,pathGF3);
+                            end
+                        end
                     end
                 end
                 
@@ -146,8 +195,7 @@ for s1=1:length(IOI.sess_res)
                             r2 = 0;
                             leg = {};
                             for r1=1:length(ROI)
-                                if all_ROIs || sum(r1==selected_ROIs)
-                                    
+                                if all_ROIs || sum(r1==selected_ROIs)                                    
                                     r2 = r2+1;
                                     if ~add_error_bars
                                         plot(ls,Ma{r2,m1}{c1,s1},[lp1{r2} lp2{c1}]); hold on
@@ -159,7 +207,6 @@ for s1=1:length(IOI.sess_res)
                                     catch
                                         leg = [leg; ['ROI ' int2str(r1)]];
                                     end
-                                    
                                 end
                             end
                             legend(gca,leg);
@@ -189,6 +236,43 @@ for s1=1:length(IOI.sess_res)
                             title(tit);
                             ioi_save_figures(save_figures,generate_figures,h(h1),tit,dir_fig);
                         end
+                    end
+                end
+            end
+        end
+        lsp{1} = '.c'; %lsp{2} = '.m'; lsp{3} = '.g'; 
+        if job.make_timeCourse_figures
+            for c1 = ctotal
+                for r1=1:length(ROI)
+                    if all_ROIs || sum(r1==selected_ROIs)
+                        tmp_d = ROI{r1}{s1,c1};
+                        Ns = length(tmp_d);
+                        lp = linspace(0,Ns*IOI.dev.TR,Ns);
+                        %add a HPF
+                        if ~isempty(rmi{i0})
+                            if c1 == 8
+                                OP.ubf = 0;
+                            else
+                                OP.ubf = 1;
+                            end
+                            tmp_d2 = ioi_remove_jumps(tmp_d,OP);
+                        else
+                            tmp_d2 = tmp_d;
+                        end
+                        d = ButterHPF(1/IOI.dev.TR,OP.bf,OP.bo,tmp_d2);
+                        
+                        h = figure; plot(lp,d); hold on; plot(lp,tmp_d,'y'); plot(lp,tmp_d2,'g')
+                        try
+                            stem(rmi{i0},10*ones(1,length(rmi{cs})),'xk');
+                            stem(armonsets{i0},20*ones(1,length(armonsets{i0})),'+r');
+                        end
+                        stem(onsets{i0},5*ones(1,length(onsets{i0})),lsp{1});
+                        
+                        tit = [IOI.subj_name ', Session ' int2str(s1) ', Color ' IOI.color.eng(c1) ', ROI ' int2str(r1)];
+                        title(tit);
+                        pathGF1 = fullfile(dir_fig,'TimeCourses');
+                        if ~exist(pathGF1,'dir'), mkdir(pathGF1); end
+                        ioi_save_figures(save_figures,generate_figures,h,tit,pathGF1);
                     end
                 end
             end
