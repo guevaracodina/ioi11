@@ -177,9 +177,9 @@ for SubjIdx=1:length(job.IOImat)
                     ctotal = [];
                     if isfield(IOI.color,'HbO')
                         lp2{IOI.color.eng==IOI.color.HbO} = 'r'; %HbO
-                        lp2{IOI.color.eng==IOI.color.HbR} = 'b'; %HbR
+                        lp2{IOI.color.eng==IOI.color.HbR} = 'b'; %HbR                       
                         ctotal = [ctotal find(IOI.color.eng==IOI.color.HbO) ...
-                            find(IOI.color.eng==IOI.color.HbR)];
+                            find(IOI.color.eng==IOI.color.HbR) ];
                         lp3{IOI.color.eng==IOI.color.HbO} = 'HbO'; %HbO
                         lp3{IOI.color.eng==IOI.color.HbR} = 'HbR'; %HbR
                     end
@@ -243,6 +243,9 @@ for SubjIdx=1:length(job.IOImat)
                                                             %plot(lp,yf,[lp1{1} lp2{c1}]); hold on
                                                             %*************************
                                                             plot(lp,yp,[lp1{2} lp2{c1}]); hold on
+%                                                             if c1==6
+%                                                             plot(lp,yp,[lp1{2} lp2{c1}]); hold on  
+                                                            
                                                             %*********************************
 %                                                             legstr = [legstr; [lp3{c1} 'f']];
                                                             %************************************

@@ -339,7 +339,7 @@ if HDMdisplay || save_figures
     spm_input('Thank you',1,'d')
     HDM_str = ['_' M.HDM_str];
     ioi_save_figures(save_figures,HDMdisplay,Fhdm,['HDM' HDM_str '_kernels'],dir1)
-    if ~O.only_display
+    if ~M.O.only_display
         Fsi = spm_figure('GetWin','SI');
         ioi_save_figures(save_figures,1,Fsi,['HDM' HDM_str 'fit'],dir1)
     end

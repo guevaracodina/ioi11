@@ -177,7 +177,7 @@ for SubjIdx=1:length(job.IOImat)
                                     HDM0.HPF = HPF; %High pass filter on data
                                     HDM0.LPF = LPF;
                                     %data specification - which modalities to include:
-                                    HDM0=ioi_get_data(ROI,HDM0,r1,s1);
+                                    HDM0=ioi_get_data(IOI,ROI,HDM0,r1,s1);
                                     HDM0=ioi_set_physiomodel(HDM0);
                                     %choose priors
                                     HDM0=ioi_set_priors(HDM0);
@@ -273,7 +273,7 @@ for SubjIdx=1:length(job.IOImat)
                                     for r1=1:length(IOI.res.ROI)
                                         if O.all_ROIs || sum(r1==O.selected_ROIs)
                                             ct = ct+1;
-                                            HDM0=ioi_get_data(ROI,HDM0,r1,s1);
+                                            HDM0=ioi_get_data(IOI,ROI,HDM0,r1,s1);
                                             Yt = HDM0.Y.y;
                                             if ct == 1
                                                 Y = zeros(size(Yt,1),size(Yt,2),length(O.selected_ROIs));

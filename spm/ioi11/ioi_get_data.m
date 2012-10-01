@@ -1,10 +1,9 @@
-function M = ioi_get_data(ROI,M,r1,s1)
+function M = ioi_get_data(IOI,ROI,M,r1,s1)
 %extract data for up to 3 modalities for session s1 at region-of-interest r1
 cHbO = M.O.cHbO;
 cHbR = M.O.cHbR;
 cFlow = M.O.cFlow;
 includeHbR = M.O.includeHbR;
-%includeHbO = M.O.includeHbO;
 includeHbT = M.O.includeHbT;
 includeFlow = M.O.includeFlow;
 %number of modalities
@@ -15,21 +14,17 @@ Y = zeros(ns,l);
 cl = 0;
 HPF = M.HPF;
 LPF = M.LPF;
-M.HbRnorm = 40;
-M.HbOnorm = 60;
-M.HbTnorm = M.HbRnorm + M.HbOnorm;
+M.HbRnorm = IOI.conc.baseline_hbr;
+M.HbOnorm = IOI.conc.baseline_hbo;
+M.HbTnorm = IOI.conc.baseline_hbt;
 if includeHbR
     cl = cl+1;
     ty = ROI{r1}{s1,cHbR};
     if HPF.hpf_butter_On
         ty = ButterHPF(1/M.dt,HPF.hpf_butter_freq,HPF.hpf_butter_order,ty);
-    end
-    
+    end    
     ty = private_baseline_correction(M,ty,1,r1,s1);
-    %try, ty = ty/abs(median(ty))-1; end
-    
     Y(:,cl) = ty/M.HbRnorm; %to get percent change
-    %Y(:,cl) = ROI{r1}{s1,cHbR}/median(ROI{r1}{s1,cHbR});
 end
 if includeHbT
     cl = cl+1;
@@ -41,9 +36,7 @@ if includeHbT
     end
     ty = ty1+ty2;
     ty = private_baseline_correction(M,ty,2,r1,s1);
-    %ty = ty/mean(ty)-1;
     Y(:,cl) =ty/M.HbTnorm; %to get percent change
-    %Y(:,cl) = ROI{r1}{s1,cHbR}/median(ROI{r1}{s1,cHbR})+ROI{r1}{s1,cHbO}/median(ROI{r1}{s1,cHbO});
 end
 if includeFlow
     cl = cl+1;
@@ -52,23 +45,14 @@ if includeFlow
         ty = ButterHPF(1/M.dt,HPF.hpf_butter_freq,HPF.hpf_butter_order,ty);
     end
     ty = private_baseline_correction(M,ty,3,r1,s1);
-    %ty = ty/mean(ty)-1;
     Y(:,cl) = ty;
 end
-% HPF = M.HPF;
-% if HPF.hpf_butter_On
-%     Y = ButterHPF(1/M.dt,HPF.hpf_butter_freq,HPF.hpf_butter_order,Y);
-% end
 if LPF.lpf_gauss_On
     K = get_K(1:size(Y,1),LPF.fwhm1,M.dt);
+    Y = ioi_filter_HPF_LPF_WMDL(K,Y);
     for i=1:size(Y,2)
         y = Y(:,i)';
-        %forward
         y = ioi_filter_HPF_LPF_WMDL(K,y')';
-        %backward
-%         y = y(end:-1:1);
-%         y = ioi_filter_HPF_LPF_WMDL(K,y')';
-%         y = y(end:-1:1);
         Y(:,i) = y;
     end
 end

@@ -121,7 +121,7 @@ for SubjIdx=1:length(job.IOImat)
                                             HDM0.HPF = HPF; %High pass filter on data
                                             HDM0.LPF = LPF;
                                             %data specification - which modalities to include:
-                                            HDM0=ioi_get_data(ROI,HDM0,r1,s1);
+                                            HDM0=ioi_get_data(IOI,ROI,HDM0,r1,s1);
                                             HDM0=ioi_set_physiomodel(HDM0);
                                             %choose priors
                                             HDM0=ioi_set_priors(HDM0);

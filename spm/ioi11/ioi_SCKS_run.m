@@ -62,7 +62,7 @@ for SubjIdx=1:length(job.IOImat)
                                         SCKS0.dt = IOI.dev.TR;
                                         SCKS0.HPF = HPF; %High pass filter on data
                                         SCKS0.LPF = LPF;
-                                        SCKS0 = ioi_get_data(ROI,SCKS0,r1,s1);
+                                        SCKS0 = ioi_get_data(IOI,ROI,SCKS0,r1,s1);
                                         SCKS0 = ioi_set_physiomodel(SCKS0);
                                         SCKS0 = ioi_set_priors(SCKS0);
                                         try %onsets may not be available, are optional
