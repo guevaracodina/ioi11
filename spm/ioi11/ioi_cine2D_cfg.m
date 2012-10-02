@@ -61,22 +61,22 @@ which_onset_type = ioi_dfg_which_onset_type;
 remove_stims = ioi_dfg_remove_stims; %To add
 use_stims = ioi_dfg_use_stims; %To add
 
-low_limit         = cfg_entry; 
-low_limit.name    = 'Enter low limit as percentage of min to max';
-low_limit.tag     = 'low_limit';       
-low_limit.strtype = 'r';
-low_limit.num     = [1 1];     
-low_limit.val     = {0};
-low_limit.help    = {'Enter low limit as percentage of min to max.'}';
+% low_limit         = cfg_entry; 
+% low_limit.name    = 'Enter low limit as percentage of min to max';
+% low_limit.tag     = 'low_limit';       
+% low_limit.strtype = 'r';
+% low_limit.num     = [1 1];     
+% low_limit.val     = {0};
+% low_limit.help    = {'Enter low limit as percentage of min to max.'}';
 
-high_limit         = cfg_entry; 
-high_limit.name    = 'Enter high limit as percentage of min to max';
-high_limit.tag     = 'high_limit';       
-high_limit.strtype = 'r';
-high_limit.num     = [1 1];     
-high_limit.val     = {10};
-high_limit.help    = {'Enter high limit as percentage of min to max.'
-    'For HbR, the code will invert min and max so the user does not have to worry about it.'}';
+% high_limit         = cfg_entry; 
+% high_limit.name    = 'Enter high limit as percentage of min to max';
+% high_limit.tag     = 'high_limit';       
+% high_limit.strtype = 'r';
+% high_limit.num     = [1 1];     
+% high_limit.val     = {10};
+% high_limit.help    = {'Enter high limit as percentage of min to max.'
+%     'For HbR, the code will invert min and max so the user does not have to worry about it.'}';
 
 IC = ioi_dfg_include_colors(0,1,1,1,1);
 hpf_butter = ioi_dfg_hpf_butter(0,0.01,3);
@@ -125,7 +125,24 @@ save_images.name = 'Save images';
 save_images.labels = {'Yes','No'};
 save_images.values = {1,0};
 save_images.val  = {1};
-save_images.help = {'Save images.'}';
+save_images.help = {'Save images. '
+    'two choices were selected: Yes or No'}';
+
+% interactive_mode      = cfg_menu;
+% interactive_mode.tag  = 'interactive_mode';
+% interactive_mode.name = 'Interactive mode';
+% interactive_mode.labels = {'Yes','No'};
+% interactive_mode.values = {1,0};
+% interactive_mode.val  = {1};
+% interactive_mode.help = {'Set min/max value for the colorbar for each color.'
+%     'two choices was selested: Yes or NO'}';
+
+% save_choice        = cfg_choice;
+% save_choice.name   = 'Save images';
+% save_choice.tag    = 'stim_choice';
+% save_choice.values = {available_onsets,manual_onsets};
+% save_choice.val    = {available_onsets};
+% save_choice.help   = {'Use available onsets or enter onsets.'}';
 
 %**********************end
 
@@ -144,7 +161,7 @@ cine2D1.tag  = 'cine2D1'; %Very important: tag is used when calling for executio
 cine2D1.val  = {IOImat redo1 IOImatCopyChoice session_choice shrinkage_choice downFact ...
     stim_choice window_after window_before window_offset skip_overlap ...
     normalize_choice group_onset_types which_onset_type ...
-    high_limit low_limit IC ...
+    IC ...
     hpf_butter lpf_choice show_movie generate_images save_images};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 cine2D1.prog = @ioi_cine2D_run;  % A function handle that will be called with the harvested job to run the computation
 cine2D1.vout = @ioi_cfg_vout_cine2D; % A function handle that will be called with the harvested job to determine virtual outputs

@@ -90,7 +90,7 @@ try
     dP = floor(sf*nP);
     eSD = max(SD0,mbSD);
     %find onsets peaks: pkh: peak height; pk: onset time at sf sampling frequency
-    [pkh pk] = findpeaks(el,'MINPEAKHEIGHT',MN+nSD*max(SD0,mbSD),'MINPEAKDISTANCE',rs);
+    [pkh pk] = findpeaks(el,'MINPEAKHEIGHT',MN+nSD*max(SD0,mbSD),'MINPEAKDISTANCE',rs); %detection onsets
     if isempty(pk)
         disp('No onsets detected initially. Chosen minimum SD too high, setting it to zero');
         [pkh pk] = findpeaks(el,'MINPEAKHEIGHT',MN+nSD*SD0,'MINPEAKDISTANCE',rs);

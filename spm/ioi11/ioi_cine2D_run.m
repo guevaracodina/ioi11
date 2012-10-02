@@ -1,5 +1,6 @@
 function out = ioi_cine2D_run(job)
-interactive_mode = 1;
+%Step 1: Get various fields (one or a few functions)
+
 [all_sessions selected_sessions] = ioi_get_sessions(job);
 %filters
 HPF = ioi_get_HPF(job);
@@ -19,13 +20,16 @@ IC = job.IC;
 normalize_choice = job.normalize_choice;
 show_movie = job.show_movie;
 %*************by Cong on 12/08/28
+% interactive_mode = job.interactive_mode;
 show_images=job.generate_images;
 save_images=job.save_images;
 %**************end
 dir_cine = 'Cine_movies';
-high_limit = job.high_limit/100;
-low_limit = job.low_limit/100;
+% high_limit = job.high_limit/100;
+% low_limit = job.low_limit/100;
 skip_overlap = job.skip_overlap;
+
+%Step 2: loop over subjects:
 %get size of windows before and after stimulation to average on, in data points
 for SubjIdx=1:length(job.IOImat)
     try
@@ -47,14 +51,11 @@ for SubjIdx=1:length(job.IOImat)
             if ~isfield(IOI,'dev')
                 IOI.dev.TR = 0.2;
             end
-            %careful, this is now in data points, while job. is in seconds
-            window_after = round(job.window_after/IOI.dev.TR);
-            window_before = round(job.window_before/IOI.dev.TR);
-            window_offset = round(job.window_offset/IOI.dev.TR);
-            %checks
-            if window_before == 0
-                window_before = 1;
-            end
+            
+            %Step 3: another function: get windows 
+            WI = ioi_get_windows(IOI.dev.TR,job);
+            
+            
             %to allow at least one data point after window_before
             if isfield(job.stim_choice,'manual_onsets')
                 if onset_time == 0
@@ -77,7 +78,7 @@ for SubjIdx=1:length(job.IOImat)
                     else
                         onsets_list{s1} = IOI.sess_res{s1}.onsets;
                     end
-                    skipped = 0;
+                    
                     if group_onset_types
                         tmp = [];
                         for m1=1:length(onsets_list{s1})
@@ -88,27 +89,11 @@ for SubjIdx=1:length(job.IOImat)
                         onsets_list{s1} = {};
                         onsets_list{s1}{1} = sort(tmp);
                     end
+                    
+                    %Function to skip_overlapping onsets
+                    [onsets_list{s1} skipped] = ioi_skip_overlapping(skip_overlap, onsets_list{s1},...
+                        job.which_onset_type,job.window_after,job.window_before);
                     %remove onsets that are too close together
-                    if skip_overlap
-                        %loop over onset types
-                        for m1=1:length(onsets_list{s1})
-                            if any(m1==which_onset_type)
-                                if length(onsets_list{s1}{m1}) > 1
-                                    tmp = [];
-                                    for o1=1:(length(onsets_list{s1}{m1})-1)
-                                        if onsets_list{s1}{m1}(o1+1)-onsets_list{s1}{m1}(o1) > job.window_after+job.window_before %in seconds
-                                            tmp = [tmp onsets_list{s1}{m1}(o1)];
-                                        else
-                                            skipped = skipped + 1;
-                                        end
-                                    end
-                                    %always keep the last one
-                                    tmp = [tmp onsets_list{s1}{m1}(end)];
-                                    onsets_list{s1}{m1} = tmp;
-                                end
-                            end
-                        end
-                    end
                     %count onsets
                     cnt = [];
                     for m1=1:length(onsets_list{s1})
@@ -123,7 +108,10 @@ for SubjIdx=1:length(job.IOImat)
                     IOI.cine_skipped{s1} = skipped;
                     disp(['Skipped:' int2str(skipped)]);
                     %loop over colors
+                    interactive_mode_all_color=0;
                     for c1=1:length(IOI.color.eng);
+                        %Get the proper do_color function 
+%                       doColor = ioi_doColor(IOI,c1,IC)
                         do_color = 0;
                         if IC.include_flow
                             if isfield(IOI.color,'flow')
@@ -169,11 +157,14 @@ for SubjIdx=1:length(job.IOImat)
                                     kb2 = 0; %counter of skipped segments before onsets
                                     ka2 = 0; %counter of skipped segments after onsets
                                     %loop over onsets for that session
-                                    U = round(onsets_list{s1}{m1}/IOI.dev.TR)-window_offset; %in data points
+                                    U = round(onsets_list{s1}{m1}/IOI.dev.TR)-WI.window_offset; %in data points
+                                    
+                                    %add a function for averaging
+                                    
                                     for u1=1:length(U)
                                         %Frames to get:
-                                        fr_before = U(u1)-window_before:U(u1)-1;
-                                        fr_after = U(u1):U(u1)+window_after-1;
+                                        fr_before = U(u1)-WI.window_before:U(u1)-1;
+                                        fr_after = U(u1):U(u1)+WI.window_after-1;
                                         %Load images before and after stimulus
                                         Yb = ioi_get_images(IOI,fr_before,c1,s1,dir_ioimat,shrinkage_choice);
                                         Ya = ioi_get_images(IOI,fr_after,c1,s1,dir_ioimat,shrinkage_choice);
@@ -225,10 +216,13 @@ for SubjIdx=1:length(job.IOImat)
                                     %divide by number of found segments (ka = kb always in this module)
                                     %save movie
                                     d = tmp_array_after/ka;
+                                    time=0;
                                     if job.downFact > 1
                                         nT = round(size(d,3)/job.downFact);
-                                        tmpd = zeros(size(d,1),size(d,2),nT);
+                                        tmpd = zeros(size(d,1),size(d,2),nT); 
+                                        interactive_mode = 1;
                                         for j0=1:nT
+                                            time=j0*job.downFact*0.2-job.window_offset;  %**************caculate the time for each frame
                                             tmpd(:,:,j0) = mean(d(:,:,(1:job.downFact)+job.downFact*(j0-1)),3);
                                             %*******by Cong on 12/08/28
                                             if show_images
@@ -236,43 +230,77 @@ for SubjIdx=1:length(job.IOImat)
                                                 tit=['Cine images' gen_num_str(s1,2) ' ' IOI.color.eng(c1) ' onset' int2str(m1)];
                                                 title(tit);
                                                 close(Images);
-                                            end
+                                            end                                           
                                             if save_images
+                                              
+                                                if interactive_mode_all_color
+                                                    clims = [clims1 clims2];
+                                                    Images=figure;                                                    
+                                                    imagesc(tmpd(:,:,j0),clims);
+                                                    colorbar;
+                                                    tit1=['Cine images' gen_num_str(s1,2) ' ' IOI.color.eng(c1) ' onset' int2str(m1) ' frame' int2str(j0) ' time ' int2str(time) 's'];
+                                                    title(tit1);
+                                                    tit=['Cine_images' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '_frame' int2str(j0) '_time_' int2str(time) 's'];
+                                                    filename=[cineDir,tit];
+                                                    print(Images, '-dpng', [filename '.png'], '-r300');
+                                                    %saveas(Images,filename, 'tif');
+                                                    saveas(Images,filename, 'fig');
+                                                    close(Images);
+                                                else
+
                                                 if j0 == 1
                                                     keep_going = 1;
                                                     first_pass = 1;
                                                 end
                                                 other_first_pass = 1;
-                                                while keep_going || (other_first_pass && j0 > 1)
+                                                %                                                 while (keep_going && (interactive_mode || first_pass ))|| (other_first_pass && j0 > 1)||((~keep_going )&& (interactive_mode))                                                
+                                                flag=0;
+                                                flag_first_pass = 0;
+                                                while (keep_going && (interactive_mode || first_pass || other_first_pass) ) || (other_first_pass && j0 > 1)||flag
                                                     Images=figure;
                                                     if first_pass
                                                         imagesc(tmpd(:,:,j0));
                                                         first_pass = 0;
+                                                        flag_first_pass = 1;
                                                     else
                                                         imagesc(tmpd(:,:,j0),clims);
                                                         other_first_pass = 0;
                                                     end
                                                     colorbar;
-                                                    tit1=['Cine images' gen_num_str(s1,2) ' ' IOI.color.eng(c1) ' onset' int2str(m1) ' frame' int2str(j0)];
+                                                    tit1=['Cine images' gen_num_str(s1,2) ' ' IOI.color.eng(c1) ' onset' int2str(m1) ' frame' int2str(j0) ' time ' int2str(time) 's'];
                                                     title(tit1);
-                                                    tit=['Cine_images' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '_frame' int2str(j0)];
+                                                    tit=['Cine_images' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '_frame' int2str(j0) '_time_' int2str(time) 's'];
                                                     filename=[cineDir,tit];
                                                     print(Images, '-dpng', [filename '.png'], '-r300');
                                                     %saveas(Images,filename, 'tif');
                                                     saveas(Images,filename, 'fig');
                                                     if keep_going && interactive_mode
-                                                        keep_going = spm_input('Change clims ',1,'y/n',[1 0]);
+                                                        keep_going = spm_input('Change colorbar limits ',1,'y/n',[1 0]);
                                                         if keep_going
                                                             clims1 = spm_input('Enter min value ','+1');
                                                             clims2 = spm_input('Enter max value ','+1');
+                                                            clims = [clims1 clims2];
                                                         end
-                                                        clims = [clims1 clims2];
+                                                        interactive_mode = ~spm_input('Leave interactive mode for this color ','+1','y/n',[1 0]);
+                                                        interactive_mode_all_color = ~spm_input('Leave interactive mode for all colors ','+1','y/n',[0 1]);
+                                                    end 
+                       
+                                                    if keep_going && (~interactive_mode) && flag_first_pass
+                                                        flag=flag+1;
+                                                        if flag>1
+                                                            flag=0;
+                                                        end
                                                         
-                                                        interactive_mode = ~spm_input('Leave interactive mode ','+1','y/n',[1 0]);
+                                                        flag_first_pass = 0;
+                                                    else
+                                                        flag = 0;
                                                     end
+%                                                     if ~interactive_mode_all_color
+%                                                        clims = [clims1 clims2];
+%                                                     end
                                                     close(Images);
                                                 end
-                                                
+                                                end
                                             end
                                             %************end
                                         end
@@ -289,7 +317,7 @@ for SubjIdx=1:length(job.IOImat)
                                     %if IOI.color.eng(c1) == IOI.color.HbR
                                     %    clims = [m0+dM*(1-5*high_limit) M0+dM*(1-low_limit)];
                                     %else
-                                    clims = [m0+dM*low_limit M0+dM*high_limit];
+%                                     clims = [m0+dM*low_limit M0+dM*high_limit];
                                     %end
                                     try
                                         try
