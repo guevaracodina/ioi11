@@ -6,9 +6,9 @@ function group_corr1        = ioi_group_corr_cfg
 %_______________________________________________________________________________
 
 % Select IOI.mat
-IOImat                      = ioi_dfg_IOImat(1);
+IOImat                      = ioi_dfg_IOImat(2);
 % Force processing
-redo1                       = ioi_dfg_redo(0);
+redo1                       = ioi_dfg_redo(1);
 % IOI copy/overwrite method
 IOImatCopyChoice            = ioi_dfg_IOImatCopyChoice('groupCorr');
 % Colors to include (OD,HbO,HbR,HbT,Flow)
@@ -21,13 +21,17 @@ control_sessions            = cfg_entry;
 control_sessions.name       = 'Control sessions';	% The displayed name
 control_sessions.tag        = 'control_sessions';	% file names
 control_sessions.strtype    = 'e';                  % Real numbers
-control_sessions.val        = { {[1 2 3];           % 1 subject per line
-                                [1 2]; 
-                                [1 2]; 
-                                [1 2]; 
-                                [1 2]; 
-                                [1 2]; 
-                                [1 2]} };           % Default values
+control_sessions.val        = { {                   % 1 subject per line
+                                [1 2 3];            % EG01
+                                [1 2];              % EG02
+                                [1 2];              % EG03 
+                                [1 2];              % EG04
+                                [1 2];              % EG05
+                                [1 2];              % EG06
+                                [1 2];              % EG07
+                                [1 2];              % EG09
+                                [1 2]               % EG10
+                                } };           
 control_sessions.help       = {'Choose the number of control sessions (Before 4-AP injection).' 
     'Enter the control session numbers as a cell of vectors.'  
     'For more info see [IOI.dir.dir_subj_raw ''resumeExp.txt'']'};
@@ -37,13 +41,17 @@ treatment_sessions          = cfg_entry;
 treatment_sessions.name     = 'Treatment sessions'; % The displayed name
 treatment_sessions.tag      = 'treatment_sessions'; % file names
 treatment_sessions.strtype  = 'e';                  % Real numbers
-treatment_sessions.val      = { {[4 5];             % 1 subject per line
-                                [3 4]; 
-                                [3]; 
-                                [3 4]; 
-                                [3 4]; 
-                                [3 4]; 
-                                [3 4]} };           % Default values
+treatment_sessions.val      = { {                   % 1 subject per line
+                                [4 5];              % EG01
+                                [3 4];              % EG02
+                                [3];                % EG03
+                                [3 4];              % EG04
+                                [3 4];              % EG05
+                                [3 4];              % EG06
+                                [3 4];              % EG07
+                                [3 4];              % EG09
+                                [3 4]               % EG10
+                                } };           
 treatment_sessions.help     = {'Choose the treatment sessions (After 4-AP injection).'
     'Enter the 4-AP session numbers as a cell of vectors.' 
     'For more info see [IOI.dir.dir_subj_raw ''resumeExp.txt'']'};
