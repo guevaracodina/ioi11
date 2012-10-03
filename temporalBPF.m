@@ -1,7 +1,7 @@
 function Yfilt = temporalBPF(type, fs, cutoff, FilterOrder, Y, varargin)
 % Butterworth type Band-pass filter (1-D)
 % SYNTAX
-% function Yfilt = ButterBPF(fs, cutoff, FilterOrder, Y)
+% Yfilt = temporalBPF(type, fs, cutoff, FilterOrder, Y, [Rp Rs])
 % INPUTS
 % type          String specifying the type of filter to use:
 %               'butter'
