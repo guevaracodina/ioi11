@@ -1,5 +1,5 @@
-function elinfo1    = ioi_get_elinfo_data_cfg
-% Graphical interface configuration function for ioi_update_elinfo_run
+function elinfostats1    = ioi_get_elinfo_data_cfg
+% Graphical interface configuration function for ioi_get_elinfo_data_run
 %_______________________________________________________________________________
 % Copyright (C) 2010 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
@@ -18,18 +18,18 @@ session_choice      = ioi_dfg_session_choice;
     save_figures]   = ioi_dfg_generate_figures;
 
 % Executable Branch
-elinfo1             = cfg_exbranch; % This is the branch that has information about how to run this module
-elinfo1.name        = 'Update elinfo';             % The display name
-elinfo1.tag         = 'elinfo1'; %Very important: tag is used when calling for execution
-elinfo1.val         = {IOImat redo1 IOImatCopyChoice session_choice generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
-elinfo1.prog        = @ioi_get_elinfo_data_run;  % A function handle that will be called with the harvested job to run the computation
-elinfo1.vout        = @ioi_cfg_vout_elinfo; % A function handle that will be called with the harvested job to determine virtual outputs
-elinfo1.help        = {'Update elinfo data in IOI matrix'};
+elinfostats1        = cfg_exbranch; % This is the branch that has information about how to run this module
+elinfostats1.name   = 'Get ECG/Temp. stats';             % The display name
+elinfostats1.tag    = 'elinfostats1'; %Very important: tag is used when calling for execution
+elinfostats1.val    = {IOImat redo1 IOImatCopyChoice session_choice generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+elinfostats1.prog   = @ioi_get_elinfo_data_run;  % A function handle that will be called with the harvested job to run the computation
+elinfostats1.vout   = @ioi_cfg_vout_elinfostats; % A function handle that will be called with the harvested job to determine virtual outputs
+elinfostats1.help   = {'Get stats on ecg and temperature'};
 
 return
 
 % Make IOI.mat available as a dependency
-function vout = ioi_cfg_vout_elinfo(job)
+function vout = ioi_cfg_vout_elinfostats(job)
 vout                = cfg_dep; % The dependency object
 vout.sname          = 'IOI.mat'; % Displayed dependency name
 vout.src_output     = substruct('.','IOImat'); %{1}); %,'IOImat');
