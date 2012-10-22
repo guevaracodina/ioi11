@@ -23,14 +23,14 @@ control_sessions.tag        = 'control_sessions';	% file names
 control_sessions.strtype    = 'e';                  % Real numbers
 control_sessions.val        = { {                   % 1 subject per line
                                 [1 2 3];            % EG01
-                                [1 2];              % EG02
+                                %[1 2];              % EG02
                                 [1 2];              % EG03 
                                 [1 2];              % EG04
-                                [1 2];              % EG05
-                                [1 2];              % EG06
+                                %[1 2];              % EG05
+                                %[1 2];              % EG06
                                 [1 2];              % EG07
                                 [1 2];              % EG09
-                                [1 2]               % EG10
+                                %[1 2]               % EG10
                                 } };           
 control_sessions.help       = {'Choose the number of control sessions (Before 4-AP injection).' 
     'Enter the control session numbers as a cell of vectors.'  
@@ -43,14 +43,14 @@ treatment_sessions.tag      = 'treatment_sessions'; % file names
 treatment_sessions.strtype  = 'e';                  % Real numbers
 treatment_sessions.val      = { {                   % 1 subject per line
                                 [4 5];              % EG01
-                                [3 4];              % EG02
+                                %[3 4];              % EG02
                                 [3];                % EG03
                                 [3 4];              % EG04
-                                [3 4];              % EG05
-                                [3 4];              % EG06
+                                %[3 4];              % EG05
+                                %[3 4];              % EG06
                                 [3 4];              % EG07
                                 [3 4];              % EG09
-                                [3 4]               % EG10
+                                %[3 4]               % EG10
                                 } };           
 treatment_sessions.help     = {'Choose the treatment sessions (After 4-AP injection).'
     'Enter the 4-AP session numbers as a cell of vectors.' 
