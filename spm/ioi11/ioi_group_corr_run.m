@@ -334,9 +334,15 @@ fprintf('Group comparison of bilateral correlation succesful!\n');
 
 function private_plot_group_corr_test(job, IOI, c1, e, y, statTest)
 % Plots statistical analysis group results
-colorNames = fieldnames(IOI.color);
+colorNames      = fieldnames(IOI.color);
 % Positioning factor for the * mark, depends on max data value at the given seed
-starPosFactor = 1.05;
+starPosFactor   = 1.05;
+% Font Sizes
+titleFontSize   = 12;
+axisFontSize    = 20;
+labelFontSize   = 24;
+legendFontSize  = 20;
+starFontSize    = 32;
 
 if job.ttest1
     % Display a graph with ROI labels
@@ -361,11 +367,11 @@ if job.ttest1
                 colormap(gray)
         end
         title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s). T-test (*p<%.2g)',...
-            c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',12)
-        ylabel('Functional correlation z(r)','FontSize',18)
-        set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b')
-        set(gca,'FontSize',14)
-        legend({'Control' '4-AP'},'FontSize',12)
+            c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
+        set(gca,'FontSize',axisFontSize)
+        ylabel('Functional correlation z(r)','FontSize',labelFontSize)
+        set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
+        legend({'Control' '4-AP'},'FontSize',legendFontSize)
         % Show a * when a significant difference is found.
         for iSeeds = 1:size(job.paired_seeds, 1)
             if statTest(1).t(1).H{iSeeds,c1}
@@ -375,7 +381,7 @@ if job.ttest1
                     yPos = starPosFactor*(min(y(iSeeds,:)) - max(e(iSeeds,:)));
                 end
                 xPos = iSeeds;
-                text(xPos, yPos, '*', 'FontSize', 24, 'FontWeight', 'b');
+                text(xPos, yPos, '*', 'FontSize', starFontSize, 'FontWeight', 'b');
             end
         end
         if job.save_figures
@@ -384,6 +390,8 @@ if job.ttest1
             spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1}, newName));
             % Save as PNG
             print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), '-r300');
+            % Save as a figure
+            saveas(h, fullfile(job.parent_results_dir{1},newName), 'fig');
         end
     end % end generate figures
 end
@@ -411,11 +419,11 @@ if job.wilcoxon1
                 colormap(gray)
         end
         title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s). Wilcoxon *(p<%.2g)',...
-            c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',12)
-        ylabel('Functional correlation z(r)','FontSize',18)
-        set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b')
-        set(gca,'FontSize',14)
-        legend({'Control' '4-AP'},'FontSize',12)
+            c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
+        set(gca,'FontSize',axisFontSize)
+        ylabel('Functional correlation z(r)','FontSize',labelFontSize)
+        set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
+        legend({'Control' '4-AP'},'FontSize',legendFontSize)
         % Show a * when a significant difference is found.
         for iSeeds = 1:size(job.paired_seeds, 1)
             if statTest(1).w(1).H{iSeeds,c1}
@@ -425,7 +433,7 @@ if job.wilcoxon1
                     yPos = starPosFactor*(min(y(iSeeds,:)) - max(e(iSeeds,:)));
                 end
                 xPos = iSeeds;
-                text(xPos,yPos,'*', 'FontSize', 24, 'FontWeight', 'b');
+                text(xPos,yPos,'*', 'FontSize', starFontSize, 'FontWeight', 'b');
             end
         end
         if job.save_figures
@@ -434,6 +442,8 @@ if job.wilcoxon1
             spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1},newName));
             % Save as PNG
             print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), '-r300');
+            % Save as a figure
+            saveas(h, fullfile(job.parent_results_dir{1},newName), 'fig');
         end
     end % End generate figures
 end
@@ -443,7 +453,13 @@ if isfield (job,'derivative')
     % Plots statistical analysis group results
     colorNames = fieldnames(IOI.color);
     % Positioning factor for the * mark, depends on max data value at the given seed
-    starPosFactor = 1.05;
+    starPosFactor   = 1.05;
+    % Font Sizes
+    titleFontSize   = 12;
+    axisFontSize    = 20;
+    labelFontSize   = 24;
+    legendFontSize  = 20;
+    starFontSize    = 32;
     
     if job.ttest1
         % Display a graph with ROI labels
@@ -468,11 +484,11 @@ if isfield (job,'derivative')
                     colormap(gray)
             end
             title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Diff. T-test (*p<%.2g)',...
-                c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',12)
-            ylabel('Functional correlation z(r)','FontSize',18)
-            set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b')
-            set(gca,'FontSize',14)
-            legend({'Control' '4-AP'},'FontSize',12)
+                c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
+            set(gca,'FontSize',axisFontSize)
+            ylabel('Functional correlation z(r)','FontSize',labelFontSize)
+            set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
+            legend({'Control' '4-AP'},'FontSize',legendFontSize)
             % Show a * when a significant difference is found.
             for iSeeds = 1:size(job.paired_seeds, 1)
                 if statTestDiff(1).t(1).H{iSeeds,c1}
@@ -482,7 +498,7 @@ if isfield (job,'derivative')
                         yPos = starPosFactor*(min(yDiff(iSeeds,:)) - max(eDiff(iSeeds,:)));
                     end
                     xPos = iSeeds;
-                    text(xPos, yPos, '*', 'FontSize', 24, 'FontWeight', 'b');
+                    text(xPos, yPos, '*', 'FontSize', starFontSize, 'FontWeight', 'b');
                 end
             end
             if job.save_figures
@@ -491,6 +507,8 @@ if isfield (job,'derivative')
                 spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1}, newName));
                 % Save as PNG
                 print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), '-r300');
+                % Save as a figure
+                saveas(h, fullfile(job.parent_results_dir{1},newName), 'fig');
             end
         end % end generate figures
     end
@@ -518,11 +536,11 @@ if isfield (job,'derivative')
                     colormap(gray)
             end
             title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Diff. Wilcoxon (*p<%.2g)',...
-                c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',12)
-            ylabel('Functional correlation z(r)','FontSize',18)
-            set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b')
-            set(gca,'FontSize',14)
-            legend({'Control' '4-AP'},'FontSize',12)
+                c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
+            set(gca,'FontSize',axisFontSize)
+            ylabel('Functional correlation z(r)','FontSize',labelFontSize)
+            set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
+            legend({'Control' '4-AP'},'FontSize',legendFontSize)
             % Show a * when a significant difference is found.
             for iSeeds = 1:size(job.paired_seeds, 1)
                 if statTestDiff(1).w(1).H{iSeeds,c1}
@@ -532,7 +550,7 @@ if isfield (job,'derivative')
                         yPos = starPosFactor*(min(yDiff(iSeeds,:)) - max(eDiff(iSeeds,:)));
                     end
                     xPos = iSeeds;
-                    text(xPos,yPos,'*', 'FontSize', 24, 'FontWeight', 'b');
+                    text(xPos,yPos,'*', 'FontSize', starFontSize, 'FontWeight', 'b');
                 end
             end
             if job.save_figures
@@ -541,6 +559,8 @@ if isfield (job,'derivative')
                 spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1},newName));
                 % Save as PNG
                 print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), '-r300');
+                % Save as a figure
+                saveas(h, fullfile(job.parent_results_dir{1},newName), 'fig');
             end
         end % End generate figures
     end % Wilcoxon
