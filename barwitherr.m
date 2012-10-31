@@ -94,6 +94,7 @@ end
 [nRows nCols] = size(values);
 handles.bar = bar(varargin{:}); % standard implementation of bar fn
 hold on
+set(handles.bar,'LineWidth',3);
 
 if nRows > 1
     for col = 1:nCols
@@ -102,11 +103,12 @@ if nRows > 1
         % Use the mean x values to call the standard errorbar fn; the
         % errorbars will now be centred on each bar; these are in ascending
         % order so use xOrder to ensure y values and errors are too:
-        errorbar(mean(x,1),values(xOrder,col),lowerErrors(xOrder,col), upperErrors(xOrder, col), '.k')
+        errorbar(mean(x,1),values(xOrder,col),lowerErrors(xOrder,col), upperErrors(xOrder, col), '.k',...
+            'LineWidth',4)
     end
 else
     x = get(get(handles.bar,'children'),'xdata');
-    errorbar(mean(x,1),values,errors,'.k')
+    errorbar(mean(x,1),values,errors,'.k', 'LineWidth',3)
 end
 
 hold off
