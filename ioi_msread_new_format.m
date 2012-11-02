@@ -241,8 +241,12 @@ try
                 dir_elfig = fullfile(dir_subj_res,'fig_el');
                 if ~exist(dir_elfig,'dir'), mkdir(dir_elfig); end
                 fname_el = fullfile(dir_elfig,[short_el_label '_' sess_label gen_num_str(sC,2)]);
-                fname_el2 = fullfile(dir_elfig,[short_el_label '2_' sess_label gen_num_str(sC,2)]);
+                fname_el2 = fullfile(dir_elfig,[short_el_label '12_' sess_label gen_num_str(sC,2)]);
+                fname_el3 = fullfile(dir_elfig,[short_el_label '2_' sess_label gen_num_str(sC,2)]);
                 ioi_plot_LFP(IOI,el,s1,1,1,fname_el);
+                %*************by cong on 02/11/12
+                ioi_plot_LFP3(IOI,el2,s1,1,1,fname_el3);
+                %*************end
                 try ioi_plot_LFP2(IOI,el,s1,el2,1,1,fname_el2); end;
                 %end
                 if ~expedite
