@@ -54,7 +54,7 @@ for s1=1:length(IOI.sess_res)
                     tmp_onsets{k0} = tmp_onsets{k0}(ust);
                     tmp_pars{k0} = tmp_pars{k0}(ust);
                 catch
-                    disp('Problem restricting number of onsets to user-specified -- probably not enough onsets');
+                    disp(['Problem restricting number of onsets for stim type ' int2str(k0) ' to user-specified -- probably not enough onsets']);
                 end
                 try
                     if ~any(k0 == job.which_onset_type)

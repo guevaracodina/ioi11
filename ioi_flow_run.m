@@ -50,7 +50,9 @@ for SubjIdx=1:length(job.IOImat)
                 % Gets the first number in the string as integration time
                 intTimeStr = regexp(tmpString,'\d+','match', 'once');
                 % Save integration time in job (in seconds)
-                job.configuration.integ_time = str2double(intTimeStr)/tFactor;
+                if ~isempty(intTimeStr)
+                    job.configuration.integ_time = str2double(intTimeStr)/tFactor;                    
+                end
                 % Update value in IOI matrix
                 IOI.res.flow.T = job.configuration.integ_time;
             catch
