@@ -5,7 +5,7 @@ if isfield(job,'remove_stims_SD')
 else
     remove_stims_SD = 1;
 end
-
+U0 = [];
 Weigh_amplitude_of_threshold = job.Weigh_amplitude_of_threshold;
 remove_segment_drift = job.remove_segment_drift;
 normalize_choice = job.normalize_choice;

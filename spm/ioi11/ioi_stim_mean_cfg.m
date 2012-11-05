@@ -22,7 +22,6 @@ normalize_choice.help = {'Normalization choice. In one test,'
     'when using time zero as the baseline, compared to taking '
     'an average (median) over the window before.'}';
 
-%***************byCong**************
 Weigh_amplitude_of_threshold      = cfg_menu;
 Weigh_amplitude_of_threshold.tag  = 'Weigh_amplitude_of_threshold';
 Weigh_amplitude_of_threshold.name = 'Weigh_threshold';
@@ -32,9 +31,6 @@ Weigh_amplitude_of_threshold.val  = {0};
 Weigh_amplitude_of_threshold.help = {'Note: this is done when the amplitude of thrshold was changed during one session.'
     'When the amplitude of the threshold was changed slect Yes'
     'When the amplitude of the threshold was not changed select No'}';
-%***************end
-
-
 
 mult_normalize_choice      = cfg_menu;
 mult_normalize_choice.tag  = 'mult_normalize_choice';
@@ -96,7 +92,6 @@ add_error_bars.values = {1,0};
 add_error_bars.val  = {0};
 add_error_bars.help = {'Add error bars.'}';
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 hpf_butter = ioi_dfg_hpf_butter(1,0.01,3);
 lpf_choice = ioi_dfg_lpf_choice(0,0.67);
     
@@ -151,6 +146,14 @@ make_eachStim_figures.values = {1,0};
 make_eachStim_figures.val  = {0};
 make_eachStim_figures.help = {'Make a figure for each stim.'}';
 
+write_excel_text      = cfg_menu;
+write_excel_text.tag  = 'write_excel_text';
+write_excel_text.name = 'Write data to Excel or to .txt files';
+write_excel_text.labels = {'None','Excel','.txt','Both Excel and .txt'};
+write_excel_text.values = {0,1,2,3};
+write_excel_text.val  = {0};
+write_excel_text.help = {'Make a figure for each stim.'}';
+
 % Executable Branch
 stim_mean1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 stim_mean1.name = 'Average stimulations';             % The display name
@@ -162,7 +165,7 @@ stim_mean1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ...
     remove_stims use_stims remove_stims_SD std_choice extract_HRF fit_3_gamma include_nlinfit ...
     generate_global generate_figures save_figures make_timeCourse_figures ...
     make_stim_figures make_eachStim_figures add_error_bars ...
-    remove_segment_drift};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    remove_segment_drift write_excel_text};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 stim_mean1.prog = @ioi_stim_mean_run;  % A function handle that will be called with the harvested job to run the computation
 stim_mean1.vout = @ioi_cfg_vout_stim_mean; % A function handle that will be called with the harvested job to determine virtual outputs
 stim_mean1.help = {'Calculate average over stimulations.'};

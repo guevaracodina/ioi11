@@ -174,7 +174,7 @@ for s1=1:length(IOI.sess_res)
                                 [nst n] = size(d);
                                 lp0 = linspace(0,n*IOI.dev.TR,n);
                                 h = figure; plot(lp0,d);
-                                tit = [IOI.subj_name ', Session ' int2str(s1) ', Stim type ' int2str(m1) ', Color ' aIOI{1}.IOI.color.eng(c1) ', ROI ' int2str(r1)];
+                                tit = [IOI.subj_name ', Session ' int2str(s1) ', Stim type ' int2str(m1) ', Color ' IOI.color.eng(c1) ', ROI ' int2str(r1)];
                                 title(tit)
                                 xlabel('Time (s)');
                                 ylabel('Changes (%)');
@@ -241,16 +241,50 @@ for s1=1:length(IOI.sess_res)
             end
         end
         lsp{1} = '.c'; %lsp{2} = '.m'; lsp{3} = '.g'; 
+        %remove jumps options:
+        TR = IOI.dev.TR;
+        OP.Sb = 4; %number of standard deviations
+        OP.Nr = 1/TR; %number of points removed before and after
+        OP.Mp = 10/TR; %size of gaps to be filled
+        OP.sf = 1/TR; %sampling frequency
+        OP.ubf = 1; %use Butterworth filter
+        OP.bf = 0.01; %Butterworth HPF cutoff
+        OP.bo = 2; %Butterworth order
+        %onsets
+        armonsets = [];
+        %TT = IOI.sess_res{s1}.n_frames*TR; %minimum: 14.33 min
+        Stm = job.which_onset_type;
+        onsets = IOI.sess_res{s1}.onsets{Stm};
+        %durations = IOI.sess_res{s1}.durations{Stm}; %small variability, but why?
+        %nonsets = length(onsets); %OK, au moins 10 stims de chaque type
+        %tmonsets = onsets(end);
+        try
+            rmonsets = IOI.onsets_removed{s1}{Stm};
+            armonsets = [armonsets rmonsets];
+        end
+        armonsets = sort(armonsets);
+        %lonsets = max(tmonsets(:));
+        %dlonsets = TT-lonsets; %varies from 0 to 22 seconds
+        
+        stm_len1 = 10;
+        stm_len2 = 2*stm_len1;
+        stm_len3 = stm_len1/2;
         if job.make_timeCourse_figures
             for c1 = ctotal
                 for r1=1:length(ROI)
                     if all_ROIs || sum(r1==selected_ROIs)
-                        tmp_d = ROI{r1}{s1,c1};
+                        if IOI.color.eng(c1) == IOI.color.HbT
+                            tmp_d = ROI{r1}{s1,IOI.color.eng == IOI.color.HbO}+...
+                                        ROI{r1}{s1,IOI.color.eng == IOI.color.HbR};
+                        else
+                            tmp_d = ROI{r1}{s1,c1};
+                        end
                         Ns = length(tmp_d);
-                        lp = linspace(0,Ns*IOI.dev.TR,Ns);
+                        lp = linspace(0,Ns*TR,Ns);
                         %add a HPF
-                        if ~isempty(rmi{i0})
-                            if c1 == 8
+                        rmi = job.remove_stims;
+                        if ~isempty(rmi)
+                            if IOI.color.eng(c1) == IOI.color.flow;
                                 OP.ubf = 0;
                             else
                                 OP.ubf = 1;
@@ -259,14 +293,14 @@ for s1=1:length(IOI.sess_res)
                         else
                             tmp_d2 = tmp_d;
                         end
-                        d = ButterHPF(1/IOI.dev.TR,OP.bf,OP.bo,tmp_d2);
+                        d = ButterHPF(1/TR,OP.bf,OP.bo,tmp_d2);
                         
                         h = figure; plot(lp,d); hold on; plot(lp,tmp_d,'y'); plot(lp,tmp_d2,'g')
                         try
-                            stem(rmi{i0},10*ones(1,length(rmi{cs})),'xk');
-                            stem(armonsets{i0},20*ones(1,length(armonsets{i0})),'+r');
+                            stem(rmi,stm_len1*ones(1,length(rmi)),'xk');
+                            stem(armonsets,stm_len2*ones(1,length(armonsets)),'+r');
                         end
-                        stem(onsets{i0},5*ones(1,length(onsets{i0})),lsp{1});
+                        stem(onsets,stm_len3*ones(1,length(onsets)),lsp{1});
                         
                         tit = [IOI.subj_name ', Session ' int2str(s1) ', Color ' IOI.color.eng(c1) ', ROI ' int2str(r1)];
                         title(tit);
