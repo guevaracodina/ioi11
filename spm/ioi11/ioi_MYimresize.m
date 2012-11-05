@@ -72,3 +72,6 @@ catch
         imageOut = logical(imageOut);
     end
 end
+
+% EOF
+
