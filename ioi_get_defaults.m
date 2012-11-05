@@ -28,6 +28,7 @@ if isempty(ioi11)
     ioi_msioi_defaults;
     ioi_concentration_defaults;
     ioi_flow_defaults;
+    ioi_cmro2_defaults;
 end
 
 % construct subscript reference struct from dot delimited tag string

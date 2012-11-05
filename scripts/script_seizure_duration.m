@@ -97,10 +97,13 @@ end
 % end
 
 %% Plot results
+% Load saved data
+load('E:\Edgar\Data\IOS_Results\corr_Results_seizures\seizDur.mat');
 plotTitles = {{'F'}; {'M'}; {'C'}; {'S'}; {'R'}; {'V'}};
 % Font sizes
-axisFont = 18;
-axisLabelFont = 20;
+axisFont = 22;
+textFont = 18;
+axisLabelFont = 26;
 dottedLineWidth = 4;
 markSize = 12;
 
@@ -129,7 +132,18 @@ for r1=1:6,
         y = groupCorrDataSubtrAvg{r1,c1}(~isnan(groupCorrDataSubtrAvg{r1,c1}));
         plot(x, y, plotType, 'LineWidth', dottedLineWidth, 'MarkerSize', markSize)
         p{r1,c1} = polyfit(x,y,1);
-        R{r1,c1} = corr(x,y);
+        % Measure of correlation r^2
+        R{r1,c1} = corr(x,y).^2;
+        if c1 == 5 
+            text(40, -0.8, ['r^2(HbO)=', sprintf('%0.2f',R{r1,c1})],...
+                'FontSize', textFont, 'Color', 'r')
+        elseif c1 == 6
+            text(40, -1.25, ['r^2(HbR)=', sprintf('%0.2f',R{r1,c1})],...
+                'FontSize', textFont, 'Color', 'b')
+        else
+            text(40, -1.70, ['r^2(F)=', sprintf('%0.2f',R{r1,c1})],...
+                'FontSize', textFont, 'Color', 'k')
+        end
         hold on
         f{r1,c1} = polyval(p{r1,c1},x);
         plot(x, f{r1,c1}, lineType, 'LineWidth', dottedLineWidth)
@@ -138,27 +152,27 @@ for r1=1:6,
         ylim(yLimits)
         xlim(xLimits)
         if r1 == 1 || r1 == 4
-            ylabel('z_{4AP}(r) - z_0(r)','FontSize',axisLabelFont);
+            ylabel('z_{4AP}(r) - z_0(r)','FontSize',axisLabelFont+6);
         end
         if r1 == 5
             xlabel('Seizure duration [s]','FontSize',axisLabelFont);
         end
     end
     if r1 == 6
-        legend({'HbO';'HbO fit';'HbR';'HbR fit';'Flow'; 'Flow fit'})
+        legend({'HbO_2';'HbO_2 fit';'HbR';'HbR fit';'Flow'; 'Flow fit'})
     end
 end
 
 %% Save results
 save (fullfile('E:\Edgar\Data\IOS_Results\corr_Results_seizures','seizDur.mat'),...
-    'seizureDuration', 'seizDurationVector', 'groupCorrDataSubtr', 'groupCorrDataSubtrAvg', 'R', 'p', 'f')
-
+    'seizureDuration', 'seizDurationVector','groupCorrData', 'groupCorrDataSubtr',...
+    'groupCorrDataSubtrAvg', 'R', 'p', 'f')
 
 %% Print graphics
 addpath(genpath('D:\Edgar\ssoct\Matlab'))
 export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','z_vs_seizure'),'-png',gcf)
 
-%% 
+%% Plot resting state somatosensory seeds time traces.
 % Font sizes
 axisFont = 18;
 axisLabelFont = 20;
