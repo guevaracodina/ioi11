@@ -154,6 +154,15 @@ write_excel_text.values = {0,1,2,3};
 write_excel_text.val  = {0};
 write_excel_text.help = {'Make a figure for each stim.'}';
 
+write_points_before      = cfg_menu;
+write_points_before.tag  = 'write_points_before';
+write_points_before.name = 'Write to Excel the time points before the onsets';
+write_points_before.labels = {'Yes','No'};
+write_points_before.values = {1,0};
+write_points_before.val  = {0};
+write_points_before.help = {'Write to Excel the time points before the onsets,'
+    'used for the baseline.'}';
+
 % Executable Branch
 stim_mean1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 stim_mean1.name = 'Average stimulations';             % The display name
@@ -165,7 +174,7 @@ stim_mean1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ...
     remove_stims use_stims remove_stims_SD std_choice extract_HRF fit_3_gamma include_nlinfit ...
     generate_global generate_figures save_figures make_timeCourse_figures ...
     make_stim_figures make_eachStim_figures add_error_bars ...
-    remove_segment_drift write_excel_text};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    remove_segment_drift write_excel_text write_points_before};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 stim_mean1.prog = @ioi_stim_mean_run;  % A function handle that will be called with the harvested job to run the computation
 stim_mean1.vout = @ioi_cfg_vout_stim_mean; % A function handle that will be called with the harvested job to determine virtual outputs
 stim_mean1.help = {'Calculate average over stimulations.'};

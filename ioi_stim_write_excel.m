@@ -73,6 +73,10 @@ for s1=1:length(IOI.sess_res)
                     for r1=1:length(ROI)
                         if all_ROIs || sum(r1==selected_ROIs)
                             d = IOI.res.Sa{r1,m1}{c1,1};
+                            if job.write_points_before
+                                db = IOI.res.Sb{r1,m1}{c1,1};
+                                d = [db d];
+                            end
                             tit = [IOI.subj_name ', Session ' int2str(s1) ', Stim type ' int2str(m1) ', Color ' IOI.color.eng(c1) ', ROI ' int2str(r1)];
                             pathGF3 = fullfile(dir_fig,'StimGroup');
                             if ~exist(pathGF3,'dir'), mkdir(pathGF3); end
