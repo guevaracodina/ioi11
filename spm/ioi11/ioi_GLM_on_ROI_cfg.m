@@ -118,6 +118,32 @@ use_onset_amplitudes.values = {1,0};
 use_onset_amplitudes.val  = {0};
 use_onset_amplitudes.help = {'Use onset amplitudes as parameters to weigh the hemodynamic response.'}';
 
+%*******************by Cong on 12/11/06
+% onset_choice        = cfg_choice;
+% onset_choice.name   = 'Choose onset types';
+% onset_choice.tag    = 'onset_choice';
+% onset_choice.values = {onsets_from_stims,onsets_from_spontaneous_activity,onsets_from_stims_and_spontaneous_activity};
+% onset_choice.val    = {onsets_from_stims_and_spontaneous_activity};
+% onset_choice.help   = {'Choose onsets selection method'
+%        'Stims: onsets from stimulation will be used to creat the regressor.(for two stimulations)'
+%        'Onsets from spontaneous activity: onsets are created by detection spontaneous activity and  '
+%        'remove the onsets from stim. (for two stimulations)'
+%        'With onsets_from_stims_and_spontaneous_activity, onsets from detection which contains stimulation '
+%        'and spontaneous activites. It can be used for onsets from seizures and spikes'}';
+%    %*********end
+   
+onset_choice      = cfg_menu;
+onset_choice.tag  = 'onset_choice';
+onset_choice.name = 'Choose onset types';
+onset_choice.labels = {'from stims','from detection','from stims and detection'};
+onset_choice.values = {2,1,0};
+onset_choice.val  = {1};
+onset_choice.help = {'Choose onsets selection method'
+       'Stims: onsets from stimulation will be used to creat the regressor.(for two stimulations)'
+       'Onsets from spontaneous activity (detection): onsets are created by detection spontaneous activity and  '
+       'remove the onsets from stim. (for two stimulations)'
+       'With onsets from stims and detection, onsets from detection which contains stimulation '
+       'and spontaneous activites. It can be used for onsets from seizures and spikes'}';
 % ---------------------------------------------------------------------
 % hrf Canonical HRF
 % ---------------------------------------------------------------------
@@ -319,7 +345,7 @@ glm_roi1      = cfg_exbranch;       % This is the branch that has information ab
 glm_roi1.name = 'GLM on ROI';             % The display name
 glm_roi1.tag  = 'glm_roi1'; %Very important: tag is used when calling for execution
 glm_roi1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ROI_choice...
-     bases volt use_onset_amplitudes hpf_butter lpf_choice IC ...
+     bases volt onset_choice use_onset_amplitudes hpf_butter lpf_choice IC ...
      generate_figures save_figures ...
      figure_show_stim figure_rebase_to_zero_at_stim show_mse};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 glm_roi1.prog = @ioi_GLM_on_ROI_run;  % A function handle that will be called with the harvested job to run the computation

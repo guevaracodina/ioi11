@@ -21,6 +21,17 @@ if isfield(job.stim_choice,'electro_stims')
         E.dP = electro_stims.spike_dP/1000;
         E.electrophysiology_onset_name = electro_stims.spike_onset_name;  
     end
+        end
+    if isfield(job.stim_choice.electro_stims,'spontaneous_activity_detection')
+        E.szOn = 0; E.spkOn = 1;
+        electro_stims = job.stim_choice.electro_stims.spontaneous_activity_detection;
+        E.tb = electro_stims.spike_tb;
+        E.ta = electro_stims.spike_ta;
+        %minimal distance between peaks in seconds
+        E.dP = electro_stims.spike_dP/1000;
+        E.electrophysiology_onset_name = electro_stims.spike_onset_name; 
+        
+    end
     E.el_choice = electro_stims.electrophysiology_choice;
     stim_choice = 1;
     %sampling frequency

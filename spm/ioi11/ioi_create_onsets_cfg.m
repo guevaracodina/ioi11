@@ -194,6 +194,17 @@ onsets_choice.val = {electro_lpf_butter_On};
 onsets_choice.help = {'Choose whether to include a Butterworth Low Pass Filter.'
         'Parameters are: order (e.g. 3) and frequency (e.g. 130 Hz)'}';
 
+    
+remove_stims            = cfg_menu;
+remove_stims.tag        = 'remove_stims';
+remove_stims.name       = 'Remove the stimulation response';
+remove_stims.labels     = {'Yes','No'};
+remove_stims.values     = {1,0};
+remove_stims.val        = {1};
+remove_stims.help       = {'Option for user to remove the response from stimulations.'
+    'If No is selected, the onsets of stimulation response will be created.'}';
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 use_epilepsy_convention      = cfg_menu;
@@ -231,10 +242,18 @@ spike_detection.val     = {electrophysiology_choice spike_onset_name ...
         write_pictures use_epilepsy_convention};
 spike_detection.help    = {    'Choose parameters for spike detection.'}';
 
+spontaneous_activity_detection         = cfg_branch;
+spontaneous_activity_detection.tag     = 'spontaneous_activity_detection';
+spontaneous_activity_detection.name    = 'spontaneous activity detection';
+spontaneous_activity_detection.val     = {remove_stims electrophysiology_choice spike_onset_name ...
+    sf nSD mbSD spike_dP spike_tb spike_ta electro_hpf_butter onsets_choice ...
+        write_pictures use_epilepsy_convention};
+spontaneous_activity_detection.help    = {    'Choose parameters for spontaneous activity detection.'}';
+
 electro_stims        = cfg_choice;
 electro_stims.name   = 'Onsets from electrophysiology';
 electro_stims.tag    = 'electro_stims';
-electro_stims.values = {seizure_detection,spike_detection};
+electro_stims.values = {seizure_detection,spike_detection,spontaneous_activity_detection};
 electro_stims.val    = {seizure_detection};
 electro_stims.help   = { 'Electrophysiology information'
     'Stimulations are assumed to last one data point.'

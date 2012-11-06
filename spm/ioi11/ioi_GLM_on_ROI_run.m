@@ -18,6 +18,7 @@ figure_rebase_to_zero_at_stim = job.figure_rebase_to_zero_at_stim;
 use_onset_amplitudes = job.use_onset_amplitudes;
 include_flow = job.IC.include_flow; %other colors not yet supported
 show_mse = job.show_mse;
+onset_choice=job.onset_choice;
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
@@ -45,15 +46,54 @@ for SubjIdx=1:length(job.IOImat)
                             
                             %TO-DO: generalize to more than 1 onset
                             %type
-                            ot = 1;
-                            ons = IOI.sess_res{s1}.onsets{ot}; %already in seconds *IOI.dev.TR;
-                            dur = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
-                            name = IOI.sess_res{s1}.names{ot};
-                            if use_onset_amplitudes
-                                amp = IOI.sess_res{s1}.parameters{ot};
-                            else
-                                amp = [];
+                            
+                            
+                            switch onset_choice
+                                case 0 %**onsets from stim and detection
+                                    %onsets from detection
+                                    ot = 1;
+                                    ons{ot} = IOI.sess_res{s1}.onsets{ot}; %already in seconds *IOI.dev.TR;
+                                    dur{ot} = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
+                                    name{ot} = IOI.sess_res{s1}.names{ot};
+                                    if use_onset_amplitudes
+                                        amp{ot} = IOI.sess_res{s1}.parameters{ot};
+                                    else
+                                        amp{ot} = [];
+                                    end
+                                    
+                                    %*******************by cong on 12/11/05
+                                    %onsets from stimulation.
+                                    ot = 2;
+                                    ons{ot} = IOI.sess_res{s1}.onsets{ot}; %already in seconds *IOI.dev.TR;
+                                    dur{ot} = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
+                                    name{ot} = IOI.sess_res{s1}.names{ot};
+                                    if use_onset_amplitudes
+                                        amp{ot} = IOI.sess_res{s1}.parameters{ot};
+                                    else
+                                        amp{ot} = [];
+                                    end
+                                case 1 %***************onsets from detection
+                                    ot = 1;
+                                    ons = IOI.sess_res{s1}.onsets{ot}; %already in seconds *IOI.dev.TR;
+                                    dur = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
+                                    name = IOI.sess_res{s1}.names{ot};
+                                    if use_onset_amplitudes
+                                        amp = IOI.sess_res{s1}.parameters{ot};
+                                    else
+                                        amp = [];
+                                    end                                    
+                                case 2   %*************onsets from stim
+                                    ot = 2;
+                                    ons= IOI.sess_res{s1}.onsets{ot}; %already in seconds *IOI.dev.TR;
+                                    dur = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
+                                    name = IOI.sess_res{s1}.names{ot};
+                                    if use_onset_amplitudes
+                                        amp = IOI.sess_res{s1}.parameters{ot};
+                                    else
+                                        amp = [];
+                                    end
                             end
+                            %***************end
                             %convolve with hemodynamic response function
                             [Xtmp U] = ioi_get_X(IOI,name,ons,dur,amp,s1,bases,volt);
                             IOI.Sess(s1).U = U; %store onsets for each session
@@ -63,7 +103,12 @@ for SubjIdx=1:length(job.IOImat)
                                 if ~iscell(Xtmp)
                                     X = Xtmp;
                                 else
-                                    X = Xtmp{c1};
+%                                     X = Xtmp{c1};
+                                   %**********by Cong
+                                    X_spikes = Xtmp{1};
+                                    X_stim = Xtmp{2};
+                                    X=[X_spikes X_stim];
+                                    %**end
                                 end
                                 if ~isempty(X)
                                     IOI.X{s1}.X0 = X;
