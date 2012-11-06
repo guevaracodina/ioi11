@@ -1,6 +1,11 @@
 function out = ioi_create_onsets_run(job)
 %select onsets, default is stimulation based
 [E stim_choice] = ioi_get_E_for_electrophysiology(job);
+if isfield(job.stim_choice.electro_stims,'spontaneous_activity_detection')
+    spontaneous_activity_detection=1;
+    remove_stims=job.stim_choice.electro_stims.spontaneous_activity_detection.remove_stims;
+else spontaneous_activity_detection=0;
+end
 
 if isfield(job.stim_choice,'manual_stims')
     stim_choice = 2;
@@ -44,17 +49,48 @@ for SubjIdx=1:length(job.IOImat)
                                     elDir0 = elDir{SubjIdx};
                                 end
                             end
-                            [pkh ons dur] = ioi_get_onsets_from_electrophysiology(IOI,s1,E,dir_ioimat,elDir0); %pk in seconds; pkh in arbitrary units
-                            ot = 1;
-                            IOI.sess_res{s1}.E = E; %Electrophysiology structure used for detection
-                            IOI.sess_res{s1}.names{ot} = E.electrophysiology_onset_name;
-                            IOI.sess_res{s1}.onsets{ot} = ons;
+                            %********by Cong on 12/11/06
+                            if spontaneous_activity_detection==1
+                                IOI.sess_res{s1}.names{2} = IOI.sess_res{s1}.names{1};
+                                IOI.sess_res{s1}.onsets{2} = IOI.sess_res{s1}.onsets{1};
+                                IOI.sess_res{s1}.durations{2} = IOI.sess_res{s1}.durations{1};
+                                IOI.sess_res{s1}.parameters{2} = IOI.sess_res{s1}.parameters{1};
+                                [pkh ons dur] = ioi_get_onsets_from_electrophysiology(IOI,s1,E,dir_ioimat,elDir0); %pk in seconds; pkh in arbitrary units
+                                ot = 1;
+                                IOI.sess_res{s1}.E = E; %Electrophysiology structure used for detection
+                                IOI.sess_res{s1}.names{ot} = E.electrophysiology_onset_name;
+                                IOI.sess_res{s1}.onsets{ot} = ons';
+                                if remove_stims==1
+                                    for i=1:length(IOI.sess_res{s1}.onsets{1})
+                                        for j=1:length(IOI.sess_res{s1}.onsets{2})
+                                            if (IOI.sess_res{s1}.onsets{2}(j)<=IOI.sess_res{s1}.onsets{1}(i))&&(IOI.sess_res{s1}.onsets{1}(i)<=IOI.sess_res{s1}.onsets{2}(j)+1)
+                                                IOI.sess_res{s1}.onsets{1}(i)=0;                                                                                             
+                                            end
+                                        end
+                                    end
+                                        index=find(IOI.sess_res{s1}.onsets{1}~=0);
+                                        IOI.sess_res{s1}.onsets{1}=IOI.sess_res{s1}.onsets{1}(index);                                                             
+                                else
+                                    [pkh ons dur] = ioi_get_onsets_from_electrophysiology(IOI,s1,E,dir_ioimat,elDir0); %pk in seconds; pkh in arbitrary units
+                                    ot = 1;
+                                    IOI.sess_res{s1}.E = E; %Electrophysiology structure used for detection
+                                    IOI.sess_res{s1}.names{ot} = E.electrophysiology_onset_name;
+                                    IOI.sess_res{s1}.onsets{ot} = ons';
+                                end
+                            end
+                   %****************************** end
+
                             if E.spkOn
                                 IOI.sess_res{s1}.durations{ot} = IOI.dev.TR;
                             else
                                 IOI.sess_res{s1}.durations{ot} = dur;
                             end
-                            IOI.sess_res{s1}.parameters{ot} = pkh;
+                            IOI.sess_res{s1}.parameters{ot} = pkh';
+                            %************************by cong on 12/11/06
+                            if remove_stims==1
+                                IOI.sess_res{s1}.parameters{ot}=IOI.sess_res{s1}.parameters{ot}(index);    
+                            end
+                            %**********************end
                         case 2
                             if isempty(oti)
                                 spm_input(['Subject ' int2str(SubjIdx) ', Session ' int2str(s1)],'-1','d');
