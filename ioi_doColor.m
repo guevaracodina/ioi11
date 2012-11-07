@@ -1,4 +1,10 @@
 function doColor = ioi_doColor(IOI,c1,IC)
+% Determines if color c1 is to be processed for this batch if selected in
+% ioi_dfg_include_colors options.
+%_______________________________________________________________________________
+% Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moleculaire
+%                    Ecole Polytechnique de Montreal
+%_______________________________________________________________________________
 doColor = 1;
 %potentially exclude various colors, to save time
 if ~IC.include_OD
@@ -46,3 +52,12 @@ try
         end
     end
 end
+try
+    if ~IC.include_CMRO2
+        if IOI.color.eng(c1) == IOI.color.CMRO2
+            doColor = 0;
+        end
+    end
+end
+
+% EOF

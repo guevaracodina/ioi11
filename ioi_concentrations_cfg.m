@@ -1,8 +1,8 @@
 function conc1 = ioi_concentrations_cfg
-%_______________________________________________________________________
-% Copyright (C) 2010 LIOM Laboratoire d'Imagerie Optique et Moléculaire
+%_______________________________________________________________________________
+% Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
-%______________________________________________________________________
+%_______________________________________________________________________________
 % Read IOI Multispectral files
 % ---------------------------------------------------------------------
 
@@ -64,18 +64,11 @@ configuration.name    = 'Configuration options';
 configuration.val     = {pathlength1 camera1 led1 basehbt1 basehbo1 basehbr1};
 configuration.help    = {'Select values.'};
 
-IOImatCopyChoice = ioi_dfg_IOImatCopyChoice('Conc');
+IOImatCopyChoice        = ioi_dfg_IOImatCopyChoice('Conc');
 
-MemoryManagementMenu      = cfg_menu;
-MemoryManagementMenu.tag  = 'MemoryManagementMenu';
-MemoryManagementMenu.name = 'Memory Management';
-MemoryManagementMenu.labels = {'Load all at once','Load one at a time'};
-MemoryManagementMenu.values = {1,0};
-MemoryManagementMenu.val  = {1};
-MemoryManagementMenu.help = {'Load all images at once (faster but requires'
-    'more memory, or load one image at a time, to compute concentrations.'}';
+MemoryManagementMenu    = ioi_dfg_MemoryManagement;
 
-session_choice = ioi_dfg_session_choice;
+session_choice          = ioi_dfg_session_choice;
 
 %%%%%%%%%%%%%%%%%%%%
 % Normalization choice

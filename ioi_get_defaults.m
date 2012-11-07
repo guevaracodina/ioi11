@@ -6,14 +6,16 @@ function varargout = ioi_get_defaults(defstr, varargin)
 % "defaults" variable defined in spm_defaults.m.
 %
 % FORMAT ioi_get_defaults(defstr, defval)
-% Sets the nirs8 value associated with identifier "defstr". The new
-% ioi8 value applies immediately to:
+% Sets the ioi11 value associated with identifier "defstr". The new
+% ioi11 value applies immediately to:
 % * new modules in batch jobs
 % * modules in batch jobs that have not been saved yet
 % This value will not be saved for future sessions of SPM. To make
 % persistent changes, edit cg_vbm8_defaults.m.
-%_______________________________________________________________________
-% Copyright (C) 2010 Laboratoire d'Imagerie Optique et Moleculaire
+%_______________________________________________________________________________
+% Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
+%                    École Polytechnique de Montréal
+%_______________________________________________________________________________
 %
 % based on Christian Gaser version of
 % cg_vbm8_get_defaults $Id: cg_vbm8_get_defaults.m 2696 2009-02-05
