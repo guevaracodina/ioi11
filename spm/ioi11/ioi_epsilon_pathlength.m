@@ -1,15 +1,17 @@
 function eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,...
     whichSystem,whichCurve,baseline_hbt,baseline_hbo,baseline_hbr,debug)
-
 %	This function estimates epsilon * D, it takes into account the camera
-%	response, the leds spectra and uses a pathlength factor either set from
-%	Kohl or Dunn in the literature.
+%	response, the leds spectra and uses a pathlength factor either set from Kohl
+%	or Dunn in the literature.
+%   This module is dependent on this file which contains all hardware info for
+%   the setup, needs to specify the leds and the camera response. we are still a
+%   bit dependent on the RGY but we could abstract this (however the lambdas
+%   would need to be registered to specific hardware still
+%_______________________________________________________________________________
+% Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moleculaire
+%                    Ecole Polytechnique de Montreal
+%_______________________________________________________________________________
 
-%   This module is dependent on this file which contains all hardware info
-%   for the setup, needs to specify the leds and the camera response.
-%   we are still a bit dependent on the RGY but we could abstract this
-%   (however the lambdas would need to be registered to specific hardware
-%   still
 if whichSystem
     load hardware_newsystem.mat;
 else
@@ -27,7 +29,7 @@ c_led(3,:) = private_reinterpolate_lambda(lambda1, lambda2, npoints, hardware.le
 c_pathlength = ioi_path_length_factor(lambda1, lambda2, npoints, c_tot*1000, whichCurve);
 [c_ext_hbo,c_ext_hbr] = ioi_get_extinctions(lambda1,lambda2,npoints);
 
-if nargin==9
+if nargin==9 && debug==1
     figure;
     subplot(2,2,1)
     plot(lambda_vec,c_led(1,:),'r')
@@ -53,6 +55,10 @@ CHbR = baseline_hbr/baseline_hbt*c_tot*(.5:.1:1.5);
 % In this computation below we neglect the fact that pathlength changes
 % with total concentration (it is fixed for a Ctot of 100e-6)
 eps_pathlength=zeros(3,2);
+
+% Preallocating memory for speed increase //EGC
+IHbO = zeros(size(CHbO));
+IHbR = zeros(size(CHbR));
 
 for iled=1:3
     for iconc = 1:length(CHbO)

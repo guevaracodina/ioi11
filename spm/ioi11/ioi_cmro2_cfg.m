@@ -1,4 +1,7 @@
 function cmro2          = ioi_cmro2_cfg
+% Graphical interface configuration function for ioi_cmro2_run.
+% This code is part of a batch job configuration system for MATLAB. See help
+% matlabbatch for a general overview.
 %_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
@@ -12,6 +15,8 @@ redo1               = ioi_dfg_redo(0);
 IOImatCopyChoice    = ioi_dfg_IOImatCopyChoice('CMRO2');
 % Choose session selection method (all/selected)
 session_choice      = ioi_dfg_session_choice;
+% Memomry management type
+MemoryManagementMenu= ioi_dfg_MemoryManagement;
 
 % ------------------------------------------------------------------------------
 % Vascular weighting constants
@@ -45,7 +50,7 @@ cmro2.name          = 'Compute CMRO2';      % The display name
 cmro2.tag           = 'cmro2';              % Very important: tag is used when calling for execution
 cmro2.val           = {IOImat redo1 ...     % The items that belong to this branch. 
     IOImatCopyChoice session_choice...      % All items must be filled before this 
-    constants};                             % branch can run or produce virtual outputs
+    MemoryManagementMenu, constants};       % branch can run or produce virtual outputs
 cmro2.prog          = @ioi_cmro2_run;       % A function handle that will be called with the harvested job to run the computation
 cmro2.vout          = @ioi_cfg_vout_cmro2;  % A function handle that will be called with the harvested job to determine virtual outputs
 cmro2.help          = {'CMRO2 computation. gammaR and gammaT can be varied over a broad range (0.1-5), but the more physiologically plausible range is around 1 (0.75-1.25)'};

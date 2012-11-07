@@ -1,7 +1,7 @@
 function bpf        = ioi_bpf_cfg(choose_on, freq, order, type, varargin)
 % Configuration unit for band-pass filter in Matlab batch gui.
 % SYNTAX
-% bpf               = ioi_bpf_cfg(choose_on, freq, order, type)
+% bpf               = ioi_bpf_cfg(choose_on, freq, order, type, [Rp Rs])
 % INPUTS
 % choose_on         Determines if filter is enabled (1) or not (0)
 % freq              2-element vector with the cut-off frequencies

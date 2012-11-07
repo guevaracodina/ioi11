@@ -1,5 +1,10 @@
 function image_out = ioi_imresize(image,mode,nx,ny,vx1,vx2)
-% mode=0 is faster
+% Resize 4-D data slice by slice.
+%_______________________________________________________________________________
+% Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moleculaire
+%                    Ecole Polytechnique de Montreal
+%_______________________________________________________________________________
+% mode = 0 is faster
 % Preallocating memory for the output can improve speed in mode 1. //EGC
 image_out = zeros(nx, ny, size(image,3), size(image,4));
 if mode %3 times slower than naive shrink below
