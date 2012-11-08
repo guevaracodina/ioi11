@@ -35,7 +35,7 @@ try
     HbT0 = ioi_get_defaults('conc1.baseline_hbt');
     % Baseline HbR
     HbR0 = ioi_get_defaults('conc1.baseline_hbr');
-    % Baseline flow
+    % Baseline flow ??????????????????
     F0 = 1;
     % Estimation of cerebral metabolic rate of oxygen.
     cmro2 = (1 + dataFlow/F0).*(1 + gammaR*dataHbR/HbR0)./(1 + gammaT*dataHbT/HbT0) - 1;
