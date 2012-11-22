@@ -93,6 +93,6 @@ title('<Laser>','FontSize',14);
 %% Get a 1x1 binning anatomical image
 
 addpath(genpath('D:\Edgar\ssoct\Matlab'))
-export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','LFP_4AP'),'-png',gcf)
+export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','CCD_res'),'-png',gcf)
 
 

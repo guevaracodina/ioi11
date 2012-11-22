@@ -164,17 +164,17 @@ for SubjIdx=1:length(job.IOImat)
                                                             if ~exist(dir_corrfigDiff,'dir'), mkdir(dir_corrfigDiff); end
                                                             % Save as PNG
                                                             print(h, '-dpng', fullfile(dir_corrfigDiff,newName), '-r300');
+                                                            % Save as a figure
+                                                            saveas(h, fullfile(dir_corrfigDiff,newName), 'fig');
                                                             % Save as EPS
                                                             spm_figure('Print', 'Graphics', fullfile(dir_corrfigDiff,newName));
-                                                            % Save as PNG
-                                                            % print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
                                                             % Save as nifti
                                                             ioi_save_nifti(tempCorrMap, fullfile(dir_corrfigDiff,[newName oldExt]), vx);
                                                             IOI.fcIOS.corr(1).corrMapName{r1}{s1, c1} = fullfile(dir_corrfigDiff,[newName oldExt]);
                                                         end
                                                     end
                                                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                                                end
+                                                end % Derivative processing
                                                 
                                                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                                                 if job.generate_figures
@@ -239,10 +239,10 @@ for SubjIdx=1:length(job.IOImat)
                                                         if ~exist(dir_corrfig,'dir'), mkdir(dir_corrfig); end
                                                         % Save as PNG
                                                         print(h, '-dpng', fullfile(dir_corrfig,newName), '-r300');
+                                                        % Save as a figure
+                                                        saveas(h, fullfile(dir_corrfig,newName), 'fig');
                                                         % Save as EPS
                                                         spm_figure('Print', 'Graphics', fullfile(dir_corrfig,newName));
-                                                        % Save as PNG
-                                                        % print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
                                                         % Save as nifti
                                                         ioi_save_nifti(tempCorrMap, fullfile(dir_corrfig,[newName oldExt]), vx);
                                                         IOI.fcIOS.corr(1).corrMapName{r1}{s1, c1} = fullfile(dir_corrfig,[newName oldExt]);
@@ -294,6 +294,8 @@ for SubjIdx=1:length(job.IOImat)
                                                         if job.save_figures
                                                             % Save as PNG
                                                             print(h, '-dpng', fullfile(dir_fisherZfig,newName), '-r150');
+                                                            % Save as a figure
+                                                            saveas(h, fullfile(dir_fisherZfig,newName), 'fig');
                                                             % Save as EPS
                                                             spm_figure('Print', 'Graphics', fullfile(dir_fisherZfig,newName));
                                                         end
