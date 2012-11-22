@@ -7,6 +7,9 @@ function cmro2          = ioi_cmro2_cfg
 %                    École Polytechnique de Montréal
 %_______________________________________________________________________________
 
+% ------------------------------------------------------------------------------
+% General options
+% ------------------------------------------------------------------------------
 % Select IOI.mat
 IOImat              = ioi_dfg_IOImat(1);
 % Force processing
@@ -17,6 +20,9 @@ IOImatCopyChoice    = ioi_dfg_IOImatCopyChoice('CMRO2');
 session_choice      = ioi_dfg_session_choice;
 % Memomry management type
 MemoryManagementMenu= ioi_dfg_MemoryManagement;
+% Bandpass filtering
+bpf                 = ioi_bpf_cfg(1, [0.009 0.5], 2, 'butter');
+% ------------------------------------------------------------------------------
 
 % ------------------------------------------------------------------------------
 % Vascular weighting constants
@@ -44,16 +50,19 @@ constants.val       = {gammaT gammaR};
 constants.help      = {'The more physiologically plausible range for gammaR & gammaT is around 1 (0.75-1.25)'};
 % ------------------------------------------------------------------------------
 
+% ------------------------------------------------------------------------------
 % Executable Branch
+% ------------------------------------------------------------------------------
 cmro2               = cfg_exbranch;         % This is the branch that has information about how to run this module
 cmro2.name          = 'Compute CMRO2';      % The display name
 cmro2.tag           = 'cmro2';              % Very important: tag is used when calling for execution
 cmro2.val           = {IOImat redo1 ...     % The items that belong to this branch. 
     IOImatCopyChoice session_choice...      % All items must be filled before this 
-    MemoryManagementMenu, constants};       % branch can run or produce virtual outputs
+    MemoryManagementMenu, bpf, constants};	% branch can run or produce virtual outputs
 cmro2.prog          = @ioi_cmro2_run;       % A function handle that will be called with the harvested job to run the computation
 cmro2.vout          = @ioi_cfg_vout_cmro2;  % A function handle that will be called with the harvested job to determine virtual outputs
 cmro2.help          = {'CMRO2 computation. gammaR and gammaT can be varied over a broad range (0.1-5), but the more physiologically plausible range is around 1 (0.75-1.25)'};
+% ------------------------------------------------------------------------------
 return
 
 % Make IOI.mat available as a dependency

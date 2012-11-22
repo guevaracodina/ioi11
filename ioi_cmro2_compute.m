@@ -1,5 +1,15 @@
-function cmro2 = ioi_cmro2_compute(dataFlow, dataHbO, dataHbR, varargin)
+function cmro2 = ioi_cmro2_compute(Flow, HbO, HbR, varargin)
 % Computes cerebral metabolic rate of oxygen (CMRO2) from blood flow, HbO and HbR data.
+% SYNTAX
+% cmro2 = ioi_cmro2_compute(Flow, HbO, HbR, gammaT, gammaR)
+% INPUTS
+% Flow      Percent change of blood flow.
+% HbO       Oxygenated hemoglobin concentrations
+% HbR       Deoxygenated hemoglobin concentrations
+% gammaT    [OPTIONAL] Vascular weighting constant gammaT
+% gammaR    [OPTIONAL] Vascular weighting constant gammaR
+% OUTPUT
+% cmro2     Yields \DeltaCMRO2/CMRO2_0
 % Reference:
 % M. Jones, J. Berwick, D. Johnston, and J. Mayhew, “Concurrent optical imaging
 % spectroscopy and laser-Doppler flowmetry: the relationship between blood flow,
@@ -28,17 +38,23 @@ optargs(1:numvarargs)	= varargin;
 [gammaT gammaR]         = optargs{:};
 % ------------------------------------------------------------------------------
 
+% Wavelength of the IR laser diode
+lambda = 785e-9;
 try
+    % Using lambda = 785nm the decorrelation velocity is found from flow images,
+    % technicallly we do not have \DeltaF/F_0, but since we high-pass filtered
+    % flow time course it is equivalent to \DeltaF
+    Flow = Flow*lambda/2*pi;
     % Total hemoglobin
-    dataHbT = dataHbO + dataHbR;
+    HbT = HbO + HbR;
     % Baseline HbT
     HbT0 = ioi_get_defaults('conc1.baseline_hbt');
     % Baseline HbR
     HbR0 = ioi_get_defaults('conc1.baseline_hbr');
-    % Baseline flow ??????????????????
-    F0 = 1;
+    % Baseline flow?
+    % F0 = 1;
     % Estimation of cerebral metabolic rate of oxygen.
-    cmro2 = (1 + dataFlow/F0).*(1 + gammaR*dataHbR/HbR0)./(1 + gammaT*dataHbT/HbT0) - 1;
+    cmro2 = (1 + Flow).*(1 + gammaR*HbR/HbR0)./(1 + gammaT*HbT/HbT0) - 1;
 catch exception
     disp(exception.identifier)
     disp(exception.stack(1))

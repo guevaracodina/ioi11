@@ -12,9 +12,9 @@ function out = ioi_cmro2_run(job)
 % ------------------------------------------------------------------------------
 % REMOVE AFTER FINISHING THE FUNCTION //EGC
 % ------------------------------------------------------------------------------
-fprintf('Work in progress...\nEGC\n')
-out.IOImat = job.IOImat;
-return
+% fprintf('Work in progress...\nEGC\n')
+% out.IOImat = job.IOImat;
+% return
 % ------------------------------------------------------------------------------
 
 % Select a subset of sessions
@@ -22,13 +22,24 @@ return
 % String that identifies CMRO2
 str_CMRO2 = 'M';
 tmp_str_CMRO2 = ['_' str_CMRO2 '_'];
+% String that identifies flow
 str_flow = 'F';
 tmp_str_flow = ['_' str_flow '_'];
+% String that identifies oxy-hemoglobin
 str_HbO = 'O';
+% String that identifies deoxy-hemoglobin
 str_HbR = 'D';
 % Vascular weighting constants
 gammaT = job.constants.gammaT;
 gammaR = job.constants.gammaR;
+% Filter order
+filterOrder = job.bpf.bpf_On.bpf_order;
+% Band-pass cut-off frequencies
+BPFfreq = job.bpf.bpf_On.bpf_freq;
+% Filter type
+fType = job.bpf.bpf_On.bpf_type;
+% Passband/Stopband ripple in dB
+Rp_Rs = [job.bpf.bpf_On.bpf_Rp job.bpf.bpf_On.bpf_Rs];
 
 % Loop over subjects
 for SubjIdx = 1:length(job.IOImat)
@@ -40,6 +51,9 @@ for SubjIdx = 1:length(job.IOImat)
         if (~isfield(IOI.res,'cmro2OK') || job.force_redo)
             %Check if flow and concentrations have already been computed.
             if (isfield(IOI.res,'flowOK') && isfield(IOI.res,'concOK'))
+                % Original Sampling Frequency (5 Hz per color, data is sampled at 20
+                % Hz for 4 colors RGYL)
+                fs = 1/IOI.dev.TR;
                 % Update color structure in IOI matrix
                 IOI.color.CMRO2 = str_CMRO2;
                 % Update string of colors
@@ -58,19 +72,23 @@ for SubjIdx = 1:length(job.IOImat)
                                 % Initialize cell with CMRO2 file names
                                 fname_new_list = {};
                                 % Initialize progress bar
-                                spm_progress_bar('Init', length(fname_list_flow), sprintf('CMRO2 computation, session %d\n',s1), 'Files');
+                                spm_progress_bar('Init', length(fname_list_flow), sprintf('CMRO2 computation, %s, S%02d\n',IOI.subj_name,s1), 'Files');
                                 % Loop over data files
                                 for f1 = 1:length(fname_list_flow)
                                     if job.MemoryManagementMenu
                                         % Load all images at once
-                                        [dataFlow nx(1) ny(1) nt(1)] = local_read_NIfTI(fname_list_flow{f1});
-                                        [dataHbO nx(2) ny(2) nt(2)] = local_read_NIfTI(fname_list_HbO{f1});
-                                        [dataHbR nx(3) ny(3) nt(3)] = local_read_NIfTI(fname_list_HbR{f1});
+                                        [imagesFlow nx(1) ny(1) nt(1)] = local_read_NIfTI(fname_list_flow{f1});
+                                        [imagesHbO nx(2) ny(2) nt(2)]  = local_read_NIfTI(fname_list_HbO{f1});
+                                        [imagesHbR nx(3) ny(3) nt(3)]  = local_read_NIfTI(fname_list_HbR{f1});
                                         % If HbO, HbR & flow data have the same
                                         % size
                                         if all(nx == nx(1)) && all(ny == ny(1)) && all(nt == nt(1))
+                                            %% Data filtering
+                                            imagesFlow = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesFlow, Rp_Rs, s1);
+                                            imagesHbO  = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesHbO, Rp_Rs, s1);
+                                            imagesHbR  = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesHbR, Rp_Rs, s1);
                                             %% CMRO2 computation
-                                            image_CMRO2 = ioi_cmro2_compute(dataFlow, dataHbO, dataHbR, gammaT, gammaR);
+                                            imagesCMRO2 = ioi_cmro2_compute(imagesFlow, imagesHbO, imagesHbR, gammaT, gammaR);
                                         else
                                             error('ioi_cmro2_run:different_Sizes_Flow_HbO_HbR', 'Flow and Hb data have different sizes.');
                                         end
@@ -85,7 +103,7 @@ for SubjIdx = 1:length(job.IOImat)
                                     % Append new file name to file name list
                                     fname_new_list = [fname_new_list; fname_new];
                                     % Save as NIfTI file
-                                    ioi_save_nifti(image_CMRO2, fname_new, vx);
+                                    ioi_save_nifti(imagesCMRO2, fname_new, vx);
                                     % Update progress bar
                                     spm_progress_bar('Set', f1);
                                 end % Loop over data files (NIfTI)
@@ -109,7 +127,7 @@ for SubjIdx = 1:length(job.IOImat)
         end
         out.IOImat{SubjIdx} = IOImat;
         disp(['Elapsed time: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
-        disp(['Subject ' int2str(SubjIdx) ' complete']);
+        disp(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ' complete']);
     catch exception
         disp(exception.identifier)
         disp(exception.stack(1))
@@ -173,5 +191,33 @@ end
 %     image_CMRO2_out = ioi_imresize(image_CMRO2_in, 1, nx, ny, vx(1), vx(2));
 % end
 end % local_check_shrinkage
+
+function filtY = local_filter_time_course(fType, fs, BPFfreq, filterOrder, Y, Rp_Rs, s1)
+slice2D = false;
+% Filters an images time-course along the time dimension.
+if ndims(Y) == 4,
+    % We assume 4th dimension is time
+    filtY = zeros(size(Y));
+elseif ndims(Y) == 3,
+    % We assume 3rd dimension is time
+    filtY = zeros([size(Y,1) size(Y,2) 1 size(Y,3)]);
+else
+    % Only one temporal point, we have a single slice
+    filtY = zeros([size(Y,1) size(Y,2) 1 1]);
+    slice2D = true;
+end
+if ~slice2D
+    % Can these loops be vectorized? //EGC
+    for iX = 1:size(filtY,1)
+        for iY = 1:size(filtY,2)
+            % Filtering
+            filtY(iX,iY,1,:) = temporalBPF(fType, fs, BPFfreq, filterOrder, squeeze(Y(iX,iY,:)), Rp_Rs);
+        end
+    end
+else
+    fprintf('2D flow matrix found at session %2d.\n',s1)
+    filtY = Y;
+end
+end % local_filter_time_course
 
 % EOF
