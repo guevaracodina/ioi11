@@ -235,6 +235,10 @@ for SubjIdx=1:length(job.IOImat)
                         if job.regressBrainSignal == 1,
                             save(fnameROIregress,'ROIregress');
                         end
+                        if job.cleanupGLM
+                            IOI.fcIOS.SPM.cleanupOK = ioi_fc_GLM_on_ROI_cleanup(IOI);
+                        end
+                        % Save IOI matrix
                         save(IOImat,'IOI');
                     end % GLM OK or redo job
                 end % Filtering&Downsampling OK
