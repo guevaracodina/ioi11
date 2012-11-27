@@ -127,6 +127,15 @@ derivative.values           = {0, 1};
 derivative.val              = {1};                      % Default value
 derivative.help             = {'Choose whether to perform correlation analysis on 1st derivative of seeds/pixels time-course'}';
 
+% Correlation on raw data time course (before filtering, downsampling and GLM regression)
+rawData                  = cfg_menu;
+rawData.tag              = 'rawData';
+rawData.name             = 'raw time course';
+rawData.labels           = {'No', 'Yes'};
+rawData.values           = {0, 1};
+rawData.val              = {1};                      % Default value
+rawData.help             = {'Choose whether to perform correlation analysis on seeds raw time course'}';
+
 % Show standard error bar
 stderror                    = cfg_menu;
 stderror.tag                = 'stderror';
@@ -152,7 +161,7 @@ parent_results_dir.help     = {'Select the directory where consolidated results 
 group_corr1                 = cfg_exbranch; % This is the branch that has information about how to run this module
 group_corr1.name            = 'Bilateral correlation group comparison'; % The display name
 group_corr1.tag             = 'group_corr1'; %Very important: tag is used when calling for execution
-group_corr1.val             = {IOImat redo1 IOImatCopyChoice IC AutoSessionChoice paired_seeds ttest1 wilcoxon1 alpha derivative stderror parent_results_dir generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+group_corr1.val             = {IOImat redo1 IOImatCopyChoice IC AutoSessionChoice paired_seeds ttest1 wilcoxon1 alpha derivative rawData stderror parent_results_dir generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 group_corr1.prog            = @ioi_group_corr_run; % A function handle that will be called with the harvested job to run the computation
 group_corr1.vout            = @ioi_cfg_vout_group_corr; % A function handle that will be called with the harvested job to determine virtual outputs
 group_corr1.help            = {'Gets the correlation between each seed and its contralateral homologue. Then performs a paired t-test for each seed set, to have a group comparison.'}';
