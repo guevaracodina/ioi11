@@ -142,7 +142,7 @@ for SubjIdx=1:length(job.IOImat)
                                             ROIsignal = downsample(ROIsignal, samples2skip);
                                             
                                             % Plot and print data if required
-                                            private_plot_filtNdown_data(job, IOI, dir_ioimat, ROIdata, ROIsignal, r1, s1, c1);
+                                            subfunction_plot_filtNdown_data(job, IOI, dir_ioimat, ROIdata, ROIsignal, r1, s1, c1);
                                             
                                         catch
                                             if msg_ColorNotOK
@@ -166,7 +166,7 @@ for SubjIdx=1:length(job.IOImat)
                                                     ROIsignal = downsample(ROIsignal, samples2skip);
                                                     
                                                     % Plot and print data if required
-                                                    private_plot_filtNdown_data(job, IOI, dir_ioimat, ROIdata, ROIsignal, r1, s1, c1);
+                                                    subfunction_plot_filtNdown_data(job, IOI, dir_ioimat, ROIdata, ROIsignal, r1, s1, c1);
                                                     
                                                 catch
                                                     msg = ['Unable to extract color ' int2str(c1) ', session ' int2str(s1)];
@@ -223,7 +223,7 @@ end % End of main for
 end % End of function
 
 
-function private_plot_filtNdown_data(job, IOI, dir_ioimat, ROIdata, ROIsignal, r1, s1, c1)
+function subfunction_plot_filtNdown_data(job, IOI, dir_ioimat, ROIdata, ROIsignal, r1, s1, c1)
 % plots time course and spectrum for both the raw and filtered/downsampled data
 if job.generate_figures
     % Original Sampling Frequency (5 Hz per color, data is sampled at 20 Hz for
@@ -296,5 +296,5 @@ if job.generate_figures
         % --------------------------
     end % Save figures
 end % Generate figures
-end % private_plot_filtNdown_data
+end % subfunction_plot_filtNdown_data
 % EOF
