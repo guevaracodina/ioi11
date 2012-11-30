@@ -80,15 +80,14 @@ for SubjIdx = 1:length(job.IOImat)
                                         [imagesFlow nx(1) ny(1) nt(1)] = local_read_NIfTI(fname_list_flow{f1});
                                         [imagesHbO nx(2) ny(2) nt(2)]  = local_read_NIfTI(fname_list_HbO{f1});
                                         [imagesHbR nx(3) ny(3) nt(3)]  = local_read_NIfTI(fname_list_HbR{f1});
-                                        % If HbO, HbR & flow data have the same
-                                        % size
+                                        % If HbO, HbR & flow data have the same size
                                         if all(nx == nx(1)) && all(ny == ny(1)) && all(nt == nt(1))
                                             %% Data filtering
                                             imagesFlow = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesFlow, Rp_Rs, s1);
                                             imagesHbO  = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesHbO, Rp_Rs, s1);
                                             imagesHbR  = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesHbR, Rp_Rs, s1);
                                             %% CMRO2 computation
-                                            imagesCMRO2 = ioi_cmro2_compute(imagesFlow, imagesHbO, imagesHbR, gammaT, gammaR);
+                                            imagesCMRO2 = ioi_cmro2_compute(imagesFlow, imagesHbO, imagesHbR, gammaT, gammaR, IOI.conc.baseline_hbt, IOI.conc.baseline_hbr);
                                         else
                                             error('ioi_cmro2_run:different_Sizes_Flow_HbO_HbR', 'Flow and Hb data have different sizes.');
                                         end
