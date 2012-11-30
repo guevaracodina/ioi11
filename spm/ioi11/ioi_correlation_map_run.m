@@ -260,32 +260,36 @@ for SubjIdx=1:length(job.IOImat)
                                                     newName = [sprintf('%s_R%02d_S%02d_C%d',IOI.subj_name,r1,s1,c1) '_fcIOS_Zmap'];
                                                     dir_fisherZfig = fullfile(dir_ioimat,'fig_fisherZ');
                                                     if ~exist(dir_fisherZfig,'dir'), mkdir(dir_fisherZfig); end
-                                                    seed_based_fcIOS_map{r1}{s1,c1}.fisher = fisherz(tempCorrMap .* (pValuesMap < job.pValue));
+                                                    % Convert r to z, masking
+                                                    % out non-brain voxels
+                                                    seed_based_fcIOS_map{r1}{s1,c1}.fisher = fisherz(tempCorrMap) .* brainMask;
                                                     
                                                     
                                                     if job.generate_figures
                                                         % Save as nifti
                                                         ioi_save_nifti(seed_based_fcIOS_map{r1}{s1,c1}.fisher, fullfile(dir_fisherZfig,[newName oldExt]), vx);
+                                                        % Save masked file as nifti
+                                                        ioi_save_nifti(seed_based_fcIOS_map{r1}{s1,c1}.fisher .* (pValuesMap < job.pValue), fullfile(dir_fisherZfig,[newName '_Masked' oldExt]), vx);
                                                         IOI.fcIOS.corr(1).zMapName{r1}{s1, c1} = fullfile(dir_fisherZfig,[newName oldExt]);
-                                                        % Find 1st positive
-                                                        % value
+                                                        IOI.fcIOS.corr(1).zMapNameMask{r1}{s1, c1} = fullfile(dir_fisherZfig,[newName '_Masked' oldExt]);
+                                                        % Find 1st positive value
                                                         z1 = sort(seed_based_fcIOS_map{r1}{s1,c1}.fisher(:),1,'ascend');
                                                         idx1  = find(z1>0, 1, 'first');
                                                         minPosVal = z1(idx1);
                                                         
-                                                        % Find 1st negative
-                                                        % value
+                                                        % Find 1st negative value
                                                         z2 = sort(seed_based_fcIOS_map{r1}{s1,c1}.fisher(:),1,'descend');
                                                         idx2  = find(z2<0, 1, 'first');
                                                         minNegVal = z2(idx2);
                                                         
-                                                        % Get parameters for
-                                                        % overlay
+                                                        % Get parameters for overlay
                                                         anatomical      = IOI.res.file_anat;
-                                                        positiveMap     = IOI.fcIOS.corr.zMapName{r1}{s1, c1};
-                                                        negativeMap     = IOI.fcIOS.corr.zMapName{r1}{s1, c1};
+                                                        % positiveMap     = IOI.fcIOS.corr.zMapName{r1}{s1, c1};
+                                                        positiveMap     = IOI.fcIOS.corr.zMapNameMask{r1}{s1, c1};
+                                                        % negativeMap     = IOI.fcIOS.corr.zMapName{r1}{s1, c1};
+                                                        negativeMap     = IOI.fcIOS.corr.zMapNameMask{r1}{s1, c1};
                                                         colorNames      = fieldnames(IOI.color);
-                                                        mapRange        = [max(abs([minNegVal minPosVal])) max(z1)];
+                                                        mapRange        = {[minPosVal max(z1)], [minNegVal min(z2)]};
                                                         titleString     = sprintf('%s seed%d S%d(%s)Z-map',IOI.subj_name,r1,s1,colorNames{1+c1});
                                                         % Display plots on SPM graphics window
                                                         h = spm_figure('GetWin', 'Graphics');

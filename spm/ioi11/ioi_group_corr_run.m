@@ -258,20 +258,30 @@ for SubjIdx = 1:size(job.IOImat, 1)
     end
 end % Big loop over subjects
 
+% ------------------------------------------------------------------------------
 % For all the subjects
 % Choose parent folder (batch)
 % Loop over available colors and paired seeds
 % Do group statistical tests
 % Plot/print graphics
-statTest = [];
-meanCorr = [];
-stdCorr = [];
-statTestDiff = [];
-meanCorrDiff = [];
-stdCorrDiff = [];
-statTestRaw = [];
-meanCorrRaw = [];
-stdCorrRaw  = [];
+% ------------------------------------------------------------------------------
+% Initialize variables
+statTest        = [];
+meanCorr        = [];
+stdCorr         = [];
+statTestDiff    = [];
+meanCorrDiff    = [];
+stdCorrDiff     = [];
+statTestRaw     = [];
+meanCorrRaw     = [];
+stdCorrRaw      = [];
+eTotal          = [];
+yTotal          = [];
+eTotalDiff      = [];
+yTotalDiff      = [];
+eTotalRaw       = [];
+yTotalRaw       = [];
+
 for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
     doColor = ioi_doColor(IOI,c1,IC);
     if doColor
@@ -279,11 +289,11 @@ for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
         %skip laser - only extract for flow
         if ~(IOI.color.eng(c1)==IOI.color.laser)
             % Perform test on ROIs time course
-            [job, IOI, e, y, statTest] = subfunction_group_corr_test(job, IOI, c1, groupCorrData, groupCorrIdx, statTest, meanCorr, stdCorr);
+            [job, IOI, e, y, eTotal, yTotal, statTest, meanCorr, stdCorr] = subfunction_group_corr_test(job, IOI, c1, groupCorrData, groupCorrIdx, statTest, meanCorr, stdCorr, eTotal, yTotal);
             % Perform tests on the derivative of ROIs time-course
-            [job, IOI, eDiff, yDiff, statTestDiff, meanCorrDiff, stdCorrDiff] = subfunction_group_corr_test_diff(job, IOI, c1, groupCorrDataDiff, groupCorrIdx, statTestDiff, meanCorrDiff, stdCorrDiff);
+            [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff] = subfunction_group_corr_test_diff(job, IOI, c1, groupCorrDataDiff, groupCorrIdx, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff);
             % Perform tests on raw data of ROIs time-course
-            [job, IOI, eRaw, yRaw, statTestRaw, meanCorrRaw, stdCorrRaw] = subfunction_group_corr_test_raw(job, IOI, c1, groupCorrDataRaw, groupCorrIdx, statTestRaw, meanCorrRaw, stdCorrRaw);
+            [job, IOI, eRaw, yRaw, eTotalRaw, yTotalRaw, statTestRaw, meanCorrRaw, stdCorrRaw] = subfunction_group_corr_test_raw(job, IOI, c1, groupCorrDataRaw, groupCorrIdx, statTestRaw, meanCorrRaw, stdCorrRaw, eTotalRaw, yTotalRaw);
             
             % Plot results
             subfunction_plot_group_corr_test(job, IOI, c1, e, y, statTest);
@@ -298,7 +308,7 @@ end % loop over colors
 fprintf('Group comparison of bilateral correlation succesful!\n');
 end % ioi_group_corr_run
 
-function [job, IOI, e, y, statTest, meanCorr, stdCorr] = subfunction_group_corr_test(job, IOI, c1, groupCorrData, groupCorrIdx, statTest, meanCorr, stdCorr)
+function [job, IOI, e, y, eTotal, yTotal, statTest, meanCorr, stdCorr] = subfunction_group_corr_test(job, IOI, c1, groupCorrData, groupCorrIdx, statTest, meanCorr, stdCorr, eTotal, yTotal)
 % Do a separate paired t-test for each seed data
 for iSeeds = 1:size(job.paired_seeds, 1)
     % Average of control group
@@ -347,12 +357,16 @@ if job.stderror
     e = e / sqrt(size(groupCorrData{iSeeds,c1}, 1));
 end
 
+% Save total data for plotting later
+yTotal{c1} = y;
+eTotal{c1} = e;
+
 % Save results in .mat file
 save(IOI.fcIOS.corr(1).fnameGroup,'groupCorrData','groupCorrIdx',...
-    'meanCorr','stdCorr','statTest');
+    'meanCorr','stdCorr','statTest','yTotal','eTotal');
 end % subfunction_group_corr_test
 
-function [job, IOI, eDiff, yDiff, statTestDiff, meanCorrDiff, stdCorrDiff] = subfunction_group_corr_test_diff(job, IOI, c1, groupCorrDataDiff, groupCorrIdx, statTestDiff, meanCorrDiff, stdCorrDiff)
+function [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff] = subfunction_group_corr_test_diff(job, IOI, c1, groupCorrDataDiff, groupCorrIdx, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff)
 if isfield (job,'derivative')
     for iSeeds = 1:size(job.paired_seeds, 1)
         % Average of control group
@@ -400,13 +414,18 @@ if isfield (job,'derivative')
         % std error bars: sigma/sqrt(N)
         eDiff = eDiff / sqrt(size(groupCorrDataDiff{iSeeds,c1}, 1));
     end
+    
+    % Save total data for plotting later
+    yTotalDiff{c1} = yDiff;
+    eTotalDiff{c1} = eDiff;
+
     % Save results in .mat file
     save(IOI.fcIOS.corr(1).fnameGroupDiff,'groupCorrDataDiff','groupCorrIdx',...
-        'meanCorrDiff','stdCorrDiff','statTestDiff');
+        'meanCorrDiff','stdCorrDiff','statTestDiff','yTotalDiff','eTotalDiff');
 end % derivative
 end % subfunction_group_corr_test_diff
 
-function [job, IOI, eRaw, yRaw, statTestRaw, meanCorrRaw, stdCorrRaw] = subfunction_group_corr_test_raw(job, IOI, c1, groupCorrDataRaw, groupCorrIdx, statTestRaw, meanCorrRaw, stdCorrRaw)
+function [job, IOI, eRaw, yRaw, eTotalRaw, yTotalRaw, statTestRaw, meanCorrRaw, stdCorrRaw] = subfunction_group_corr_test_raw(job, IOI, c1, groupCorrDataRaw, groupCorrIdx, statTestRaw, meanCorrRaw, stdCorrRaw, eTotalRaw, yTotalRaw)
 if isfield (job,'rawData')
     for iSeeds = 1:size(job.paired_seeds, 1)
         % Average of control group
@@ -454,9 +473,14 @@ if isfield (job,'rawData')
         % std error bars: sigma/sqrt(N)
         eRaw = eRaw / sqrt(size(groupCorrDataRaw{iSeeds,c1}, 1));
     end
+    
+    % Save total data for plotting later
+    yTotalRaw{c1} = yRaw;
+    eTotalRaw{c1} = eRaw;
+    
     % Save results in .mat file
     save(IOI.fcIOS.corr(1).fnameGroupRaw,'groupCorrDataRaw','groupCorrIdx',...
-        'meanCorrRaw','stdCorrRaw','statTestRaw');
+        'meanCorrRaw','stdCorrRaw','statTestRaw', 'yTotalRaw', 'eTotalRaw');
 end % raw data
 end % subfunction_group_corr_test_raw
 

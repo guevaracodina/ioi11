@@ -21,8 +21,8 @@ function h = ioi_overlay_map(anatomical, positiveMap, negativeMap, mapRange, tit
 %               foreground.
 % negativeMap   NIfTI (.nii) filename with negativ functional map on the
 %               foreground.
-% titleString           String with the title to be displayed.
-% mapRange      2-element vector with the data range to be displayed.
+% titleString   String with the title to be displayed.
+% mapRange      2-element cell with the data range (positive&negative) to be displayed.
 % OUTPUT
 % h             Handle to the figure
 %_______________________________________________________________________________
@@ -44,6 +44,7 @@ h = gcf;
 % Make mapRange a column vector
 if size(mapRange, 1) == 1
     mapRange = mapRange';
+    mapRange = cellfun(@(x) x', mapRange, 'UniformOutput', false);
 end
 
 % Create overlay object
@@ -60,8 +61,8 @@ slObj = slover(char(imagesOverlay));
 
 slObj.slices = 1;                           % For IOI images only 1 slice (2D)
                                             % Automatic range for image 1 (anatomy)
-slObj.img(2).range = mapRange;              % Range for positive map
-slObj.img(3).range = -slObj.img(2).range;   % Same range for negative map
+slObj.img(2).range = mapRange{1};           % Range for positive map
+slObj.img(3).range = mapRange{2};           % Range for negative map
 slObj.img(1).type = 'truecolor';            % Anatomical image
 slObj.img(2).type = 'split';                % Pos. map
 slObj.img(3).type = 'split';                % Neg. map
