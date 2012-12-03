@@ -1,5 +1,11 @@
 function out = ioi_flow_run(job)
-%select a subset of sessions
+% Computes decorrelation velocity from speckle contrast in IR laser images.
+%_______________________________________________________________________________
+% Copyright (C) 2011 LIOM Laboratoire d'Imagerie Optique et Moléculaire
+%                    École Polytechnique de Montréal
+%_______________________________________________________________________________
+
+% select a subset of sessions
 [all_sessions selected_sessions] = ioi_get_sessions(job);
 RemoveLC = job.RemoveLC;
 for SubjIdx=1:length(job.IOImat)
@@ -98,7 +104,7 @@ for SubjIdx=1:length(job.IOImat)
                                     OPTIONS.Brep = 0;
                                     for i3=1:nt
                                         tmp_laser = squeeze(laser(:,:,i3));
-                                        std_laser=stdfilt(tmp_laser,win2);
+                                        std_laser = stdfilt(tmp_laser,win2);
                                         %this is much faster (4 times) than conv2
                                         %tic
                                         %THIS IS SLOW:
@@ -106,6 +112,15 @@ for SubjIdx=1:length(job.IOImat)
                                         %toc
                                         contrast=std_laser./mean_laser;
                                         image_flow(:,:,1,i3)=private_flow_from_contrast(contrast,job.configuration.integ_time);
+                                        % Normalization of the decorrelation velocity
+                                        if isfield(job, 'flow_lambda_norm')
+                                            if isfield (job.flow_lambda_norm, 'flow_lambda_norm_On')
+                                                % Establishes the relationship on the correlation time and the velocity of the scattering particles.
+                                                image_flow(:,:,1,i3) = image_flow(:,:,1,i3).*job.flow_lambda_norm.flow_lambda_norm_On.IR_laser_lambda/(2*pi);
+                                            else
+                                                % Decorrelation velocity is inversely proportional to correlation time.
+                                            end
+                                        end
                                     end
                                     
                                     if IOI.res.shrinkageOn
