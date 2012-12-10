@@ -1,10 +1,10 @@
 function out = ioi_cine2D_run(job)
 %Step 1: Get various fields (one or a few functions)
-
+%Step 1: Get various fields (one or a few functions)
 [all_sessions selected_sessions] = ioi_get_sessions(job);
 %filters
-HPF = ioi_get_HPF(job);
-LPF = ioi_get_LPF(job);
+%HPF = ioi_get_HPF(job);
+%LPF = ioi_get_LPF(job);
 [shrinkage_choice SH] = ioi_get_shrinkage_choice(job);
 
 if isfield(job.stim_choice,'manual_onsets')
@@ -16,10 +16,10 @@ end
 which_onset_type = job.which_onset_type;
 group_onset_types = job.group_onset_types; %overrides which_onset_type
 IC = job.IC;
-
+interactive_mode_all_color = job.interactive_mode;
+interactive_mode = job.interactive_mode;
 normalize_choice = job.normalize_choice;
 show_movie = job.show_movie;
-%*************by Cong on 12/08/28
 % interactive_mode = job.interactive_mode;
 show_images=job.generate_images;
 save_images=job.save_images;
@@ -28,6 +28,22 @@ dir_cine = 'Cine_movies';
 % high_limit = job.high_limit/100;
 % low_limit = job.low_limit/100;
 skip_overlap = job.skip_overlap;
+very_first_pass = 1;
+very_last_pass = 0;
+
+if isfield(job.superpose_anatomical, 'SuperposeOn')
+    Z.superpose_anatomical = 1;
+    Z.do_superpose = 1;
+    Z.generate_figures = 1;
+    Z.superpose_threshold = job.superpose_anatomical.SuperposeOn.threshold;
+else
+    Z.superpose_anatomical = 0;
+    Z.do_superpose = 0;
+    Z.generate_figures = job.generate_figures;
+end
+Z.superpose_ROIs = job.superpose_ROIs;
+Z.save_figures = job.save_images;
+%Step 2: loop over subjects:
 
 %Step 2: loop over subjects:
 %get size of windows before and after stimulation to average on, in data points
@@ -52,10 +68,26 @@ for SubjIdx=1:length(job.IOImat)
                 IOI.dev.TR = 0.2;
             end
             
-            %Step 3: another function: get windows 
+            %Step 3: another function: get windows
+            WI = ioi_get_windows(IOI.dev.TR,job);
+            
+            %include anatomical image
+            if Z.superpose_anatomical
+                Z.file_anat = IOI.res.file_anat; %.nii
+            end
+            
+            %Step 3: another function: get windows
             WI = ioi_get_windows(IOI.dev.TR,job);
             
             
+            %include ROIs
+            try
+                if Z.superpose_ROIs
+                    Z.ROI = IOI.res.ROI;
+                end
+            catch
+                disp('Could not find ROIname');
+            end
             %to allow at least one data point after window_before
             if isfield(job.stim_choice,'manual_onsets')
                 if onset_time == 0
@@ -108,268 +140,384 @@ for SubjIdx=1:length(job.IOImat)
                     IOI.cine_skipped{s1} = skipped;
                     disp(['Skipped:' int2str(skipped)]);
                     %loop over colors
+                    %interactive_mode_all_color=0;
                     interactive_mode_all_color=0;
                     for c1=1:length(IOI.color.eng);
-                        %Get the proper do_color function 
-%                       doColor = ioi_doColor(IOI,c1,IC)
-                        do_color = 0;
-                        if IC.include_flow
-                            if isfield(IOI.color,'flow')
-                                if IOI.color.eng(c1)==IOI.color.flow
-                                    do_color = 1;
-                                end
-                            end
-                        end
-                        if IC.include_OD
-                            if any(IOI.color.eng(c1)==[IOI.color.green IOI.color.red IOI.color.yellow])
-                                do_color = 1;
-                            end
-                        end
-                        if isfield(IOI.color,'HbO')
-                            if IC.include_HbT
-                                HbColors = [IOI.color.HbO IOI.color.HbR IOI.color.HbT];
-                            else
-                                HbColors = [];
-                            end
-                            if IC.include_HbO
-                                if IOI.color.eng(c1)==IOI.color.HbO
-                                    do_color = 1;
-                                end
-                            end
-                            if IC.include_HbR
-                                if IOI.color.eng(c1)==IOI.color.HbR
-                                    do_color = 1;
-                                end
-                            end
-                            if any(IOI.color.eng(c1)==HbColors)
-                                do_color = 1;
-                            end
-                        end
-                        if do_color
-                            m2 = 0;
-                            %loop over onset types
-                            for m1=1:length(onsets_list{s1})
-                                if any(m1==which_onset_type)
-                                    m2 = m2+1;
-                                    arrays_assigned = 0;
-                                    kb = 0; %counter of segments before onsets
-                                    ka = 0; %counter of segments after onsets
-                                    kb2 = 0; %counter of skipped segments before onsets
-                                    ka2 = 0; %counter of skipped segments after onsets
-                                    %loop over onsets for that session
-                                    U = round(onsets_list{s1}{m1}/IOI.dev.TR)-WI.window_offset; %in data points
-                                    
-                                    %add a function for averaging
-                                    
-                                    for u1=1:length(U)
-                                        %Frames to get:
-                                        fr_before = U(u1)-WI.window_before:U(u1)-1;
-                                        fr_after = U(u1):U(u1)+WI.window_after-1;
-                                        %Load images before and after stimulus
-                                        Yb = ioi_get_images(IOI,fr_before,c1,s1,dir_ioimat,shrinkage_choice);
-                                        Ya = ioi_get_images(IOI,fr_after,c1,s1,dir_ioimat,shrinkage_choice);
-                                        if ~isempty(Ya) && ~isempty(Yb)
-                                            if ~arrays_assigned %assign arrays
-                                                tmp_array_before = zeros(size(Yb));
-                                                tmp_array_after = zeros(size(Ya));
-                                                arrays_assigned = 1;
-                                            end
-                                            
-                                            switch normalize_choice
-                                                case 1
-                                                    tmp_median = median(Yb,3);
-                                                case 2
-                                                    tmp_median = squeeze(Yb(:,:,end));
-                                                case 3
-                                                    tmp_median = mean(Yb,3);
-                                                case 4
-                                                    tmp_median = zeros(size(Yb,1),size(Yb,2));
-                                            end
-                                            tmp_median_b = repmat(tmp_median,[1 1 size(Yb,3)]);
-                                            tmp_median_a = repmat(tmp_median,[1 1 size(Ya,3)]);
-                                            tmp_array_before = tmp_array_before + Yb - tmp_median_b;
-                                            tmp_array_after = tmp_array_after + Ya - tmp_median_a;
-                                            ka = ka+1;
-                                            kb = kb+1;
-                                        else
-                                            if isempty(Ya)
-                                                ka2 = ka2+1;
-                                                if ka2<3
-                                                    disp(['Could not include segment due to incomplete data after onset ' int2str(u1) ' at time ' num2str(U(u1)*IOI.dev.TR) ...
-                                                        ' for session ' int2str(s1) ...
-                                                        ' for color ' int2str(c1) ' for onset type ' int2str(m1) ...
-                                                        '... skipping ' int2str(ka2) ' so far']);
-                                                    
-                                                end
-                                            end
-                                            if isempty(Yb)
-                                                kb2 = kb2+1;
-                                                if kb2 < 3
-                                                    disp(['Could not include segment due to incomplete data before onset ' int2str(u1) ' at time ' num2str(U(u1)*IOI.dev.TR) ...
-                                                        ' for session ' int2str(s1) ...
-                                                        ' for color ' int2str(c1) ' for onset type ' int2str(m1) ...
-                                                        '... skipping ' int2str(kb2) ' so far']);
-                                                end
-                                            end
-                                        end
+                        doColor = ioi_doColor(IOI,c1,IC);
+                        if doColor
+                            %Get the proper do_color function
+                            %                       doColor = ioi_doColor(IOI,c1,IC)
+                            do_color = 0;
+                            if IC.include_flow
+                                if isfield(IOI.color,'flow')
+                                    if IOI.color.eng(c1)==IOI.color.flow
+                                        do_color = 1;
                                     end
-                                    %divide by number of found segments (ka = kb always in this module)
-                                    %save movie
-                                    d = tmp_array_after/ka;
-                                    time=0;
-                                    if job.downFact > 1
-                                        nT = round(size(d,3)/job.downFact);
-                                        tmpd = zeros(size(d,1),size(d,2),nT); 
-                                        interactive_mode = 1;
-                                        for j0=1:nT
-                                            time=j0*job.downFact*0.2-job.window_offset;  %**************caculate the time for each frame
-                                            tmpd(:,:,j0) = mean(d(:,:,(1:job.downFact)+job.downFact*(j0-1)),3);
-                                            %*******by Cong on 12/08/28
-                                            if show_images
-                                                Images=figure; imagesc(tmpd(:,:,j0)); colorbar;
-                                                tit=['Cine images' gen_num_str(s1,2) ' ' IOI.color.eng(c1) ' onset' int2str(m1)];
-                                                title(tit);
-                                                close(Images);
-                                            end                                           
-                                            if save_images
-                                              
-                                                if interactive_mode_all_color
-                                                    clims = [clims1 clims2];
-                                                    Images=figure;                                                    
-                                                    imagesc(tmpd(:,:,j0),clims);
-                                                    colorbar;
-                                                    tit1=['Cine images' gen_num_str(s1,2) ' ' IOI.color.eng(c1) ' onset' int2str(m1) ' frame' int2str(j0) ' time ' int2str(time) 's'];
-                                                    title(tit1);
-                                                    tit=['Cine_images' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '_frame' int2str(j0) '_time_' int2str(time) 's'];
-                                                    filename=[cineDir,tit];
-                                                    print(Images, '-dpng', [filename '.png'], '-r300');
-                                                    %saveas(Images,filename, 'tif');
-                                                    saveas(Images,filename, 'fig');
-                                                    close(Images);
-                                                else
-
-                                                if j0 == 1
-                                                    keep_going = 1;
-                                                    first_pass = 1;
+                                end
+                            end
+                            if IC.include_OD
+                                if any(IOI.color.eng(c1)==[IOI.color.green IOI.color.red IOI.color.yellow])
+                                    do_color = 1;
+                                end
+                            end
+                            if isfield(IOI.color,'HbO')
+                                if IC.include_HbT
+                                    HbColors = [IOI.color.HbO IOI.color.HbR IOI.color.HbT];
+                                else
+                                    HbColors = [];
+                                end
+                                if IC.include_HbO
+                                    if IOI.color.eng(c1)==IOI.color.HbO
+                                        do_color = 1;
+                                    end
+                                end
+                                if IC.include_HbR
+                                    if IOI.color.eng(c1)==IOI.color.HbR
+                                        do_color = 1;
+                                    end
+                                end
+                                if any(IOI.color.eng(c1)==HbColors)
+                                    do_color = 1;
+                                end
+                            end
+                            if do_color
+                                m2 = 0;
+                                %loop over onset types
+                                for m1=1:length(onsets_list{s1})
+                                    if any(m1==which_onset_type)
+                                        m2 = m2+1;
+                                        arrays_assigned = 0;
+                                        kb = 0; %counter of segments before onsets
+                                        ka = 0; %counter of segments after onsets
+                                        kb2 = 0; %counter of skipped segments before onsets
+                                        ka2 = 0; %counter of skipped segments after onsets
+                                        %loop over onsets for that session
+                                        U = round(onsets_list{s1}{m1}/IOI.dev.TR)-WI.window_offset; %in data points
+                                        
+                                        %add a function for averaging
+                                        
+                                        for u1=1:length(U)
+                                            %Frames to get:
+                                            fr_before = U(u1)-WI.window_before:U(u1)-1;
+                                            fr_after = U(u1):U(u1)+WI.window_after-1;
+                                            %Load images before and after stimulus
+                                            Yb = ioi_get_images(IOI,fr_before,c1,s1,dir_ioimat,shrinkage_choice);
+                                            Ya = ioi_get_images(IOI,fr_after,c1,s1,dir_ioimat,shrinkage_choice);
+                                            if ~isempty(Ya) && ~isempty(Yb)
+                                                if ~arrays_assigned %assign arrays
+                                                    tmp_array_before = zeros(size(Yb));
+                                                    tmp_array_after = zeros(size(Ya));
+                                                    arrays_assigned = 1;
                                                 end
-                                                other_first_pass = 1;
-                                                %                                                 while (keep_going && (interactive_mode || first_pass ))|| (other_first_pass && j0 > 1)||((~keep_going )&& (interactive_mode))                                                
-                                                flag=0;
-                                                flag_first_pass = 0;
-                                                while (keep_going && (interactive_mode || first_pass || other_first_pass) ) || (other_first_pass && j0 > 1)||flag
-                                                    Images=figure;
-                                                    if first_pass
-                                                        imagesc(tmpd(:,:,j0));
-                                                        first_pass = 0;
-                                                        flag_first_pass = 1;
-                                                    else
-                                                        imagesc(tmpd(:,:,j0),clims);
-                                                        other_first_pass = 0;
-                                                    end
-                                                    colorbar;
-                                                    tit1=['Cine images' gen_num_str(s1,2) ' ' IOI.color.eng(c1) ' onset' int2str(m1) ' frame' int2str(j0) ' time ' int2str(time) 's'];
-                                                    title(tit1);
-                                                    tit=['Cine_images' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '_frame' int2str(j0) '_time_' int2str(time) 's'];
-                                                    filename=[cineDir,tit];
-                                                    print(Images, '-dpng', [filename '.png'], '-r300');
-                                                    %saveas(Images,filename, 'tif');
-                                                    saveas(Images,filename, 'fig');
-                                                    if keep_going && interactive_mode
-                                                        keep_going = spm_input('Change colorbar limits ',1,'y/n',[1 0]);
-                                                        if keep_going
-                                                            clims1 = spm_input('Enter min value ','+1');
-                                                            clims2 = spm_input('Enter max value ','+1');
-                                                            clims = [clims1 clims2];
-                                                        end
-                                                        interactive_mode = ~spm_input('Leave interactive mode for this color ','+1','y/n',[1 0]);
-                                                        interactive_mode_all_color = ~spm_input('Leave interactive mode for all colors ','+1','y/n',[0 1]);
-                                                    end 
-                       
-                                                    if keep_going && (~interactive_mode) && flag_first_pass
-                                                        flag=flag+1;
-                                                        if flag>1
-                                                            flag=0;
-                                                        end
+                                                
+                                                switch normalize_choice
+                                                    case 1
+                                                        tmp_median = median(Yb,3);
+                                                    case 2
+                                                        tmp_median = squeeze(Yb(:,:,end));
+                                                    case 3
+                                                        tmp_median = mean(Yb,3);
+                                                    case 4
+                                                        tmp_median = zeros(size(Yb,1),size(Yb,2));
+                                                end
+                                                tmp_median_b = repmat(tmp_median,[1 1 size(Yb,3)]);
+                                                tmp_median_a = repmat(tmp_median,[1 1 size(Ya,3)]);
+                                                tmp_array_before = tmp_array_before + Yb - tmp_median_b;
+                                                tmp_array_after = tmp_array_after + Ya - tmp_median_a;
+                                                ka = ka+1;
+                                                kb = kb+1;
+                                            else
+                                                if isempty(Ya)
+                                                    ka2 = ka2+1;
+                                                    if ka2<3
+                                                        disp(['Could not include segment due to incomplete data after onset ' int2str(u1) ' at time ' num2str(U(u1)*IOI.dev.TR) ...
+                                                            ' for session ' int2str(s1) ...
+                                                            ' for color ' int2str(c1) ' for onset type ' int2str(m1) ...
+                                                            '... skipping ' int2str(ka2) ' so far']);
                                                         
-                                                        flag_first_pass = 0;
-                                                    else
-                                                        flag = 0;
                                                     end
-%                                                     if ~interactive_mode_all_color
-%                                                        clims = [clims1 clims2];
-%                                                     end
+                                                end
+                                                if isempty(Yb)
+                                                    kb2 = kb2+1;
+                                                    if kb2 < 3
+                                                        disp(['Could not include segment due to incomplete data before onset ' int2str(u1) ' at time ' num2str(U(u1)*IOI.dev.TR) ...
+                                                            ' for session ' int2str(s1) ...
+                                                            ' for color ' int2str(c1) ' for onset type ' int2str(m1) ...
+                                                            '... skipping ' int2str(kb2) ' so far']);
+                                                    end
+                                                end
+                                            end
+                                        end
+                                        %divide by number of found segments (ka = kb always in this module)
+                                        %save movie
+                                        d = tmp_array_after/ka;
+                                        if Z.superpose_anatomical
+                                            baseline = mean(tmp_array_before,3);
+                                            d = d-repmat(baseline,[1 1 size(d,3)]);
+                                            min_std = 0.1;
+                                            %try to get something like a t-stat, assuming first point is the baseline
+                                            std0 = std(d,0,3);
+                                            std0 = max(std0,min_std);
+                                            d = d ./repmat(std0,[1 1 size(d,3)]);
+                                        end
+                                        time=0;
+                                        time=0;
+                                        if job.downFact > 1
+                                            nT = round(size(d,3)/job.downFact);
+                                            tmpd = zeros(size(d,1),size(d,2),nT);
+                                            interactive_mode = 1;
+                                            %interactive_mode = 1;
+                                            for j0=1:nT
+                                                time=j0*job.downFact*IOI.dev.TR-job.window_offset;  %**************caculate the time for each frame
+                                                time=j0*job.downFact*0.2-job.window_offset;  %**************caculate the time for each frame
+                                                tmpd(:,:,j0) = mean(d(:,:,(1:job.downFact)+job.downFact*(j0-1)),3);
+                                                %*******by Cong on 12/08/28
+                                                if show_images
+                                                    Images=figure; imagesc(tmpd(:,:,j0)); colorbar;
+                                                    tit=['Cine images' gen_num_str(s1,2) ' ' IOI.color.eng(c1) ' onset' int2str(m1)];
+                                                    title(tit);
                                                     close(Images);
                                                 end
+                                                if save_images
+                                                    
+                                                    if interactive_mode_all_color
+                                                        ioi_save_images_callOn = 1;
+                                                        if ioi_save_images_callOn
+                                                            tit=['Cine_images' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '_frame' int2str(j0) '_time_' int2str(time) 's'];
+                                                            fname = fullfile(cineDir,tit);
+                                                            if ~very_first_pass
+                                                                try close(gcf); end
+                                                            else
+                                                                very_first_pass = 0;
+                                                            end
+                                                            ioi_save_images(tmpd(:,:,j0), fname, [1 1 1],Z,tit)
+                                                            
+                                                            if interactive_mode_all_color
+                                                                clims = [clims1 clims2];
+                                                                Images=figure;
+                                                                imagesc(tmpd(:,:,j0),clims);
+                                                                colorbar;
+                                                                tit1=['Cine images' gen_num_str(s1,2) ' ' IOI.color.eng(c1) ' onset' int2str(m1) ' frame' int2str(j0) ' time ' int2str(time) 's'];
+                                                                title(tit1);
+                                                                tit=['Cine_images' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '_frame' int2str(j0) '_time_' int2str(time) 's'];
+                                                                filename=[cineDir,tit];
+                                                                print(Images, '-dpng', [filename '.png'], '-r300');
+                                                                %saveas(Images,filename, 'tif');
+                                                                saveas(Images,filename, 'fig');
+                                                                close(Images);
+                                                            else
+                                                                
+                                                                if j0 == 1
+                                                                    keep_going = 1;
+                                                                    first_pass = 1;
+                                                                end
+                                                                other_first_pass = 1;
+                                                                %                                                 while (keep_going && (interactive_mode || first_pass ))|| (other_first_pass && j0 > 1)||((~keep_going )&& (interactive_mode))
+                                                                flag=0;
+                                                                flag_first_pass = 0;
+                                                                while (keep_going && (interactive_mode || first_pass || other_first_pass) ) || (other_first_pass && j0 > 1)||flag
+                                                                    Images=figure;
+                                                                    if first_pass
+                                                                        imagesc(tmpd(:,:,j0));
+                                                                        first_pass = 0;
+                                                                        flag_first_pass = 1;
+                                                                    else
+                                                                        clims = [clims1 clims2];
+                                                                        Images=figure;
+                                                                        imagesc(tmpd(:,:,j0),clims);
+                                                                        colorbar;
+                                                                        tit1=['Cine images' gen_num_str(s1,2) ' ' IOI.color.eng(c1) ' onset' int2str(m1) ' frame' int2str(j0) ' time ' int2str(time) 's'];
+                                                                        title(tit1);
+                                                                        tit=['Cine_images' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '_frame' int2str(j0) '_time_' int2str(time) 's'];
+                                                                        filename=[cineDir,tit];
+                                                                        print(Images, '-dpng', [filename '.png'], '-r300');
+                                                                        %saveas(Images,filename, 'tif');
+                                                                        saveas(Images,filename, 'fig');
+                                                                        close(Images);
+                                                                    end
+                                                                    else
+                                                                        
+                                                                        if j0 == 1
+                                                                            keep_going = 1;
+                                                                            first_pass = 1;
+                                                                        end
+                                                                        other_first_pass = 1;
+                                                                        %                                                 while (keep_going && (interactive_mode || first_pass ))|| (other_first_pass && j0 > 1)||((~keep_going )&& (interactive_mode))
+                                                                        flag=0;
+                                                                        flag_first_pass = 0;
+                                                                        Z.cbar.colorbar_override = 0;
+                                                                        while (keep_going && (interactive_mode || first_pass || other_first_pass) ) || (other_first_pass && j0 > 1)||flag
+                                                                            ioi_save_images_callOn = 1;
+                                                                            if ioi_save_images_callOn
+                                                                                tit=['Cine_images' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '_frame' int2str(j0) '_time_' int2str(time) 's'];
+                                                                                fname = fullfile(cineDir,tit);
+                                                                                if ~very_first_pass
+                                                                                    try close(gcf); end
+                                                                                else
+                                                                                    very_first_pass = 0;
+                                                                                end
+                                                                                ioi_save_images(tmpd(:,:,j0), fname, [1 1 1],Z,tit)
+                                                                            else
+                                                                                Images=figure;
+                                                                                if first_pass
+                                                                                    imagesc(tmpd(:,:,j0));
+                                                                                    first_pass = 0;
+                                                                                    flag_first_pass = 1;
+                                                                                else
+                                                                                    imagesc(tmpd(:,:,j0),clims);
+                                                                                    other_first_pass = 0;
+                                                                                end
+                                                                                
+                                                                                colorbar;
+                                                                                tit1=['Cine images' gen_num_str(s1,2) ' ' IOI.color.eng(c1) ' onset' int2str(m1) ' frame' int2str(j0) ' time ' int2str(time) 's'];
+                                                                                title(tit1);
+                                                                                tit=['Cine_images' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '_frame' int2str(j0) '_time_' int2str(time) 's'];
+                                                                                filename=[cineDir,tit];
+                                                                                print(Images, '-dpng', [filename '.png'], '-r300');
+                                                                                %saveas(Images,filename, 'tif');
+                                                                                saveas(Images,filename, 'fig');
+                                                                                colorbar;
+                                                                                tit1=['Cine images' gen_num_str(s1,2) ' ' IOI.color.eng(c1) ' onset' int2str(m1) ' frame' int2str(j0) ' time ' int2str(time) 's'];
+                                                                                title(tit1);
+                                                                                tit=['Cine_images' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '_frame' int2str(j0) '_time_' int2str(time) 's'];
+                                                                                filename=[cineDir,tit];
+                                                                                print(Images, '-dpng', [filename '.png'], '-r300');
+                                                                                %saveas(Images,filename, 'tif');
+                                                                                saveas(Images,filename, 'fig');
+                                                                                if keep_going && interactive_mode
+                                                                                    keep_going = spm_input('Change colorbar limits ',1,'y/n',[1 0]);
+                                                                                    if keep_going
+                                                                                        clims1 = spm_input('Enter min value ','+1');
+                                                                                        clims2 = spm_input('Enter max value ','+1');
+                                                                                        clims = [clims1 clims2];
+                                                                                    end
+                                                                                    if keep_going && interactive_mode
+                                                                                        keep_going = spm_input('Change colorbar limits ',1,'y/n',[1 0]);
+                                                                                        if keep_going
+                                                                                            clims1 = spm_input('Enter min value ','+1');
+                                                                                            clims2 = spm_input('Enter max value ','+1');
+                                                                                            clims = [clims1 clims2];
+                                                                                            Z.cbar.colorbar_override = 1;
+                                                                                            Z.cbar.c_max = clims2;
+                                                                                            Z.cbar.c_min = clims1;
+                                                                                        end
+                                                                                        interactive_mode = ~spm_input('Leave interactive mode for this color ','+1','y/n',[1 0]);
+                                                                                        interactive_mode_all_color = ~spm_input('Leave interactive mode for all colors ','+1','y/n',[0 1]);
+                                                                                    end
+                                                                                    interactive_mode = ~spm_input('Leave interactive mode for this color ','+1','y/n',[1 0]);
+                                                                                    interactive_mode_all_color = ~spm_input('Leave interactive mode for all colors ','+1','y/n',[0 1]);
+                                                                                end
+                                                                                
+                                                                                if keep_going && (~interactive_mode) && flag_first_pass
+                                                                                    flag=flag+1;
+                                                                                    if flag>1
+                                                                                        flag=0;
+                                                                                    end
+                                                                                    
+                                                                                    if keep_going && (~interactive_mode) && flag_first_pass
+                                                                                        flag=flag+1;
+                                                                                        if flag>1
+                                                                                            flag=0;
+                                                                                        end
+                                                                                        
+                                                                                        flag_first_pass = 0;
+                                                                                    else
+                                                                                        flag = 0;
+                                                                                    end
+                                                                                    %                                                     if ~interactive_mode_all_color
+                                                                                    %                                                        clims = [clims1 clims2];
+                                                                                    %                                                     end
+                                                                                    if ~ioi_save_images_callOn
+                                                                                        close(Images);
+                                                                                    end
+                                                                                    flag_first_pass = 0;
+                                                                                else
+                                                                                    flag = 0;
+                                                                                end
+                                                                                %                                                     if ~interactive_mode_all_color
+                                                                                %                                                        clims = [clims1 clims2];
+                                                                                %                                                     end
+                                                                                close(Images);
+                                                                            end
+                                                                        end
+                                                                end
+                                                                %************end
+                                                            end
+                                                            d = tmpd;
+                                                        end
+                                                        m0 = min(d(:));
+                                                        M0 = max(d(:));
+                                                        %best is to save d
+                                                        save(fullfile(cineDir,['cine_S' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '.Mdat']),'d','-v7.3');
+                                                        dM = M0-m0;
+                                                        Nf = size(d,3);
+                                                        F(Nf) = struct('cdata',[],'colormap',[]);
+                                                        h0 = figure;
+                                                        %if IOI.color.eng(c1) == IOI.color.HbR
+                                                        %    clims = [m0+dM*(1-5*high_limit) M0+dM*(1-low_limit)];
+                                                        %else
+                                                        %                                     clims = [m0+dM*low_limit M0+dM*high_limit];
+                                                        %                                     clims = [m0+dM*low_limit M0+dM*high_limit];
+                                                        %end
+                                                        try
+                                                            try
+                                                                fname_movie = fullfile(cineDir,['cine_S' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '.avi']);
+                                                                vidObj = VideoWriter(fname_movie);
+                                                                open(vidObj);
+                                                                VideoOK = 1;
+                                                            catch
+                                                                VideoOK = 0;
+                                                                fname_movie = fullfile(cineDir,['cine_S' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '.mat']);
+                                                            end
+                                                            %set(gca,'NextPlot','replacechildren');
+                                                            for i0=1:size(d,3); %20
+                                                                try
+                                                                    imagesc(squeeze(d(:,:,i0)),clims);
+                                                                catch %in case there are Inf in d
+                                                                    imagesc(squeeze(d(:,:,i0)));
+                                                                end
+                                                                F(i0) = getframe;
+                                                                if VideoOK
+                                                                    writeVideo(vidObj,F(i0));
+                                                                end
+                                                            end
+                                                            if VideoOK
+                                                                close(vidObj);
+                                                            else
+                                                                save(fname_movie,'F','-v7.3');
+                                                            end
+                                                            %movie(h0,F,1,1/IOI.dev.TR); %,[0 0 0 0]);
+                                                            try close(h0); end
+                                                            IOI.cine{s1,m1}{c1}.fname_movie = fname_movie;
+                                                        end
+                                                    end
+                                                end
+                                                if (ka2>0 || kb2 > 0)
+                                                    disp(['Skipped ' int2str(ka2+kb2) ' segments']);
                                                 end
                                             end
-                                            %************end
                                         end
-                                        d = tmpd;
                                     end
-                                    m0 = min(d(:));
-                                    M0 = max(d(:));
-                                    %best is to save d
-                                    save(fullfile(cineDir,['cine_S' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '.Mdat']),'d','-v7.3');
-                                    dM = M0-m0;
-                                    Nf = size(d,3);
-                                    F(Nf) = struct('cdata',[],'colormap',[]);
-                                    h0 = figure;
-                                    %if IOI.color.eng(c1) == IOI.color.HbR
-                                    %    clims = [m0+dM*(1-5*high_limit) M0+dM*(1-low_limit)];
-                                    %else
-%                                     clims = [m0+dM*low_limit M0+dM*high_limit];
-                                    %end
-                                    try
-                                        try
-                                            fname_movie = fullfile(cineDir,['cine_S' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '.avi']);
-                                            vidObj = VideoWriter(fname_movie);
-                                            open(vidObj);
-                                            VideoOK = 1;
-                                        catch
-                                            VideoOK = 0;
-                                            fname_movie = fullfile(cineDir,['cine_S' gen_num_str(s1,2) '_' IOI.color.eng(c1) '_onset' int2str(m1) '.mat']);
-                                        end
-                                        %set(gca,'NextPlot','replacechildren');
-                                        for i0=1:size(d,3); %20
-                                            try
-                                                imagesc(squeeze(d(:,:,i0)),clims);
-                                            catch %in case there are Inf in d
-                                                imagesc(squeeze(d(:,:,i0)));
-                                            end
-                                            F(i0) = getframe;
-                                            if VideoOK
-                                                writeVideo(vidObj,F(i0));
-                                            end
-                                        end
-                                        if VideoOK
-                                            close(vidObj);
-                                        else
-                                            save(fname_movie,'F','-v7.3');
-                                        end
-                                        %movie(h0,F,1,1/IOI.dev.TR); %,[0 0 0 0]);
-                                        try close(h0); end
-                                        IOI.cine{s1,m1}{c1}.fname_movie = fname_movie;
-                                    end
-                                end
-                            end
-                            if (ka2>0 || kb2 > 0)
-                                disp(['Skipped ' int2str(ka2+kb2) ' segments']);
+                                end                               
                             end
                         end
                     end
                 end
-                
-            end
+            end                                                                              
             IOI.res.cineOK = 1;
             save(IOImat,'IOI');
         end
         toc
         disp(['Subject ' int2str(SubjIdx) ' complete']);
         out.IOImat{SubjIdx} = IOImat;
+
     catch exception
         disp(exception.identifier)
         disp(exception.stack(1))
         out.IOImat{SubjIdx} = job.IOImat{SubjIdx};
     end
 end
+if very_last_pass
+    try close(gcf); end
 end
+              
