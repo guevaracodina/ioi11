@@ -46,10 +46,15 @@ for SubjIdx=1:length(job.IOImat)
                             
                             %TO-DO: generalize to more than 1 onset
                             %type
-                            
-                            
+                            do_f_test = 1;
+                            if do_f_test
+                                onset_choice_det= [0 1];
+                                onset_choice_stim = [0 2];
+                            end
+                           
+                        
                             switch onset_choice
-                                case 0 %**onsets from stim and detection
+                                case 0 %**onsets from stim and spontaneous activity
                                     %onsets from detection
                                     ot = 1;
                                     ons{ot} = IOI.sess_res{s1}.onsets{ot}; %already in seconds *IOI.dev.TR;
@@ -116,8 +121,15 @@ for SubjIdx=1:length(job.IOImat)
                                     if HPF.hpf_butter_On
                                         X = ButterHPF(1/IOI.dev.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,X);
                                     end
+                                    do_f_test=1;
+                                    if do_f_test
+                                        X = [X ones(size(X,1),1)];
+                                        X_stim = [X(2) ones(size(X(1),1),1)];
+                                        X_spikes = [X(1) ones(size(X(1),1),1)];
+                                    else                                    
                                     %add a constant
                                     X = [X ones(size(X,1),1)];
+                                    end
                                     %get K for low pass filtering:
                                     K = get_K(1:size(X,1),LPF.fwhm1,IOI.dev.TR);
                                     %filter X - LPF
@@ -186,7 +198,7 @@ for SubjIdx=1:length(job.IOImat)
                                                 IOI.X{s1}.r(r1,c1) = res2; % Residuals
                                                 IOI.X{s1}.mse(r1,c1) = res2/length(y);
                                                 IOI.X{s1}.t(r1,c1) = b(1)/(res2*bcov(1,1)/trRV)^0.5;
-                                                if volt
+                                                if volt==2
                                                     IOI.X{s1}.t2(r1,c1) = b(2)/(res2*bcov(2,2)/trRV)^0.5;
                                                 end
                                                 IOI.X{s1}.yf{r1,c1} = y; %filtered data

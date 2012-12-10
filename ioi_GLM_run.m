@@ -7,7 +7,10 @@ bases = job.bases;
 [all_sessions selected_sessions] = ioi_get_sessions(job);
 %filters
 HPF = ioi_get_HPF(job);
-LPF = ioi_get_LPF(job);
+%*********by Cong on 12 /11/08
+% LPF = ioi_get_LPF(job);
+%*****end
+onset_choice=job.onset_choice;
 if isfield(job,'remove_stims')
     rmi = job.remove_stims;
 else
@@ -22,6 +25,7 @@ end
 if isfield(job.data_selection_choice,'ROI_mode')
     image_mode = 0;
     ROImat = job.data_selection_choice.ROI_mode.ROImat;
+   job.ROI_choice = job.data_selection_choice.ROI_mode.ROI_choice;
     [all_ROIs selected_ROIs] = ioi_get_ROIs(job);
     show_mse = job.data_selection_choice.ROI_mode.show_mse;
     figure_show_stim = job.data_selection_choice.ROI_mode.figure_show_stim;
@@ -35,8 +39,10 @@ else
     else
         spatial_LPF = 0;
     end
+    job.shrinkage_choice = job.data_selection_choice.image_mode.shrinkage_choice;
+    [shrinkage_choice SH] = ioi_get_shrinkage_choice(job);
 end
-[shrinkage_choice SH] = ioi_get_shrinkage_choice(job);
+
 
 if isfield(job.vasomotion_choice,'vasomotion_on')
     vasomotion_on = 1;
@@ -93,8 +99,10 @@ for SubjIdx=1:length(job.IOImat)
                         end
                     end
                     %save shrunk images
-                    if shrinkage_choice
-                        IOI = ioi_save_shrunk_images(IOI,job,SH,dir_ioimat);                        
+                    if image_mode 
+                        if shrinkage_choice
+                            IOI = ioi_save_shrunk_images(IOI,job,SH,dir_ioimat);
+                        end
                     end
                     %Overwrite old IOI
                     save(job.IOImat{SubjIdx},'IOI');
@@ -104,27 +112,77 @@ for SubjIdx=1:length(job.IOImat)
                             %Electrophysiology, for each subject and session
                             
                             %TO-DO: generalize to more than 1 onset type
-                            ot = job.which_onset_type;
-                            ons = IOI.sess_res{s1}.onsets{ot}; %already in seconds *IOI.dev.TR;
-                            dur = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
-                            name = IOI.sess_res{s1}.names{ot};
-                            if use_onset_amplitudes
-                                amp = IOI.sess_res{s1}.parameters{ot};
-                            else
-                                amp = [];
+                            %************************by Cong on 12/11/08
+                                                       switch onset_choice
+                                case 0 %**onsets from stim and detection
+                                    %onsets from detection
+                                    ot = 1;
+                                    ons{ot} = IOI.sess_res{s1}.onsets{ot}; %already in seconds *IOI.dev.TR;
+                                    dur{ot} = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
+                                    name{ot} = IOI.sess_res{s1}.names{ot};
+                                    if use_onset_amplitudes
+                                        amp{ot} = IOI.sess_res{s1}.parameters{ot};
+                                    else
+                                        amp{ot} = [];
+                                    end
+                                    
+                                    %*******************by cong on 12/11/05
+                                    %onsets from stimulation.
+                                    ot = 2;
+                                    ons{ot} = IOI.sess_res{s1}.onsets{ot}; %already in seconds *IOI.dev.TR;
+                                    dur{ot} = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
+                                    name{ot} = IOI.sess_res{s1}.names{ot};
+                                    if use_onset_amplitudes
+                                        amp{ot} = IOI.sess_res{s1}.parameters{ot};
+                                    else
+                                        amp{ot} = [];
+                                    end
+                                case 1 %***************onsets from detection
+                                    ot = 1;
+                                    ons = IOI.sess_res{s1}.onsets{ot}; %already in seconds *IOI.dev.TR;
+                                    dur = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
+                                    name = IOI.sess_res{s1}.names{ot};
+                                    if use_onset_amplitudes
+                                        amp = IOI.sess_res{s1}.parameters{ot};
+                                    else
+                                        amp = [];
+                                    end                                    
+                                case 2   %*************onsets from stim
+                                    ot = 2;
+                                    ons= IOI.sess_res{s1}.onsets{ot}; %already in seconds *IOI.dev.TR;
+                                    dur = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
+                                    name = IOI.sess_res{s1}.names{ot};
+                                    if use_onset_amplitudes
+                                        amp = IOI.sess_res{s1}.parameters{ot};
+                                    else
+                                        amp = [];
+                                    end
                             end
+                            %********end
+% %                             ot = job.which_onset_type;
+% %                             ons = IOI.sess_res{s1}.onsets{ot}; %already in seconds *IOI.dev.TR;
+% %                             dur = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
+% %                             name = IOI.sess_res{s1}.names{ot};
+% %                             if use_onset_amplitudes
+% %                                 amp = IOI.sess_res{s1}.parameters{ot};
+% %                             else
+% %                                 amp = [];
+% %                             end
                             %remove onsets
                             %Alternative to this ioi_remove_onsets: create
                             %a function from similar code in
                             %ioi_stim_mean_run and call this function
                             %before line just above that defines ons, dur,
-                            [ons amp IOI] = ioi_remove_onsets(ons, amp, rmi, ust,IOI,s1,ot);
+                            %**********i donot know if it is removed. I
+                            %think it should be removed because it has been
+                            %removed in create onsets. 
+% %                             [ons amp IOI] = ioi_remove_onsets(ons, amp, rmi, ust,IOI,s1,ot);
                             %convolve with hemodynamic response function
                             [Xtmp U] = ioi_get_X(IOI,name,ons,dur,amp,s1,bases,volt);
                             IOI.Sess(s1).U = U; %store onsets for each session
                             
                             %loop over available colors
-                            for c1=1:length(IOI.color.eng) %(IOI.sess_res{s1}.fname)
+                            for c1=1:length(IOI.color.eng)-1 %(IOI.sess_res{s1}.fname)
                                 doColor = ioi_doColor(IOI,c1,IC);
                                 if doColor
                                     %select design matrix
@@ -135,7 +193,10 @@ for SubjIdx=1:length(job.IOImat)
                                     end
                                     
                                     if ~isempty(X)
-                                        if image_mode || vasomotion_on
+%                                         if image_mode || vasomotion_on
+%*************************by Cong on 12/11/08
+                                        if image_mode 
+                                            %********end 
                                             %put all the data for this color, and session, into memory
                                             %Note that this takes several minutes to load per session
                                             %Y is typically 3 GB or larger
@@ -155,6 +216,7 @@ for SubjIdx=1:length(job.IOImat)
                                         %add a constant
                                         X = [X ones(size(X,1),1)];
                                         %get K for low pass filtering:
+                                        LPF.fwhm1 = job.lpf_gauss.fwhm1;
                                         K = get_K(1:size(X,1),LPF.fwhm1,IOI.dev.TR);
                                         %filter X - LPF
                                         %calculate X inverse

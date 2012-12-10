@@ -49,10 +49,10 @@ if isfield(job.stim_choice,'electro_stims')
         E.electro_hpf_butter_On = 0;
     end
     %LPF
-    if isfield(electro_stims.electro_lpf_butter,'lpf_butter_On')
+    if isfield(electro_stims.electro_lpf_butter,'electro_lpf_butter_On')
         E.electro_lpf_butter_On = 1;
-        E.lpf_butter_freq = electro_stims.lpf_butter.lpf_butter_On.lpf_butter_freq;
-        E.lpf_butter_order = electro_stims.lpf_butter.lpf_butter_On.lpf_butter_order;
+        E.lpf_butter_freq = electro_stims.electro_lpf_butter.electro_lpf_butter_On.electro_lpf_butter_freq;
+        E.lpf_butter_order = electro_stims.electro_lpf_butter.electro_lpf_butter_On.electro_lpf_butter_order;
     else
         E.electro_lpf_butter_On = 0;
     end

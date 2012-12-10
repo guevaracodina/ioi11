@@ -302,7 +302,7 @@ volt.labels = {
                'Do not model Interactions'
                'Model Interactions'
 }';
-volt.values = {1 2};
+volt.values = {2 1};
 volt.val    = {1};
 
 hpf_butter = ioi_dfg_hpf_butter(1,0.01,3);
