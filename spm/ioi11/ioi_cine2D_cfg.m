@@ -128,6 +128,23 @@ save_images.val  = {1};
 save_images.help = {'Save images. '
     'two choices were selected: Yes or No'}';
 
+
+interactive_mode      = cfg_menu;
+interactive_mode.tag  = 'interactive_mode';
+interactive_mode.name = 'Interactive mode';
+interactive_mode.labels = {'Yes','No'};
+interactive_mode.values = {1,0};
+interactive_mode.val  = {1};
+interactive_mode.help = {'Set min/max value interactively for the colorbar for each color.'}';
+
+% save_choice        = cfg_choice;
+% save_choice.name   = 'Save images';
+% save_choice.tag    = 'stim_choice';
+% save_choice.values = {available_onsets,manual_onsets};
+% save_choice.val    = {available_onsets};
+% save_choice.help   = {'Use available onsets or enter onsets.'}';
+
+
 % interactive_mode      = cfg_menu;
 % interactive_mode.tag  = 'interactive_mode';
 % interactive_mode.name = 'Interactive mode';
@@ -144,6 +161,7 @@ save_images.help = {'Save images. '
 % save_choice.val    = {available_onsets};
 % save_choice.help   = {'Use available onsets or enter onsets.'}';
 
+
 %**********************end
 
 downFact      = cfg_entry;
@@ -154,6 +172,10 @@ downFact.strtype = 'r';
 downFact.num     = [1 1]; 
 downFact.help    = {'Downsampling factor.'}; 
 
+%display options -- superpose activations on anatomical image
+superpose_anatomical = ioi_dfg_superpose_anatomical;
+superpose_ROIs = ioi_dfg_superpose_ROIs;
+
 % Executable Branch
 cine2D1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 cine2D1.name = '2D Cine';             % The display name
@@ -161,8 +183,10 @@ cine2D1.tag  = 'cine2D1'; %Very important: tag is used when calling for executio
 cine2D1.val  = {IOImat redo1 IOImatCopyChoice session_choice shrinkage_choice downFact ...
     stim_choice window_after window_before window_offset skip_overlap ...
     normalize_choice group_onset_types which_onset_type ...
-    IC ...
-    hpf_butter lpf_choice show_movie generate_images save_images};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    IC interactive_mode ...
+    hpf_butter lpf_choice show_movie generate_images save_images ...
+    superpose_anatomical superpose_ROIs};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+
 cine2D1.prog = @ioi_cine2D_run;  % A function handle that will be called with the harvested job to run the computation
 cine2D1.vout = @ioi_cfg_vout_cine2D; % A function handle that will be called with the harvested job to determine virtual outputs
 cine2D1.help = {'Generate a 2D movie'
