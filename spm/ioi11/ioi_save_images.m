@@ -73,7 +73,10 @@ try
         A(index_over) = B(index_over);
         A(index_under) = B(index_under);
         image = A;
-        %figure; 
+        if Z.cbar.colorbar_override
+            image = ioi_fix_cbar(image,Z);
+        end
+        %figure;
         imagesc(image);
         axis off
         load split
@@ -94,21 +97,17 @@ try
         hc1 = ioi_set_colorbar_limits_fontsize(hc1,hc1_min,hc1_max,tick_number,fontsize_choice);
         hc2 = ioi_set_colorbar_limits_fontsize(hc2,hc2_min,hc2_max,tick_number,fontsize_choice);
     else
+        if Z.cbar.colorbar_override
+            image = ioi_fix_cbar(image,Z);
+        end
         imagesc(image); colorbar;
     end
 catch
     disp('Unable to superpose anatomical image');
+    if Z.cbar.colorbar_override
+        image = ioi_fix_cbar(image,Z);
+    end
     imagesc(image); colorbar;
-end
-
-% %save also as figures
-if Z.cbar.colorbar_override
-    image(image>Z.cbar.c_max) = Z.cbar.c_max;
-    image(image<Z.cbar.c_min) = Z.cbar.c_min;
-    image(1,1) = Z.cbar.c_max;
-    image(end,end) = Z.cbar.c_min;
-    %hc = colorbar;
-    %set(hc, 'YLim', [Im.cbar.c_min Im.cbar.c_max]);
 end
 
 % Here I prevent title to display characters preceded by _ as subscripts

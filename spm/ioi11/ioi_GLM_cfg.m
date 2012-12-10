@@ -149,6 +149,21 @@ derivs.labels = {
 derivs.values = {[0 0] [1 0] [1 1]};
 derivs.val    = {[0 0]};
 
+%******************by Cong on 12/11/08
+onset_choice      = cfg_menu;
+onset_choice.tag  = 'onset_choice';
+onset_choice.name = 'Choose onset types';
+onset_choice.labels = {'from stims','from detection','from stims and detection'};
+onset_choice.values = {2,1,0};
+onset_choice.val  = {1};
+onset_choice.help = {'Choose onsets selection method'
+       'Stims: onsets from stimulation will be used to creat the regressor.(for two stimulations)'
+       'Onsets from spontaneous activity (detection): onsets are created by detection spontaneous activity and  '
+       'remove the onsets from stim. (for two stimulations)'
+       'With onsets from stims and detection, onsets from detection which contains stimulation '
+       'and spontaneous activites. It can be used for onsets from seizures and spikes'}';
+%******************end
+
 %Additional HRFs
 
 HRF_ROI      = cfg_entry;
@@ -438,7 +453,7 @@ glm1.val  = {IOImat data_selection_choice redo1 IOImatCopyChoice ...
      bases volt use_onset_amplitudes hpf_butter lpf_gauss vasomotion_choice ...
      IC ...
      which_onset_type ...
-     remove_stims use_stims override_colorbar save_beta_mse ...
+     onset_choice remove_stims use_stims override_colorbar save_beta_mse ...
      generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 glm1.prog = @ioi_GLM_run;  % A function handle that will be called with the harvested job to run the computation
 glm1.vout = @ioi_cfg_vout_glm; % A function handle that will be called with the harvested job to determine virtual outputs

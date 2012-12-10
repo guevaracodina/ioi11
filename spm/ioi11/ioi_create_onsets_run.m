@@ -64,20 +64,21 @@ for SubjIdx=1:length(job.IOImat)
                                     for i=1:length(IOI.sess_res{s1}.onsets{1})
                                         for j=1:length(IOI.sess_res{s1}.onsets{2})
                                             if (IOI.sess_res{s1}.onsets{2}(j)<=IOI.sess_res{s1}.onsets{1}(i))&&(IOI.sess_res{s1}.onsets{1}(i)<=IOI.sess_res{s1}.onsets{2}(j)+1)
-                                                IOI.sess_res{s1}.onsets{1}(i)=0;                                                                                             
+                                                IOI.sess_res{s1}.onsets{1}(i)=0;
                                             end
                                         end
                                     end
-                                        index=find(IOI.sess_res{s1}.onsets{1}~=0);
-                                        IOI.sess_res{s1}.onsets{1}=IOI.sess_res{s1}.onsets{1}(index);                                                             
-                                else
-                                    [pkh ons dur] = ioi_get_onsets_from_electrophysiology(IOI,s1,E,dir_ioimat,elDir0); %pk in seconds; pkh in arbitrary units
-                                    ot = 1;
-                                    IOI.sess_res{s1}.E = E; %Electrophysiology structure used for detection
-                                    IOI.sess_res{s1}.names{ot} = E.electrophysiology_onset_name;
-                                    IOI.sess_res{s1}.onsets{ot} = ons';
                                 end
+                                index=find(IOI.sess_res{s1}.onsets{1}~=0);
+                                IOI.sess_res{s1}.onsets{1}=IOI.sess_res{s1}.onsets{1}(index);
+                            else
+                                [pkh ons dur] = ioi_get_onsets_from_electrophysiology(IOI,s1,E,dir_ioimat,elDir0); %pk in seconds; pkh in arbitrary units
+                                ot = 1;
+                                IOI.sess_res{s1}.E = E; %Electrophysiology structure used for detection
+                                IOI.sess_res{s1}.names{ot} = E.electrophysiology_onset_name;
+                                IOI.sess_res{s1}.onsets{ot} = ons';
                             end
+                            
                    %****************************** end
 
                             if E.spkOn
@@ -87,8 +88,10 @@ for SubjIdx=1:length(job.IOImat)
                             end
                             IOI.sess_res{s1}.parameters{ot} = pkh';
                             %************************by cong on 12/11/06
-                            if remove_stims==1
-                                IOI.sess_res{s1}.parameters{ot}=IOI.sess_res{s1}.parameters{ot}(index);    
+                            if spontaneous_activity_detection==1
+                                if remove_stims==1
+                                    IOI.sess_res{s1}.parameters{ot}=IOI.sess_res{s1}.parameters{ot}(index);
+                                end
                             end
                             %**********************end
                         case 2
