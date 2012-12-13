@@ -543,23 +543,15 @@ try
                 %electrophysiology
                 if isfield(IOI.sess_raw{s1},'electroOK')
                     IOI = extract_electro(IOI,s1,IOI.sess_raw{s1}.electro{1});
-                    IOI.res.electroOK = 1; %a bit early, but should be OK
                     
                     dir_elfig = fullfile(dir_subj_res,'fig_el');
                     if ~exist(dir_elfig,'dir'), mkdir(dir_elfig); end
                     %if expedite
                     el = load(IOI.res.el{s1});
                     fname_el = fullfile(dir_elfig,[short_el_label '_' sess_label gen_num_str(s1,2)]);
-                    %fname_el2 = fullfile(dir_elfig,[short_el_label '2_' sess_label gen_num_str(s1,2)]);
                     ioi_plot_LFP(IOI,el.el,s1,1,1,fname_el);
-                    %try ioi_plot_LFP2(IOI,el,s1,el2,1,1,fname_el2); end;
-                    disp(['Done processing session: ' int2str(s1) ', electrophysiology']);  
-                    
-                    %ioi_plot_LFP(IOI,el,s1);
-                    %or
-                        %ioi_plot_LFP(IOI,el.el,s1);
-                    %end
-                end
+                    disp(['Done processing session: ' int2str(s1) ', electrophysiology']);                     
+                 end
                 %toc
                 if ~expedite
                     disp(['Done processing session ' int2str(s1) ' images (' int2str(n_frames) 'images)']);
