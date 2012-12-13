@@ -75,21 +75,25 @@ for SubjIdx = 1:length(job.IOImat)
                                 spm_progress_bar('Init', length(fname_list_flow), sprintf('CMRO2 computation, %s, S%02d\n',IOI.subj_name,s1), 'Files');
                                 % Loop over data files
                                 for f1 = 1:length(fname_list_flow)
+                                    % Save - substitute 'F' for 'M' in file name
+                                    fname_new = regexprep(fname_list_flow{f1}, tmp_str_flow , tmp_str_CMRO2);
                                     if job.MemoryManagementMenu
-                                        % Load all images at once
-                                        [imagesFlow nx(1) ny(1) nt(1)] = local_read_NIfTI(fname_list_flow{f1});
-                                        [imagesHbO nx(2) ny(2) nt(2)]  = local_read_NIfTI(fname_list_HbO{f1});
-                                        [imagesHbR nx(3) ny(3) nt(3)]  = local_read_NIfTI(fname_list_HbR{f1});
-                                        % If HbO, HbR & flow data have the same size
-                                        if all(nx == nx(1)) && all(ny == ny(1)) && all(nt == nt(1))
-                                            %% Data filtering
-                                            imagesFlow = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesFlow, Rp_Rs, s1);
-                                            imagesHbO  = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesHbO, Rp_Rs, s1);
-                                            imagesHbR  = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesHbR, Rp_Rs, s1);
-                                            %% CMRO2 computation
-                                            imagesCMRO2 = ioi_cmro2_compute(imagesFlow, imagesHbO, imagesHbR, gammaT, gammaR, IOI.conc.baseline_hbt, IOI.conc.baseline_hbr);
-                                        else
-                                            error('ioi_cmro2_run:different_Sizes_Flow_HbO_HbR', 'Flow and Hb data have different sizes.');
+                                        if ~(job.keepFiles && exist(fname_new,'file'))
+                                            % Load all images at once
+                                            [imagesFlow nx(1) ny(1) nt(1)] = local_read_NIfTI(fname_list_flow{f1});
+                                            [imagesHbO nx(2) ny(2) nt(2)]  = local_read_NIfTI(fname_list_HbO{f1});
+                                            [imagesHbR nx(3) ny(3) nt(3)]  = local_read_NIfTI(fname_list_HbR{f1});
+                                            % If HbO, HbR & flow data have the same size
+                                            if all(nx == nx(1)) && all(ny == ny(1)) && all(nt == nt(1))
+                                                %% Data filtering
+                                                imagesFlow = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesFlow, Rp_Rs, s1);
+                                                imagesHbO  = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesHbO, Rp_Rs, s1);
+                                                imagesHbR  = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesHbR, Rp_Rs, s1);
+                                                %% CMRO2 computation
+                                                imagesCMRO2 = ioi_cmro2_compute(imagesFlow, imagesHbO, imagesHbR, gammaT, gammaR, IOI.conc.baseline_hbt, IOI.conc.baseline_hbr);
+                                            else
+                                                error('ioi_cmro2_run:different_Sizes_Flow_HbO_HbR', 'Flow and Hb data have different sizes.');
+                                            end
                                         end
                                     else
                                         % Load images one by one
@@ -97,12 +101,13 @@ for SubjIdx = 1:length(job.IOImat)
                                     end
                                     % Reshrinks image if necessary
                                     vx = local_check_shrinkage(IOI);
-                                    % Save - substitute 'F' for 'M' in file name
-                                    fname_new = regexprep(fname_list_flow{f1}, tmp_str_flow , tmp_str_CMRO2);
                                     % Append new file name to file name list
                                     fname_new_list = [fname_new_list; fname_new];
-                                    % Save as NIfTI file
-                                    ioi_save_nifti(imagesCMRO2, fname_new, vx);
+                                    if ~(job.keepFiles && exist(fname_new,'file'))
+                                        % Save as NIfTI file
+                                        ioi_save_nifti(imagesCMRO2, fname_new, vx);
+                                    end
+                                    fprintf('%d of %d files done. %s saved.\n',f1, length(fname_list_flow), fname_new);
                                     % Update progress bar
                                     spm_progress_bar('Set', f1);
                                 end % Loop over data files (NIfTI)

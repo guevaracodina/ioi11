@@ -21,7 +21,7 @@ session_choice      = ioi_dfg_session_choice;
 % Memomry management type
 MemoryManagementMenu= ioi_dfg_MemoryManagement;
 % Bandpass filtering
-bpf                 = ioi_bpf_cfg(1, [0.009 0.5], 2, 'butter');
+bpf                 = ioi_bpf_cfg(1, [0.009 0.5], 4, 'butter');
 % ------------------------------------------------------------------------------
 
 % ------------------------------------------------------------------------------
@@ -51,14 +51,28 @@ constants.help      = {'The more physiologically plausible range for gammaR & ga
 % ------------------------------------------------------------------------------
 
 % ------------------------------------------------------------------------------
+% Check previously computed files
+% ------------------------------------------------------------------------------
+keepFiles           = cfg_menu;
+keepFiles.tag       = 'keepFiles';
+keepFiles.name      = 'Keep files';
+keepFiles.labels    = {'False','True'};
+keepFiles.values    = {0,1};
+keepFiles.val       = {1};
+keepFiles.help      = {'When batch is interrupted, keeps previous NIfTI files'};
+% ------------------------------------------------------------------------------
+
+
+% ------------------------------------------------------------------------------
 % Executable Branch
 % ------------------------------------------------------------------------------
 cmro2               = cfg_exbranch;         % This is the branch that has information about how to run this module
 cmro2.name          = 'Compute CMRO2';      % The display name
 cmro2.tag           = 'cmro2';              % Very important: tag is used when calling for execution
 cmro2.val           = {IOImat redo1 ...     % The items that belong to this branch. 
-    IOImatCopyChoice session_choice...      % All items must be filled before this 
-    MemoryManagementMenu, bpf, constants};	% branch can run or produce virtual outputs
+    keepFiles IOImatCopyChoice...     
+    session_choice MemoryManagementMenu...  % All items must be filled before this 
+    bpf constants};                         % branch can run or produce virtual outputs
 cmro2.prog          = @ioi_cmro2_run;       % A function handle that will be called with the harvested job to run the computation
 cmro2.vout          = @ioi_cfg_vout_cmro2;  % A function handle that will be called with the harvested job to determine virtual outputs
 cmro2.help          = {'CMRO2 computation. gammaR and gammaT can be varied over a broad range (0.1-5), but the more physiologically plausible range is around 1 (0.75-1.25)'};

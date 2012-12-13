@@ -96,23 +96,26 @@ end
 %     end
 % end
 
-%% Plot results
+%% Plot results change in correlation vs, seizures
 % Load saved data
 load('E:\Edgar\Data\IOS_Results\corr_Results_seizures\seizDur.mat');
 plotTitles = {{'F'}; {'M'}; {'C'}; {'S'}; {'R'}; {'V'}};
 % Font sizes
 axisFont = 22;
 textFont = 18;
-axisLabelFont = 26;
-dottedLineWidth = 4;
+axisLabelFont = 28;
+dottedLineWidth = 2;
 markSize = 12;
 
-%
+% Preallocate cells
 p = cell(size(groupCorrData));
 R = cell(size(groupCorrData));
 f = cell(size(groupCorrData));
-yLimits = [-2 2];
+finterp = cell(size(groupCorrData));
+yLimits = [-2.2 2];
 xLimits = [0.8*min(seizDurationVector) 1.05*max(seizDurationVector)];
+% # points to interpolate fitted line
+nPoints = 100;
 
 figure; set (gcf,'color','w')
 for r1=1:6,
@@ -122,9 +125,9 @@ for r1=1:6,
             lineType = 'r-';
         elseif c1 == 6
             plotType = 'bx';
-            lineType = 'b--';
+            lineType = 'b-.';
         else
-            plotType = 'ks';
+            plotType = 'k^';
             lineType = 'k:';
         end
         subplot(2,3,r1)
@@ -146,13 +149,23 @@ for r1=1:6,
         end
         hold on
         f{r1,c1} = polyval(p{r1,c1},x);
-        plot(x, f{r1,c1}, lineType, 'LineWidth', dottedLineWidth)
+        xinterp = linspace(x(1), x(end), nPoints);
+        finterp{r1,c1} = interp1q(x,f{r1,c1},xinterp);
+%         finterp{r1,c1} = interpft(f{r1,c1},nPoints);
+%         plot(x, f{r1,c1}, lineType, 'LineWidth', dottedLineWidth)
+        plot(xinterp, finterp{r1,c1}, lineType, 'LineWidth', dottedLineWidth)
         title(plotTitles{r1}, 'FontSize', axisLabelFont);
         set(gca,'FontSize',axisFont);
         ylim(yLimits)
         xlim(xLimits)
-        if r1 == 1 || r1 == 4
-            ylabel('z_{4AP}(r) - z_0(r)','FontSize',axisLabelFont+6);
+        if r1 == 1
+            ylabel('z_{4AP}(r) - z_0(r)','FontSize',axisLabelFont);
+        end
+        if r1 == 1 || r1 == 2 || r1 == 3
+            set(gca, 'XTick', []);
+        end
+        if r1 == 2 || r1 == 3 || r1 == 5 || r1 == 6
+            set(gca, 'YTick', []);
         end
         if r1 == 5
             xlabel('Seizure duration [s]','FontSize',axisLabelFont);
@@ -163,14 +176,14 @@ for r1=1:6,
     end
 end
 
+%% Print graphics
+addpath(genpath('D:\Edgar\ssoct\Matlab'))
+export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','z_vs_seizure'),'-png',gcf)
+
 %% Save results
 save (fullfile('E:\Edgar\Data\IOS_Results\corr_Results_seizures','seizDur.mat'),...
     'seizureDuration', 'seizDurationVector','groupCorrData', 'groupCorrDataSubtr',...
     'groupCorrDataSubtrAvg', 'R', 'p', 'f')
-
-%% Print graphics
-addpath(genpath('D:\Edgar\ssoct\Matlab'))
-export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','z_vs_seizure'),'-png',gcf)
 
 %% Plot resting state somatosensory seeds time traces.
 % Font sizes
