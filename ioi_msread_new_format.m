@@ -29,8 +29,6 @@ try
     %to find images):
     str_color = [str_red str_green str_yellow str_laser]; %red, green, yellow and laser speckle -- this is the desired color order for processed images
     hasRGY = [str_red str_green str_yellow];
-    % nColors is not always necessarily equal to 4 //EGC
-    nColors = length(str_color);
     OD_label = 'OD'; %label for optical density images
     suffix_for_anat_file = 'anat'; %to build anatomical image name
     sess_label = 'S'; %prefix for name of directories for each session
@@ -42,12 +40,6 @@ try
     %leave voxel size in arbitrary units for now, for anatomical image
     vx_anat = [1 1 1];
     vx = [1 1 1];
-    % Is it not dangerous to let the user choose the acq_freq? //EGC
-    if isfield(job,'acq_freq')
-        IOI.dev.TR = job.color_number/job.acq_freq;
-    else
-        IOI.dev.TR = 0.2;
-    end
     
     if isfield(job,'stim_cutoff')
         stim_cutoff = job.stim_cutoff;
@@ -60,7 +52,6 @@ try
         minTimeBetweenStim = 1.001;
     end
     
-    
     %subj_OK = 1; %Boolean to exit loop if subject data is too corrupted
     if ~job.PartialRedo2
         IOI.color.eng = str_color;
@@ -70,7 +61,6 @@ try
         IOI.color.laser = str_laser;
         IOI.res.shrinkageOn = 0; %no shrinkage of images
         IOI.res.flowShrinkageOn = 0; %no flow shrinkage of images
-%         IOI.dev.TR = TR;
     end
 
     if ~job.PartialRedo2
@@ -98,8 +88,7 @@ try
                     tmpString = t0(endIndex:end);
                     % Get acquisition frequency as a number //EGC
                     [startIndex endIndex] = regexp(tmpString,'\d+','once');
-                    % Save repetition time in IOI //EGC
-                    IOI.dev.TR = job.color_number/str2double(tmpString(startIndex:endIndex));
+                    acq_freq=str2double(tmpString(startIndex:endIndex));
                     % Find the phrase color order //EGC
                     [startIndex endIndex] = regexp(t0, 'Color order : ', 'once');
                     % Look for the remaining characters (more robust) //EGC
@@ -108,6 +97,7 @@ try
                     % if strcmp(color_order_french,'flat')
                     switch color_order_french
                         case 'flat'
+                            nColors=4;
                             try
                                 sp0 = strfind(t0,'Light : ');
                                 sr0 = t0((sp0+8):(sp0+19));
@@ -156,8 +146,12 @@ try
                                 nColors = numel(color_order_french);
                             catch
                                 color_order_french = 'RVJL';
+                                nColors=4;
                             end
                     end
+                    % Save repetition time in IOI //EGC
+                    IOI.dev.TR = nColors/acq_freq;
+
                     %color_order_french = color_order_french(1:4);
                     color_order = color_order_french;
                     %get English colors
@@ -171,7 +165,8 @@ try
                     end
                 catch
                     color_order = str_color_default;
-                    IOI = disp_msg(IOI,['Problem with colors in info.txt for session ' int2str(s1) ';  defaulting to ' str_color_default]);
+                    IOI.dev.TR=0.2;
+                    IOI = disp_msg(IOI,['Problem with colors in info.txt for session ' int2str(s1) ';TR set to 0.2 and  defaulting to ' str_color_default]);    
                 end
                 %Read electro
                 [files_el,dummy] = cfg_getfile('FPList',dirs{s1},[el_label '.' el_suffix]);
@@ -181,6 +176,7 @@ try
                 %types of stimulations???
                 stims = ConvertedData.Data.MeasuredData(6).Data;
                 stims_dt= ConvertedData.Data.MeasuredData(6).Property(3).Value;
+                
                 ons0 = stims_dt*find(stims>stim_cutoff);
                 par0 = stims(stims>stim_cutoff);
                 ons1 = find(diff(ons0)>=minTimeBetweenStim);
@@ -235,7 +231,6 @@ try
                     el2 = ConvertedData.Data.MeasuredData(12).Data;
                     save(elfile2,'el2');
                 end
-                IOI.res.electroOK = 1; %not by session...
                 IOI.res.sfel = 1/stims_dt;
                 %if expedite
                 dir_elfig = fullfile(dir_subj_res,'fig_el');
@@ -244,9 +239,7 @@ try
                 fname_el2 = fullfile(dir_elfig,[short_el_label '12_' sess_label gen_num_str(sC,2)]);
                 fname_el3 = fullfile(dir_elfig,[short_el_label '2_' sess_label gen_num_str(sC,2)]);
                 ioi_plot_LFP(IOI,el,s1,1,1,fname_el);
-                %*************by cong on 02/11/12
-                ioi_plot_LFP3(IOI,el2,s1,1,1,fname_el3);
-                %*************end
+                ioi_plot_LFP(IOI,el2,s1,1,1,fname_el3);
                 try ioi_plot_LFP2(IOI,el,s1,el2,1,1,fname_el2); end;
                 %end
                 if ~expedite
@@ -326,32 +319,6 @@ try
                         K.k2 = NY;
                         K = ioi_spatial_LPF('set', K);
                     end
-%                     %************by Cong on 12/08/24                
-%                     %flow shrink if required                
-%                     [flow_shrinkage_choice SH] = ioi_get_flow_shrinkage_choice(job);
-%                      IOI.res.flowShrinkageOn = flow_shrinkage_choice; 
-%                     if flow_shrinkage_choice
-%                         % Only if shrinkage is chosen //EGC
-%                         IOI.res.flow_shrink_x = SH.shrink_x;
-%                         IOI.res.flow_shrink_y = SH.shrink_y;                    
-%                     end
-%                     
-%                     NX = nx;
-%                     NY = ny;
-%                     if flow_shrinkage_choice
-%                         nx = floor(NX/SH.shrink_x);
-%                         if dupOn
-%                             ny = floor(NY/(SH.shrink_y/2));
-%                         else
-%                             ny = floor(NY/SH.shrink_y);
-%                         end
-%                         K.radius = SH.shrink_x;
-%                         K.k1 = NX;
-%                         K.k2 = NY;
-%                         K = ioi_spatial_LPF('set', K);
-%                     end
-%                     
-%                     %*****************end
                     
                     %create large memmapfile for Y, R, G images (several GB)
                     fmem_name = 'all_images.dat';
