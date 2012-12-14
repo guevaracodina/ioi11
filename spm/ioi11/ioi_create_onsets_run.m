@@ -1,10 +1,14 @@
 function out = ioi_create_onsets_run(job)
 %select onsets, default is stimulation based
 [E stim_choice] = ioi_get_E_for_electrophysiology(job);
-if isfield(job.stim_choice.electro_stims,'spontaneous_activity_detection')
-    spontaneous_activity_detection=1;
-    remove_stims=job.stim_choice.electro_stims.spontaneous_activity_detection.remove_stims;
-else spontaneous_activity_detection=0;
+
+% XXX: Recheck this, many ifs...
+if isfield(job.stim_choice,'electro_stims')
+    if isfield(job.stim_choice.electro_stims,'spontaneous_activity_detection')
+        spontaneous_activity_detection=1;
+        remove_stims=job.stim_choice.electro_stims.spontaneous_activity_detection.remove_stims;
+    else spontaneous_activity_detection=0;
+    end
 end
 
 if isfield(job.stim_choice,'manual_stims')
