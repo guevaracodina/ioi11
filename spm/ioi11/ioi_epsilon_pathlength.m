@@ -37,13 +37,6 @@ if nargin==9 && debug==1
     plot(lambda_vec,c_led(2,:),'g')
     hold on
     plot(lambda_vec,c_led(3,:),'y')
-%     figure; plot(hardware.leds.g.lambda,hardware.leds.g.intensity,'g'); hold on
-%     plot(hardware.leds.y.lambda,hardware.leds.y.intensity,'y'); hold on
-%     plot(hardware.leds.r.lambda,hardware.leds.r.intensity,'r');
-%         figure; plot(hardwareOS.leds.g.lambda,hardware.leds.g.intensity,'g:'); hold on
-%     plot(hardwareOS.leds.y.lambda,hardware.leds.y.intensity,'y:'); hold on
-%     plot(hardwareOS.leds.r.lambda,hardware.leds.r.intensity,'r:');
-
 end
 
 %Input basehbt1 not used...
