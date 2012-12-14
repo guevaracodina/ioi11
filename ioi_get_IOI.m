@@ -13,6 +13,8 @@ try
     load(IOImat);
     display([IOImat ' now loaded']);
 catch
+    % XXX: This is not true, if we create a new dir, then there should be no
+    % error... 
     load(job.IOImat{SubjIdx});
     display([IOImat ' not found -- ' job.IOImat{SubjIdx} ' now loaded']);
 end
