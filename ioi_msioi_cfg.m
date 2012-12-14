@@ -80,15 +80,6 @@ output_path.val     = {};
 output_path.def     = @(val){ioi_get_defaults('msioi1.output_path_select.output_path', val{:})};
 output_path.help    = {'Choose path for .ioi output files'}';
 
-% output_path         = cfg_entry; %path
-% output_path.name    = 'path for .ioi output files';
-% output_path.tag     = 'output_path';       
-% output_path.strtype = 's';
-% output_path.num     = [1 Inf];     
-% %output_path.val     = {fullfile('D:/Users/')};
-% output_path.def     = @(val)ioi_get_defaults('msioi1.output_path_select.output_path', val{:}); 
-% output_path.help    = {'Choose path for .ioi output files'}; 
-
 output_path_select         = cfg_branch;
 output_path_select.tag     = 'output_path_select';
 output_path_select.name    = 'output_path_select';
@@ -103,9 +94,16 @@ output_path_choice.val    = {output_path_default};
 output_path_choice.help   = {'Choose output_path_choice'}';
 
 shrinkage_choice = ioi_dfg_shrinkage_choice;
-%****************by Cong on 12/08/23
-flow_shrinkage_choice=ioi_dfg_flow_shrinkage_choice;
-%***********end
+
+% Window size for speckle contrast
+windowsize1         = cfg_entry;
+windowsize1.tag     = 'window_size';
+windowsize1.name    = 'Speckle Window Size';
+windowsize1.strtype = 'i';
+windowsize1.num     = [1 1];
+windowsize1.def     = @(val)ioi_get_defaults('msioi1.window_size', val{:});
+windowsize1.help    = {'Window size for speckle contrast computation.'};
+
 session_choice = ioi_dfg_session_choice;
 
 sess_min_image_files         = cfg_entry; 
@@ -151,16 +149,6 @@ save_choice.val    = {2};
 save_choice.help   = {'Choose saving method'
     'Applies to old data format only; new format: always one file per block'}';
 
-memmapfileOn        = cfg_menu;
-memmapfileOn.name   = 'Choose memory management method';
-memmapfileOn.tag    = 'memmapfileOn';
-memmapfileOn.labels = {'Keep all in memory','Use disk space for large structures'};
-memmapfileOn.values = {0,1};
-memmapfileOn.val    = {1};
-memmapfileOn.help   = {'Select memory management method. Keeping all in memory'
-    'is faster, but may require too much memory.'
-    'Applies to old data format only; new format: always using disk space'}';
-
 forceProcessingOn        = cfg_menu;
 forceProcessingOn.name   = 'Force processing of bad sessions';
 forceProcessingOn.tag    = 'forceProcessingOn';
@@ -175,8 +163,8 @@ forceProcessingOn.help   = {'Force processing of bad sessions: attempt will be'
 msioi1      = cfg_exbranch;       % This is the branch that has information about how to run this module
 msioi1.name = 'Read Multi-Spectral IOI';             % The display name
 msioi1.tag  = 'msioi1'; %Very important: tag is used when calling for execution
-msioi1.val  = {top_bin_dir treatment_mode redo1 shrinkage_choice flow_shrinkage_choice output_path_choice ...
-    session_choice save_choice memmapfileOn sess_min_image_files ...
+msioi1.val  = {top_bin_dir treatment_mode redo1 shrinkage_choice windowsize1 output_path_choice ...
+    session_choice save_choice sess_min_image_files ...
     stim_cutoff minTimeBetweenStim forceProcessingOn};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 msioi1.prog = @ioi_msioi_run;  % A function handle that will be called with the harvested job to run the computation
 msioi1.vout = @ioi_cfg_vout_msioi; % A function handle that will be called with the harvested job to determine virtual outputs
