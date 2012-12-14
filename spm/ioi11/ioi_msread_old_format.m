@@ -48,7 +48,6 @@ try
     [all_sessions selected_sessions] = ioi_get_sessions(job);
     
     %choose saving mode
-    memmapfileOn = job.memmapfileOn;
     try
         save_choice = job.save_choice;
     catch
@@ -187,7 +186,7 @@ try
             disp(['No sessions found... skipping subject ' int2str(job.SubjIdx) ' (namely: ' job.top_bin_dir{job.SubjIdx} ')']);
             subj_OK = 0;
             %return
-        end       
+        end
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %2- Extract various info and stimuli if available
@@ -219,14 +218,14 @@ try
                     if s1==1 %assume acquisition frequency is unchanged for later sessions
                         % Identifiy times for each frame and each color separately
                         %try
-                            IOI.dev.acq_freq_hz=(scan_info.Frame(end,1)-scan_info.Frame(1,1))/scan_info.Frame(end,3);
-                            % Fix TR for everyone, the factor 6 comes from the fact that we need 6
-                            % camera frames to return to the same colors
-                            IOI.dev.TR=frames_per_cycle/IOI.dev.acq_freq_hz;
-%                         catch
-%                             IOI.dev.acq_freq_hz = 5;
-%                             IOI.dev.TR=0.1999;
-%                         end
+                        IOI.dev.acq_freq_hz=(scan_info.Frame(end,1)-scan_info.Frame(1,1))/scan_info.Frame(end,3);
+                        % Fix TR for everyone, the factor 6 comes from the fact that we need 6
+                        % camera frames to return to the same colors
+                        IOI.dev.TR=frames_per_cycle/IOI.dev.acq_freq_hz;
+                        %                         catch
+                        %                             IOI.dev.acq_freq_hz = 5;
+                        %                             IOI.dev.TR=0.1999;
+                        %                         end
                     end
                     % 6 images make one frame, each frame is indexed, partial frames are
                     % counted as one frame - this is only approximate
@@ -266,10 +265,10 @@ try
                     %Store onset information
                     sess.list_stim = list_stim;
                     try
-                    sess.names = names; %not quite the SPM format, need to put in Sess.U format
-                    sess.onsets = onsets; %in seconds
-                    sess.durations = durations; %in seconds
-                    sess.parameters = parameters;
+                        sess.names = names; %not quite the SPM format, need to put in Sess.U format
+                        sess.onsets = onsets; %in seconds
+                        sess.durations = durations; %in seconds
+                        sess.parameters = parameters;
                     catch
                         disp('No onsets found');
                     end
@@ -371,7 +370,7 @@ try
                                     nx0 = nx;
                                     ny0 = ny;
                                 end
-                                if f1==1 && memmapfileOn
+                                if f1==1
                                     %create temporary file
                                     fid = fopen('tmp_file.dat','w');
                                     fwrite(fid, zeros([nx ny 1 n_frames]), 'single');
@@ -394,11 +393,7 @@ try
                                     end
                                 end
                                 %Build large image_total array, for later calculating the median
-                                if ~memmapfileOn
-                                    image_total = cat(4,image_total,image_part);
-                                else
-                                    im_obj.Data.image_total(:,:,:,im_count-nt+1:im_count) = image_part;
-                                end
+                                im_obj.Data.image_total(:,:,:,im_count-nt+1:im_count) = image_part;
                             end %end of loop over binary files
                             if ~(im_count==n_frames)
                                 disp('Problem with image interpolation - wrong final number');
@@ -406,11 +401,7 @@ try
                                     'n_frames = ' int2str(n_frames) '; final number images = ' int2str(im_count)]);
                             end
                             %check that color order is OK
-                            if ~memmapfileOn
-                                [sts i0] = ioi_check_color_order(image_total,str1,str_laser);
-                            else
-                                [sts i0] = ioi_check_color_order(im_obj.Data.image_total,str1,str_laser);
-                            end
+                            [sts i0] = ioi_check_color_order(im_obj.Data.image_total,str1,str_laser);
                             IOI.bad_frames{s1,c1} = i0;
                             if ~sts
                                 try
@@ -420,16 +411,9 @@ try
                                 end
                             end
                             %calculate median for whole image in time direction
-                            if ~memmapfileOn
-                                image_median = median(image_total,4);
-                                if ~(str1 == str_laser || str1 == str_contrast) %not laser speckle nor contrast
-                                    image_total = -log(image_total./repmat(image_median,[1 1 1 n_frames]));
-                                end
-                            else
-                                image_median = median(im_obj.Data.image_total,4);
-                                if ~(str1 == str_laser || str1 == str_contrast) %not laser speckle nor contrast
-                                    im_obj.Data.image_total = -log(im_obj.Data.image_total./repmat(image_median,[1 1 1 n_frames]));
-                                end
+                            image_median = median(im_obj.Data.image_total,4);
+                            if ~(str1 == str_laser || str1 == str_contrast) %not laser speckle nor contrast
+                                im_obj.Data.image_total = -log(im_obj.Data.image_total./repmat(image_median,[1 1 1 n_frames]));
                             end
                             
                             %Save the median
@@ -439,19 +423,10 @@ try
                             tit0 = [subj_name ' ' OD_label ' median ' str1 ' ' sess_str];
                             ioi_save_images(single(image_median),IOI.sess_res{s1}.fname_median{c1},vx,[],tit0);
                             try
-                                if ~memmapfileOn
-                                    %min and max and relative change
-                                    min_image = min(image_total,[],4);
-                                    max_image = max(image_total,[],4);
-                                    %10th and 90th percentiles and relative change
-                                    tenthpctle_image = prctile(image_total,10,4);
-                                    ninetiethpctle_image = prctile(image_total,90,4);
-                                else
-                                    min_image = min(im_obj.Data.image_total,[],4);
-                                    max_image = max(im_obj.Data.image_total,[],4);
-                                    tenthpctle_image = prctile(im_obj.Data.image_total,10,4);
-                                    ninetiethpctle_image = prctile(im_obj.Data.image_total,90,4);
-                                end
+                                min_image = min(im_obj.Data.image_total,[],4);
+                                max_image = max(im_obj.Data.image_total,[],4);
+                                tenthpctle_image = prctile(im_obj.Data.image_total,10,4);
+                                ninetiethpctle_image = prctile(im_obj.Data.image_total,90,4);
                                 change = single(max_image) ./single(min_image);
                                 change_90_10 = single(ninetiethpctle_image) ./ single(tenthpctle_image);
                                 sess.fname_min{c1} = fullfile(dir_subj_res,sess_str, ...
@@ -491,11 +466,7 @@ try
                                 case 1
                                     fname = fullfile(dir_subj_res,sess_str, [subj_name '_' OD_label '_' str1 '_S' str_s1 '.nii']);
                                     IOI.sess_res{s1}.fname{c1} = [IOI.sess_res{s1}.fname{c1}; fname];
-                                    if ~memmapfileOn
-                                        ioi_save_nifti(image_total,fname,vx);
-                                    else
-                                        ioi_save_nifti(im_obj.Data.image_total,fname,vx);
-                                    end
+                                    ioi_save_nifti(im_obj.Data.image_total,fname,vx);
                                 case 2
                                     %save per block of size size_block
                                     for j1=1:block_size:n_frames
@@ -508,11 +479,7 @@ try
                                         last_image_str = gen_num_str(last_index,nzero_padding);
                                         fname = fullfile(dir_subj_res,sess_str, [subj_name '_' OD_label '_' str1 '_S' str_s1 '_' first_image_str '_to_' last_image_str  '.nii']);
                                         IOI.sess_res{s1}.fname{c1} = [IOI.sess_res{s1}.fname{c1}; fname];
-                                        if ~memmapfileOn
-                                            ioi_save_nifti(image_total(:,:,:,j1:last_index), fname, vx);
-                                        else
-                                            ioi_save_nifti(im_obj.Data.image_total(:,:,:,j1:last_index), fname, vx);
-                                        end
+                                        ioi_save_nifti(im_obj.Data.image_total(:,:,:,j1:last_index), fname, vx);
                                     end
                                 case 3
                                     %save each frame separately
@@ -520,17 +487,11 @@ try
                                         image_str = gen_num_str(j1,nzero_padding);
                                         fname = fullfile(dir_subj_res,sess_str, [subj_name '_' OD_label '_' str1 '_S' str_s1 '_' image_str '.nii']);
                                         IOI.sess_res{s1}.fname{c1} = [IOI.sess_res{s1}.fname{c1}; fname];
-                                        if ~memmapfileOn
-                                            ioi_save_nifti(image_total(:,:,:,j1),fname,vx);
-                                        else
-                                            ioi_save_nifti(im_obj.Data.image_total(:,:,:,j1),fname,vx);
-                                        end
+                                        ioi_save_nifti(im_obj.Data.image_total(:,:,:,j1),fname,vx);
                                     end
                             end
-                            if memmapfileOn %clean up
-                                clear im_obj;
-                                delete('tmp_file.dat');
-                            end
+                            clear im_obj;
+                            delete('tmp_file.dat');
                             %Add found color - used later in concentration calculation module
                             if ~(str1 == str_laser || str1 == str_contrast)
                                 hasRGY = [hasRGY str1];
@@ -550,8 +511,8 @@ try
                     el = load(IOI.res.el{s1});
                     fname_el = fullfile(dir_elfig,[short_el_label '_' sess_label gen_num_str(s1,2)]);
                     ioi_plot_LFP(IOI,el.el,s1,1,1,fname_el);
-                    disp(['Done processing session: ' int2str(s1) ', electrophysiology']);                     
-                 end
+                    disp(['Done processing session: ' int2str(s1) ', electrophysiology']);
+                end
                 %toc
                 if ~expedite
                     disp(['Done processing session ' int2str(s1) ' images (' int2str(n_frames) 'images)']);

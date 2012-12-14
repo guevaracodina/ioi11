@@ -13,3 +13,6 @@ ioi11.msioi1.force_redo = 0;
 % Shrink factors to reduce impact on memory
 ioi11.msioi1.shrink_x = 2;
 ioi11.msioi1.shrink_y = 2;
+
+% Contrast window size for speckle
+ioi11.msioi1.window_size = 5;

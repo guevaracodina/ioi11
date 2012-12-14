@@ -40,6 +40,15 @@ try
     %leave voxel size in arbitrary units for now, for anatomical image
     vx_anat = [1 1 1];
     vx = [1 1 1];
+    wsize=job.window_size;
+    if (mod(wsize,2)==0)
+        disp(['Contrast Computation: Need to specify an odd window size, changing to: ' num2str(wsize+1)]);
+        wsize=wsize+1;
+        job.window_size=wsize;  % For reference
+    end
+    % XXX: This is potentially an error: No assignment to IOI should occur if we
+    % are not redoing
+    IOI.res.flow.window_size=wsize;
     
     if isfield(job,'stim_cutoff')
         stim_cutoff = job.stim_cutoff;
@@ -60,7 +69,6 @@ try
         IOI.color.yellow = str_yellow;
         IOI.color.laser = str_laser;
         IOI.res.shrinkageOn = 0; %no shrinkage of images
-        IOI.res.flowShrinkageOn = 0; %no flow shrinkage of images
     end
 
     if ~job.PartialRedo2
@@ -235,19 +243,19 @@ try
                 %if expedite
                 dir_elfig = fullfile(dir_subj_res,'fig_el');
                 if ~exist(dir_elfig,'dir'), mkdir(dir_elfig); end
-                fname_el = fullfile(dir_elfig,[short_el_label '_' sess_label gen_num_str(sC,2)]);
-                fname_el2 = fullfile(dir_elfig,[short_el_label '12_' sess_label gen_num_str(sC,2)]);
+                fname_el = fullfile(dir_elfig,[short_el_label '1_' sess_label gen_num_str(sC,2)]);
+                fname_el2 = fullfile(dir_elfig,[short_el_label '1&2_' sess_label gen_num_str(sC,2)]);
                 fname_el3 = fullfile(dir_elfig,[short_el_label '2_' sess_label gen_num_str(sC,2)]);
-                ioi_plot_LFP(IOI,el,s1,1,1,fname_el);
-                ioi_plot_LFP(IOI,el2,s1,1,1,fname_el3);
+                % This saves figures of electrophysiology to inspect data
+                % later (try is for safery in case they don't exist)
+                try ioi_plot_LFP(IOI,el,s1,1,1,fname_el); end;
+                try ioi_plot_LFP(IOI,el2,s1,1,1,fname_el3); end;
                 try ioi_plot_LFP2(IOI,el,s1,el2,1,1,fname_el2); end;
                 %end
                 if ~expedite
                     %extract ttl
                     ttl=TDMS2ttl(ConvertedData);
-                    %save(elfile,el(1,:)); %incorrect.
                     %loop over image files for this session
-                    %[imfiles dummy] = cfg_getfile('FPList',dirs{s1},'image');
                     %read frame present
                     [Imout frameout frameReadOut fileNo] = LectureImageMultiFast(dirs{s1},'image',-1);
                     frameReadOut = frameReadOut(frameReadOut(:,1) ~= 0,:);
@@ -261,7 +269,6 @@ try
                             missing_frames = [missing_frames i0];
                         end
                     end
-                    iC = 0; %counter for number of images so far
                     % Display stats of missing frames //EGC
                     fprintf('%d missing frames out of %d frames (%0.2f%%)\n',...
                         numel(missing_frames), n_frames*nColors, ...
@@ -282,15 +289,8 @@ try
                     % with saturated spots as images with duplicated pixels
                     % //EGC
                     if all((images(:,nyt) == images(:,nyt+1))) || all((images(:,nyt+1) == images(:,nyt+2)))
-                        %two tests should be enough... -- weaker test now
-                    % if (images(nxt,nyt) == images(nxt,nyt+1)) || (images(nxt,nyt+1) == images(nxt,nyt+2))
-                        %(images(nxt,nyt) == images(nxt,nyt+1)) && (images(nxt+3,nyt+3) == images(nxt+3,nyt+4))
-                        %if mod(ny,2) == 0
                         dupOn = 1;
                         ny = length(images(1,1:2:end));
-                        %else %This happens sometimes, that's OK
-                        %    disp('Odd number of pixels in y direction, yet pixels are duplicated!')
-                        %end
                     else
                         dupOn = 0;
                         ny = ny0;
@@ -302,7 +302,8 @@ try
                     if shrinkage_choice
                         % Only if shrinkage is chosen //EGC
                         IOI.res.shrink_x = SH.shrink_x;
-                        IOI.res.shrink_y = SH.shrink_y;                    
+                        IOI.res.shrink_y = SH.shrink_y;    
+                        vx =[IOI.res.shrink_x IOI.res.shrink_y 1];
                     end
                     
                     NX = nx;
@@ -320,15 +321,8 @@ try
                         K = ioi_spatial_LPF('set', K);
                     end
                     
-                    %create large memmapfile for Y, R, G images (several GB)
+                    %create large memmapfile for Y, R, G L images (several GB)
                     fmem_name = 'all_images.dat';
-                    %                 if exist(fmem_name,'file')
-                    %                     try
-                    %                         delete(fmem_name);
-                    %                     catch
-                    %                         disp([fmem_name ' : File could not be closed']);
-                    %                     end
-                    %                 end
                     fid = fopen(fmem_name,'w');
                     fwrite(fid, zeros([nx ny 1 n_frames nColors]), 'int16');
                     fclose(fid);
@@ -338,6 +332,7 @@ try
                     % Initialize progress bar
                     spm_progress_bar('Init', length(fileNo), sprintf('Multispectral reading. Subject %s, Session %d\n',IOI.subj_name,s1), 'Files');
                     % Loop over files
+                    iC = 0; %counter for number of images so far
                     for f1 = 1:length(fileNo)
                         % fprintf('Processing file %d\n',f1);
                         frames = frameReadOut(frameReadOut(:,3)==fileNo(f1),:);
@@ -349,53 +344,25 @@ try
                             end
                         end
                         nImages = ceil(frames(end,1)/nColors)-iC;
-                        %image_total{c1} = zeros(nx,ny,nz,nImages);
                         si = iC+1; %start index
                         ei = iC+nImages; %end index
-                        %create an array for laser
-                        [flow_shrinkage_choice SH] = ioi_get_flow_shrinkage_choice(job);
-                        IOI.res.flowShrinkageOn = flow_shrinkage_choice;
-                        if shrinkage_choice && ~isempty(regexp(color_order,'L','once'))
-                            % Check if laser is recorded
-                            %************by Cong on 12/08/24
-                            %flow shrink if required
-
-                            if flow_shrinkage_choice
-                                %                     if flow_shrinkage_choice
-                                % Only if shrinkage is chosen //EGC
-                                IOI.res.flow_shrink_x = SH.shrink_x;
-                                IOI.res.flow_shrink_y = SH.shrink_y;
-                            end
-                            
-                            %                             NX = nx;
-                            %                             NY = ny;
-                            if flow_shrinkage_choice
-                                flow_nx = floor(NX/SH.shrink_x);
-                                if dupOn
-                                    flow_ny = floor(NY/(SH.shrink_y/2));
-                                else
-                                    flow_ny = floor(NY/SH.shrink_y);
-                                end
-                                K.radius = SH.shrink_x;
-                                K.k1 = NX;
-                                K.k2 = NY;
-                                K = ioi_spatial_LPF('set', K);
-                                laser_array = zeros(flow_nx,flow_ny,nImages);
-                            else
-                                laser_array = zeros(NX,NY,nImages);
-                            end
-                        end
-                        %**********end
+                                                
                         sess.si = [sess.si si];
                         sess.ei = [sess.ei ei];
                         image_str_start = gen_num_str(si,nzero_padding);
                         image_str_last = gen_num_str(ei,nzero_padding);
                         image_str = [image_str_start 'to' image_str_last];
-                        %separate images of different colors
+                        %separate images of different colors, laser is not
+                        %a color, give a C label for contrast
                         for c1=1:nColors
                             str1 = str_color(c1);
-                            fname{c1} = fullfile(dir_subj_res,sess_str, ...
-                                [subj_name '_' OD_label '_' str1 '_' sess_str '_' image_str '.nii']);
+                            if ~(str1==str_laser)
+                                fname{c1} = fullfile(dir_subj_res,sess_str, ...
+                                    [subj_name '_' OD_label '_' str1 '_' sess_str '_' image_str '.nii']);
+                            else
+                                fname{c1} = fullfile(dir_subj_res,sess_str, ...
+                                    [subj_name '_C_' sess_str '_' image_str '.nii']);
+                            end
                             sess.fname{c1} = [sess.fname{c1} fname{c1}];
                         end
                         
@@ -413,89 +380,63 @@ try
                             tframe = ceil(fr1/nColors); %which image for this frame
                             if ~(any(fr1+iC*nColors == missing_frames))
                                 if ~(IOI.color.eng(tcol)==str_laser)
-                                    % fprintf('Processing file %d, frame %d...\n',f1,fr1);
                                     if fr1+iC*nColors < frames(end,1)
                                         tmp_image{tcol} = images{frames(frames(:,1)==(fr1+iC*nColors),2)};
                                     else
                                         % tmp_image{tcol} does not change
                                     end
                                     if shrinkage_choice 
-                                        % ioi_MYimresize replaces imresize
                                         tmp_image{tcol} = ioi_MYimresize(tmp_image{tcol}, [nx ny]);
-                                        %                                         try
-%                                             % Added by EGC: downsampling below
-%                                             % does not always work, e.g. for
-%                                             % NX=792, nx=396, but
-%                                             % size(tmp_image{tcol},1) = 395 and
-%                                             % there is a mismatch when assigning
-%                                             % dimensions in the large memory
-%                                             % mapped file im_obj
-%                                             tmp_image{tcol} = imresize(tmp_image{tcol},[nx ny]);
-%                                         catch exception
-%                                             disp(exception.identifier)
-%                                             disp(exception.stack(1))
-%                                             % first spatially filter the images
-%                                             tmp_image{tcol} = ioi_spatial_LPF('lpf', K, tmp_image{tcol});
-%                                             % then downsample
-%                                             tmp_image{tcol} = tmp_image{tcol}((SH.shrink_x/2+1):SH.shrink_x:(end-(SH.shrink_x/2)),(SH.shrink_y/2+1):SH.shrink_y:(end-(SH.shrink_y/2)));
-%                                         end
                                     end
-%*********************************************By Cong on 12/08/29
                                 else
-                                    if flow_shrinkage_choice 
-%                                      tmp_image{tcol} = ioi_MYimresize(tmp_image{tcol}, [flow_nx flow_ny]);
-                                     tmp_image{tcol} = ioi_MYimresize(images{frames(frames(:,1)==(fr1+iC*nColors),2)},[flow_nx flow_ny]);
-                                    else 
-                                        %****************end
-                                      tmp_image{tcol} = images{frames(frames(:,1)==(fr1+iC*nColors),2)};
+                                    if fr1+iC*nColors < frames(end,1)
+                                        % Only one shrink choice, we move contrast computation
+                                        % here to correct for potential
+                                        % decrease in contrast of the
+                                        % shrinkage, so on output the contrast
+                                        % image is saved
+                                        OPTIONS.GPU = 0;
+                                        OPTIONS.Power2Flag = 0;
+                                        OPTIONS.Brep = 0;
+                                        tmp_laser=single(images{frames(frames(:,1)==(fr1+iC*nColors),2)});
+                                        win2 = ones(wsize,wsize);
+                                        std_laser = stdfilt(tmp_laser,win2);
+                                        mean_laser = convnfft(tmp_laser,win2,'same',1:2,OPTIONS)/wsize^2;
+                                        contrast=std_laser./mean_laser;
+                                        tmp_image{tcol} = contrast;
+                                    else
+                                        % tmp_image{tcol} does not change
+                                    end
+                                    if shrinkage_choice
+                                        tmp_image{tcol} = ioi_MYimresize(tmp_image{tcol},[nx ny]);
                                     end
  
-                                    %laser -- do not shrink now
-                                    
                                 end
                             else
                                 %missing frame: tmp_image{tcol} does not change, so the
-                                %previous image will be used
+                                %previous image of the same color will be used
                             end
-                            if ~shrinkage_choice || (shrinkage_choice && ~(IOI.color.eng(tcol)==str_laser))
-                                % im_obj.Data.image_total(:,:,:,tframe+iC,tcol) = tmp_image{tcol};
-                                % Correct assignment for the 3rd dimension //EGC
-                                im_obj.Data.image_total(:,:,1,tframe+iC,tcol) = tmp_image{tcol};
-                            else
-                                % Check if laser is recorded
-                                if ~isempty(regexp(color_order,'L','once'))
-                                    %store laser data
-                                    laser_array(:,:,tframe) = tmp_image{tcol}; %tframe???
-                                end
-                            end
-                            %image_total{tcol}(:,:,:,tframe) = tmp_image{tcol};
+                            % All images here including laser are kept in
+                            % this memmapfile object
+                            im_obj.Data.image_total(:,:,1,tframe+iC,tcol) = tmp_image{tcol};
+ 
                             if f1==1 && (fr1 <= nColors) && strcmp(str_color(tcol),str_anat)
                                 image_anat = images{fr1}; %problem with fr1 sometimes...
                             end
                         end
                         iC = iC + nImages;
-                        if shrinkage_choice
-                            % Check if laser is recorded
-                            if ~isempty(regexp(color_order,'L','once'))
-                                %save laser images
-                                ioi_save_nifti(single(laser_array),sess.fname{IOI.color.eng == str_laser}{f1},vx);
-                            end
-                        end
                         % Update progress bar
                         spm_progress_bar('Set', f1);
                     end % Files loop
                     % Clear progress bar
                     spm_progress_bar('Clear');
                     
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     for_Cong_to_test = 0;
                     if for_Cong_to_test
                         for c1=1:nColors
                             %check that color order is OK
-                            if ~memmapfileOn
-                                [sts i0] = ioi_check_color_order(squeeze(image_total(:,:,:,:,c1)),str1,str_laser);
-                            else
-                                [sts i0] = ioi_check_color_order(squeeze(im_obj.Data.image_total(:,:,:,:,c1)),str1,str_laser);
-                            end
+                            [sts i0] = ioi_check_color_order(squeeze(im_obj.Data.image_total(:,:,:,:,c1)),str1,str_laser);
                             IOI.bad_frames{s1,c1} = i0;
                             if ~sts
                                 try
@@ -506,7 +447,9 @@ try
                             end
                         end
                     end
-                    %Compute median
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    
+                    %Compute median for colors other than laser
                     for c1=1:nColors
                         %skip laser
                         if ~(str_color(c1)==str_laser)
@@ -516,7 +459,6 @@ try
                             str1 = str_color(c1);
                             sess.fname_median{c1} = fullfile(dir_subj_res,sess_str, ...
                                 [subj_name '_' OD_label '_median_' str1 '_' sess_str]);
-                            %ioi_save_nifti(single(median0{c1}),sess.fname_median{c1},vx);
                             tit0 = [subj_name ' ' OD_label ' median ' str1 ' ' sess_str];
                             ioi_save_images(single(median0{c1}),sess.fname_median{c1},vx,[],tit0);
                             try
@@ -546,12 +488,6 @@ try
                                 tit4 = [subj_name ' ' OD_label ' 90pctle ' str1 ' ' sess_str];
                                 tit5 = [subj_name ' ' OD_label ' change min to max ' str1 ' ' sess_str];
                                 tit6 = [subj_name ' ' OD_label ' change 90 to 10 ' str1 ' ' sess_str];
-                                %                             ioi_save_nifti(single(min_image),sess.fname_min{c1},vx);
-                                %                             ioi_save_nifti(single(max_image),sess.fname_max{c1},vx);
-                                %                             ioi_save_nifti(single(change),sess.fname_change{c1},vx);
-                                %                             ioi_save_nifti(single(tenthpctle_image),sess.fname_10pctle{c1},vx);
-                                %                             ioi_save_nifti(single(ninetiethpctle_image),sess.fname_90pctle{c1},vx);
-                                %                             ioi_save_nifti(single(change_90_10),sess.fname_change_90_10{c1},vx);
                                 ioi_save_images(single(min_image),sess.fname_min{c1},vx,[],tit1);
                                 ioi_save_images(single(max_image),sess.fname_max{c1},vx,[],tit2);
                                 ioi_save_images(single(change),sess.fname_change{c1},vx,[],tit3);
@@ -569,20 +505,16 @@ try
                             if ~(str_color(c1)==str_laser)
                                 ioi_save_nifti(-log(single(im_obj.Data.image_total(:,:,:,ind0,c1))./repmat(single(median0{c1}),[1 1 1 length(ind0)])),sess.fname{c1}{f1},vx);
                             else
-                                if ~shrinkage_choice
-                                    ioi_save_nifti(single(im_obj.Data.image_total(:,:,:,ind0,c1)),sess.fname{c1}{f1},vx);
-                                end
+                                ioi_save_nifti(single(im_obj.Data.image_total(:,:,:,ind0,c1)),sess.fname{c1}{f1},vx);
                             end
                         end
                     end
-                    %disp(['Done processing session: ' int2str(s1) ', color: ' str1]);
                     IOI.sess_res{sC} = sess;
                     IOI.sess_res{sC}.hasRGY = hasRGY;
                     % Save available colors
                     IOI.sess_res{sC}.availCol = color_order;
                     % Stats on missing frames 
                     IOI.sess_res{sC}.missingFrames = numel(missing_frames);
-                    %sess_res =[sess_res sess];
                     disp(['Done processing session ' int2str(s1) ' images (' int2str(iC) ' images)']);
                     clear im_obj;
                     delete('all_images.dat');
@@ -590,7 +522,6 @@ try
                     %4- Anatomical image - Save for each session
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     % Use first green colored image as the anatomy
-                    % anat_fname = fullfile(dir_subj_res, [subj_name '_' suffix_for_anat_file '.nii']);
                     anat_fname = fullfile(dir_subj_res,sess_str, ...
                                     [subj_name '_' suffix_for_anat_file '_' sess_str]);
                     ioi_save_images(image_anat, anat_fname, vx_anat,[],sprintf('%s Anatomical image',IOI.subj_name))
@@ -599,7 +530,6 @@ try
                 end
             end
         end % sessions for
-        %IOI.sess_res = sess_res;
     end
 catch exception
     disp(exception.identifier)
