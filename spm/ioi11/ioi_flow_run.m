@@ -15,24 +15,15 @@ for SubjIdx=1:length(job.IOImat)
         [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);
         
         if ~isfield(IOI.res,'flowOK') || job.force_redo
-            wsize=job.configuration.window_size;
-            if (mod(wsize,2)==0)
-                disp(['Flow Computation: Need to specify an odd window size, changing to: ' num2str(wsize+1)]);
-                wsize=wsize+1;
-                job.configuration.window_size=wsize;  % For reference
-            end
-            
             str_flow = 'F';
             str_laser = IOI.color.laser;
-            tmp_str_laser = ['_' str_laser '_'];
+            tmp_str_contrast = ['_C_'];
             tmp_str_flow = ['_' str_flow '_'];
             IOI.color.flow = str_flow;
             if ~(IOI.color.eng==str_flow)
                 IOI.color.eng = [IOI.color.eng str_flow];
             end
-            
-            IOI.res.flow.window_size=wsize;
-            
+                        
             % Get integration time directly from the info.txt file //EGC
             try
                 % Get the raw data folder
@@ -94,24 +85,10 @@ for SubjIdx=1:length(job.IOImat)
                                     % NOTE: nt is not necessarily the largest
                                     % dimension of vol //EGC
                                     % nt = length(vol); 
-                                    win2 = ones(wsize,wsize);
-                                    laser=spm_read_vols(vol);
-                                    %mean_laser = zeros(size(laser));
-                                    %std_laser = zeros(size(laser));
+                                    contrast=spm_read_vols(vol);
                                     image_flow=zeros(nx,ny,1,nt);
-                                    OPTIONS.GPU = 0;
-                                    OPTIONS.Power2Flag = 0;
-                                    OPTIONS.Brep = 0;
                                     for i3=1:nt
-                                        tmp_laser = squeeze(laser(:,:,i3));
-                                        std_laser = stdfilt(tmp_laser,win2);
-                                        %this is much faster (4 times) than conv2
-                                        %tic
-                                        %THIS IS SLOW:
-                                        mean_laser = convnfft(tmp_laser,win2,'same',1:2,OPTIONS)/wsize^2;
-                                        %toc
-                                        contrast=std_laser./mean_laser;
-                                        image_flow(:,:,1,i3)=private_flow_from_contrast(contrast,job.configuration.integ_time);
+                                        image_flow(:,:,1,i3)=private_flow_from_contrast(squeeze(contrast(:,:,1,i3)),job.configuration.integ_time);
                                         % Normalization of the decorrelation velocity
                                         if isfield(job, 'flow_lambda_norm')
                                             if isfield (job.flow_lambda_norm, 'flow_lambda_norm_On')
@@ -128,14 +105,9 @@ for SubjIdx=1:length(job.IOImat)
                                     else
                                         vx = [1 1 1];
                                     end
-                                    if vx(1) > 1 || vx(2) > 1
-                                        nx=size(vx(1):vx(1):size(image_flow,1),2);
-                                        ny=size(vx(2):vx(2):size(image_flow,2),2);
-                                        image_flow = ioi_imresize(image_flow,0,nx,ny,vx(1),vx(2));
-                                    end
-                                    
-                                    %save - substitute 'L' for 'F' in file name
-                                    fname_new = regexprep(fname, tmp_str_laser , tmp_str_flow);
+                                  
+                                    %save - substitute 'C' for 'F' in file name
+                                    fname_new = regexprep(fname, tmp_str_contrast , tmp_str_flow);
                                     fname_new_list = [fname_new_list; fname_new];
                                     ioi_save_nifti(image_flow, fname_new, vx);
                                     % Update progress bar
