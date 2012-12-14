@@ -24,19 +24,10 @@ inttime1.num        = [1 1];
 inttime1.def        = @(val)ioi_get_defaults('flow1.T', val{:});
 inttime1.help       = {'Camera integration time.'};
 
-% Window size for speckle contrast
-windowsize1         = cfg_entry;
-windowsize1.tag     = 'window_size';
-windowsize1.name    = 'Speckle Window Size';
-windowsize1.strtype = 'i';
-windowsize1.num     = [1 1];
-windowsize1.def     = @(val)ioi_get_defaults('flow1.window_size', val{:});
-windowsize1.help    = {'Window size for speckle contrast computation.'};
-
 configuration       = cfg_branch;
 configuration.tag   = 'configuration';
 configuration.name  = 'Configuration options';
-configuration.val   = {inttime1 windowsize1};
+configuration.val   = {inttime1};
 configuration.help  = {'Select values.'};
 
 RemoveLC            = cfg_menu;
