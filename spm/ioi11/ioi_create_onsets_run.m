@@ -82,8 +82,7 @@ for SubjIdx=1:length(job.IOImat)
                                 IOI.sess_res{s1}.names{ot} = E.electrophysiology_onset_name;
                                 IOI.sess_res{s1}.onsets{ot} = ons';
                             end
-                            
-                   %****************************** end
+                            %****************************** end
 
                             if E.spkOn
                                 IOI.sess_res{s1}.durations{ot} = IOI.dev.TR;
