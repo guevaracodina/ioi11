@@ -170,10 +170,10 @@ for SubjIdx=1:length(job.IOImat)
                                     fname = fullfile(fdir,[fil0 ext0]);
                                 end
                                 
-                                fname_new_HbO = regexprep(fname,tmp_str_avail_color ,tmp_str_HbO);
+                                fname_new_HbO = regexprep(fname,['_OD',tmp_str_avail_color] ,tmp_str_HbO);
                                 fname_new_HbO_list = [fname_new_HbO_list; fname_new_HbO];
                                 ioi_save_nifti(image_hbo, fname_new_HbO, vx);
-                                fname_new_HbR = regexprep(fname,tmp_str_avail_color ,tmp_str_HbR);
+                                fname_new_HbR = regexprep(fname,['_OD',tmp_str_avail_color] ,tmp_str_HbR);
                                 fname_new_HbR_list = [fname_new_HbR_list; fname_new_HbR];
                                 ioi_save_nifti(image_hbr, fname_new_HbR, vx);
                                 % Update progress bar
