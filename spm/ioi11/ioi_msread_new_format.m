@@ -403,7 +403,11 @@ try
                                         std_laser = stdfilt(tmp_laser,win2);
                                         mean_laser = convnfft(tmp_laser,win2,'same',1:2,OPTIONS)/wsize^2;
                                         contrast=std_laser./mean_laser;
-                                        tmp_image{tcol} = contrast;
+                                        % Problem here is contrast is
+                                        % between 0-1 and image is saved as
+                                        % int16, modify to get some
+                                        % dynamical range
+                                        tmp_image{tcol} = contrast*10000;
                                     else
                                         % tmp_image{tcol} does not change
                                     end
@@ -505,7 +509,10 @@ try
                             if ~(str_color(c1)==str_laser)
                                 ioi_save_nifti(-log(single(im_obj.Data.image_total(:,:,:,ind0,c1))./repmat(single(median0{c1}),[1 1 1 length(ind0)])),sess.fname{c1}{f1},vx);
                             else
-                                ioi_save_nifti(single(im_obj.Data.image_total(:,:,:,ind0,c1)),sess.fname{c1}{f1},vx);
+                                % Here the 10000 is because the INT16
+                                % memmapfile is an issue with contrast
+                                % between 0-1
+                                ioi_save_nifti(single(im_obj.Data.image_total(:,:,:,ind0,c1))/10000,sess.fname{c1}{f1},vx);
                             end
                         end
                     end
