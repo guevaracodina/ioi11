@@ -1,5 +1,6 @@
 function out = ioi_fcIOS_maps_run(job)
-% 
+% Prints multiple correlation maps at the same scale. 
+% Ideal to make a mosaique figure.
 %_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moleculaire
 %                    Ecole Polytechnique de Montreal
@@ -68,16 +69,11 @@ for SubjIdx = 1:length(job.IOImat)
                                 % Save NIfTI to use slover
                                 ioi_save_nifti(y, IOI.fcIOS.corr.corrMapNameMask{r1}{s1, c1}, vx);
                                 
-                                %% display overlay data
+                                %% Display overlay data and print to png
                                 % Get parameters for overlay
                                 anatomical      = IOI.res.file_anat;
                                 corrMap         = IOI.fcIOS.corr.corrMapNameMask{r1}{s1, c1};
-                                colorNames      = fieldnames(IOI.color);
-                                % h = ioi_overlay_map(anatomical, positiveMap, negativeMap, mapRange, titleString)
                                 internal_overlay_map(anatomical, corrMap,  job, newName);
-                                
-                                %% Print figure
-                                
                             end
                         end % ROIs loop
                     end
@@ -103,12 +99,14 @@ function [h, varargout] = internal_overlay_map(anatomical, positiveMap,  job, ti
 % The positive map is plotted in hot colormap, the negative map is cold and the
 % anatomical is grayscale by default. The image has the following orientation:
 % 
-%         |
-%         |
-%         | Left
-%         |        
-% ________|
-% Rostral
+%         Rostral
+%       |________
+%       |
+%       |
+%  Left | 
+%       |        
+
+
 % 
 % SYNTAX
 % h = ioi_overlay_map(anatomical,positiveMap,negativeMap,mapRange,titleString)
@@ -116,12 +114,11 @@ function [h, varargout] = internal_overlay_map(anatomical, positiveMap,  job, ti
 % anatomical    NIfTI (.nii) filename with anatomical image for background.
 % positiveMap   NIfTI (.nii) filename with positive functional map on the
 %               foreground.
-% negativeMap   NIfTI (.nii) filename with negativ functional map on the
-%               foreground.
+% job           Matlab batch jobjob 
 % titleString   String with the title to be displayed.
-% mapRange      2-element cell with the data range (positive&negative) to be displayed.
 % OUTPUT
 % h             Handle to the figure
+% slObj         [OPTIONAL] slover object
 %_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
@@ -148,7 +145,11 @@ if size(mapRange, 1) == 1
     mapRange = cellfun(@(x) x', mapRange, 'UniformOutput', false);
 end
 
-% Get 
+% Define anonymous functions for affine transformations
+rotx = @(theta) [1 0 0 0; 0 cos(theta) -sin(theta) 0; 0 sin(theta) cos(theta) 0; 0 0 0 1];
+roty = @(theta) [cos(theta) 0 sin(theta) 0; 0 1 0 0; -sin(theta) 0 cos(theta) 0; 0 0 0 1];
+rotz = @(theta) [cos(theta) -sin(theta) 0 0; sin(theta) cos(theta) 0 0; 0 0 1 0; 0 0 0 1];
+translate = @(a,b) [1 0 a 0; 0 1 b 0; 0 0 1 0; 0 0 0 1];
 
 % Create overlay object
 slObj = slover(char(imagesOverlay));
@@ -161,7 +162,7 @@ slObj.img(1).type = 'truecolour';           % Anatomical image
 slObj.img(2).type = 'truecolour';           % Functional map
 
 slObj.img(1).cmap = gray(256);              % Colormap for anatomy
-slObj.img(2).cmap = jet(256);               % Colormap for positive map
+slObj.img(2).cmap = job.figCmap;            % Colormap for functional map
 
 % slObj.cbar = [2 3];                         % Plot colorbars for images 2 & 3
 slObj.area.valign = 'middle';               % Vertical alignment
@@ -174,20 +175,21 @@ slObj.img(1).outofrange =  {0 255};         % Behavior for image values out of r
 slObj.img(2).outofrange =  {0 255};
 
 slObj.labels = 'none';                      % No labels on this slice
-  
-% Redraw the object (e.g. after window maximization)
-slObj = paint(slObj);
+
+% Apply affine transformation
+slObj.transform = job.transM*translate(-slObj.img(1).vol.dim(1),-slObj.img(1).vol.dim(2));               % Apply affine transformation
 
 % Change figure name
 set(slObj.figure,'Name',titleString);
 
+% Pass the slover object as output
 varargout{1} = slObj;
 
 % Specify window units
 set(h, 'units', 'inches')
 % Change figure and paper size
-set(h, 'Position', job.figSize)
-set(h, 'PaperPosition', job.figSize)
+set(h, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
+set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
 % Refresh figure
 slObj = paint(slObj);
 % Save as PNG at the user-defined resolution

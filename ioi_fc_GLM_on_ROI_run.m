@@ -236,6 +236,7 @@ for SubjIdx=1:length(job.IOImat)
                             save(fnameROIregress,'ROIregress');
                         end
                         if job.cleanupGLM
+                            % Keeps only NIfTI files of succesfully regressed ROIs
                             IOI.fcIOS.SPM.cleanupOK = ioi_fc_GLM_on_ROI_cleanup(IOI);
                         end
                         % Save IOI matrix
