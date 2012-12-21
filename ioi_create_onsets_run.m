@@ -75,18 +75,28 @@ for SubjIdx=1:length(job.IOImat)
                                 end
                                 index=find(IOI.sess_res{s1}.onsets{1}~=0);
                                 IOI.sess_res{s1}.onsets{1}=IOI.sess_res{s1}.onsets{1}(index);
-                            else
-                                [pkh ons dur] = ioi_get_onsets_from_electrophysiology(IOI,s1,E,dir_ioimat,elDir0); %pk in seconds; pkh in arbitrary units
-                                ot = 1;
-                                IOI.sess_res{s1}.E = E; %Electrophysiology structure used for detection
-                                IOI.sess_res{s1}.names{ot} = E.electrophysiology_onset_name;
-                                IOI.sess_res{s1}.onsets{ot} = ons';
+                            else if E.szOn_manual
+                                    dur = E.ta-E.tb; %in seconds
+                                    [pkh ons dur] = ioi_get_onsets_from_electrophysiology_manually(IOI,s1,E,dir_ioimat,elDir0);                                   
+                                    IOI.sess_res{s1}.E = E; %Electrophysiology structure used for detection
+                                    IOI.sess_res{s1}.names = E.electrophysiology_onset_name;
+                                    IOI.sess_res{s1}.onsets = ons';
+                                  
+                                else
+                                    [pkh ons dur] = ioi_get_onsets_from_electrophysiology(IOI,s1,E,dir_ioimat,elDir0); %pk in seconds; pkh in arbitrary units
+                                    ot = 1;
+                                    IOI.sess_res{s1}.E = E; %Electrophysiology structure used for detection
+                                    IOI.sess_res{s1}.names{ot} = E.electrophysiology_onset_name;
+                                    IOI.sess_res{s1}.onsets{ot} = ons';
+                                end
                             end
                             %****************************** end
 
                             if E.spkOn
+                                 ot = 1;
                                 IOI.sess_res{s1}.durations{ot} = IOI.dev.TR;
                             else
+                                ot = 1;
                                 IOI.sess_res{s1}.durations{ot} = dur;
                             end
                             IOI.sess_res{s1}.parameters{ot} = pkh';

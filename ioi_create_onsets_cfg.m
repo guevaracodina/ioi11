@@ -225,14 +225,102 @@ write_pictures.val  = {1};
 write_pictures.help = {'Generate plots of electrophysiology.'}';
 
 %%%%%%%%%%%%%%%%%%%%
+%******************by Cong on 12/12/20
+electrophysiology_choice      = cfg_menu;
+electrophysiology_choice.tag  = 'electrophysiology_choice';
+electrophysiology_choice.name = 'Electrophysiology choice';
+electrophysiology_choice.labels = {'1','2'};
+electrophysiology_choice.values = {1,2};
+electrophysiology_choice.val  = {2};
+electrophysiology_choice.help = {'Choose which electrophysiology to detect onsets '
+        '1-electrophysiology from the micropipette'
+        '2-electrophysiology from the tungsten electrode'}';
+    
+seizure_onset_name         = cfg_entry; 
+seizure_onset_name.name    = 'Seizure onset name';
+seizure_onset_name.tag     = 'seizure_onset_name';       
+seizure_onset_name.strtype = 's';
+seizure_onset_name.num     = [1 Inf];     
+seizure_onset_name.val{1}  = 'Sz_manually';
+seizure_onset_name.help    = {'Specify the onset name.'};
 
-seizure_detection         = cfg_branch;
-seizure_detection.tag     = 'seizure_detection';
-seizure_detection.name    = 'Seizure detection';
-seizure_detection.val     = {electrophysiology_choice seizure_onset_name ...
+nSD      = cfg_entry;
+nSD.tag  = 'nSD';
+nSD.name = 'Enter number of standard deviations';
+nSD.strtype  = 'r';
+nSD.num = [1 1];
+nSD.val{1} = 2; %1.8; %3;
+nSD.help = {'Enter number of standard deviations above mean of electrophysiology'
+    'signal to use for detection of peaks.'}';
+
+sf      = cfg_entry;
+sf.tag  = 'sf';
+sf.name = 'Enter electrophysiology sampling frequency';
+sf.strtype  = 'r';
+sf.num = [1 1];
+sf.val{1} = 10000;
+sf.help = {'Enter electrophysiology sampling frequency.'}';
+
+seizure_tb         = cfg_entry; 
+seizure_tb.name    = 'Time window before';
+seizure_tb.tag     = 'seizure_tb';       
+seizure_tb.strtype = 'r';
+seizure_tb.num     = [1 1];     
+seizure_tb.val{1}  = 3;
+seizure_tb.help    = {'Specify the time window before seizure to use for display (in seconds) or for baseline calcuation.'}';
+
+seizure_ta         = cfg_entry; 
+seizure_ta.name    = 'Time window after';
+seizure_ta.tag     = 'seizure_ta';       
+seizure_ta.strtype = 'r';
+seizure_ta.num     = [1 1];     
+seizure_ta.val{1}  = 0.5;
+seizure_ta.help    = {'Specify the time window after onset to use for display (in seconds).'}';
+
+
+seizure_offset         = cfg_entry; 
+seizure_offset.name    = 'seizure offset';
+seizure_offset.tag     = 'seizure_offset';       
+seizure_offset.strtype = 'r';
+seizure_offset.num     = [1 Inf];     
+seizure_offset.val{1}  = 3;
+seizure_offset.help    = {'Specify the time window before seizure to use for display (in seconds) or for baseline calcuation.'}';
+
+seizure_onset         = cfg_entry; 
+seizure_onset.name    = 'seizure onset';
+seizure_onset.tag     = 'seizure_onset';       
+seizure_onset.strtype = 'r';
+seizure_onset.num     = [1 Inf];     
+seizure_onset.val{1}  = 0.5;
+seizure_onset.help    = {'Specify the time window after onset to use for display (in seconds).'}';
+
+seizure_detection_manually   = cfg_branch;
+seizure_detection_manually.tag     = 'seizure_detection_manually';
+seizure_detection_manually.name    = 'Seizure detection manually';
+seizure_detection_manually.val     = {electrophysiology_choice seizure_onset_name ...
+    sf nSD seizure_onset seizure_offset seizure_ta seizure_tb electro_hpf_butter onsets_choice ...
+        write_pictures use_epilepsy_convention};
+seizure_detection_manually.help    = {    'Choose parameters for seizure detection.'}';
+
+%******************end
+seizure_detection_automatically         = cfg_branch;
+seizure_detection_automatically.tag     = 'seizure_detection_automatically';
+seizure_detection_automatically.name    = 'Seizure detection automatically';
+seizure_detection_automatically.val     = {electrophysiology_choice seizure_onset_name ...
     sf nSD mbSD seizure_dP seizure_tb seizure_ta electro_hpf_butter onsets_choice ...
         write_pictures use_epilepsy_convention};
-seizure_detection.help    = {    'Choose parameters for seizure detection.'}';
+seizure_detection_automatically.help    = {    'Choose parameters for seizure detection.'}';
+
+seizure_detection        = cfg_choice;
+seizure_detection.name   = 'seizure detection';
+seizure_detection.tag    = 'seizure_detection';
+seizure_detection.values = {seizure_detection_automatically,seizure_detection_manually};
+seizure_detection.val    = {seizure_detection_manually};
+seizure_detection.help   = { 'choose methord for seizure detection.'
+    'two choices: seizure_detection manually and sezire detection automatically.'
+    'seizure detection automatically was done automatically'
+    'seizure detection manually needs to enter the onset time of the seizure'}';
+
 
 spike_detection         = cfg_branch;
 spike_detection.tag     = 'spike_detection';

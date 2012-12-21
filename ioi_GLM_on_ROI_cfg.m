@@ -144,6 +144,49 @@ onset_choice.help = {'Choose onsets selection method'
        'remove the onsets from stim. (for two stimulations)'
        'With onsets from stims and detection, onsets from detection which contains stimulation '
        'and spontaneous activites. It can be used for onsets from seizures and spikes'}';
+
+% do_F_test      = cfg_menu;
+% do_F_test.tag  = 'do_F_test';
+% do_F_test.name = 'do_F_test';
+% do_F_test.labels = {'Yes','No'};
+% do_F_test.values = {1,0};
+% do_F_test.val  = {1};
+% do_F_test.help = {'1- do the F-test for two models;'
+%                   '0- donot do the F-test.'}';
+model_choice      = cfg_menu;
+model_choice.tag  = 'model_choice';
+model_choice.name = 'Choose model types';
+model_choice.labels = {'reduced model from stims','reduced model from detection'};
+model_choice.values = {0,1};
+model_choice.val  = {1};
+model_choice.help = {'Choose the types of reduced model'
+       'Stims: onsets from stimulation will be used to creat the regressor.(for two stimulations)'
+       'Onsets from spontaneous activity (detection): onsets are created by detection spontaneous activity and  '
+       'remove the onsets from stim. (for two stimulations)'
+       'full model is from stims and detection, onsets from detection which contains stimulation '
+       'and spontaneous activites. It can be used for onsets from seizures and spikes'}';
+              
+F_test_enabled         = cfg_branch;
+F_test_enabled.tag     = 'F_test_enabled'; %note tag "rat" is historical and no longer applies
+F_test_enabled.name    = 'F-test enabled';
+F_test_enabled.val     = {model_choice};
+F_test_enabled.help    = {'F-test option has been enabled'};
+
+F_test_disabled         = cfg_branch;
+F_test_disabled.tag     = 'F_test_disabled'; %note tag "rat" is historical and no longer applies
+F_test_disabled.name    = 'F-test disabled';
+F_test_disabled.val     = {};
+F_test_disabled.help    = {'F-test option has been disabled'};
+              
+do_F_test         = cfg_choice;
+do_F_test.tag     = 'do_F_test';
+do_F_test.name    = 'do_F_test';
+do_F_test.val     = {F_test_disabled};
+do_F_test.help    = {'The most common choice of basis function is the Canonical HRF with or without time and dispersion derivatives. '};
+do_F_test.values  = {F_test_enabled F_test_disabled};
+   
+   
+   
 % ---------------------------------------------------------------------
 % hrf Canonical HRF
 % ---------------------------------------------------------------------
@@ -345,7 +388,7 @@ glm_roi1      = cfg_exbranch;       % This is the branch that has information ab
 glm_roi1.name = 'GLM on ROI';             % The display name
 glm_roi1.tag  = 'glm_roi1'; %Very important: tag is used when calling for execution
 glm_roi1.val  = {IOImat ROImat redo1 IOImatCopyChoice session_choice ROI_choice...
-     bases volt onset_choice use_onset_amplitudes hpf_butter lpf_choice IC ...
+     bases volt onset_choice do_F_test use_onset_amplitudes hpf_butter lpf_choice IC ...
      generate_figures save_figures ...
      figure_show_stim figure_rebase_to_zero_at_stim show_mse};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 glm_roi1.prog = @ioi_GLM_on_ROI_run;  % A function handle that will be called with the harvested job to run the computation

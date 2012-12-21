@@ -18,7 +18,7 @@ figure_rebase_to_zero_at_stim = job.figure_rebase_to_zero_at_stim;
 use_onset_amplitudes = job.use_onset_amplitudes;
 include_flow = job.IC.include_flow; %other colors not yet supported
 show_mse = job.show_mse;
-onset_choice=job.onset_choice;
+onset_choice = job.onset_choice;
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
@@ -46,13 +46,19 @@ for SubjIdx=1:length(job.IOImat)
                             
                             %TO-DO: generalize to more than 1 onset
                             %type
-                            do_f_test = 1;
-                            if do_f_test
-                                onset_choice_det= [0 1];
-                                onset_choice_stim = [0 2];
+                            %******by Cong on 12/1/2/19                                                       
+                            if isfield(job.do_F_test,'F_test_enabled')
+                                model_choice = job.do_F_test.F_test_enabled.model_choice;
+                                onset_choice = 0;
+%                                 if model_choice                                
+%                                 onset_choice = [0 1]; %************reduced model is the detection
+%                                 else                            
+%                                 onset_choice = [0 2];   %**************reduced model is the stim
+%                                 end
                             end
-                           
-                        
+                            
+                             
+                       
                             switch onset_choice
                                 case 0 %**onsets from stim and spontaneous activity
                                     %onsets from detection
@@ -61,19 +67,19 @@ for SubjIdx=1:length(job.IOImat)
                                     dur{ot} = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
                                     name{ot} = IOI.sess_res{s1}.names{ot};
                                     if use_onset_amplitudes
-                                        amp{ot} = IOI.sess_res{s1}.parameters{ot};
+                                        amp{ot} = IOI.sess_res{s1}.parameters{ot}';
                                     else
                                         amp{ot} = [];
                                     end
                                     
-                                    %*******************by cong on 12/11/05
+                                  
                                     %onsets from stimulation.
                                     ot = 2;
                                     ons{ot} = IOI.sess_res{s1}.onsets{ot}; %already in seconds *IOI.dev.TR;
                                     dur{ot} = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
                                     name{ot} = IOI.sess_res{s1}.names{ot};
                                     if use_onset_amplitudes
-                                        amp{ot} = IOI.sess_res{s1}.parameters{ot};
+                                        amp{ot} = IOI.sess_res{s1}.parameters{ot}';
                                     else
                                         amp{ot} = [];
                                     end
@@ -83,7 +89,7 @@ for SubjIdx=1:length(job.IOImat)
                                     dur = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
                                     name = IOI.sess_res{s1}.names{ot};
                                     if use_onset_amplitudes
-                                        amp = IOI.sess_res{s1}.parameters{ot};
+                                        amp = IOI.sess_res{s1}.parameters{ot}';
                                     else
                                         amp = [];
                                     end                                    
@@ -93,11 +99,12 @@ for SubjIdx=1:length(job.IOImat)
                                     dur = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
                                     name = IOI.sess_res{s1}.names{ot};
                                     if use_onset_amplitudes
-                                        amp = IOI.sess_res{s1}.parameters{ot};
+                                        amp = IOI.sess_res{s1}.parameters{ot}';
                                     else
                                         amp = [];
                                     end
                             end
+                            
                             %***************end
                             %convolve with hemodynamic response function
                             [Xtmp U] = ioi_get_X(IOI,name,ons,dur,amp,s1,bases,volt);
@@ -121,11 +128,14 @@ for SubjIdx=1:length(job.IOImat)
                                     if HPF.hpf_butter_On
                                         X = ButterHPF(1/IOI.dev.TR,HPF.hpf_butter_freq,HPF.hpf_butter_order,X);
                                     end
-                                    do_f_test=1;
-                                    if do_f_test
+                                    
+                                    if isfield(job.do_F_test,'F_test_enabled')                                    
                                         X = [X ones(size(X,1),1)];
-                                        X_stim = [X(2) ones(size(X(1),1),1)];
-                                        X_spikes = [X(1) ones(size(X(1),1),1)];
+                                        if model_choice                                        
+                                            X_spikes = [X(1) ones(size(X(1),1),1)];
+                                        else
+                                            X_stim = [X(2) ones(size(X(2),1),1)];
+                                        end                                      
                                     else                                    
                                     %add a constant
                                     X = [X ones(size(X,1),1)];
@@ -150,17 +160,60 @@ for SubjIdx=1:length(job.IOImat)
                                     bcov = bcov * bcov';
                                     %approximate calculation of effective degrees of freedom
                                     [trRV trRVRV] = approx_trRV(KX.X,Xm,K.KL);
-                                    if ~iscell(Xtmp)
-                                        cX = c1;
-                                    else
-                                        cX = 1;
-                                    end
+%                                     if ~iscell(Xtmp)
+%                                         cX = c1;
+%                                     else
+%                                         cX = 1;
+%                                     end
+                                    cX = c1;
                                     IOI.X{s1}.X{cX} = X;
                                     IOI.X{s1}.Xm{cX} = Xm;
                                     IOI.X{s1}.bcov{cX} = bcov;
                                     IOI.X{s1}.trRV{cX} = trRV;
                                     IOI.X{s1}.trRVRV{cX} = trRVRV;
                                     IOI.X{s1}.erdf{cX} = (trRV)^2/trRVRV;
+                                    %************by Cong 
+                                    if isfield(job.do_F_test,'F_test_enabled')
+                                        if model_choice                                        
+                                            X_spikes = [X(:,1) ones(size(X(:,1),1),1)];
+                                            F = X_spikes;
+                                        else
+                                            X_stim = [X(:,2) ones(size(X(:,2),1),1)];
+                                            F = X_stim;
+                                        end  
+                                     K = get_K(1:size(F,1),LPF.fwhm1,IOI.dev.TR);
+                                    %filter X - LPF
+                                    %calculate X inverse
+                                    %Xm = pinv(X);
+                                    %Xu = X(:,1);
+                                    %filter forward
+                                    F1 = ioi_filter_HPF_LPF_WMDL(K,F);
+                                    %filter backward
+%                                     X1 = X1(end:-1:1,:);
+%                                     X1 = ioi_filter_HPF_LPF_WMDL(K,X1);
+%                                     X1 = X1(end:-1:1,:);
+                                    KF = spm_sp('Set', F1);
+                                    KF.F = full(KF.X); %Filtered X
+                                    Fm = spm_sp('x-',KF); % projector
+                                    %covariance
+                                    bcov = Fm * K.KL;
+                                    bcov = bcov * bcov';
+                                    %approximate calculation of effective degrees of freedom
+                                    [trRV trRVRV] = approx_trRV(KF.F,Fm,K.KL);
+%                                     if ~iscell(Xtmp)
+%                                         cX = c1;
+%                                     else
+%                                         cX = 1;
+%                                     end
+                                    cX = c1;
+                                    IOI.F{s1}.F{cX} = F;
+                                    IOI.F{s1}.Fm{cX} = Fm;
+                                    IOI.F{s1}.bcov{cX} = bcov;
+                                    IOI.F{s1}.trRV{cX} = trRV;
+                                    IOI.F{s1}.trRVRV{cX} = trRVRV;
+                                    IOI.F{s1}.erdf{cX} = (trRV)^2/trRVRV;
+                                    end
+                                    %****************end
                                     %load ROI
                                     if ~isempty(job.ROImat)
                                         load(job.ROImat{SubjIdx});
@@ -190,7 +243,7 @@ for SubjIdx=1:length(job.IOImat)
 %                                                 y = ioi_filter_HPF_LPF_WMDL(K,y')';
 %                                                 y = y(end:-1:1);
                                                 %GLM inversion: calculating beta and residuals - would be SPM.Vbeta,
-                                                b = Xm * y'; % beta : least square estimate
+                                                b = Xm * y'; % beta : least square estimate                                           
                                                 %Compute t stat
                                                 res = y'-X*b;
                                                 res2 = sum(res.^2);
@@ -198,6 +251,24 @@ for SubjIdx=1:length(job.IOImat)
                                                 IOI.X{s1}.r(r1,c1) = res2; % Residuals
                                                 IOI.X{s1}.mse(r1,c1) = res2/length(y);
                                                 IOI.X{s1}.t(r1,c1) = b(1)/(res2*bcov(1,1)/trRV)^0.5;
+                                                %%%%%%%%%%%%%%%du f-test by
+                                                %%%%%%%%%%%%%%%cong on
+                                                %%%%%%%%%%%%%%%12/12/19
+                                                if isfield(job.do_F_test,'F_test_enabled')
+                                                b_re = Fm * y';
+                                                res_re = y'- F*b_re;
+                                                res_re2 = sum(res_re.^2);
+                                                IOI.F{s1}.b_re{r1,c1} = b_re;
+                                                IOI.F{s1}.r_re(r1,c1) = res_re2; % Residuals
+%                                                 IOI.F{s1}.mse_re(r1,c1) = res_re2/length(y);                                               
+                                                degree_X = length(y)-size(X,2);
+                                                F_value_numerator = (res_re2 - res2)/(size(X,2)-size(F,2));
+                                                F_value_denominator = res2/degree_X;
+                                                F_value = F_value_numerator/F_value_denominator;
+                                                IOI.F{s1}.f(r1,c1) = F_value;
+                                                
+                                                end
+                                                %****************end
                                                 if volt==2
                                                     IOI.X{s1}.t2(r1,c1) = b(2)/(res2*bcov(2,2)/trRV)^0.5;
                                                 end
@@ -295,6 +366,9 @@ for SubjIdx=1:length(job.IOImat)
                                                             end
 
                                                             t = IOI.X{s1}.t(r1,c1);
+                                                            if isfield(job.do_F_test,'F_test_enabled')
+                                                            f = IOI.F{s1}.f(r1,c1);
+                                                            end
                                                             if volt==2, t2 = IOI.X{s1}.t2(r1,c1); end
                                                             %***********************
                                                             %plot(lp,yf,[lp1{1} lp2{c1}]); hold on
@@ -313,7 +387,11 @@ for SubjIdx=1:length(job.IOImat)
                                                             end
 
                                                             if volt == 1
+                                                                if isfield(job.do_F_test,'F_test_enabled')
+                                                                legstr = [legstr; [lp3{c1} 'p(' sprintf('%2.1f',t) mse_str ',' sprintf('%2.1f',f) ')']];
+                                                                else
                                                                 legstr = [legstr; [lp3{c1} 'p(' sprintf('%2.1f',t) mse_str ')']];
+                                                                end
                                                             else
                                                                 legstr = [legstr; [lp3{c1} 'p(' sprintf('%2.1f',t) ',' sprintf('%2.1f',t2) mse_str ')']];
                                                             end

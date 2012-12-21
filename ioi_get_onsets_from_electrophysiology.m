@@ -73,7 +73,8 @@ try
         el = ButterLPF(sf,cutoff,order,el);
         el = el(end:-1:1);
         if E.write_pictures
-            h = figure; plot(lp,sgn*el0(1:ds:end),'k'); hold on; plot(lp,sgn*el(1:ds:end),'r'); hold off
+            h = figure; plot(lp,sgn*el0(1:ds:end),'k'); hold on;
+            plot(lp,sgn*el(1:ds:end),'r'); hold off
             xlabel('time (s)')
             ylabel('LFP (a.u.)')
             title('Detected onsets')
@@ -97,7 +98,11 @@ try
     end
     %[pkh2 pk2] = findpeaks(-el,'MINPEAKHEIGHT',MN+nSD*max(SD0,mbSD),'MINPEAKDISTANCE',rs);
     if E.write_pictures
-        h = figure; plot(lp,sgn*el(1:ds:end),'k'); hold on; stem(pk/sf,sgn*(MN+nSD*eSD)*ones(1,length(pk)),'r');
+        %****************by Cong on 2012/12/13
+        h = figure; plot(lp,sgn*el0(1:ds:end),'k'); hold on; 
+        stem(pk/sf,sgn*(MN+nSD*eSD)*ones(1,length(pk)),'r');
+        %*****end
+%         h = figure; plot(lp,sgn*el(1:ds:end),'k'); hold on; stem(pk/sf,sgn*(MN+nSD*eSD)*ones(1,length(pk)),'r');
         xlabel('time (s)')
         ylabel('LFP (a.u.)')
         title('Detected onsets')
@@ -112,7 +117,11 @@ try
     pk = npk/sf;
     pkh = npkh;
     if E.write_pictures
-        h = figure; plot(lp,sgn*el(1:ds:end),'k'); hold on; stem(pk,sgn*(MN+nSD*eSD)*ones(1,length(pk)),'r');
+        %****************by Cong on 2012/12/13
+        h = figure; plot(lp,sgn*el0(1:ds:end),'k'); hold on; 
+        stem(pk,sgn*(MN+nSD*eSD)*ones(1,length(pk)),'r');
+        %****************end
+%         h = figure; plot(lp,sgn*el(1:ds:end),'k'); hold on; stem(pk,sgn*(MN+nSD*eSD)*ones(1,length(pk)),'r');
         xlabel('time (s)')
         ylabel('LFP (a.u.)')
         title('Detected onsets')
