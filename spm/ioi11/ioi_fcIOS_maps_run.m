@@ -133,7 +133,7 @@ imagesOverlay{2,1}  = positiveMap;          % Pos. correlation
 % imagesOverlay{3,1}  = negativeMap;          % Neg. correlation
 
 % Handle of current figure;
-h = figure;
+h = figure(999);
 set(h,'color','k')
 
 % Get range

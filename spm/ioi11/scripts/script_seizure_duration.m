@@ -1,8 +1,9 @@
-%% script_peak_threshold
+%% script_seizure_duration
 load('E:\Edgar\Data\IOS_Results\corr_Results_seizures\group_corr_pair_seeds.mat')
 load('E:\Edgar\Data\IOS_Results\corr_Results_seizures\group_corr_pair_seeds_diff.mat')
 
-%% Preallocate and gather data for the sessions after the 4AP injection
+%% Average seizure duration 
+% Preallocate and gather data for the sessions after the 4AP injection
 seizureDuration = num2cell(nan(max(groupCorrIdx{1,5}(:,3)), 5));
 % seizureDuration{iSubject, iSession}
 seizureDuration{1, 4} = mean([203-158; 375-332; 660-627; 838-806]);
@@ -32,10 +33,51 @@ seizureDuration{9-4, 4} = mean([432-271]);
 % seizureDuration{10-1, 3} = NaN;
 % seizureDuration{10-1, 4} = NaN;
 
+%% Seizure percentage
+sessionTotalDuration = 863;
+
+% seizurePercent{iSubject, iSession}
+
+seizurePercent{1, 4} = 100*([203-158; 375-332; 660-627; 838-806])/sessionTotalDuration;
+seizurePercent{1, 5} = 100*([244-209; 433-401; 729-702])/sessionTotalDuration;
+
+% Only 1 4AP session
+seizurePercent{3-1, 3} = 100*([81-54; 332-299; 852-818])/sessionTotalDuration;
+
+seizurePercent{4-1, 3} = 100*([334-220])/sessionTotalDuration;
+seizurePercent{4-1, 4} = 100*([392-321; 812-700])/sessionTotalDuration;
+
+seizurePercent{7-3, 3} = 100*([200-162; 384-354; 748-718])/sessionTotalDuration;
+seizurePercent{7-3, 4} = 100*([382-349; 566-534])/sessionTotalDuration;
+
+seizurePercent{9-4, 3} = 100*([459-329])/sessionTotalDuration;
+seizurePercent{9-4, 4} = 100*([432-271])/sessionTotalDuration;
+
+%% Average number of seizures and duration
+% nSeizureAvg{iSubject, iSession}
+
+nSeizureAvg{1, 4} = mean([numel([203-158; 375-332; 660-627; 838-806]) numel([244-209; 433-401; 729-702])]);
+% nSeizureAvg{1, 5} = mean(numel([244-209; 433-401; 729-702]));
+
+% Only 1 4AP session
+nSeizureAvg{3-1, 3} = mean(numel([81-54; 332-299; 852-818]));
+
+nSeizureAvg{4-1, 3} = mean([numel([334-220]) numel([392-321; 812-700])]);
+% nSeizureAvg{4-1, 4} = mean(numel([392-321; 812-700]));
+
+nSeizureAvg{7-3, 3} = mean([numel([200-162; 384-354; 748-718]) numel([382-349; 566-534])]);
+% nSeizureAvg{7-3, 4} = mean(numel([382-349; 566-534]));
+
+nSeizureAvg{9-4, 3} = mean([numel([459-329]) numel([432-271])]);
+% nSeizureAvg{9-4, 4} = mean(numel([432-271]));
+
 
 %% Only subjects where seizures where observed
 seizureDurationTrans = seizureDuration';
 seizDurationVector = cell2mat(seizureDurationTrans(~isnan(cell2mat(seizureDurationTrans))));
+
+% Time percent of the session, marked as seizure
+seizurePercentVector = 100*seizDurationVector/sessionTotalDuration;
 
 %% Get correlation values
 groupCorrDataSubtr = cell(size(groupCorrData));
@@ -128,7 +170,7 @@ for r1=1:6,
             lineType = 'b-.';
         else
             plotType = 'k^';
-            lineType = 'k:';
+            lineType = 'k--';
         end
         subplot(2,3,r1)
         x = seizDurationVector(~isnan(groupCorrDataSubtrAvg{r1,c1}));
@@ -138,22 +180,22 @@ for r1=1:6,
         % Measure of correlation r^2
         R{r1,c1} = corr(x,y).^2;
         if c1 == 5 
-            text(40, -0.8, ['r^2(HbO)=', sprintf('%0.2f',R{r1,c1})],...
+            text(40, -0.8, ['r^2(HbO_2)=', sprintf('%0.2f',R{r1,c1})],...
                 'FontSize', textFont, 'Color', 'r')
         elseif c1 == 6
             text(40, -1.25, ['r^2(HbR)=', sprintf('%0.2f',R{r1,c1})],...
                 'FontSize', textFont, 'Color', 'b')
         else
-            text(40, -1.70, ['r^2(F)=', sprintf('%0.2f',R{r1,c1})],...
+            text(40, -1.70, ['r^2(CBF)=', sprintf('%0.2f',R{r1,c1})],...
                 'FontSize', textFont, 'Color', 'k')
         end
         hold on
         f{r1,c1} = polyval(p{r1,c1},x);
         xinterp = linspace(x(1), x(end), nPoints);
-        finterp{r1,c1} = interp1q(x,f{r1,c1},xinterp);
+%         finterp{r1,c1} = interp1q(x,f{r1,c1},xinterp);
 %         finterp{r1,c1} = interpft(f{r1,c1},nPoints);
-%         plot(x, f{r1,c1}, lineType, 'LineWidth', dottedLineWidth)
-        plot(xinterp, finterp{r1,c1}, lineType, 'LineWidth', dottedLineWidth)
+        plot(x, f{r1,c1}, lineType, 'LineWidth', dottedLineWidth)
+%         plot(xinterp, finterp{r1,c1}, lineType, 'LineWidth', dottedLineWidth)
         title(plotTitles{r1}, 'FontSize', axisLabelFont);
         set(gca,'FontSize',axisFont);
         ylim(yLimits)
@@ -185,6 +227,111 @@ save (fullfile('E:\Edgar\Data\IOS_Results\corr_Results_seizures','seizDur.mat'),
     'seizureDuration', 'seizDurationVector','groupCorrData', 'groupCorrDataSubtr',...
     'groupCorrDataSubtrAvg', 'R', 'p', 'f')
 
+
+%% %% Plot results change in correlation vs, seizures duration %
+% Load saved data
+load('E:\Edgar\Data\IOS_Results\corr_Results_seizures\seizDur.mat');
+plotTitles = {{'F'}; {'M'}; {'C'}; {'S'}; {'R'}; {'V'}};
+% Font sizes
+axisFont = 22;
+textFont = 20;
+axisLabelFont = 30;
+dottedLineWidth = 3;
+markSize = 14;
+
+% Preallocate cells
+p = cell(size(groupCorrData));
+R = cell(size(groupCorrData));
+f = cell(size(groupCorrData));
+finterp = cell(size(groupCorrData));
+yLimits = [-2.2 2];
+xLimits = [0.8*min(seizurePercentVector) 1.05*max(seizurePercentVector)];
+% # points to interpolate fitted line
+nPoints = 100;
+
+h = figure; set (gcf,'color','w')
+for r1=1:6,
+    for c1=5:7,
+        if c1 == 5 
+            plotType = 'ro';
+            lineType = 'r-';
+        elseif c1 == 6
+            plotType = 'bx';
+            lineType = 'b-.';
+        else
+            plotType = 'k^';
+            lineType = 'k--';
+        end
+        subplot(2,3,r1)
+        x = seizurePercentVector(~isnan(groupCorrDataSubtrAvg{r1,c1}));
+        y = groupCorrDataSubtrAvg{r1,c1}(~isnan(groupCorrDataSubtrAvg{r1,c1}));
+        plot(x, y, plotType, 'LineWidth', dottedLineWidth, 'MarkerSize', markSize)
+        p{r1,c1} = polyfit(x,y,1);
+        % Measure of correlation r^2
+        R{r1,c1} = corr(x,y).^2;
+        if c1 == 5 
+            text(5, -0.8, ['r^2(HbO_2)=', sprintf('%0.2f',R{r1,c1})],...
+                'FontSize', textFont, 'Color', 'r')
+        elseif c1 == 6
+            text(5, -1.25, ['r^2(HbR)=', sprintf('%0.2f',R{r1,c1})],...
+                'FontSize', textFont, 'Color', 'b')
+        else
+            text(5, -1.70, ['r^2(CBF)=', sprintf('%0.2f',R{r1,c1})],...
+                'FontSize', textFont, 'Color', 'k')
+        end
+        hold on
+        f{r1,c1} = polyval(p{r1,c1},x);
+        xinterp = linspace(x(1), x(end), nPoints);
+        finterp{r1,c1} = linspace(f{r1,c1}(1), f{r1,c1}(end), nPoints);
+%         finterp{r1,c1} = interp1q(x,f{r1,c1},xinterp);
+%         finterp{r1,c1} = interpft(f{r1,c1},nPoints);
+%         plot(x, f{r1,c1}, lineType, 'LineWidth', dottedLineWidth)
+        plot(xinterp, finterp{r1,c1}, lineType, 'LineWidth', dottedLineWidth)
+        % title(plotTitles{r1}, 'FontSize', axisLabelFont);
+        set(gca,'FontSize',axisFont);
+        ylim(yLimits)
+        xlim(xLimits)
+        if r1 == 1
+            ylabel('z_{4AP}(r) - z_0(r)','FontSize',axisLabelFont);
+        end
+        if r1 == 1 || r1 == 2 || r1 == 3
+            set(gca, 'XTick', []);
+        end
+        if r1 == 2 || r1 == 3 || r1 == 5 || r1 == 6
+            set(gca, 'YTick', []);
+        end
+        if r1 == 5
+            xlabel('Seizure duration [%]','FontSize',axisLabelFont);
+        end
+    end
+    if r1 == 6
+        legend({'HbO_2';'HbO_2 fit';'HbR';'HbR fit';'CBF'; 'CBF fit'})
+    end
+end
+
+job.figSize = [20 10];
+job.figRes = 1200;
+
+% Specify window units
+set(h, 'units', 'inches')
+% Change figure and paper size
+set(h, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
+set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
+
+%% Print graphics
+
+% addpath(genpath('D:\Edgar\ssoct\Matlab'))
+% export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','z_vs_seizurePerc'),'-png',gcf)
+
+clc
+% Save as PNG at the user-defined resolution
+print(h, '-dpng', ...
+    fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs', 'z_vs_seizurePerc'),...
+    sprintf('-r%d',job.figRes));
+% Return the property to its default
+set(h, 'units', 'pixels')
+disp('Printing done!')
+
 %% Plot resting state somatosensory seeds time traces.
 % Font sizes
 axisFont = 18;
@@ -196,7 +343,6 @@ xLimits = [200 500];
 load('E:\Edgar\Data\IOS_Results\12_08_21,EG01\FiltNDownButter4ff\GLMfcIOS\ROIregress.mat')
 r1 = 3;
 s1 = 5;
-
 
 figure; set(gcf,'color','w')
 hold on
@@ -223,3 +369,4 @@ ylabel('\DeltaHb [mM]','FontSize',axisLabelFont);
 addpath(genpath('D:\Edgar\ssoct\Matlab'))
 export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','resting_state_somato'),'-png',gcf)
 
+% EOF

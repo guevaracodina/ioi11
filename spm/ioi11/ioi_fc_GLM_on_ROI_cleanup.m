@@ -13,7 +13,7 @@ function cleanupOK = ioi_fc_GLM_on_ROI_cleanup(IOI)
 %_______________________________________________________________________________
 
 try
-    tic
+    eTime = tic;
     cleanupOK = false;
     % Cell with names of files to be deleted
     files2Delete = {    
@@ -75,7 +75,7 @@ try
     % Clean up succesful
     cleanupOK = true;
     fprintf('Cleanup GLM files for %s done! Elapsed time: %s\n',...
-        IOI.subj_name, datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS'));
+        IOI.subj_name, datestr(datenum(0,0,0,0,0,toc(eTime)),'HH:MM:SS'));
 catch exception
     cleanupOK = false;
     disp(exception.identifier)

@@ -177,13 +177,17 @@ for SubjIdx=1:length(job.IOImat)
                                         end
                                         if colorOK
                                             filtNdownROI{r1}{s1,c1} = ROIsignal;
-                                            filtNdownBrain{1}{s1,c1} = brainSignal;
+                                            if job.wholeImage
+                                                filtNdownBrain{1}{s1,c1} = brainSignal;
+                                            end
                                         end
                                     end
                                 end % ROI loop
                                 if colorOK
                                     filtNdownROI{r1}{s1,c1} = ROIsignal;
-                                    filtNdownBrain{1}{s1,c1} = brainSignal;
+                                    if job.wholeImage
+                                        filtNdownBrain{1}{s1,c1} = brainSignal;
+                                    end
                                     fprintf('Filtering and downsampling ROIs/seeds for session %d and color %d (%s) completed\n',s1,c1,colorNames{1+c1})
                                 end
                             end
@@ -197,7 +201,11 @@ for SubjIdx=1:length(job.IOImat)
             IOI.fcIOS.filtNdown(1).filtNdownOK = true;
             % Save filtered & downsampled data
             filtNdownfname = fullfile(dir_ioimat,'filtNdown.mat');
-            save(filtNdownfname,'filtNdownROI','filtNdownBrain');
+            if job.wholeImage
+                save(filtNdownfname,'filtNdownROI','filtNdownBrain');
+            else
+                save(filtNdownfname,'filtNdownROI');
+            end
             % Update .mat file name in IOI structure
             IOI.fcIOS.filtNdown.fname = filtNdownfname;
             % Desired downsampling frequency, it could be different to real
