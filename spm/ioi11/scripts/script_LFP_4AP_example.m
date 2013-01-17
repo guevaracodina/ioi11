@@ -1,8 +1,10 @@
 %% Load data
 clear all
 load('E:\Edgar\Data\IOS_Results\12_08_24,EG04\Onsets\IOI.mat')
-load(IOI.res.el2{3})
-load(IOI.res.elinfo{3})
+% third session (post 4-AP)
+s1 = 3;
+load(IOI.res.el2{s1})
+load(IOI.res.elinfo{s1})
 
 %% Filter data
 % The signal was filtered between 10-5000 Hz, amplified 1000× with a
@@ -33,14 +35,14 @@ axisLabelFont = 16;
 dottedLineWidth = 2;
 
 % Plot results
-figure; set(gcf,'color','w')
+h = figure; set(gcf,'color','w')
 % A, An example of LFP recording demonstrates several ictal discharges following
 % a single 4-AP injection. The arrow highlights the 4-AP injection time.
 subplot(311)
 plot(t,el2,'k-'); hold on
 axis tight; box off; set(gca,'FontSize',axisFont)
 yAxisLim = get(gca,'yLim');
-ylabel('LFP [mV]','FontSize',axisLabelFont)
+% ylabel('LFP [mV]','FontSize',axisLabelFont)
 % Plot ictal discharge limits
 plot([ictalDischargeLimits(1) ictalDischargeLimits(1)],...
     [yAxisLim(1) yAxisLim(2)],'r--','LineWidth',dottedLineWidth);
@@ -72,21 +74,39 @@ plot(t,el2,'k-'); hold on
 xlim(onsetLimits); ylim(yAxisLim); box off; set(gca,'FontSize',axisFont)
 set(gca,'xTick',onsetLimits)
 xlabel('Onset','FontSize',axisLabelFont)
-ylabel('LFP [mV]','FontSize',axisLabelFont)
+% ylabel('LFP [mV]','FontSize',axisLabelFont)
 
 subplot(338)
 plot(t,el2,'k-'); hold on
 xlim(ictusLimits); ylim(yAxisLim); box off; set(gca,'FontSize',axisFont)
 set(gca,'xTick',ictusLimits)
+set(gca,'yTick',[])
 xlabel({'Ictus'; 'time [s]'}, 'FontSize', axisLabelFont)
 
 subplot(339)
 plot(t,el2,'k-'); hold on
 xlim(offsetLimits); ylim(yAxisLim); box off; set(gca,'FontSize',axisFont)
 set(gca,'xTick',offsetLimits)
+set(gca,'yTick',[])
 xlabel('Offset','FontSize',axisLabelFont)
+
+%% Set windows real size
+job.figSize = [6 2.5];
+job.figRes = 300;
+% Specify window units
+set(h, 'units', 'inches')
+% Change figure and paper size
+set(h, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
+set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
+
+% Save as PNG at the user-defined resolution
+print(h, '-dpng', ...
+    fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','LFP_4AP'),...
+    sprintf('-r%d',job.figRes));
+% Return the property to its default
+set(h, 'units', 'pixels')
 
 %%
 addpath(genpath('D:\Edgar\ssoct\Matlab'))
-export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','LFP_4AP'),'-png',gcf)
+export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','LFP_4AP'),'-png',h)
 % EOF

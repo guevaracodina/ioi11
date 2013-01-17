@@ -334,36 +334,66 @@ disp('Printing done!')
 
 %% Plot resting state somatosensory seeds time traces.
 % Font sizes
-axisFont = 18;
-axisLabelFont = 20;
+axisFont = 14;
+axisLabelFont = 16;
 dottedLineWidth = 2;
 markSize = 12;
-xLimits = [200 500];
+% xLimits = [200 500];
+% Time window for onset/ictus/offset
+tWin = 4;
+ictalDischargeLimits = [318-tWin 392+tWin];
+% time vector idx2plot
+idx2plot = (ictalDischargeLimits(1):ictalDischargeLimits(2));
 
-load('E:\Edgar\Data\IOS_Results\12_08_21,EG01\FiltNDownButter4ff\GLMfcIOS\ROIregress.mat')
-r1 = 3;
-s1 = 5;
+% load('E:\Edgar\Data\IOS_Results\12_08_21,EG01\FiltNDownButter4ff\GLMfcIOS\ROIregress.mat')
+% r1 = 3;
+% s1 = 5;
 
-figure; set(gcf,'color','w')
+load('E:\Edgar\Data\IOS_Results\12_08_24,EG04\FiltNDown\GLMfcIOS\ROIregress.mat')
+% Region 3 (Motor)
+r1 = 7;
+% Session 3
+s1 = 3;
+
+h = figure; set(gcf,'color','w')
 hold on
 
 % HbO
 c1 = 5;
-plot(ROIregress{r1}{s1,c1}, 'r-', 'LineWidth', dottedLineWidth)
-plot(ROIregress{r1+1}{s1,c1}, 'r--', 'LineWidth', dottedLineWidth)
-corr(ROIregress{r1}{s1,c1}',ROIregress{r1+1}{s1,c1}')
+plot(idx2plot, ROIregress{r1}{s1,c1}(idx2plot), 'r-', 'LineWidth', dottedLineWidth)
+plot(idx2plot, ROIregress{r1+1}{s1,c1}(idx2plot), 'r--', 'LineWidth', dottedLineWidth)
+fprintf('HbO correlation = %f\n',corr(ROIregress{r1}{s1,c1}(idx2plot)',ROIregress{r1+1}{s1,c1}(idx2plot)'));
 
 % HbR
 c1 = 6;
-plot(ROIregress{r1}{s1,c1}, 'b-', 'LineWidth', dottedLineWidth)
-plot(ROIregress{r1+1}{s1,c1}, 'b--', 'LineWidth', dottedLineWidth)
-corr(ROIregress{r1}{s1,c1}',ROIregress{r1+1}{s1,c1}')
+plot(idx2plot, ROIregress{r1}{s1,c1}(idx2plot), 'b-', 'LineWidth', dottedLineWidth)
+plot(idx2plot, ROIregress{r1+1}{s1,c1}(idx2plot), 'b--', 'LineWidth', dottedLineWidth)
+fprintf('HbR correlation = %f\n',corr(ROIregress{r1}{s1,c1}(idx2plot)',ROIregress{r1+1}{s1,c1}(idx2plot)'));
 
-xlim(xLimits)
-legend({'HbO_2 Left';'HbO_2 Right';'HbR Left';'HbR Right'})
+axis tight
+% xlim(ictalDischargeLimits)
+% legend({'HbO_2 Left';'HbO_2 Right';'HbR Left';'HbR Right'})
 set(gca,'FontSize',axisFont);
+
 xlabel('time [s]','FontSize',axisLabelFont);
 ylabel('\DeltaHb [mM]','FontSize',axisLabelFont);
+
+
+%% Set windows real size
+job.figSize = [6+1 2.5];
+job.figRes = 300;
+% Specify window units
+set(h, 'units', 'inches')
+% Change figure and paper size
+set(h, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
+set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
+
+% Save as PNG at the user-defined resolution
+print(h, '-dpng', ...
+    fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','resting_state_somato_Seizure'),...
+    sprintf('-r%d',job.figRes));
+% Return the property to its default
+set(h, 'units', 'pixels')
 
 %% Print graphics
 addpath(genpath('D:\Edgar\ssoct\Matlab'))
