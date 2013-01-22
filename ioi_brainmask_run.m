@@ -55,7 +55,9 @@ for SubjIdx=1:length(job.IOImat)
             % ------------------------------------------------------------------
             
             % Display masked image on SPM graphics window
-            imagesc(im_anat .* BW_mask);
+            minVal = min(im_anat(:));
+            maxVal = max(im_anat(:));
+            imagesc(im_anat .* BW_mask, [minVal maxVal]);
             axis image
             title(['Mask for subject ' IOI.subj_name],'FontSize',13)
             
