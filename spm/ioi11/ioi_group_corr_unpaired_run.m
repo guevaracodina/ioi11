@@ -11,9 +11,9 @@ function out = ioi_group_corr_unpaired_run(job)
 % ------------------------------------------------------------------------------
 % REMOVE AFTER FINISHING THE FUNCTION //EGC
 % ------------------------------------------------------------------------------
-fprintf('Work in progress...\nEGC\n')
-out.IOImat = job.IOImat;
-return
+% fprintf('Work in progress...\nEGC\n')
+% out.IOImat = job.IOImat;
+% return
 % ------------------------------------------------------------------------------
 
 % For each subject:
@@ -38,14 +38,20 @@ return
 
 % Initialize cell to hold group data {pairs_of_seeds, nColors}
 groupCorrData = cell([size(job.paired_seeds, 1) numel(IOI.color.eng)]);
-groupCorrIdx  = cell([size(job.paired_seeds, 1) numel(IOI.color.eng)]);
+groupCorrIdx = cell([size(job.paired_seeds, 1) numel(IOI.color.eng)]);
 
+% Process data from the derivative of the seeds time course
 if isfield (job,'derivative')
     groupCorrDataDiff = cell([size(job.paired_seeds, 1) numel(IOI.color.eng)]);
 end
 
+% Process raw data from the seeds time course
 if isfield (job,'rawData')
     groupCorrDataRaw = cell([size(job.paired_seeds, 1) numel(IOI.color.eng)]);
+end
+
+if job.bonferroni
+    job.alpha = job.alpha ./ size(job.paired_seeds, 1);
 end
 
 %Big loop over subjects
@@ -66,6 +72,11 @@ for SubjIdx = 1:size(job.IOImat, 1)
                 % File name where correlation data is saved
                 IOI.fcIOS.corr(1).fnameGroup = fullfile(job.parent_results_dir{1},'group_corr_pair_seeds.mat');
                 
+                % .CSV file
+%                 csvFile = fullfile(job.parent_results_dir{1},'fcGroup.csv');
+%                 fid = fopen(csvFile, 'w');
+%                 fprintf(fid,'Name, ROIs, fc z(r), fc'' z(r), fc_raw z(r), Type(NaCl=0, CaCl2=1)\n');
+                
                 % File name where correlation data of 1st derivative is saved
                 if isfield(job,'derivative')
                     IOI.fcIOS.corr(1).fnameGroupDiff = fullfile(job.parent_results_dir{1},'group_corr_pair_seeds_diff.mat');
@@ -75,104 +86,79 @@ for SubjIdx = 1:size(job.IOImat, 1)
                     IOI.fcIOS.corr(1).fnameGroupRaw = fullfile(job.parent_results_dir{1},'group_corr_pair_seeds_raw.mat');
                 end
                 
-                % - Display resumeexp.txt in command window (to check which sessions are
-                %   control/treatment)
-                % fileread(fullfile(IOI.dir.dir_subj_raw,'resumeExp.txt'))
-                
-                if isfield(job.AutoSessionChoice, 'ManualSessions')
-                    % - choose the control sessions
-                    [ctrlSessList, sts] = cfg_getfile(Inf,'dir','Select control sessions',[], IOI.dir.dir_subj_res, 'S[0-9]+');
-                    
-                    % - choose the post-injection sessions
-                    [treatSessList, sts] = cfg_getfile(Inf,'dir','Select 4-AP sessions',[], IOI.dir.dir_subj_res, 'S[0-9]+');
-                    
-                    ctrlSessVec = [];
-                    % Get control session numbers
-                    for iSess = 1:numel(ctrlSessList)
-                        sessString = regexp(ctrlSessList{iSess},'\\S[0-9]+\\','match','once');
-                        sessString = regexp(sessString,'[0-9]+','match','once');
-                        ctrlSessVec(iSess) = str2double(sessString);
-                    end
-                    
-                    treatSessVec = [];
-                    % Get treatment session numbers
-                    for iSess = 1:numel(treatSessList)
-                        sessString = regexp(treatSessList{iSess},'\\S[0-9]+\\','match','once');
-                        sessString = regexp(sessString,'[0-9]+','match','once');
-                        treatSessVec(iSess) = str2double(sessString);
-                    end
-                elseif isfield(job.AutoSessionChoice, 'AutoSessions')
-                    % Retrieve sessions
-                    ctrlSessVec = job.AutoSessionChoice.AutoSessions.control_sessions{SubjIdx};
-                    treatSessVec = job.AutoSessionChoice.AutoSessions.treatment_sessions{SubjIdx};
-                else
-                    % Do nothing for the moment
-                end
-                
-                % Get indices for the paired sessions
-                % 1st column contains the indices to the control sessions
-                % 2nd column contains the indices to the 4-AP sessions
-                idxSess = CombVec(ctrlSessVec, treatSessVec)';
-                
+                % Check if mouse is tratment (1) or control (0)
+                isTreatment(SubjIdx,1) = ~isempty(regexp(IOI.subj_name, [job.treatmentString '[0-9]+'], 'once'));
+
+                % Treatment/control sessions is always 1
+                idxSess(1,1:2) = 1;
+         
                 % Additional 3rd column with subject index
                 idxSess(:,3) = SubjIdx;
                 
-                % Get the seed-to-seed correlation matrix
+                % Get the seed-to-seed correlation matrix (seed2seedCorrMat)
                 load(IOI.fcIOS.corr.corrMatrixFname)
                 
                 if isfield (job,'derivative')
-                    % Get the seed-to-seed correlation of 1st derivative matrix
-                    load(IOI.fcIOS.corr.corrMatrixDiffFname)
+                    if job.derivative
+                        % Get the seed-to-seed correlation of 1st derivative matrix
+                        % (seed2seedCorrMatDiff)
+                        load(IOI.fcIOS.corr.corrMatrixDiffFname)
+                    end
                 end
                 
                 if isfield(job, 'rawData')
-                    % Compute the seed-to-seed correlation of raw data
-                    [seed2seedCorrMatRaw IOI.fcIOS.corr(1).corrMatrixRawFname] = ioi_roi_corr_raw(job,SubjIdx);
-                    % Save seed-to-seed correlation data
-                    save(IOI.fcIOS.corr(1).corrMatrixRawFname, 'seed2seedCorrMatRaw')
+                    if job.rawData
+                        % Compute the seed-to-seed correlation of raw data
+                        [seed2seedCorrMatRaw IOI.fcIOS.corr(1).corrMatrixRawFname] = ioi_roi_corr_raw(job,SubjIdx);
+                        % Save seed-to-seed correlation data
+                        save(IOI.fcIOS.corr(1).corrMatrixRawFname, 'seed2seedCorrMatRaw')
+                    end
                 end
                 
                 % Initialize cell to hold paired seeds correlation data
                 pairedSeeds = cell([size(job.paired_seeds, 1) 1]);
                 for iCell = 1:size(job.paired_seeds, 1),
-                    pairedSeeds{iCell} = cell([size(ctrlSessVec,1) + size(treatSessVec, 1) numel(IOI.color.eng)]);
+                    pairedSeeds{iCell} = cell([1 numel(IOI.color.eng)]);
                     if isfield (job,'derivative')
-                        pairedSeedsDiff{iCell} = cell([size(ctrlSessVec,1) + size(treatSessVec, 1) numel(IOI.color.eng)]);
+                        pairedSeedsDiff{iCell} = cell([1 numel(IOI.color.eng)]);
                     end
                     if isfield (job,'rawData')
-                        pairedSeedsRaw{iCell} = cell([size(ctrlSessVec,1) + size(treatSessVec, 1) numel(IOI.color.eng)]);
+                        pairedSeedsRaw{iCell} = cell([1 numel(IOI.color.eng)]);
                     end
-                end
-
+                    % Get paired ROIs names
+                    pairedSeedsNames{SubjIdx,1}{iCell,1} = [IOI.ROIname{job.paired_seeds(iCell,1)} ' & ' IOI.ROIname{job.paired_seeds(iCell,2)}];
+                    subjectName{SubjIdx,1}{iCell,1} = IOI.subj_name;
+                    groupID{SubjIdx,1}{iCell,1} = isTreatment(SubjIdx,1);
+                end % paired seeds loop
+                
                 % Loop over available colors
                 for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
                     doColor = ioi_doColor(IOI,c1,IC);
                     if doColor
-                        %skip laser - only extract for flow
-                        if ~(IOI.color.eng(c1)==IOI.color.laser)
-                            % Loop over sessions
-                            for s1 = [ctrlSessVec treatSessVec],
-                                % Get current correlation matrix
-                                currCorrMat = seed2seedCorrMat{1}{s1,c1};
-                                % transform Pearson's r to Fisher's z
-                                currCorrMat = fisherz(currCorrMat);
-                                if isnan(currCorrMat)
-                                    for iROI = 1:size(job.paired_seeds, 1)
-                                        pairedSeeds{iROI}{s1,c1} = NaN;
-                                    end
-                                else
-                                    % choose only 6 values for each mouse, each color
-                                    for iROI = 1:size(job.paired_seeds, 1)
-                                        pairedSeeds{iROI}{s1,c1} = currCorrMat(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2));
-                                    end
+                        % Loop over sessions
+                        for s1 = 1,
+                            % Get current correlation matrix
+                            currCorrMat = seed2seedCorrMat{1}{s1,c1};
+                            % transform Pearson's r to Fisher's z
+                            currCorrMat = fisherz(currCorrMat);
+                            if any(any(isnan(currCorrMat))) || isempty(currCorrMat)
+                                for iROI = 1:size(job.paired_seeds, 1)
+                                    pairedSeeds{iROI}{s1,c1} = NaN;
                                 end
-                                
-                                if isfield (job,'derivative')
+                            else
+                                % choose only 6 values for each mouse, each color
+                                for iROI = 1:size(job.paired_seeds, 1)
+                                    pairedSeeds{iROI}{s1,c1} = currCorrMat(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2));
+                                end
+                            end
+                            
+                            if isfield (job,'derivative')
+                                if job.derivative
                                     % Get current correlation matrix
                                     currCorrMatDiff = seed2seedCorrMatDiff{1}{s1,c1};
                                     % transform Pearson's r to Fisher's z
                                     currCorrMatDiff = fisherz(currCorrMatDiff);
-                                    if isnan(currCorrMatDiff)
+                                    if any(any(isnan(currCorrMatDiff))) || isempty(currCorrMatDiff)
                                         for iROI = 1:size(job.paired_seeds, 1)
                                             pairedSeedsDiff{iROI}{s1,c1} = NaN;
                                         end
@@ -182,10 +168,11 @@ for SubjIdx = 1:size(job.IOImat, 1)
                                             pairedSeedsDiff{iROI}{s1,c1} = currCorrMatDiff(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2));
                                         end
                                     end
-                                    
-                                end % derivative
-                                
-                                if isfield (job,'rawData')
+                                end
+                            end % derivative
+                            
+                            if isfield (job,'rawData')
+                                if job.rawData
                                     % Get current correlation matrix
                                     currCorrMatRaw = seed2seedCorrMatRaw{1}{s1,c1};
                                     % transform Pearson's r to Fisher's z
@@ -200,52 +187,60 @@ for SubjIdx = 1:size(job.IOImat, 1)
                                             pairedSeedsRaw{iROI}{s1,c1} = currCorrMatRaw(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2));
                                         end
                                     end
-                                    
-                                end % raw time course
-                                
-                            end % sessions loop
-                        end
+                                end
+                            end % raw time course
+                            
+                        end % sessions loop
+                        
                         % Arrange the paired seeds according to idxSessions
                         fprintf('Retrieving data %s C%d (%s)...\n',IOI.subj_name, c1,colorNames{1+c1});
-                        tmpArray = zeros([size(job.paired_seeds, 1), size(idxSess)]);
+                        tmpArray = zeros([size(job.paired_seeds, 1), 1]);
                         if isfield (job,'derivative')
-                            tmpArrayDiff = zeros([size(job.paired_seeds, 1), size(idxSess)]);
+                            if job.derivative
+                                tmpArrayDiff = zeros([size(job.paired_seeds, 1), 1]);
+                            end
                         end
                         if isfield (job,'rawData')
-                            tmpArrayRaw = zeros([size(job.paired_seeds, 1), size(idxSess)]);
+                            if job.rawData
+                                tmpArrayRaw = zeros([size(job.paired_seeds, 1), 1]);
+                            end
                         end
                         for iROI = 1:size(job.paired_seeds, 1)
                             for iSess = 1:size(idxSess, 1)
                                 tmpArray(iROI,iSess,1) = pairedSeeds{iROI}{idxSess(iSess,1), c1};
-                                tmpArray(iROI,iSess,2) = pairedSeeds{iROI}{idxSess(iSess,2), c1};
                                 if isfield (job,'derivative')
-                                    tmpArrayDiff(iROI,iSess,1) = pairedSeedsDiff{iROI}{idxSess(iSess,1), c1};
-                                    tmpArrayDiff(iROI,iSess,2) = pairedSeedsDiff{iROI}{idxSess(iSess,2), c1};
+                                    if job.derivative
+                                        tmpArrayDiff(iROI,iSess,1) = pairedSeedsDiff{iROI}{idxSess(iSess,1), c1};
+                                    end
                                 end
                                 if isfield (job,'rawData')
-                                    tmpArrayRaw(iROI,iSess,1) = pairedSeedsRaw{iROI}{idxSess(iSess,1), c1};
-                                    tmpArrayRaw(iROI,iSess,2) = pairedSeedsRaw{iROI}{idxSess(iSess,2), c1};
+                                    if job.rawData
+                                        tmpArrayRaw(iROI,iSess,1) = pairedSeedsRaw{iROI}{idxSess(iSess,1), c1};
+                                    end
                                 end
                             end
                         end
                         for iROI = 1:size(job.paired_seeds, 1)
+                            % Full group data
                             groupCorrData{iROI,c1} = [groupCorrData{iROI,c1}; squeeze(tmpArray(iROI,:,:))];
-                            groupCorrIdx{iROI,c1} = [groupCorrIdx{iROI,c1}; idxSess];
+                            % Full group index
+                            groupCorrIdx{iROI,c1} = [groupCorrIdx{iROI,c1}; SubjIdx];
                             if isfield (job,'derivative')
-                                groupCorrDataDiff{iROI,c1} = [groupCorrDataDiff{iROI,c1}; squeeze(tmpArrayDiff(iROI,:,:))];
+                                if job.derivative
+                                    groupCorrDataDiff{iROI,c1} = [groupCorrDataDiff{iROI,c1}; squeeze(tmpArrayDiff(iROI,:,:))];
+                                end
                             end
                             if isfield (job,'rawData')
-                                groupCorrDataRaw{iROI,c1} = [groupCorrDataRaw{iROI,c1}; squeeze(tmpArrayRaw(iROI,:,:))];
+                                if job.rawData
+                                    groupCorrDataRaw{iROI,c1} = [groupCorrDataRaw{iROI,c1}; squeeze(tmpArrayRaw(iROI,:,:))];
+                                end
                             end
                         end
-                    % else
-                        % correlation map failed!
-                        % IOI.fcIOS.corr(1).corrGroupOK{1}{1, c1} = false;
-                        % fprintf('Paired seeds correlation analysis failed! C%d (%s)...\n',c1,colorNames{1+c1});
+                        
                     end
                 end % colors loop
                 % Save group correlation data data (data is appended for more subjects)
-                save(IOI.fcIOS.corr(1).fnameGroup,'groupCorrData','groupCorrIdx','groupCorrDataDiff','groupCorrDataRaw')
+                save(IOI.fcIOS.corr(1).fnameGroup, 'subjectName', 'groupID', 'pairedSeedsNames', 'isTreatment','groupCorrData','groupCorrIdx','groupCorrDataDiff','groupCorrDataRaw')
                 if isfield (job,'derivative')
                     save(IOI.fcIOS.corr(1).fnameGroupDiff,'groupCorrDataDiff');
                 end
@@ -258,8 +253,10 @@ for SubjIdx = 1:size(job.IOImat, 1)
         end % corrMap OK
         disp(['Elapsed time: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
         disp(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ' complete']);
+%         fclose(fid);
         out.IOImat{SubjIdx} = IOImat;
     catch exception
+%         fclose(fid);
         out.IOImat{SubjIdx} = IOImat;
         disp(exception.identifier)
         disp(exception.stack(1))
@@ -289,44 +286,127 @@ eTotalDiff      = [];
 yTotalDiff      = [];
 eTotalRaw       = [];
 yTotalRaw       = [];
+dataCell        = [];
 
 for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
     doColor = ioi_doColor(IOI,c1,IC);
     if doColor
-        colorOK = true;
-        %skip laser - only extract for flow
-        if ~(IOI.color.eng(c1)==IOI.color.laser)
-            % Perform test on ROIs time course
-            [job, IOI, e, y, eTotal, yTotal, statTest, meanCorr, stdCorr] = subfunction_group_corr_test(job, IOI, c1, groupCorrData, groupCorrIdx, statTest, meanCorr, stdCorr, eTotal, yTotal);
-            % Perform tests on the derivative of ROIs time-course
-            [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff] = subfunction_group_corr_test_diff(job, IOI, c1, groupCorrDataDiff, groupCorrIdx, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff);
-            % Perform tests on raw data of ROIs time-course
-            [job, IOI, eRaw, yRaw, eTotalRaw, yTotalRaw, statTestRaw, meanCorrRaw, stdCorrRaw] = subfunction_group_corr_test_raw(job, IOI, c1, groupCorrDataRaw, groupCorrIdx, statTestRaw, meanCorrRaw, stdCorrRaw, eTotalRaw, yTotalRaw);
-            
-            % Plot results
-            subfunction_plot_group_corr_test(job, IOI, c1, e, y, statTest);
-            % Plot results based on 1st derivative
-            subfunction_plot_group_corr_test_diff(job, IOI, c1, eDiff, yDiff, statTestDiff);
-            % Plot results based on raw data
-            subfunction_plot_group_corr_test_raw(job, IOI, c1, eRaw, yRaw, statTestRaw);
-        end
+        fileName = fullfile(job.parent_results_dir{1},['fcGroup_C'  num2str(c1) '_' colorNames{1+c1} '.csv']);
+        % Arrange all bilateral connectivity measurements in a big cell
+        dataCell = subfunction_full_group_data(c1, subjectName, pairedSeedsNames, groupCorrData, groupCorrDataDiff, groupCorrDataRaw, groupID, groupCorrIdx);
+        % Save this cell into a .csv file (one for each contrast)
+        subfunction_cell2csv(dataCell, fileName);
+        % Perform test on ROIs time course
+        [job, IOI, e, y, eTotal, yTotal, statTest, meanCorr, stdCorr] = subfunction_group_corr_test_unpaired(job, IOI, c1, groupCorrData, statTest, meanCorr, stdCorr, eTotal, yTotal, isTreatment);
+%         % Perform tests on the derivative of ROIs time-course
+%         [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff] = subfunction_group_corr_test_diff(job, IOI, c1, groupCorrDataDiff, groupCorrIdx, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff);
+%         % Perform tests on raw data of ROIs time-course
+%         [job, IOI, eRaw, yRaw, eTotalRaw, yTotalRaw, statTestRaw, meanCorrRaw, stdCorrRaw] = subfunction_group_corr_test_raw(job, IOI, c1, groupCorrDataRaw, groupCorrIdx, statTestRaw, meanCorrRaw, stdCorrRaw, eTotalRaw, yTotalRaw);
+%         % Plot results
+        subfunction_plot_group_corr_test(job, IOI, c1, e, y, statTest);
+%         % Plot results based on 1st derivative
+%         subfunction_plot_group_corr_test_diff(job, IOI, c1, eDiff, yDiff, statTestDiff);
+%         % Plot results based on raw data
+%         subfunction_plot_group_corr_test_raw(job, IOI, c1, eRaw, yRaw, statTestRaw);
     end
 end % loop over colors
 % Group comparison of bilateral correlation succesful!
 fprintf('Group comparison of bilateral correlation succesful!\n');
 end % ioi_group_corr_run
 
-function [job, IOI, e, y, eTotal, yTotal, statTest, meanCorr, stdCorr] = subfunction_group_corr_test(job, IOI, c1, groupCorrData, groupCorrIdx, statTest, meanCorr, stdCorr, eTotal, yTotal)
+function dataCell = subfunction_full_group_data(c1, subjectName, pairedSeedsNames, groupCorrData, groupCorrDataDiff, groupCorrDataRaw, groupID, groupCorrIdx)
+% Organize all correlation data in a big cell for group analysis
+% Rows = Subjects * Seed Pairs
+nRows = size(subjectName,1)*size(subjectName{1},1);
+% Columns:
+% 1.Name 2.SeedName 3.z(r) 4.z'(r) 5.z_raw(r) 6.isTreatment
+nCols = 6;
+dataCell = cell([nRows nCols]);
+iRows = 0;
+for iSubjects = 1:size(subjectName,1),
+    for iSeedPairs = 1:size(subjectName{1},1)
+        iRows = iRows + 1;
+        % Subject Name
+        if ~isempty(subjectName{groupCorrIdx{iSeedPairs, c1}(iSubjects, 1)}{iSeedPairs,1})
+            dataCell{iRows,1} = subjectName{groupCorrIdx{iSeedPairs, c1}(iSubjects, 1)}{iSeedPairs,1};
+            % Replace , for _ (not good for .csv files...)
+            dataCell{iRows,1} = regexprep(dataCell{iRows,1},',','_');
+        else
+            dataCell{iRows,1} = '';
+        end
+        % Seed pair name
+        if ~isempty(pairedSeedsNames{groupCorrIdx{iSeedPairs, c1}(iSubjects, 1)}{iSeedPairs,1})
+            dataCell{iRows,2} = pairedSeedsNames{groupCorrIdx{iSeedPairs, c1}(iSubjects, 1)}{iSeedPairs,1};
+        else
+            dataCell{iRows,2} = '';
+        end 
+        % Bilateral correlation measure
+        if ~isempty(groupCorrData{iSeedPairs,c1})
+            dataCell{iRows,3} = groupCorrData{iSeedPairs,c1}(groupCorrIdx{iSeedPairs, c1}(iSubjects, 1));
+        else
+            dataCell{iRows,3} = '';
+        end
+        % Bilateral correlation measure from 1st deerivative
+        if ~isempty(groupCorrDataDiff{iSeedPairs,c1})
+            dataCell{iRows,4} = groupCorrDataDiff{iSeedPairs,c1}(groupCorrIdx{iSeedPairs, c1}(iSubjects, 1));
+        else
+            dataCell{iRows,4} = '';
+        end
+        % Bilateral correlation measure from raw data
+        if ~isempty(groupCorrDataRaw{iSeedPairs,c1})
+            dataCell{iRows,5} = groupCorrDataRaw{iSeedPairs,c1}(groupCorrIdx{iSeedPairs, c1}(iSubjects, 1));
+        else
+            dataCell{iRows,5} = '';
+        end
+        % 1 if measure belongs to treatment group, 0 if control
+       	if ~isempty(groupID{groupCorrIdx{iSeedPairs, c1}(iSubjects, 1)}{iSeedPairs,1})
+            dataCell{iRows,6} = double(groupID{groupCorrIdx{iSeedPairs, c1}(iSubjects, 1)}{iSeedPairs,1});
+        else
+            dataCell{iRows,6} = '';
+        end
+    end
+end
+if nCols == 6,
+    % Append header
+    hdr = {'Subject Name' 'Seed Pairs' 'z(r)' 'z(r'')' 'z(r_raw)' 'NaCl=0; CaCl_2=1'};
+    dataCell = [hdr; dataCell];
+end
+end % subfunction_full_group_data
+
+function subfunction_cell2csv(dataCell, fileName)
+% Create .csv file from cell array
+fid=fopen(fileName,'wt');
+[nRows,nCols]=size(dataCell);
+
+for iRows=1:nRows
+    for iCols = 1:nCols-1
+        if ~isnumeric(dataCell{iRows, iCols})
+            fprintf(fid,'%s,',dataCell{iRows,iCols});
+        else
+            fprintf(fid,'%f,',dataCell{iRows,iCols});
+        end
+    end
+    if ~isnumeric(dataCell{iRows, end})
+        fprintf(fid,'%s\n',dataCell{iRows,end});
+    else
+        fprintf(fid,'%f\n',dataCell{iRows,end});
+    end
+end
+
+fclose(fid);
+end % subfunction_cell2csv
+
+function [job, IOI, e, y, eTotal, yTotal, statTest, meanCorr, stdCorr] = subfunction_group_corr_test_unpaired(job, IOI, c1, groupCorrData, statTest, meanCorr, stdCorr, eTotal, yTotal, isTreatment)
 % Do a separate paired t-test for each seed data
 for iSeeds = 1:size(job.paired_seeds, 1)
     % Average of control group
-    meanCorr{iSeeds,c1}(1) = nanmean(groupCorrData{iSeeds,c1}(:,1));
+    meanCorr{iSeeds,c1}(1) = nanmean(groupCorrData{iSeeds,c1}(~isTreatment));
     % Average of treatment group
-    meanCorr{iSeeds,c1}(2) = nanmean(groupCorrData{iSeeds,c1}(:,2));
+    meanCorr{iSeeds,c1}(2) = nanmean(groupCorrData{iSeeds,c1}(isTreatment));
     % Standard deviation of control group
-    stdCorr{iSeeds,c1}(1) = nanstd(groupCorrData{iSeeds,c1}(:,1));
+    stdCorr{iSeeds,c1}(1) = nanstd(groupCorrData{iSeeds,c1}(~isTreatment));
     % Standard deviation oftreatment group
-    stdCorr{iSeeds,c1}(2) = nanstd(groupCorrData{iSeeds,c1}(:,2));
+    stdCorr{iSeeds,c1}(2) = nanstd(groupCorrData{iSeeds,c1}(isTreatment));
     
     % Used to plot bar graphs with errorbars
     y(iSeeds,:) = meanCorr{iSeeds,c1};
@@ -336,18 +416,18 @@ for iSeeds = 1:size(job.paired_seeds, 1)
     if job.ttest1
         [statTest(1).t(1).H{iSeeds,c1}, statTest(1).t(1).P{iSeeds,c1}, ...
             statTest(1).t(1).CI{iSeeds,c1}, statTest(1).t(1).STATS{iSeeds,c1}] ...
-            = ttest(...
-            groupCorrData{iSeeds,c1}(:,1), groupCorrData{iSeeds,c1}(:,2),...
+            = ttest2(...
+            groupCorrData{iSeeds,c1}(~isTreatment), groupCorrData{iSeeds,c1}(isTreatment),...
             job.alpha,'both');
-        statTest(1).t(1).id = 'Paired-sample t-test';
+        statTest(1).t(1).id = 'Unpaired-sample t-test';
     end % t-test
     
     % Wilcoxon rank sum test
     if job.wilcoxon1
-        ctrlGroup = groupCorrData{iSeeds,c1}(:,1);
+        ctrlGroup = groupCorrData{iSeeds,c1}(~isTreatment);
         % ignore NaN values
         ctrlGroup = ctrlGroup(~isnan(ctrlGroup));
-        treatmentGroup = groupCorrData{iSeeds,c1}(:,2);
+        treatmentGroup = groupCorrData{iSeeds,c1}(isTreatment);
         % ignore NaN values
         treatmentGroup = treatmentGroup(~isnan(treatmentGroup));
         % Perform such test
@@ -370,52 +450,54 @@ yTotal{c1} = y;
 eTotal{c1} = e;
 
 % Save results in .mat file
-save(IOI.fcIOS.corr(1).fnameGroup,'groupCorrData','groupCorrIdx',...
+save(IOI.fcIOS.corr(1).fnameGroup,'groupCorrData', 'isTreatment',...
     'meanCorr','stdCorr','statTest','yTotal','eTotal');
 end % subfunction_group_corr_test
 
 function [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff] = subfunction_group_corr_test_diff(job, IOI, c1, groupCorrDataDiff, groupCorrIdx, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff)
 if isfield (job,'derivative')
-    for iSeeds = 1:size(job.paired_seeds, 1)
-        % Average of control group
-        meanCorrDiff{iSeeds,c1}(1) = nanmean(groupCorrDataDiff{iSeeds,c1}(:,1));
-        % Average of treatment group
-        meanCorrDiff{iSeeds,c1}(2) = nanmean(groupCorrDataDiff{iSeeds,c1}(:,2));
-        % Standard deviation of control group
-        stdCorrDiff{iSeeds,c1}(1) = nanstd(groupCorrDataDiff{iSeeds,c1}(:,1));
-        % Standard deviation oftreatment group
-        stdCorrDiff{iSeeds,c1}(2) = nanstd(groupCorrDataDiff{iSeeds,c1}(:,2));
-        
-        % Used to plot bar graphs with errorbars
-        yDiff(iSeeds,:) = meanCorrDiff{iSeeds,c1};
-        eDiff(iSeeds,:) = stdCorrDiff{iSeeds,c1};
-        
-        % Paired-sample t-test
-        if job.ttest1
-            [statTestDiff(1).t(1).H{iSeeds,c1}, statTestDiff(1).t(1).P{iSeeds,c1}, ...
-                statTestDiff(1).t(1).CI{iSeeds,c1}, statTestDiff(1).t(1).STATS{iSeeds,c1}] ...
-                = ttest(...
-                groupCorrDataDiff{iSeeds,c1}(:,1), groupCorrDataDiff{iSeeds,c1}(:,2),...
-                job.alpha,'both');
-            statTestDiff(1).t(1).id = 'Paired-sample t-test(1st derivative)';
-        end % t-test
-        
-        % Wilcoxon rank sum test
-        if job.wilcoxon1
-            ctrlGroupDiff = groupCorrDataDiff{iSeeds,c1}(:,1);
-            % ignore NaN values
-            ctrlGroupDiff = ctrlGroupDiff(~isnan(ctrlGroupDiff));
-            treatmentGroupDiff = groupCorrDataDiff{iSeeds,c1}(:,2);
-            % ignore NaN values
-            treatmentGroupDiff = treatmentGroupDiff(~isnan(treatmentGroupDiff));
-            % Perform such test
-            [statTestDiff(1).w(1).P{iSeeds,c1}, statTestDiff(1).w(1).H{iSeeds,c1},...
-                statTestDiff(1).w(1).STATS{iSeeds,c1}] = ranksum...
-                (ctrlGroupDiff, treatmentGroupDiff, 'alpha', job.alpha);
-            statTestDiff(1).w(1).id = 'Wilcoxon rank sum test(1st derivative)';
-        end % Wilcoxon test
-        
-    end % paired-seeds loop
+    if job.derivative
+        for iSeeds = 1:size(job.paired_seeds, 1)
+            % Average of control group
+            meanCorrDiff{iSeeds,c1}(1) = nanmean(groupCorrDataDiff{iSeeds,c1}(:,1));
+            % Average of treatment group
+            meanCorrDiff{iSeeds,c1}(2) = nanmean(groupCorrDataDiff{iSeeds,c1}(:,2));
+            % Standard deviation of control group
+            stdCorrDiff{iSeeds,c1}(1) = nanstd(groupCorrDataDiff{iSeeds,c1}(:,1));
+            % Standard deviation oftreatment group
+            stdCorrDiff{iSeeds,c1}(2) = nanstd(groupCorrDataDiff{iSeeds,c1}(:,2));
+            
+            % Used to plot bar graphs with errorbars
+            yDiff(iSeeds,:) = meanCorrDiff{iSeeds,c1};
+            eDiff(iSeeds,:) = stdCorrDiff{iSeeds,c1};
+            
+            % Paired-sample t-test
+            if job.ttest1
+                [statTestDiff(1).t(1).H{iSeeds,c1}, statTestDiff(1).t(1).P{iSeeds,c1}, ...
+                    statTestDiff(1).t(1).CI{iSeeds,c1}, statTestDiff(1).t(1).STATS{iSeeds,c1}] ...
+                    = ttest(...
+                    groupCorrDataDiff{iSeeds,c1}(:,1), groupCorrDataDiff{iSeeds,c1}(:,2),...
+                    job.alpha,'both');
+                statTestDiff(1).t(1).id = 'Paired-sample t-test(1st derivative)';
+            end % t-test
+            
+            % Wilcoxon rank sum test
+            if job.wilcoxon1
+                ctrlGroupDiff = groupCorrDataDiff{iSeeds,c1}(:,1);
+                % ignore NaN values
+                ctrlGroupDiff = ctrlGroupDiff(~isnan(ctrlGroupDiff));
+                treatmentGroupDiff = groupCorrDataDiff{iSeeds,c1}(:,2);
+                % ignore NaN values
+                treatmentGroupDiff = treatmentGroupDiff(~isnan(treatmentGroupDiff));
+                % Perform such test
+                [statTestDiff(1).w(1).P{iSeeds,c1}, statTestDiff(1).w(1).H{iSeeds,c1},...
+                    statTestDiff(1).w(1).STATS{iSeeds,c1}] = ranksum...
+                    (ctrlGroupDiff, treatmentGroupDiff, 'alpha', job.alpha);
+                statTestDiff(1).w(1).id = 'Wilcoxon rank sum test(1st derivative)';
+            end % Wilcoxon test
+            
+        end % paired-seeds loop
+    end
     
     % Show standard error bars instead of standard deviation
     if job.stderror
@@ -426,7 +508,7 @@ if isfield (job,'derivative')
     % Save total data for plotting later
     yTotalDiff{c1} = yDiff;
     eTotalDiff{c1} = eDiff;
-
+    
     % Save results in .mat file
     save(IOI.fcIOS.corr(1).fnameGroupDiff,'groupCorrDataDiff','groupCorrIdx',...
         'meanCorrDiff','stdCorrDiff','statTestDiff','yTotalDiff','eTotalDiff');
@@ -435,60 +517,62 @@ end % subfunction_group_corr_test_diff
 
 function [job, IOI, eRaw, yRaw, eTotalRaw, yTotalRaw, statTestRaw, meanCorrRaw, stdCorrRaw] = subfunction_group_corr_test_raw(job, IOI, c1, groupCorrDataRaw, groupCorrIdx, statTestRaw, meanCorrRaw, stdCorrRaw, eTotalRaw, yTotalRaw)
 if isfield (job,'rawData')
-    for iSeeds = 1:size(job.paired_seeds, 1)
-        % Average of control group
-        meanCorrRaw{iSeeds,c1}(1) = nanmean(groupCorrDataRaw{iSeeds,c1}(:,1));
-        % Average of treatment group
-        meanCorrRaw{iSeeds,c1}(2) = nanmean(groupCorrDataRaw{iSeeds,c1}(:,2));
-        % Standard deviation of control group
-        stdCorrRaw{iSeeds,c1}(1) = nanstd(groupCorrDataRaw{iSeeds,c1}(:,1));
-        % Standard deviation oftreatment group
-        stdCorrRaw{iSeeds,c1}(2) = nanstd(groupCorrDataRaw{iSeeds,c1}(:,2));
+    if job.rawData
+        for iSeeds = 1:size(job.paired_seeds, 1)
+            % Average of control group
+            meanCorrRaw{iSeeds,c1}(1) = nanmean(groupCorrDataRaw{iSeeds,c1}(:,1));
+            % Average of treatment group
+            meanCorrRaw{iSeeds,c1}(2) = nanmean(groupCorrDataRaw{iSeeds,c1}(:,2));
+            % Standard deviation of control group
+            stdCorrRaw{iSeeds,c1}(1) = nanstd(groupCorrDataRaw{iSeeds,c1}(:,1));
+            % Standard deviation oftreatment group
+            stdCorrRaw{iSeeds,c1}(2) = nanstd(groupCorrDataRaw{iSeeds,c1}(:,2));
+            
+            % Used to plot bar graphs with errorbars
+            yRaw(iSeeds,:) = meanCorrRaw{iSeeds,c1};
+            eRaw(iSeeds,:) = stdCorrRaw{iSeeds,c1};
+            
+            % Paired-sample t-test
+            if job.ttest1
+                [statTestRaw(1).t(1).H{iSeeds,c1}, statTestRaw(1).t(1).P{iSeeds,c1}, ...
+                    statTestRaw(1).t(1).CI{iSeeds,c1}, statTestRaw(1).t(1).STATS{iSeeds,c1}] ...
+                    = ttest(...
+                    groupCorrDataRaw{iSeeds,c1}(:,1), groupCorrDataRaw{iSeeds,c1}(:,2),...
+                    job.alpha,'both');
+                statTestRaw(1).t(1).id = 'Paired-sample t-test(raw data)';
+            end % t-test
+            
+            % Wilcoxon rank sum test
+            if job.wilcoxon1
+                ctrlGroupRaw = groupCorrDataRaw{iSeeds,c1}(:,1);
+                % ignore NaN values
+                ctrlGroupRaw = ctrlGroupRaw(~isnan(ctrlGroupRaw));
+                treatmentGroupRaw = groupCorrDataRaw{iSeeds,c1}(:,2);
+                % ignore NaN values
+                treatmentGroupRaw = treatmentGroupRaw(~isnan(treatmentGroupRaw));
+                % Perform such test
+                [statTestRaw(1).w(1).P{iSeeds,c1}, statTestRaw(1).w(1).H{iSeeds,c1},...
+                    statTestRaw(1).w(1).STATS{iSeeds,c1}] = ranksum...
+                    (ctrlGroupRaw, treatmentGroupRaw, 'alpha', job.alpha);
+                statTestRaw(1).w(1).id = 'Wilcoxon rank sum test(raw data)';
+            end % Wilcoxon test
+            
+        end % paired-seeds loop
         
-        % Used to plot bar graphs with errorbars
-        yRaw(iSeeds,:) = meanCorrRaw{iSeeds,c1};
-        eRaw(iSeeds,:) = stdCorrRaw{iSeeds,c1};
+        % Show standard error bars instead of standard deviation
+        if job.stderror
+            % std error bars: sigma/sqrt(N)
+            eRaw = eRaw / sqrt(size(groupCorrDataRaw{iSeeds,c1}, 1));
+        end
         
-        % Paired-sample t-test
-        if job.ttest1
-            [statTestRaw(1).t(1).H{iSeeds,c1}, statTestRaw(1).t(1).P{iSeeds,c1}, ...
-                statTestRaw(1).t(1).CI{iSeeds,c1}, statTestRaw(1).t(1).STATS{iSeeds,c1}] ...
-                = ttest(...
-                groupCorrDataRaw{iSeeds,c1}(:,1), groupCorrDataRaw{iSeeds,c1}(:,2),...
-                job.alpha,'both');
-            statTestRaw(1).t(1).id = 'Paired-sample t-test(raw data)';
-        end % t-test
+        % Save total data for plotting later
+        yTotalRaw{c1} = yRaw;
+        eTotalRaw{c1} = eRaw;
         
-        % Wilcoxon rank sum test
-        if job.wilcoxon1
-            ctrlGroupRaw = groupCorrDataRaw{iSeeds,c1}(:,1);
-            % ignore NaN values
-            ctrlGroupRaw = ctrlGroupRaw(~isnan(ctrlGroupRaw));
-            treatmentGroupRaw = groupCorrDataRaw{iSeeds,c1}(:,2);
-            % ignore NaN values
-            treatmentGroupRaw = treatmentGroupRaw(~isnan(treatmentGroupRaw));
-            % Perform such test
-            [statTestRaw(1).w(1).P{iSeeds,c1}, statTestRaw(1).w(1).H{iSeeds,c1},...
-                statTestRaw(1).w(1).STATS{iSeeds,c1}] = ranksum...
-                (ctrlGroupRaw, treatmentGroupRaw, 'alpha', job.alpha);
-            statTestRaw(1).w(1).id = 'Wilcoxon rank sum test(raw data)';
-        end % Wilcoxon test
-        
-    end % paired-seeds loop
-    
-    % Show standard error bars instead of standard deviation
-    if job.stderror
-        % std error bars: sigma/sqrt(N)
-        eRaw = eRaw / sqrt(size(groupCorrDataRaw{iSeeds,c1}, 1));
+        % Save results in .mat file
+        save(IOI.fcIOS.corr(1).fnameGroupRaw,'groupCorrDataRaw','groupCorrIdx',...
+            'meanCorrRaw','stdCorrRaw','statTestRaw', 'yTotalRaw', 'eTotalRaw');
     end
-    
-    % Save total data for plotting later
-    yTotalRaw{c1} = yRaw;
-    eTotalRaw{c1} = eRaw;
-    
-    % Save results in .mat file
-    save(IOI.fcIOS.corr(1).fnameGroupRaw,'groupCorrDataRaw','groupCorrIdx',...
-        'meanCorrRaw','stdCorrRaw','statTestRaw', 'yTotalRaw', 'eTotalRaw');
 end % raw data
 end % subfunction_group_corr_test_raw
 
@@ -499,17 +583,22 @@ colorNames      = fieldnames(IOI.color);
 starPosFactor   = 1.05;
 % Font Sizes
 titleFontSize   = 12;
-axisFontSize    = 20;
-labelFontSize   = 24;
-legendFontSize  = 20;
-starFontSize    = 32;
+axisFontSize    = 12;
+labelFontSize   = 14;
+legendFontSize  = 14;
+starFontSize    = 22;
+axMargin        = 0.5;
 
 if job.ttest1
     % Display a graph with ROI labels
     if job.generate_figures
-        % Display plots on SPM graphics window
-        h = spm_figure('GetWin', 'Graphics');
-        spm_figure('Clear', 'Graphics');
+        % Display plots on new figure
+        h = figure(999); set(gcf,'color','w')
+        % Specify window units
+        set(h, 'units', 'inches')
+        % Change figure and paper size
+        set(h, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
+        set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
         % Custom bar graphs with error bars (1st arg: error)
         barwitherr(e, y)
         % Display colormap according to the contrast
@@ -529,12 +618,16 @@ if job.ttest1
             otherwise
                 colormap(gray)
         end
-        title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s). T-test (*p<%.2g)',...
+        title(sprintf('C%d(%s). T-test (*p<%.2g)',...
             c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
         set(gca,'FontSize',axisFontSize)
         ylabel('Functional correlation z(r)','FontSize',labelFontSize)
         set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-        legend({'Control' '4-AP'},'FontSize',legendFontSize)
+%         legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize,'location','NorthWest')
+        set(gca, 'xLim', [axMargin size(y,1) + axMargin]);
+        if isfield(job.yLimits, 'yLimManual')
+            set(gca, 'ylim', job.yLimits.yLimManual.yLimValue)
+        end
         % Show a * when a significant difference is found.
         for iSeeds = 1:size(job.paired_seeds, 1)
             if statTest(1).t(1).H{iSeeds,c1}
@@ -552,19 +645,26 @@ if job.ttest1
             % Save as EPS
             spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1}, newName));
             % Save as PNG
-            print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), '-r300');
+            print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), sprintf('-r%d',job.figRes));
             % Save as a figure
             saveas(h, fullfile(job.parent_results_dir{1},newName), 'fig');
         end
+        % Return the property to its default
+        set(h, 'units', 'pixels')
+        close(h)
     end % end generate figures
 end
 
 if job.wilcoxon1
     % Display a graph with ROI labels
     if job.generate_figures
-        % Display plots on SPM graphics window
-        h = spm_figure('GetWin', 'Graphics');
-        spm_figure('Clear', 'Graphics');
+        % Display plots on new figure
+        h = figure; set(gcf,'color','w')
+        % Specify window units
+        set(h, 'units', 'inches')
+        % Change figure and paper size
+        set(h, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
+        set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
         % Custom bar graphs with error bars (1st arg: error)
         barwitherr(e, y)
         % Display colormap according to the contrast
@@ -584,12 +684,16 @@ if job.wilcoxon1
             otherwise
                 colormap(gray)
         end
-        title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s). Wilcoxon *(p<%.2g)',...
+        title(sprintf('C%d(%s). Wilcoxon *(p<%.2g)',...
             c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
         set(gca,'FontSize',axisFontSize)
         ylabel('Functional correlation z(r)','FontSize',labelFontSize)
         set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-        legend({'Control' '4-AP'},'FontSize',legendFontSize)
+%         legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize)
+        set(gca, 'xLim', [axMargin size(y,1) + axMargin]);
+        if isfield(job.yLimits, 'yLimManual')
+            set(gca, 'ylim', job.yLimits.yLimManual.yLimValue)
+        end
         % Show a * when a significant difference is found.
         for iSeeds = 1:size(job.paired_seeds, 1)
             if statTest(1).w(1).H{iSeeds,c1}
@@ -607,261 +711,296 @@ if job.wilcoxon1
             % Save as EPS
             spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1},newName));
             % Save as PNG
-            print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), '-r300');
+            print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), sprintf('-r%d',job.figRes));
             % Save as a figure
             saveas(h, fullfile(job.parent_results_dir{1},newName), 'fig');
         end
+        % Return the property to its default
+        set(h, 'units', 'pixels')
+        close(h)
     end % End generate figures
 end
 end % subfunction_plot_group_corr_test
 
 function subfunction_plot_group_corr_test_diff(job, IOI, c1, eDiff, yDiff, statTestDiff)
 if isfield (job,'derivative')
-    % Plots statistical analysis group results
-    colorNames = fieldnames(IOI.color);
-    % Positioning factor for the * mark, depends on max data value at the given seed
-    starPosFactor   = 1.05;
-    % Font Sizes
-    titleFontSize   = 12;
-    axisFontSize    = 20;
-    labelFontSize   = 24;
-    legendFontSize  = 20;
-    starFontSize    = 32;
-    
-    if job.ttest1
-        % Display a graph with ROI labels
-        if job.generate_figures
-            % Display plots on SPM graphics window
-            h = spm_figure('GetWin', 'Graphics');
-            spm_figure('Clear', 'Graphics');
-            % Custom bar graphs with error bars (1st arg: error)
-            barwitherr(eDiff, yDiff)
-            % Display colormap according to the contrast
-            switch(c1)
-                case 5
-                    % HbO contrast
-                    colormap([1 0 0; 1 1 1]);
-                case 6
-                    % HbR contrast
-                    colormap([0 0 1; 1 1 1]);
-                case 7
-                    % Flow contrast
-                    colormap([0.5 0.5 0.5; 1 1 1]);
-                case 8
-                    % CMRO2 contrast
-                    colormap([0 0 0; 1 1 1]);
-                otherwise
-                    colormap(gray)
-            end
-            title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Diff. T-test (*p<%.2g)',...
-                c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
-            set(gca,'FontSize',axisFontSize)
-            ylabel('Functional correlation z(r)','FontSize',labelFontSize)
-            set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-            legend({'Control' '4-AP'},'FontSize',legendFontSize)
-            % Show a * when a significant difference is found.
-            for iSeeds = 1:size(job.paired_seeds, 1)
-                if statTestDiff(1).t(1).H{iSeeds,c1}
-                    if max(yDiff(iSeeds,:))>=0
-                        yPos = starPosFactor*(max(yDiff(iSeeds,:)) + max(eDiff(iSeeds,:)));
-                    else
-                        yPos = starPosFactor*(min(yDiff(iSeeds,:)) - max(eDiff(iSeeds,:)));
-                    end
-                    xPos = iSeeds;
-                    text(xPos, yPos, '*', 'FontSize', starFontSize, 'FontWeight', 'b');
+    if job.derivative
+        % Plots statistical analysis group results
+        colorNames = fieldnames(IOI.color);
+        % Positioning factor for the * mark, depends on max data value at the given seed
+        starPosFactor   = 1.05;
+        % Font Sizes
+        titleFontSize   = 12;
+        axisFontSize    = 20;
+        labelFontSize   = 24;
+        legendFontSize  = 20;
+        starFontSize    = 32;
+        
+        if job.ttest1
+            % Display a graph with ROI labels
+            if job.generate_figures
+                % Display plots on new figure
+                h = figure; set(gcf,'color','w')
+                % Specify window units
+                set(h, 'units', 'inches')
+                % Change figure and paper size
+                set(h, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
+                set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
+                % Custom bar graphs with error bars (1st arg: error)
+                barwitherr(eDiff, yDiff)
+                % Display colormap according to the contrast
+                switch(c1)
+                    case 5
+                        % HbO contrast
+                        colormap([1 0 0; 1 1 1]);
+                    case 6
+                        % HbR contrast
+                        colormap([0 0 1; 1 1 1]);
+                    case 7
+                        % Flow contrast
+                        colormap([0.5 0.5 0.5; 1 1 1]);
+                    case 8
+                        % CMRO2 contrast
+                        colormap([0 0 0; 1 1 1]);
+                    otherwise
+                        colormap(gray)
                 end
-            end
-            if job.save_figures
-                newName = sprintf('groupCorr_Ttest_C%d_(%s)_diff',c1,colorNames{1+c1});
-                % Save as EPS
-                spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1}, newName));
-                % Save as PNG
-                print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), '-r300');
-                % Save as a figure
-                saveas(h, fullfile(job.parent_results_dir{1},newName), 'fig');
-            end
-        end % end generate figures
+                title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Diff. T-test (*p<%.2g)',...
+                    c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
+                set(gca,'FontSize',axisFontSize)
+                ylabel('Functional correlation z(r)','FontSize',labelFontSize)
+                set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
+                legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize)
+                % Show a * when a significant difference is found.
+                for iSeeds = 1:size(job.paired_seeds, 1)
+                    if statTestDiff(1).t(1).H{iSeeds,c1}
+                        if max(yDiff(iSeeds,:))>=0
+                            yPos = starPosFactor*(max(yDiff(iSeeds,:)) + max(eDiff(iSeeds,:)));
+                        else
+                            yPos = starPosFactor*(min(yDiff(iSeeds,:)) - max(eDiff(iSeeds,:)));
+                        end
+                        xPos = iSeeds;
+                        text(xPos, yPos, '*', 'FontSize', starFontSize, 'FontWeight', 'b');
+                    end
+                end
+                if job.save_figures
+                    newName = sprintf('groupCorr_Ttest_C%d_(%s)_diff',c1,colorNames{1+c1});
+                    % Save as EPS
+                    spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1}, newName));
+                    % Save as PNG
+                    print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), sprintf('-r%d',job.figRes));
+                    % Save as a figure
+                    saveas(h, fullfile(job.parent_results_dir{1},newName), 'fig');
+                end
+                % Return the property to its default
+                set(h, 'units', 'pixels')
+                close(h)
+            end % end generate figures
+        end
+        
+        if job.wilcoxon1
+            % Display a graph with ROI labels
+            if job.generate_figures
+                % Display plots on new figure
+                h = figure; set(gcf,'color','w')
+                % Specify window units
+                set(h, 'units', 'inches')
+                % Change figure and paper size
+                set(h, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
+                set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
+                % Custom bar graphs with error bars (1st arg: error)
+                barwitherr(eDiff, yDiff)
+                % Display colormap according to the contrast
+                switch(c1)
+                    case 5
+                        % HbO contrast
+                        colormap([1 0 0; 1 1 1]);
+                    case 6
+                        % HbR contrast
+                        colormap([0 0 1; 1 1 1]);
+                    case 7
+                        % Flow contrast
+                        colormap([0.5 0.5 0.5; 1 1 1]);
+                    case 8
+                        % CMRO2 contrast
+                        colormap([0 0 0; 1 1 1]);
+                    otherwise
+                        colormap(gray)
+                end
+                title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Diff. Wilcoxon (*p<%.2g)',...
+                    c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
+                set(gca,'FontSize',axisFontSize)
+                ylabel('Functional correlation z(r)','FontSize',labelFontSize)
+                set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
+                legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize)
+                % Show a * when a significant difference is found.
+                for iSeeds = 1:size(job.paired_seeds, 1)
+                    if statTestDiff(1).w(1).H{iSeeds,c1}
+                        if max(yDiff(iSeeds,:))>=0
+                            yPos = starPosFactor*(max(yDiff(iSeeds,:)) + max(eDiff(iSeeds,:)));
+                        else
+                            yPos = starPosFactor*(min(yDiff(iSeeds,:)) - max(eDiff(iSeeds,:)));
+                        end
+                        xPos = iSeeds;
+                        text(xPos, yPos,'*', 'FontSize', starFontSize, 'FontWeight', 'b');
+                    end
+                end
+                if job.save_figures
+                    newName = sprintf('groupCorr_Wtest_C%d_(%s)_diff',c1,colorNames{1+c1});
+                    % Save as EPS
+                    spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1},newName));
+                    % Save as PNG
+                    print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), sprintf('-r%d',job.figRes));
+                    % Save as a figure
+                    saveas(h, fullfile(job.parent_results_dir{1},newName), 'fig');
+                end
+                % Return the property to its default
+                set(h, 'units', 'pixels')
+                close(h)
+            end % End generate figures
+        end % Wilcoxon
     end
-    
-    if job.wilcoxon1
-        % Display a graph with ROI labels
-        if job.generate_figures
-            % Display plots on SPM graphics window
-            h = spm_figure('GetWin', 'Graphics');
-            spm_figure('Clear', 'Graphics');
-            % Custom bar graphs with error bars (1st arg: error)
-            barwitherr(eDiff, yDiff)
-            % Display colormap according to the contrast
-            switch(c1)
-                case 5
-                    % HbO contrast
-                    colormap([1 0 0; 1 1 1]);
-                case 6
-                    % HbR contrast
-                    colormap([0 0 1; 1 1 1]);
-                case 7
-                    % Flow contrast
-                    colormap([0.5 0.5 0.5; 1 1 1]);
-                case 8
-                    % CMRO2 contrast
-                    colormap([0 0 0; 1 1 1]);
-                otherwise
-                    colormap(gray)
-            end
-            title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Diff. Wilcoxon (*p<%.2g)',...
-                c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
-            set(gca,'FontSize',axisFontSize)
-            ylabel('Functional correlation z(r)','FontSize',labelFontSize)
-            set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-            legend({'Control' '4-AP'},'FontSize',legendFontSize)
-            % Show a * when a significant difference is found.
-            for iSeeds = 1:size(job.paired_seeds, 1)
-                if statTestDiff(1).w(1).H{iSeeds,c1}
-                    if max(yDiff(iSeeds,:))>=0
-                        yPos = starPosFactor*(max(yDiff(iSeeds,:)) + max(eDiff(iSeeds,:)));
-                    else
-                        yPos = starPosFactor*(min(yDiff(iSeeds,:)) - max(eDiff(iSeeds,:)));
-                    end
-                    xPos = iSeeds;
-                    text(xPos, yPos,'*', 'FontSize', starFontSize, 'FontWeight', 'b');
-                end
-            end
-            if job.save_figures
-                newName = sprintf('groupCorr_Wtest_C%d_(%s)_diff',c1,colorNames{1+c1});
-                % Save as EPS
-                spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1},newName));
-                % Save as PNG
-                print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), '-r300');
-                % Save as a figure
-                saveas(h, fullfile(job.parent_results_dir{1},newName), 'fig');
-            end
-        end % End generate figures
-    end % Wilcoxon
 end % derivative
 end % subfunction_plot_group_corr_test_diff
 
 function subfunction_plot_group_corr_test_raw(job, IOI, c1, eRaw, yRaw, statTestRaw)
 if isfield (job,'rawData')
-    % Plots statistical analysis group results
-    colorNames = fieldnames(IOI.color);
-    % Positioning factor for the * mark, depends on max data value at the given seed
-    starPosFactor   = 1.05;
-    % Font Sizes
-    titleFontSize   = 12;
-    axisFontSize    = 20;
-    labelFontSize   = 24;
-    legendFontSize  = 20;
-    starFontSize    = 32;
-    
-    if job.ttest1
-        % Display a graph with ROI labels
-        if job.generate_figures
-            % Display plots on SPM graphics window
-            h = spm_figure('GetWin', 'Graphics');
-            spm_figure('Clear', 'Graphics');
-            % Custom bar graphs with error bars (1st arg: error)
-            barwitherr(eRaw, yRaw)
-            % Display colormap according to the contrast
-            switch(c1)
-                case 5
-                    % HbO contrast
-                    colormap([1 0 0; 1 1 1]);
-                case 6
-                    % HbR contrast
-                    colormap([0 0 1; 1 1 1]);
-                case 7
-                    % Flow contrast
-                    colormap([0.5 0.5 0.5; 1 1 1]);
-                case 8
-                    % CMRO2 contrast
-                    colormap([0 0 0; 1 1 1]);
-                otherwise
-                    colormap(gray)
-            end
-            title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Raw T-test (*p<%.2g)',...
-                c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
-            set(gca,'FontSize',axisFontSize)
-            ylabel('Functional correlation z(r)','FontSize',labelFontSize)
-            set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-            legend({'Control' '4-AP'},'FontSize',legendFontSize)
-            % Show a * when a significant difference is found.
-            for iSeeds = 1:size(job.paired_seeds, 1)
-                if statTestRaw(1).t(1).H{iSeeds,c1}
-                    if max(yRaw(iSeeds,:))>=0
-                        yPos = starPosFactor*(max(yRaw(iSeeds,:)) + max(eRaw(iSeeds,:)));
-                    else
-                        yPos = starPosFactor*(min(yRaw(iSeeds,:)) - max(eRaw(iSeeds,:)));
-                    end
-                    xPos = iSeeds;
-                    text(xPos, yPos, '*', 'FontSize', starFontSize, 'FontWeight', 'b');
+    if job.rawData
+        % Plots statistical analysis group results
+        colorNames = fieldnames(IOI.color);
+        % Positioning factor for the * mark, depends on max data value at the given seed
+        starPosFactor   = 1.05;
+        % Font Sizes
+        titleFontSize   = 12;
+        axisFontSize    = 20;
+        labelFontSize   = 24;
+        legendFontSize  = 20;
+        starFontSize    = 32;
+        
+        if job.ttest1
+            % Display a graph with ROI labels
+            if job.generate_figures
+                % Display plots on new figure
+                h = figure; set(gcf,'color','w')
+                % Specify window units
+                set(h, 'units', 'inches')
+                % Change figure and paper size
+                set(h, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
+                set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
+                % Custom bar graphs with error bars (1st arg: error)
+                barwitherr(eRaw, yRaw)
+                % Display colormap according to the contrast
+                switch(c1)
+                    case 5
+                        % HbO contrast
+                        colormap([1 0 0; 1 1 1]);
+                    case 6
+                        % HbR contrast
+                        colormap([0 0 1; 1 1 1]);
+                    case 7
+                        % Flow contrast
+                        colormap([0.5 0.5 0.5; 1 1 1]);
+                    case 8
+                        % CMRO2 contrast
+                        colormap([0 0 0; 1 1 1]);
+                    otherwise
+                        colormap(gray)
                 end
-            end
-            if job.save_figures
-                newName = sprintf('groupCorr_Ttest_C%d_(%s)_raw',c1,colorNames{1+c1});
-                % Save as EPS
-                spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1}, newName));
-                % Save as PNG
-                print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), '-r300');
-                % Save as a figure
-                saveas(h, fullfile(job.parent_results_dir{1},newName), 'fig');
-            end
-        end % end generate figures
+                title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Raw T-test (*p<%.2g)',...
+                    c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
+                set(gca,'FontSize',axisFontSize)
+                ylabel('Functional correlation z(r)','FontSize',labelFontSize)
+                set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
+                legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize)
+                % Show a * when a significant difference is found.
+                for iSeeds = 1:size(job.paired_seeds, 1)
+                    if statTestRaw(1).t(1).H{iSeeds,c1}
+                        if max(yRaw(iSeeds,:))>=0
+                            yPos = starPosFactor*(max(yRaw(iSeeds,:)) + max(eRaw(iSeeds,:)));
+                        else
+                            yPos = starPosFactor*(min(yRaw(iSeeds,:)) - max(eRaw(iSeeds,:)));
+                        end
+                        xPos = iSeeds;
+                        text(xPos, yPos, '*', 'FontSize', starFontSize, 'FontWeight', 'b');
+                    end
+                end
+                if job.save_figures
+                    newName = sprintf('groupCorr_Ttest_C%d_(%s)_raw',c1,colorNames{1+c1});
+                    % Save as EPS
+                    spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1}, newName));
+                    % Save as PNG
+                    print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), sprintf('-r%d',job.figRes));
+                    % Save as a figure
+                    saveas(h, fullfile(job.parent_results_dir{1},newName), 'fig');
+                end
+                % Return the property to its default
+                set(h, 'units', 'pixels')
+                close(h)
+            end % end generate figures
+        end
+        
+        if job.wilcoxon1
+            % Display a graph with ROI labels
+            if job.generate_figures
+                % Display plots on new figure
+                h = figure; set(gcf,'color','w')
+                % Specify window units
+                set(h, 'units', 'inches')
+                % Change figure and paper size
+                set(h, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
+                set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
+                % Custom bar graphs with error bars (1st arg: error)
+                barwitherr(eRaw, yRaw)
+                % Display colormap according to the contrast
+                switch(c1)
+                    case 5
+                        % HbO contrast
+                        colormap([1 0 0; 1 1 1]);
+                    case 6
+                        % HbR contrast
+                        colormap([0 0 1; 1 1 1]);
+                    case 7
+                        % Flow contrast
+                        colormap([0.5 0.5 0.5; 1 1 1]);
+                    case 8
+                        % CMRO2 contrast
+                        colormap([0 0 0; 1 1 1]);
+                    otherwise
+                        colormap(gray)
+                end
+                title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Raw Wilcoxon (*p<%.2g)',...
+                    c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
+                set(gca,'FontSize',axisFontSize)
+                ylabel('Functional correlation z(r)','FontSize',labelFontSize)
+                set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
+                legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize)
+                % Show a * when a significant difference is found.
+                for iSeeds = 1:size(job.paired_seeds, 1)
+                    if statTestRaw(1).w(1).H{iSeeds,c1}
+                        if max(yRaw(iSeeds,:))>=0
+                            yPos = starPosFactor*(max(yRaw(iSeeds,:)) + max(eRaw(iSeeds,:)));
+                        else
+                            yPos = starPosFactor*(min(yRaw(iSeeds,:)) - max(eRaw(iSeeds,:)));
+                        end
+                        xPos = iSeeds;
+                        text(xPos, yPos,'*', 'FontSize', starFontSize, 'FontWeight', 'b');
+                    end
+                end
+                if job.save_figures
+                    newName = sprintf('groupCorr_Wtest_C%d_(%s)_raw',c1,colorNames{1+c1});
+                    % Save as EPS
+                    spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1},newName));
+                    % Save as PNG
+                    print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), sprintf('-r%d',job.figRes));
+                    % Save as a figure
+                    saveas(h, fullfile(job.parent_results_dir{1},newName), 'fig');
+                end
+                % Return the property to its default
+                set(h, 'units', 'pixels')
+                close(h)
+            end % End generate figures
+        end % Wilcoxon
     end
-    
-    if job.wilcoxon1
-        % Display a graph with ROI labels
-        if job.generate_figures
-            % Display plots on SPM graphics window
-            h = spm_figure('GetWin', 'Graphics');
-            spm_figure('Clear', 'Graphics');
-            % Custom bar graphs with error bars (1st arg: error)
-            barwitherr(eRaw, yRaw)
-            % Display colormap according to the contrast
-            switch(c1)
-                case 5
-                    % HbO contrast
-                    colormap([1 0 0; 1 1 1]);
-                case 6
-                    % HbR contrast
-                    colormap([0 0 1; 1 1 1]);
-                case 7
-                    % Flow contrast
-                    colormap([0.5 0.5 0.5; 1 1 1]);
-                case 8
-                    % CMRO2 contrast
-                    colormap([0 0 0; 1 1 1]);
-                otherwise
-                    colormap(gray)
-            end
-            title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Raw Wilcoxon (*p<%.2g)',...
-                c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
-            set(gca,'FontSize',axisFontSize)
-            ylabel('Functional correlation z(r)','FontSize',labelFontSize)
-            set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-            legend({'Control' '4-AP'},'FontSize',legendFontSize)
-            % Show a * when a significant difference is found.
-            for iSeeds = 1:size(job.paired_seeds, 1)
-                if statTestRaw(1).w(1).H{iSeeds,c1}
-                    if max(yRaw(iSeeds,:))>=0
-                        yPos = starPosFactor*(max(yRaw(iSeeds,:)) + max(eRaw(iSeeds,:)));
-                    else
-                        yPos = starPosFactor*(min(yRaw(iSeeds,:)) - max(eRaw(iSeeds,:)));
-                    end
-                    xPos = iSeeds;
-                    text(xPos, yPos,'*', 'FontSize', starFontSize, 'FontWeight', 'b');
-                end
-            end
-            if job.save_figures
-                newName = sprintf('groupCorr_Wtest_C%d_(%s)_raw',c1,colorNames{1+c1});
-                % Save as EPS
-                spm_figure('Print', 'Graphics', fullfile(job.parent_results_dir{1},newName));
-                % Save as PNG
-                print(h, '-dpng', fullfile(job.parent_results_dir{1},newName), '-r300');
-                % Save as a figure
-                saveas(h, fullfile(job.parent_results_dir{1},newName), 'fig');
-            end
-        end % End generate figures
-    end % Wilcoxon
 end % raw data
 end % subfunction_plot_group_corr_test_raw
 
