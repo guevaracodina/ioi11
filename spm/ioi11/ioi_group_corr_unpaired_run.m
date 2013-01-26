@@ -17,11 +17,8 @@ function out = ioi_group_corr_unpaired_run(job)
 % ------------------------------------------------------------------------------
 
 % For each subject:
-% - Display resumeexp.txt in figures windows (to check which sessions are
-%   control/treatment)
+% Define string to ID a group (NC, CC, etc.)
 % - choose the pairs of ROIs (1-2, 3-4, ..., 11-12 by default) (batch)
-% - choose the control sessions
-% - choose the post-injection sessions
 % for each color
 %   - get the seed-to-seed correlation matrix
 %   - transform Pearson's r to Fisher's z
@@ -31,7 +28,7 @@ function out = ioi_group_corr_unpaired_run(job)
 % - Choose parent folder (batch)
 % - Do a separate statistical for each seed data (paired t-test, wil)
 % - Display a graph with ROI labels
-% - Save a .csv file in parent folder
+% - Save a .csv file in parent folder for each contrast
 
 % Load first IOI matrix to check the number of colors
 [IOI IOImat dir_ioimat]= ioi_get_IOI(job,1);
@@ -71,12 +68,7 @@ for SubjIdx = 1:size(job.IOImat, 1)
                 
                 % File name where correlation data is saved
                 IOI.fcIOS.corr(1).fnameGroup = fullfile(job.parent_results_dir{1},'group_corr_pair_seeds.mat');
-                
-                % .CSV file
-%                 csvFile = fullfile(job.parent_results_dir{1},'fcGroup.csv');
-%                 fid = fopen(csvFile, 'w');
-%                 fprintf(fid,'Name, ROIs, fc z(r), fc'' z(r), fc_raw z(r), Type(NaCl=0, CaCl2=1)\n');
-                
+                                
                 % File name where correlation data of 1st derivative is saved
                 if isfield(job,'derivative')
                     IOI.fcIOS.corr(1).fnameGroupDiff = fullfile(job.parent_results_dir{1},'group_corr_pair_seeds_diff.mat');
@@ -253,10 +245,8 @@ for SubjIdx = 1:size(job.IOImat, 1)
         end % corrMap OK
         disp(['Elapsed time: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
         disp(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ' complete']);
-%         fclose(fid);
         out.IOImat{SubjIdx} = IOImat;
     catch exception
-%         fclose(fid);
         out.IOImat{SubjIdx} = IOImat;
         disp(exception.identifier)
         disp(exception.stack(1))
@@ -286,7 +276,7 @@ eTotalDiff      = [];
 yTotalDiff      = [];
 eTotalRaw       = [];
 yTotalRaw       = [];
-dataCell        = [];
+% dataCell        = [];
 
 for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
     doColor = ioi_doColor(IOI,c1,IC);
@@ -298,16 +288,16 @@ for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
         subfunction_cell2csv(dataCell, fileName);
         % Perform test on ROIs time course
         [job, IOI, e, y, eTotal, yTotal, statTest, meanCorr, stdCorr] = subfunction_group_corr_test_unpaired(job, IOI, c1, groupCorrData, statTest, meanCorr, stdCorr, eTotal, yTotal, isTreatment);
-%         % Perform tests on the derivative of ROIs time-course
-%         [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff] = subfunction_group_corr_test_diff(job, IOI, c1, groupCorrDataDiff, groupCorrIdx, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff);
+        % Perform tests on the derivative of ROIs time-course
+        [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff] = subfunction_group_corr_test_diff_unpaired(job, IOI, c1, groupCorrDataDiff, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff, isTreatment);
 %         % Perform tests on raw data of ROIs time-course
-%         [job, IOI, eRaw, yRaw, eTotalRaw, yTotalRaw, statTestRaw, meanCorrRaw, stdCorrRaw] = subfunction_group_corr_test_raw(job, IOI, c1, groupCorrDataRaw, groupCorrIdx, statTestRaw, meanCorrRaw, stdCorrRaw, eTotalRaw, yTotalRaw);
+        [job, IOI, eRaw, yRaw, eTotalRaw, yTotalRaw, statTestRaw, meanCorrRaw, stdCorrRaw] = subfunction_group_corr_test_raw_unpaired(job, IOI, c1, groupCorrDataRaw, statTestRaw, meanCorrRaw, stdCorrRaw, eTotalRaw, yTotalRaw, isTreatment);
 %         % Plot results
         subfunction_plot_group_corr_test(job, IOI, c1, e, y, statTest);
 %         % Plot results based on 1st derivative
-%         subfunction_plot_group_corr_test_diff(job, IOI, c1, eDiff, yDiff, statTestDiff);
+        subfunction_plot_group_corr_test_diff(job, IOI, c1, eDiff, yDiff, statTestDiff);
 %         % Plot results based on raw data
-%         subfunction_plot_group_corr_test_raw(job, IOI, c1, eRaw, yRaw, statTestRaw);
+        subfunction_plot_group_corr_test_raw(job, IOI, c1, eRaw, yRaw, statTestRaw);
     end
 end % loop over colors
 % Group comparison of bilateral correlation succesful!
@@ -412,7 +402,7 @@ for iSeeds = 1:size(job.paired_seeds, 1)
     y(iSeeds,:) = meanCorr{iSeeds,c1};
     e(iSeeds,:) = stdCorr{iSeeds,c1};
     
-    % Paired-sample t-test
+    % Unpaired-sample t-test
     if job.ttest1
         [statTest(1).t(1).H{iSeeds,c1}, statTest(1).t(1).P{iSeeds,c1}, ...
             statTest(1).t(1).CI{iSeeds,c1}, statTest(1).t(1).STATS{iSeeds,c1}] ...
@@ -452,20 +442,20 @@ eTotal{c1} = e;
 % Save results in .mat file
 save(IOI.fcIOS.corr(1).fnameGroup,'groupCorrData', 'isTreatment',...
     'meanCorr','stdCorr','statTest','yTotal','eTotal');
-end % subfunction_group_corr_test
+end % subfunction_group_corr_test_unpaired
 
-function [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff] = subfunction_group_corr_test_diff(job, IOI, c1, groupCorrDataDiff, groupCorrIdx, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff)
+function [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff] = subfunction_group_corr_test_diff_unpaired(job, IOI, c1, groupCorrDataDiff, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff, isTreatment)
 if isfield (job,'derivative')
     if job.derivative
         for iSeeds = 1:size(job.paired_seeds, 1)
             % Average of control group
-            meanCorrDiff{iSeeds,c1}(1) = nanmean(groupCorrDataDiff{iSeeds,c1}(:,1));
+            meanCorrDiff{iSeeds,c1}(1) = nanmean(groupCorrDataDiff{iSeeds,c1}(~isTreatment));
             % Average of treatment group
-            meanCorrDiff{iSeeds,c1}(2) = nanmean(groupCorrDataDiff{iSeeds,c1}(:,2));
+            meanCorrDiff{iSeeds,c1}(2) = nanmean(groupCorrDataDiff{iSeeds,c1}(isTreatment));
             % Standard deviation of control group
-            stdCorrDiff{iSeeds,c1}(1) = nanstd(groupCorrDataDiff{iSeeds,c1}(:,1));
+            stdCorrDiff{iSeeds,c1}(1) = nanstd(groupCorrDataDiff{iSeeds,c1}(~isTreatment));
             % Standard deviation oftreatment group
-            stdCorrDiff{iSeeds,c1}(2) = nanstd(groupCorrDataDiff{iSeeds,c1}(:,2));
+            stdCorrDiff{iSeeds,c1}(2) = nanstd(groupCorrDataDiff{iSeeds,c1}(isTreatment));
             
             % Used to plot bar graphs with errorbars
             yDiff(iSeeds,:) = meanCorrDiff{iSeeds,c1};
@@ -475,18 +465,18 @@ if isfield (job,'derivative')
             if job.ttest1
                 [statTestDiff(1).t(1).H{iSeeds,c1}, statTestDiff(1).t(1).P{iSeeds,c1}, ...
                     statTestDiff(1).t(1).CI{iSeeds,c1}, statTestDiff(1).t(1).STATS{iSeeds,c1}] ...
-                    = ttest(...
-                    groupCorrDataDiff{iSeeds,c1}(:,1), groupCorrDataDiff{iSeeds,c1}(:,2),...
+                    = ttest2(...
+                    groupCorrDataDiff{iSeeds,c1}(~isTreatment), groupCorrDataDiff{iSeeds,c1}(isTreatment),...
                     job.alpha,'both');
-                statTestDiff(1).t(1).id = 'Paired-sample t-test(1st derivative)';
+                statTestDiff(1).t(1).id = 'Unpaired-sample t-test(1st derivative)';
             end % t-test
             
             % Wilcoxon rank sum test
             if job.wilcoxon1
-                ctrlGroupDiff = groupCorrDataDiff{iSeeds,c1}(:,1);
+                ctrlGroupDiff = groupCorrDataDiff{iSeeds,c1}(~isTreatment);
                 % ignore NaN values
                 ctrlGroupDiff = ctrlGroupDiff(~isnan(ctrlGroupDiff));
-                treatmentGroupDiff = groupCorrDataDiff{iSeeds,c1}(:,2);
+                treatmentGroupDiff = groupCorrDataDiff{iSeeds,c1}(isTreatment);
                 % ignore NaN values
                 treatmentGroupDiff = treatmentGroupDiff(~isnan(treatmentGroupDiff));
                 % Perform such test
@@ -510,23 +500,23 @@ if isfield (job,'derivative')
     eTotalDiff{c1} = eDiff;
     
     % Save results in .mat file
-    save(IOI.fcIOS.corr(1).fnameGroupDiff,'groupCorrDataDiff','groupCorrIdx',...
+    save(IOI.fcIOS.corr(1).fnameGroupDiff,'groupCorrDataDiff','isTreatment',...
         'meanCorrDiff','stdCorrDiff','statTestDiff','yTotalDiff','eTotalDiff');
 end % derivative
-end % subfunction_group_corr_test_diff
+end % subfunction_group_corr_test_diff_unpaired
 
-function [job, IOI, eRaw, yRaw, eTotalRaw, yTotalRaw, statTestRaw, meanCorrRaw, stdCorrRaw] = subfunction_group_corr_test_raw(job, IOI, c1, groupCorrDataRaw, groupCorrIdx, statTestRaw, meanCorrRaw, stdCorrRaw, eTotalRaw, yTotalRaw)
+function [job, IOI, eRaw, yRaw, eTotalRaw, yTotalRaw, statTestRaw, meanCorrRaw, stdCorrRaw] = subfunction_group_corr_test_raw_unpaired(job, IOI, c1, groupCorrDataRaw, statTestRaw, meanCorrRaw, stdCorrRaw, eTotalRaw, yTotalRaw, isTreatment)
 if isfield (job,'rawData')
     if job.rawData
         for iSeeds = 1:size(job.paired_seeds, 1)
             % Average of control group
-            meanCorrRaw{iSeeds,c1}(1) = nanmean(groupCorrDataRaw{iSeeds,c1}(:,1));
+            meanCorrRaw{iSeeds,c1}(1) = nanmean(groupCorrDataRaw{iSeeds,c1}(~isTreatment));
             % Average of treatment group
-            meanCorrRaw{iSeeds,c1}(2) = nanmean(groupCorrDataRaw{iSeeds,c1}(:,2));
+            meanCorrRaw{iSeeds,c1}(2) = nanmean(groupCorrDataRaw{iSeeds,c1}(isTreatment));
             % Standard deviation of control group
-            stdCorrRaw{iSeeds,c1}(1) = nanstd(groupCorrDataRaw{iSeeds,c1}(:,1));
+            stdCorrRaw{iSeeds,c1}(1) = nanstd(groupCorrDataRaw{iSeeds,c1}(~isTreatment));
             % Standard deviation oftreatment group
-            stdCorrRaw{iSeeds,c1}(2) = nanstd(groupCorrDataRaw{iSeeds,c1}(:,2));
+            stdCorrRaw{iSeeds,c1}(2) = nanstd(groupCorrDataRaw{iSeeds,c1}(isTreatment));
             
             % Used to plot bar graphs with errorbars
             yRaw(iSeeds,:) = meanCorrRaw{iSeeds,c1};
@@ -536,18 +526,18 @@ if isfield (job,'rawData')
             if job.ttest1
                 [statTestRaw(1).t(1).H{iSeeds,c1}, statTestRaw(1).t(1).P{iSeeds,c1}, ...
                     statTestRaw(1).t(1).CI{iSeeds,c1}, statTestRaw(1).t(1).STATS{iSeeds,c1}] ...
-                    = ttest(...
-                    groupCorrDataRaw{iSeeds,c1}(:,1), groupCorrDataRaw{iSeeds,c1}(:,2),...
+                    = ttest2(...
+                    groupCorrDataRaw{iSeeds,c1}(~isTreatment), groupCorrDataRaw{iSeeds,c1}(isTreatment),...
                     job.alpha,'both');
-                statTestRaw(1).t(1).id = 'Paired-sample t-test(raw data)';
+                statTestRaw(1).t(1).id = 'Unpaired-sample t-test(raw data)';
             end % t-test
             
             % Wilcoxon rank sum test
             if job.wilcoxon1
-                ctrlGroupRaw = groupCorrDataRaw{iSeeds,c1}(:,1);
+                ctrlGroupRaw = groupCorrDataRaw{iSeeds,c1}(~isTreatment);
                 % ignore NaN values
                 ctrlGroupRaw = ctrlGroupRaw(~isnan(ctrlGroupRaw));
-                treatmentGroupRaw = groupCorrDataRaw{iSeeds,c1}(:,2);
+                treatmentGroupRaw = groupCorrDataRaw{iSeeds,c1}(isTreatment);
                 % ignore NaN values
                 treatmentGroupRaw = treatmentGroupRaw(~isnan(treatmentGroupRaw));
                 % Perform such test
@@ -570,11 +560,11 @@ if isfield (job,'rawData')
         eTotalRaw{c1} = eRaw;
         
         % Save results in .mat file
-        save(IOI.fcIOS.corr(1).fnameGroupRaw,'groupCorrDataRaw','groupCorrIdx',...
+        save(IOI.fcIOS.corr(1).fnameGroupRaw,'groupCorrDataRaw','isTreatment',...
             'meanCorrRaw','stdCorrRaw','statTestRaw', 'yTotalRaw', 'eTotalRaw');
     end
 end % raw data
-end % subfunction_group_corr_test_raw
+end % subfunction_group_corr_test_raw_unpaired
 
 function subfunction_plot_group_corr_test(job, IOI, c1, e, y, statTest)
 % Plots statistical analysis group results
@@ -689,7 +679,7 @@ if job.wilcoxon1
         set(gca,'FontSize',axisFontSize)
         ylabel('Functional correlation z(r)','FontSize',labelFontSize)
         set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-%         legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize)
+%         legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize,'location','NorthWest')
         set(gca, 'xLim', [axMargin size(y,1) + axMargin]);
         if isfield(job.yLimits, 'yLimManual')
             set(gca, 'ylim', job.yLimits.yLimManual.yLimValue)
@@ -731,10 +721,11 @@ if isfield (job,'derivative')
         starPosFactor   = 1.05;
         % Font Sizes
         titleFontSize   = 12;
-        axisFontSize    = 20;
-        labelFontSize   = 24;
-        legendFontSize  = 20;
-        starFontSize    = 32;
+        axisFontSize    = 12;
+        labelFontSize   = 14;
+        legendFontSize  = 14;
+        starFontSize    = 22;
+        axMargin        = 0.5;
         
         if job.ttest1
             % Display a graph with ROI labels
@@ -765,12 +756,16 @@ if isfield (job,'derivative')
                     otherwise
                         colormap(gray)
                 end
-                title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Diff. T-test (*p<%.2g)',...
+                title(sprintf('C%d(%s) Diff. T-test (*p<%.2g)',...
                     c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
                 set(gca,'FontSize',axisFontSize)
                 ylabel('Functional correlation z(r)','FontSize',labelFontSize)
                 set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-                legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize)
+%                 legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize,'location','NorthWest')
+                set(gca, 'xLim', [axMargin size(yDiff,1) + axMargin]);
+                if isfield(job.yLimits, 'yLimManual')
+                    set(gca, 'ylim', job.yLimits.yLimManual.yLimValue)
+                end
                 % Show a * when a significant difference is found.
                 for iSeeds = 1:size(job.paired_seeds, 1)
                     if statTestDiff(1).t(1).H{iSeeds,c1}
@@ -827,12 +822,16 @@ if isfield (job,'derivative')
                     otherwise
                         colormap(gray)
                 end
-                title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Diff. Wilcoxon (*p<%.2g)',...
+                title(sprintf('C%d(%s) Diff. Wilcoxon (*p<%.2g)',...
                     c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
                 set(gca,'FontSize',axisFontSize)
                 ylabel('Functional correlation z(r)','FontSize',labelFontSize)
                 set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-                legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize)
+%                 legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize,'location','NorthWest')
+                set(gca, 'xLim', [axMargin size(yDiff,1) + axMargin]);
+                if isfield(job.yLimits, 'yLimManual')
+                    set(gca, 'ylim', job.yLimits.yLimManual.yLimValue)
+                end
                 % Show a * when a significant difference is found.
                 for iSeeds = 1:size(job.paired_seeds, 1)
                     if statTestDiff(1).w(1).H{iSeeds,c1}
@@ -872,10 +871,11 @@ if isfield (job,'rawData')
         starPosFactor   = 1.05;
         % Font Sizes
         titleFontSize   = 12;
-        axisFontSize    = 20;
-        labelFontSize   = 24;
-        legendFontSize  = 20;
-        starFontSize    = 32;
+        axisFontSize    = 12;
+        labelFontSize   = 14;
+        legendFontSize  = 14;
+        starFontSize    = 22;
+        axMargin        = 0.5;
         
         if job.ttest1
             % Display a graph with ROI labels
@@ -906,12 +906,16 @@ if isfield (job,'rawData')
                     otherwise
                         colormap(gray)
                 end
-                title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Raw T-test (*p<%.2g)',...
+                title(sprintf('C%d(%s) Raw T-test (*p<%.2g)',...
                     c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
                 set(gca,'FontSize',axisFontSize)
                 ylabel('Functional correlation z(r)','FontSize',labelFontSize)
                 set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-                legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize)
+%                 legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize,'location','NorthWest')
+                set(gca, 'xLim', [axMargin size(yRaw,1) + axMargin]);
+                if isfield(job.yLimits, 'yLimManual')
+                    set(gca, 'ylim', job.yLimits.yLimManual.yLimValue)
+                end
                 % Show a * when a significant difference is found.
                 for iSeeds = 1:size(job.paired_seeds, 1)
                     if statTestRaw(1).t(1).H{iSeeds,c1}
@@ -968,12 +972,16 @@ if isfield (job,'rawData')
                     otherwise
                         colormap(gray)
                 end
-                title(sprintf('Bilateral Correlation before/after 4-AP C%d(%s) Raw Wilcoxon (*p<%.2g)',...
+                title(sprintf('C%d(%s) Raw Wilcoxon (*p<%.2g)',...
                     c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
                 set(gca,'FontSize',axisFontSize)
                 ylabel('Functional correlation z(r)','FontSize',labelFontSize)
                 set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-                legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize)
+%                 legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize,'location','NorthWest')
+                set(gca, 'xLim', [axMargin size(yRaw,1) + axMargin]);
+                if isfield(job.yLimits, 'yLimManual')
+                    set(gca, 'ylim', job.yLimits.yLimManual.yLimValue)
+                end
                 % Show a * when a significant difference is found.
                 for iSeeds = 1:size(job.paired_seeds, 1)
                     if statTestRaw(1).w(1).H{iSeeds,c1}
