@@ -51,7 +51,8 @@
 %**************************************************************************
 
 function barwitherr(errors,varargin)
-
+% Sets LineWidth
+LINEWIDTH = 2;
 % Check how the function has been called based on requirements for "bar"
 if nargin < 3
     % This is the same as calling bar(y)
@@ -94,7 +95,7 @@ end
 [nRows nCols] = size(values);
 handles.bar = bar(varargin{:}); % standard implementation of bar fn
 hold on
-set(handles.bar,'LineWidth',3);
+set(handles.bar, 'LineWidth', LINEWIDTH);
 
 if nRows > 1
     for col = 1:nCols
@@ -104,11 +105,11 @@ if nRows > 1
         % errorbars will now be centred on each bar; these are in ascending
         % order so use xOrder to ensure y values and errors are too:
         errorbar(mean(x,1),values(xOrder,col),lowerErrors(xOrder,col), upperErrors(xOrder, col), '.k',...
-            'LineWidth',4)
+            'LineWidth', LINEWIDTH)
     end
 else
     x = get(get(handles.bar,'children'),'xdata');
-    errorbar(mean(x,1),values,errors,'.k', 'LineWidth',3)
+    errorbar(mean(x,1),values,errors,'.k', 'LineWidth', LINEWIDTH)
 end
 
 hold off

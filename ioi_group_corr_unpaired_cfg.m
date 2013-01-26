@@ -1,79 +1,36 @@
-function group_corr1        = ioi_group_corr_unpaired_cfg
+function group_corr2        = ioi_group_corr_unpaired_cfg
 % Graphical interface configuration function for ioi_group_corr_unpaired_run
 %_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
 %_______________________________________________________________________________
 
-% Select IOI.mat
+% Select IOI.mat (2 files minimum)
 IOImat                      = ioi_dfg_IOImat(2);
 % Force processing
 redo1                       = ioi_dfg_redo(1);
 % IOI copy/overwrite method
-IOImatCopyChoice            = ioi_dfg_IOImatCopyChoice('groupCorr');
+IOImatCopyChoice            = ioi_dfg_IOImatCopyChoice('groupCorrUnpaired');
 % Colors to include (OD,HbO,HbR,HbT,Flow)
-IC                          = ioi_dfg_include_colors(0,1,1,1,1);
+IC                          = ioi_dfg_include_colors(0,1,1,1,1,1);
 
-% CONTROL / TREATMENT SESSIONS ASKED INSIDE THE SUBJECT LOOP FOR MANUAL MODE
+% String identifying Control (NaCl) group [NC]
+controlString               = cfg_entry;
+controlString.name          = 'Control group ID';
+controlString.tag           = 'controlString';       
+controlString.strtype       = 's';
+controlString.val{1}        = 'NC'; 
+controlString.num           = [2 2];     
+controlString.help          = {'String to identify Control Group.'}'; 
 
-% Control sessions
-control_sessions            = cfg_entry;
-control_sessions.name       = 'Control sessions';	% The displayed name
-control_sessions.tag        = 'control_sessions';	% file names
-control_sessions.strtype    = 'e';                  % Real numbers
-control_sessions.val        = { {                   % 1 subject per line
-                                [1 2 3];            % EG01
-                                %[1 2];              % EG02
-                                [1 2];              % EG03 
-                                [1 2];              % EG04
-                                %[1 2];              % EG05
-                                %[1 2];              % EG06
-                                [1 2];              % EG07
-                                [1 2];              % EG09
-                                %[1 2]               % EG10
-                                } };           
-control_sessions.help       = {'Choose the number of control sessions (Before 4-AP injection).' 
-    'Enter the control session numbers as a cell of vectors.'  
-    'For more info see [IOI.dir.dir_subj_raw ''resumeExp.txt'']'};
-
-% Treatment sessions
-treatment_sessions          = cfg_entry;
-treatment_sessions.name     = 'Treatment sessions'; % The displayed name
-treatment_sessions.tag      = 'treatment_sessions'; % file names
-treatment_sessions.strtype  = 'e';                  % Real numbers
-treatment_sessions.val      = { {                   % 1 subject per line
-                                [4 5];              % EG01
-                                %[3 4];              % EG02
-                                [3];                % EG03
-                                [3 4];              % EG04
-                                %[3 4];              % EG05
-                                %[3 4];              % EG06
-                                [3 4];              % EG07
-                                [3 4];              % EG09
-                                %[3 4]               % EG10
-                                } };           
-treatment_sessions.help     = {'Choose the treatment sessions (After 4-AP injection).'
-    'Enter the 4-AP session numbers as a cell of vectors.' 
-    'For more info see [IOI.dir.dir_subj_raw ''resumeExp.txt'']'};
-
-AutoSessions                = cfg_branch;
-AutoSessions.tag            = 'AutoSessions';
-AutoSessions.name           = 'Automatic session selection'; 
-AutoSessions.val            = {control_sessions treatment_sessions};
-AutoSessions.help           = {'Automatic selection of control and 4-AP sessions.'}';
-        
-ManualSessions              = cfg_branch;
-ManualSessions.tag          = 'ManualSessions';
-ManualSessions.name         = 'Manual session selection: GUI'; 
-ManualSessions.val          = {};
-ManualSessions.help         = {'Manual selection of control and 4-AP sessions.'}';
-
-AutoSessionChoice           = cfg_choice;
-AutoSessionChoice.name      = 'Choose session selection mode';
-AutoSessionChoice.tag       = 'AutoSessionChoice';
-AutoSessionChoice.values    = {ManualSessions AutoSessions}; 
-AutoSessionChoice.val       = {AutoSessions}; 
-AutoSessionChoice.help      = {'Choose whether to select sessions manually or automatically'}'; 
+% String identifying treatment (CaCl2) group [CC]
+treatmentString             = cfg_entry;
+treatmentString.name        = 'Treatment group ID';
+treatmentString.tag         = 'treatmentString';       
+treatmentString.strtype     = 's';
+treatmentString.val{1}      = 'CC'; 
+treatmentString.num         = [2 2];     
+treatmentString.help        = {'String to identify Treatment Group.'}'; 
 
 % Paired seeds
 paired_seeds                = cfg_entry;
@@ -89,6 +46,15 @@ paired_seeds.help           = {'Choose the pairs of seeds to compare. Usually:'
                                 '  7,8: Somatosensory'
                                 ' 9,10: Retrosplenial'
                                 '11,12: Visual'};
+                            
+% Multiple comparisons correc
+bonferroni              	= cfg_menu;
+bonferroni.tag              = 'bonferroni';
+bonferroni.name             = 'Bonferroni correction';
+bonferroni.labels           = {'No','Yes'};
+bonferroni.values           = {0,1};
+bonferroni.val              = {1};
+bonferroni.help             = {'Perform Bonferroni correction for multiple comparisons.'}';
                             
 % Paired t-test
 ttest1                      = cfg_menu;
@@ -128,13 +94,13 @@ derivative.val              = {1};                      % Default value
 derivative.help             = {'Choose whether to perform correlation analysis on 1st derivative of seeds/pixels time-course'}';
 
 % Correlation on raw data time course (before filtering, downsampling and GLM regression)
-rawData                  = cfg_menu;
-rawData.tag              = 'rawData';
-rawData.name             = 'raw time course';
-rawData.labels           = {'No', 'Yes'};
-rawData.values           = {0, 1};
-rawData.val              = {1};                      % Default value
-rawData.help             = {'Choose whether to perform correlation analysis on seeds raw time course'}';
+rawData                     = cfg_menu;
+rawData.tag                 = 'rawData';
+rawData.name                = 'raw time course';
+rawData.labels              = {'No', 'Yes'};
+rawData.values              = {0, 1};
+rawData.val                 = {1};                      % Default value
+rawData.help                = {'Choose whether to perform correlation analysis on seeds raw time course'}';
 
 % Show standard error bar
 stderror                    = cfg_menu;
@@ -153,18 +119,69 @@ parent_results_dir.filter   = 'dir';
 parent_results_dir.num      = [1 1];
 parent_results_dir.help     = {'Select the directory where consolidated results will be saved.'}';
 
+% Figure size
+figSize                     = cfg_entry;
+figSize.tag                 = 'figSize';
+figSize.name                = 'Figure size';
+figSize.strtype             = 'r';
+figSize.num                 = [1 2];
+figSize.val{1}              = [3.25 3.25];
+figSize.help                = {'Enter figure size in inches.'};
+
+% Figure resolution
+figRes                      = cfg_entry;
+figRes.tag                  = 'figRes';
+figRes.name                 = 'Figure resolution';
+figRes.strtype              = 'r';
+figRes.num                  = [1 1];
+figRes.val{1}               = 300;
+figRes.help                 = {'Enter figure resolution in dpi [300-1200]'};
+
+% ------------------------------------------------------------------------------
+% Choose axis limits
+% ------------------------------------------------------------------------------
+yLimValue                   = cfg_entry;
+yLimValue.tag               = 'yLimValue';
+yLimValue.name              = 'Y axis limits';
+yLimValue.strtype           = 'r';
+yLimValue.num               = [1 2];
+yLimValue.val{1}            = [-0.9 1.3];
+yLimValue.help              = {'Enter limits for Y axis'};
+
+yLimManual                  = cfg_branch;
+yLimManual.tag              = 'yLimManual';
+yLimManual.name             = 'Manual Ylim';
+yLimManual.val              = {yLimValue};
+yLimManual.help             = {'Manual limits for Y axis.'};
+
+yLimAuto                    = cfg_branch;
+yLimAuto.tag                = 'yLimAuto';
+yLimAuto.name               = 'Auto Ylim';
+yLimAuto.val                = {};
+yLimAuto.help               = {'Auto limits for Y axis.'};
+
+yLimits                     = cfg_choice;
+yLimits.tag                 = 'yLimits';
+yLimits.name                = 'Y axis limits';
+yLimits.values              = {yLimManual yLimAuto};
+yLimits.val                 = {yLimAuto};
+yLimits.help                = {'Choose whether to set manual limits to Y axis'};
+% ------------------------------------------------------------------------------
+
 % Generate / save figures
 [generate_figures ...
     save_figures]           = ioi_dfg_generate_figures;
 
 % Executable Branch
-group_corr1                 = cfg_exbranch; % This is the branch that has information about how to run this module
-group_corr1.name            = 'Bilateral correlation group comparison (unpaired)'; % The display name
-group_corr1.tag             = 'group_corr2'; %Very important: tag is used when calling for execution
-group_corr1.val             = {IOImat redo1 IOImatCopyChoice IC AutoSessionChoice paired_seeds ttest1 wilcoxon1 alpha derivative rawData stderror parent_results_dir generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
-group_corr1.prog            = @ioi_group_corr_unpaired_run; % A function handle that will be called with the harvested job to run the computation
-group_corr1.vout            = @ioi_cfg_vout_group_corr_unpaired; % A function handle that will be called with the harvested job to determine virtual outputs
-group_corr1.help            = {'Gets the correlation between each seed and its contralateral homologue. Then performs a non-paired t-test for each seed set, to have a group comparison.'}';
+group_corr2                 = cfg_exbranch; % This is the branch that has information about how to run this module
+group_corr2.name            = 'Bilateral correlation group comparison (unpaired)'; % The display name
+group_corr2.tag             = 'group_corr2'; %Very important: tag is used when calling for execution
+group_corr2.val             = {IOImat redo1 IOImatCopyChoice IC controlString ...
+    treatmentString paired_seeds bonferroni ttest1 wilcoxon1 alpha derivative rawData ...
+    stderror parent_results_dir figSize figRes yLimits generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+group_corr2.prog            = @ioi_group_corr_unpaired_run; % A function handle that will be called with the harvested job to run the computation
+group_corr2.vout            = @ioi_cfg_vout_group_corr_unpaired; % A function handle that will be called with the harvested job to determine virtual outputs
+group_corr2.help            = {'Gets the correlation between each seed and its contralateral homologue. Then performs a non-paired t-test for each seed set, to have a group comparison.'}';
 
 return
 
