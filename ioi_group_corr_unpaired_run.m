@@ -68,7 +68,7 @@ for SubjIdx = 1:size(job.IOImat, 1)
                 
                 % File name where correlation data is saved
                 IOI.fcIOS.corr(1).fnameGroup = fullfile(job.parent_results_dir{1},'group_corr_pair_seeds.mat');
-                                
+                
                 % File name where correlation data of 1st derivative is saved
                 if isfield(job,'derivative')
                     IOI.fcIOS.corr(1).fnameGroupDiff = fullfile(job.parent_results_dir{1},'group_corr_pair_seeds_diff.mat');
@@ -80,10 +80,10 @@ for SubjIdx = 1:size(job.IOImat, 1)
                 
                 % Check if mouse is tratment (1) or control (0)
                 isTreatment(SubjIdx,1) = ~isempty(regexp(IOI.subj_name, [job.treatmentString '[0-9]+'], 'once'));
-
+                
                 % Treatment/control sessions is always 1
                 idxSess(1,1:2) = 1;
-         
+                
                 % Additional 3rd column with subject index
                 idxSess(:,3) = SubjIdx;
                 
@@ -133,16 +133,17 @@ for SubjIdx = 1:size(job.IOImat, 1)
                             currCorrMat = seed2seedCorrMat{1}{s1,c1};
                             % transform Pearson's r to Fisher's z
                             currCorrMat = fisherz(currCorrMat);
-                            if any(any(isnan(currCorrMat))) || isempty(currCorrMat)
-                                for iROI = 1:size(job.paired_seeds, 1)
+                            for iROI = 1:size(job.paired_seeds, 1)
+                                % Need to check this for every seed pair //EGC
+                                if isempty(currCorrMat)
                                     pairedSeeds{iROI}{s1,c1} = NaN;
-                                end
-                            else
-                                % choose only 6 values for each mouse, each color
-                                for iROI = 1:size(job.paired_seeds, 1)
+                                elseif isnan(currCorrMat(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2))) || isempty(currCorrMat(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2)))
+                                    pairedSeeds{iROI}{s1,c1} = NaN;
+                                else
+                                    % choose only 6 values for each mouse, each color
                                     pairedSeeds{iROI}{s1,c1} = currCorrMat(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2));
                                 end
-                            end
+                            end % paired ROIs loop
                             
                             if isfield (job,'derivative')
                                 if job.derivative
@@ -150,16 +151,17 @@ for SubjIdx = 1:size(job.IOImat, 1)
                                     currCorrMatDiff = seed2seedCorrMatDiff{1}{s1,c1};
                                     % transform Pearson's r to Fisher's z
                                     currCorrMatDiff = fisherz(currCorrMatDiff);
-                                    if any(any(isnan(currCorrMatDiff))) || isempty(currCorrMatDiff)
-                                        for iROI = 1:size(job.paired_seeds, 1)
+                                    for iROI = 1:size(job.paired_seeds, 1)
+                                        % Need to check this for every seed pair //EGC
+                                        if isempty(currCorrMatDiff)
                                             pairedSeedsDiff{iROI}{s1,c1} = NaN;
-                                        end
-                                    else
-                                        % choose only 6 values for each mouse, each color
-                                        for iROI = 1:size(job.paired_seeds, 1)
+                                        elseif isnan(currCorrMatDiff(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2))) || isempty(currCorrMatDiff(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2)))
+                                            pairedSeedsDiff{iROI}{s1,c1} = NaN;
+                                        else
+                                            % choose only 6 values for each mouse, each color
                                             pairedSeedsDiff{iROI}{s1,c1} = currCorrMatDiff(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2));
                                         end
-                                    end
+                                    end % paired ROIs loop
                                 end
                             end % derivative
                             
@@ -169,16 +171,17 @@ for SubjIdx = 1:size(job.IOImat, 1)
                                     currCorrMatRaw = seed2seedCorrMatRaw{1}{s1,c1};
                                     % transform Pearson's r to Fisher's z
                                     currCorrMatRaw = fisherz(currCorrMatRaw);
-                                    if isnan(currCorrMatRaw)
-                                        for iROI = 1:size(job.paired_seeds, 1)
+                                    for iROI = 1:size(job.paired_seeds, 1)
+                                        % Need to check this for every seed pair //EGC
+                                        if isempty(currCorrMatRaw)
                                             pairedSeedsRaw{iROI}{s1,c1} = NaN;
-                                        end
-                                    else
-                                        % choose only 6 values for each mouse, each color
-                                        for iROI = 1:size(job.paired_seeds, 1)
+                                        elseif isnan(currCorrMatRaw(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2))) || isempty(currCorrMatRaw(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2)))
+                                            pairedSeedsRaw{iROI}{s1,c1} = NaN;
+                                        else
+                                            % choose only 6 values for each mouse, each color
                                             pairedSeedsRaw{iROI}{s1,c1} = currCorrMatRaw(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2));
                                         end
-                                    end
+                                    end % paired ROIs loop
                                 end
                             end % raw time course
                             
@@ -290,13 +293,13 @@ for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
         [job, IOI, e, y, eTotal, yTotal, statTest, meanCorr, stdCorr] = subfunction_group_corr_test_unpaired(job, IOI, c1, groupCorrData, statTest, meanCorr, stdCorr, eTotal, yTotal, isTreatment);
         % Perform tests on the derivative of ROIs time-course
         [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff] = subfunction_group_corr_test_diff_unpaired(job, IOI, c1, groupCorrDataDiff, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff, isTreatment);
-%         % Perform tests on raw data of ROIs time-course
+        %         % Perform tests on raw data of ROIs time-course
         [job, IOI, eRaw, yRaw, eTotalRaw, yTotalRaw, statTestRaw, meanCorrRaw, stdCorrRaw] = subfunction_group_corr_test_raw_unpaired(job, IOI, c1, groupCorrDataRaw, statTestRaw, meanCorrRaw, stdCorrRaw, eTotalRaw, yTotalRaw, isTreatment);
-%         % Plot results
+        %         % Plot results
         subfunction_plot_group_corr_test(job, IOI, c1, e, y, statTest);
-%         % Plot results based on 1st derivative
+        %         % Plot results based on 1st derivative
         subfunction_plot_group_corr_test_diff(job, IOI, c1, eDiff, yDiff, statTestDiff);
-%         % Plot results based on raw data
+        %         % Plot results based on raw data
         subfunction_plot_group_corr_test_raw(job, IOI, c1, eRaw, yRaw, statTestRaw);
     end
 end % loop over colors
@@ -329,7 +332,7 @@ for iSubjects = 1:size(subjectName,1),
             dataCell{iRows,2} = pairedSeedsNames{groupCorrIdx{iSeedPairs, c1}(iSubjects, 1)}{iSeedPairs,1};
         else
             dataCell{iRows,2} = '';
-        end 
+        end
         % Bilateral correlation measure
         if ~isempty(groupCorrData{iSeedPairs,c1})
             dataCell{iRows,3} = groupCorrData{iSeedPairs,c1}(groupCorrIdx{iSeedPairs, c1}(iSubjects, 1));
@@ -349,7 +352,7 @@ for iSubjects = 1:size(subjectName,1),
             dataCell{iRows,5} = '';
         end
         % 1 if measure belongs to treatment group, 0 if control
-       	if ~isempty(groupID{groupCorrIdx{iSeedPairs, c1}(iSubjects, 1)}{iSeedPairs,1})
+        if ~isempty(groupID{groupCorrIdx{iSeedPairs, c1}(iSubjects, 1)}{iSeedPairs,1})
             dataCell{iRows,6} = double(groupID{groupCorrIdx{iSeedPairs, c1}(iSubjects, 1)}{iSeedPairs,1});
         else
             dataCell{iRows,6} = '';
@@ -391,12 +394,27 @@ function [job, IOI, e, y, eTotal, yTotal, statTest, meanCorr, stdCorr] = subfunc
 for iSeeds = 1:size(job.paired_seeds, 1)
     % Average of control group
     meanCorr{iSeeds,c1}(1) = nanmean(groupCorrData{iSeeds,c1}(~isTreatment));
-    % Average of treatment group
-    meanCorr{iSeeds,c1}(2) = nanmean(groupCorrData{iSeeds,c1}(isTreatment));
     % Standard deviation of control group
     stdCorr{iSeeds,c1}(1) = nanstd(groupCorrData{iSeeds,c1}(~isTreatment));
-    % Standard deviation oftreatment group
+    % Average of treatment group
+    meanCorr{iSeeds,c1}(2) = nanmean(groupCorrData{iSeeds,c1}(isTreatment));
+    % Standard deviation of treatment group
     stdCorr{iSeeds,c1}(2) = nanstd(groupCorrData{iSeeds,c1}(isTreatment));
+    
+    if isfield(job.remOutlier, 'remOutOn')
+        nStdDev = job.remOutlier.remOutOn.stdDevVal;
+        outliers = zeros(size(isTreatment));
+        % Outliers of control group
+        outliers(~isTreatment) = abs(groupCorrData{iSeeds,c1}(~isTreatment) - meanCorr{iSeeds,c1}(1)) > nStdDev*stdCorr{iSeeds,c1}(1);
+        if any(outliers(~isTreatment))
+        	groupCorrData{iSeeds,c1}(~isTreatment & outliers) = NaN;
+        end
+        % Outliers of treatment group
+        outliers(isTreatment) = abs(groupCorrData{iSeeds,c1}(isTreatment) - meanCorr{iSeeds,c1}(2)) > nStdDev*stdCorr{iSeeds,c1}(2);
+        if any(outliers(~isTreatment))
+            groupCorrData{iSeeds,c1}(isTreatment & outliers) = NaN;
+        end
+    end
     
     % Used to plot bar graphs with errorbars
     y(iSeeds,:) = meanCorr{iSeeds,c1};
@@ -445,6 +463,10 @@ save(IOI.fcIOS.corr(1).fnameGroup,'groupCorrData', 'isTreatment',...
 end % subfunction_group_corr_test_unpaired
 
 function [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff] = subfunction_group_corr_test_diff_unpaired(job, IOI, c1, groupCorrDataDiff, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff, isTreatment)
+% empty outputs
+eDiff = [];
+yDiff = [];
+
 if isfield (job,'derivative')
     if job.derivative
         for iSeeds = 1:size(job.paired_seeds, 1)
@@ -487,25 +509,30 @@ if isfield (job,'derivative')
             end % Wilcoxon test
             
         end % paired-seeds loop
+        
+        
+        % Show standard error bars instead of standard deviation
+        if job.stderror
+            % std error bars: sigma/sqrt(N)
+            eDiff = eDiff / sqrt(size(groupCorrDataDiff{iSeeds,c1}, 1));
+        end
+        
+        % Save total data for plotting later
+        yTotalDiff{c1} = yDiff;
+        eTotalDiff{c1} = eDiff;
+        
+        % Save results in .mat file
+        save(IOI.fcIOS.corr(1).fnameGroupDiff,'groupCorrDataDiff','isTreatment',...
+            'meanCorrDiff','stdCorrDiff','statTestDiff','yTotalDiff','eTotalDiff');
     end
-    
-    % Show standard error bars instead of standard deviation
-    if job.stderror
-        % std error bars: sigma/sqrt(N)
-        eDiff = eDiff / sqrt(size(groupCorrDataDiff{iSeeds,c1}, 1));
-    end
-    
-    % Save total data for plotting later
-    yTotalDiff{c1} = yDiff;
-    eTotalDiff{c1} = eDiff;
-    
-    % Save results in .mat file
-    save(IOI.fcIOS.corr(1).fnameGroupDiff,'groupCorrDataDiff','isTreatment',...
-        'meanCorrDiff','stdCorrDiff','statTestDiff','yTotalDiff','eTotalDiff');
 end % derivative
 end % subfunction_group_corr_test_diff_unpaired
 
 function [job, IOI, eRaw, yRaw, eTotalRaw, yTotalRaw, statTestRaw, meanCorrRaw, stdCorrRaw] = subfunction_group_corr_test_raw_unpaired(job, IOI, c1, groupCorrDataRaw, statTestRaw, meanCorrRaw, stdCorrRaw, eTotalRaw, yTotalRaw, isTreatment)
+% empty outputs
+eRaw = [];
+yRaw = [];
+
 if isfield (job,'rawData')
     if job.rawData
         for iSeeds = 1:size(job.paired_seeds, 1)
@@ -572,10 +599,7 @@ colorNames      = fieldnames(IOI.color);
 % Positioning factor for the * mark, depends on max data value at the given seed
 starPosFactor   = 1.05;
 % Font Sizes
-titleFontSize   = 12;
 axisFontSize    = 12;
-labelFontSize   = 14;
-legendFontSize  = 14;
 starFontSize    = 22;
 axMargin        = 0.5;
 
@@ -609,11 +633,13 @@ if job.ttest1
                 colormap(gray)
         end
         title(sprintf('C%d(%s). T-test (*p<%.2g)',...
-            c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
+            c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',job.titleFontSize)
         set(gca,'FontSize',axisFontSize)
-        ylabel('Functional correlation z(r)','FontSize',labelFontSize)
-        set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-%         legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize,'location','NorthWest')
+        ylabel('Functional correlation z(r)','FontSize',job.yLabelFontSize)
+        set(gca,'XTickLabel',job.xAxisLabels,'FontWeight', 'b','FontSize',job.xLabelFontSize)
+        if isfield(job.legends, 'legendShow')
+            legend(job.legends.legendShow.legendStr,'FontSize',job.legends.legendShow.legendFontSize,'location',job.legends.legendShow.legendLocation)
+        end
         set(gca, 'xLim', [axMargin size(y,1) + axMargin]);
         if isfield(job.yLimits, 'yLimManual')
             set(gca, 'ylim', job.yLimits.yLimManual.yLimValue)
@@ -675,11 +701,13 @@ if job.wilcoxon1
                 colormap(gray)
         end
         title(sprintf('C%d(%s). Wilcoxon *(p<%.2g)',...
-            c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
+            c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',job.titleFontSize)
         set(gca,'FontSize',axisFontSize)
-        ylabel('Functional correlation z(r)','FontSize',labelFontSize)
-        set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-%         legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize,'location','NorthWest')
+        ylabel('Functional correlation z(r)','FontSize',job.yLabelFontSize)
+        set(gca,'XTickLabel',job.xAxisLabels,'FontWeight', 'b','FontSize',job.xLabelFontSize)
+        if isfield(job.legends, 'legendShow')
+            legend(job.legends.legendShow.legendStr,'FontSize',job.legends.legendShow.legendFontSize,'location',job.legends.legendShow.legendLocation)
+        end
         set(gca, 'xLim', [axMargin size(y,1) + axMargin]);
         if isfield(job.yLimits, 'yLimManual')
             set(gca, 'ylim', job.yLimits.yLimManual.yLimValue)
@@ -720,10 +748,7 @@ if isfield (job,'derivative')
         % Positioning factor for the * mark, depends on max data value at the given seed
         starPosFactor   = 1.05;
         % Font Sizes
-        titleFontSize   = 12;
         axisFontSize    = 12;
-        labelFontSize   = 14;
-        legendFontSize  = 14;
         starFontSize    = 22;
         axMargin        = 0.5;
         
@@ -757,11 +782,13 @@ if isfield (job,'derivative')
                         colormap(gray)
                 end
                 title(sprintf('C%d(%s) Diff. T-test (*p<%.2g)',...
-                    c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
+                    c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',job.titleFontSize)
                 set(gca,'FontSize',axisFontSize)
-                ylabel('Functional correlation z(r)','FontSize',labelFontSize)
-                set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-%                 legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize,'location','NorthWest')
+                ylabel('Functional correlation z(r)','FontSize',job.yLabelFontSize)
+                set(gca,'XTickLabel',job.xAxisLabels,'FontWeight', 'b','FontSize',job.xLabelFontSize)
+                if isfield(job.legends, 'legendShow')
+                    legend(job.legends.legendShow.legendStr,'FontSize',job.legends.legendShow.legendFontSize,'location',job.legends.legendShow.legendLocation)
+                end
                 set(gca, 'xLim', [axMargin size(yDiff,1) + axMargin]);
                 if isfield(job.yLimits, 'yLimManual')
                     set(gca, 'ylim', job.yLimits.yLimManual.yLimValue)
@@ -823,11 +850,13 @@ if isfield (job,'derivative')
                         colormap(gray)
                 end
                 title(sprintf('C%d(%s) Diff. Wilcoxon (*p<%.2g)',...
-                    c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
+                    c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',job.titleFontSize)
                 set(gca,'FontSize',axisFontSize)
-                ylabel('Functional correlation z(r)','FontSize',labelFontSize)
-                set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-%                 legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize,'location','NorthWest')
+                ylabel('Functional correlation z(r)','FontSize',job.yLabelFontSize)
+                set(gca,'XTickLabel',job.xAxisLabels,'FontWeight', 'b','FontSize',job.xLabelFontSize)
+                if isfield(job.legends, 'legendShow')
+                    legend(job.legends.legendShow.legendStr,'FontSize',job.legends.legendShow.legendFontSize,'location',job.legends.legendShow.legendLocation)
+                end
                 set(gca, 'xLim', [axMargin size(yDiff,1) + axMargin]);
                 if isfield(job.yLimits, 'yLimManual')
                     set(gca, 'ylim', job.yLimits.yLimManual.yLimValue)
@@ -870,10 +899,7 @@ if isfield (job,'rawData')
         % Positioning factor for the * mark, depends on max data value at the given seed
         starPosFactor   = 1.05;
         % Font Sizes
-        titleFontSize   = 12;
         axisFontSize    = 12;
-        labelFontSize   = 14;
-        legendFontSize  = 14;
         starFontSize    = 22;
         axMargin        = 0.5;
         
@@ -907,11 +933,13 @@ if isfield (job,'rawData')
                         colormap(gray)
                 end
                 title(sprintf('C%d(%s) Raw T-test (*p<%.2g)',...
-                    c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
+                    c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',job.titleFontSize)
                 set(gca,'FontSize',axisFontSize)
-                ylabel('Functional correlation z(r)','FontSize',labelFontSize)
-                set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-%                 legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize,'location','NorthWest')
+                ylabel('Functional correlation z(r)','FontSize',job.yLabelFontSize)
+                set(gca,'XTickLabel',job.xAxisLabels,'FontWeight', 'b','FontSize',job.xLabelFontSize)
+                if isfield(job.legends, 'legendShow')
+                    legend(job.legends.legendShow.legendStr,'FontSize',job.legends.legendShow.legendFontSize,'location',job.legends.legendShow.legendLocation)
+                end
                 set(gca, 'xLim', [axMargin size(yRaw,1) + axMargin]);
                 if isfield(job.yLimits, 'yLimManual')
                     set(gca, 'ylim', job.yLimits.yLimManual.yLimValue)
@@ -973,11 +1001,13 @@ if isfield (job,'rawData')
                         colormap(gray)
                 end
                 title(sprintf('C%d(%s) Raw Wilcoxon (*p<%.2g)',...
-                    c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',titleFontSize)
+                    c1,colorNames{1+c1},job.alpha),'interpreter','none','FontSize',job.titleFontSize)
                 set(gca,'FontSize',axisFontSize)
-                ylabel('Functional correlation z(r)','FontSize',labelFontSize)
-                set(gca,'XTickLabel',{'F', 'M', 'C', 'S', 'R', 'V'},'FontWeight', 'b','FontSize',labelFontSize)
-%                 legend({'NaCl' 'CaCl_2'},'FontSize',legendFontSize,'location','NorthWest')
+                ylabel('Functional correlation z(r)','FontSize',job.yLabelFontSize)
+                set(gca,'XTickLabel',job.xAxisLabels,'FontWeight', 'b','FontSize',job.xLabelFontSize)
+                if isfield(job.legends, 'legendShow')
+                    legend(job.legends.legendShow.legendStr,'FontSize',job.legends.legendShow.legendFontSize,'location',job.legends.legendShow.legendLocation)
+                end
                 set(gca, 'xLim', [axMargin size(yRaw,1) + axMargin]);
                 if isfield(job.yLimits, 'yLimManual')
                     set(gca, 'ylim', job.yLimits.yLimManual.yLimValue)

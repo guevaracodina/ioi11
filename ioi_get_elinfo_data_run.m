@@ -1,4 +1,5 @@
 function out = ioi_get_elinfo_data_run(job)
+% Get stats on ecg and temperature. 
 %_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
