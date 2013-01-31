@@ -279,7 +279,6 @@ eTotalDiff      = [];
 yTotalDiff      = [];
 eTotalRaw       = [];
 yTotalRaw       = [];
-% dataCell        = [];
 
 for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
     doColor = ioi_doColor(IOI,c1,IC);
@@ -450,7 +449,7 @@ end % paired-seeds loop
 % Show standard error bars instead of standard deviation
 if job.stderror
     % std error bars: sigma/sqrt(N)
-    e = e / sqrt(size(groupCorrData{iSeeds,c1}, 1));
+    e = e / sqrt(numel(~isnan(groupCorrData{iSeeds,c1})==1));
 end
 
 % Save total data for plotting later
@@ -514,7 +513,7 @@ if isfield (job,'derivative')
         % Show standard error bars instead of standard deviation
         if job.stderror
             % std error bars: sigma/sqrt(N)
-            eDiff = eDiff / sqrt(size(groupCorrDataDiff{iSeeds,c1}, 1));
+            eDiff = eDiff / sqrt(numel(~isnan(groupCorrDataDiff{iSeeds,c1})==1));
         end
         
         % Save total data for plotting later
@@ -579,7 +578,7 @@ if isfield (job,'rawData')
         % Show standard error bars instead of standard deviation
         if job.stderror
             % std error bars: sigma/sqrt(N)
-            eRaw = eRaw / sqrt(size(groupCorrDataRaw{iSeeds,c1}, 1));
+            eRaw = eRaw / sqrt(numel(~isnan(groupCorrDataRaw{iSeeds,c1})==1));
         end
         
         % Save total data for plotting later
