@@ -176,7 +176,7 @@ yLimValue.tag               = 'yLimValue';
 yLimValue.name              = 'Y axis limits';
 yLimValue.strtype           = 'r';
 yLimValue.num               = [1 2];
-yLimValue.val               = {[-0.9 1.3]};
+yLimValue.val               = {[-0.15 1.7]};
 yLimValue.help              = {'Enter limits for Y axis'};
 
 yLimManual                  = cfg_branch;
