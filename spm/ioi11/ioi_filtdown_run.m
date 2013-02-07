@@ -47,7 +47,7 @@ for SubjIdx=1:length(job.IOImat)
                 ROIdata = load(IOI.ROI.ROIfname);
                 ROIdata = ROIdata.ROI;
             end
-            if job.wholeImage && IOI.fcIOS.mask.seriesOK
+            if IOI.fcIOS.mask.seriesOK
                 brainMaskData = load(IOI.fcIOS.mask.fnameSeries);
                 brainMaskData = brainMaskData.brainMaskSeries;
             end
@@ -56,6 +56,8 @@ for SubjIdx=1:length(job.IOImat)
             
             % Include colors
             IC = job.IC;
+            % Band-pass filter configuration
+            [z, p, k] = temporalBPFconfig(fType, fs, BPFfreq, filterOrder, Rp_Rs);
             % Loop over sessions
             for s1=1:length(IOI.sess_res)
                 if all_sessions || sum(s1==selected_sessions)
@@ -91,7 +93,8 @@ for SubjIdx=1:length(job.IOImat)
                                             if brainMask(iX,iY) == 1
                                                 % Only non-masked pixels are
                                                 % band-passs filtered
-                                                filtY(iX,iY,1,:) = temporalBPF(fType, fs, BPFfreq, filterOrder, squeeze(y(iX,iY,:)), Rp_Rs);
+                                                % filtY(iX,iY,1,:) = temporalBPF(fType, fs, BPFfreq, filterOrder, squeeze(y(iX,iY,:)), Rp_Rs);
+                                                filtY(iX,iY,1,:) = temporalBPFrun(squeeze(y(iX,iY,:)), z, p, k);
                                                 % Downsampling
                                                 filtNdownY(iX,iY,1,:) = downsample(squeeze(filtY(iX,iY,1,:)), samples2skip);
                                             end
@@ -104,19 +107,20 @@ for SubjIdx=1:length(job.IOImat)
                                     filtNdownfnameWholeImage = fullfile(sessionDir,[IOI.subj_name '_OD_' IOI.color.eng(c1) '_filtNdown_' sprintf('%05d',1) 'to' sprintf('%05d',IOI.sess_res{s1}.n_frames) '.nii']);
                                     ioi_save_nifti(filtNdownY, filtNdownfnameWholeImage, [1 1 samples2skip/fs]);
                                     IOI.fcIOS.filtNdown.fnameWholeImage{s1, c1} = filtNdownfnameWholeImage;
-                                    if IOI.fcIOS.mask.seriesOK
-                                        % Retrieve time-course
-                                        % signal for brain mask
-                                        brainSignal = brainMaskData{1}{s1, c1};
-                                        % Band-passs filtering
-                                        brainSignal = temporalBPF(fType, fs, BPFfreq, filterOrder, brainSignal, Rp_Rs);
-                                        % Downsampling
-                                        brainSignal = downsample(brainSignal, samples2skip);
-                                        % Update data cell
-                                        filtNdownBrain{1}{s1,c1} = brainSignal;
-                                    end
                                     fprintf('Filtering and downsampling whole images for session %d and color %d (%s) completed\n',s1,c1,colorNames{1+c1})
                                 end % End of filtering & downsampling whole images
+                                if IOI.fcIOS.mask.seriesOK
+                                    % Retrieve time-course
+                                    % signal for brain mask
+                                    brainSignal = brainMaskData{1}{s1, c1};
+                                    % Band-passs filtering
+                                    % brainSignal = temporalBPF(fType, fs, BPFfreq, filterOrder, brainSignal, Rp_Rs);
+                                    brainSignal = temporalBPFrun(brainSignal, z, p, k);
+                                    % Downsampling
+                                    brainSignal = downsample(brainSignal, samples2skip);
+                                    % Update data cell
+                                    filtNdownBrain{1}{s1,c1} = brainSignal;
+                                end
                                 %skip laser - only extract for flow
                                 [all_ROIs selected_ROIs] = ioi_get_ROIs(job);
                                 nROI = 1:length(IOI.res.ROI); % All the ROIs
@@ -136,7 +140,8 @@ for SubjIdx=1:length(job.IOImat)
                                             ROIsignal = ROIdata{r1}{s1, c1};
                                             
                                             % Band-passs filtering
-                                            ROIsignal = temporalBPF(fType, fs, BPFfreq, filterOrder, ROIsignal, Rp_Rs);
+                                            % ROIsignal = temporalBPF(fType, fs, BPFfreq, filterOrder, ROIsignal, Rp_Rs);
+                                            ROIsignal = temporalBPFrun(ROIsignal, z, p, k);
                                             
                                             % Downsampling
                                             ROIsignal = downsample(ROIsignal, samples2skip);
@@ -160,7 +165,8 @@ for SubjIdx=1:length(job.IOImat)
                                                     ROIsignal = ROIdata{r1}{s1, c1};
                                                     
                                                     % Band-passs filtering
-                                                    ROIsignal = temporalBPF(fType, fs, BPFfreq, filterOrder, ROIsignal, Rp_Rs);
+                                                    % ROIsignal = temporalBPF(fType, fs, BPFfreq, filterOrder, ROIsignal, Rp_Rs);
+                                                    ROIsignal = temporalBPFrun(ROIsignal, z, p, k);
                                                     
                                                     % Downsampling
                                                     ROIsignal = downsample(ROIsignal, samples2skip);
@@ -177,17 +183,13 @@ for SubjIdx=1:length(job.IOImat)
                                         end
                                         if colorOK
                                             filtNdownROI{r1}{s1,c1} = ROIsignal;
-                                            if job.wholeImage
-                                                filtNdownBrain{1}{s1,c1} = brainSignal;
-                                            end
+                                            filtNdownBrain{1}{s1,c1} = brainSignal;
                                         end
                                     end
                                 end % ROI loop
                                 if colorOK
                                     filtNdownROI{r1}{s1,c1} = ROIsignal;
-                                    if job.wholeImage
-                                        filtNdownBrain{1}{s1,c1} = brainSignal;
-                                    end
+                                    filtNdownBrain{1}{s1,c1} = brainSignal;
                                     fprintf('Filtering and downsampling ROIs/seeds for session %d and color %d (%s) completed\n',s1,c1,colorNames{1+c1})
                                 end
                             end
@@ -201,11 +203,7 @@ for SubjIdx=1:length(job.IOImat)
             IOI.fcIOS.filtNdown(1).filtNdownOK = true;
             % Save filtered & downsampled data
             filtNdownfname = fullfile(dir_ioimat,'filtNdown.mat');
-            if job.wholeImage
-                save(filtNdownfname,'filtNdownROI','filtNdownBrain');
-            else
-                save(filtNdownfname,'filtNdownROI');
-            end
+            save(filtNdownfname,'filtNdownROI','filtNdownBrain');
             % Update .mat file name in IOI structure
             IOI.fcIOS.filtNdown.fname = filtNdownfname;
             % Desired downsampling frequency, it could be different to real

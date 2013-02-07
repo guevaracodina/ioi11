@@ -1,8 +1,8 @@
-function cleanupOK = ioi_fc_GLM_on_ROI_cleanup(IOI)
+function cleanupOK = ioi_fc_GLM_on_ROI_cleanup(IOI, job)
 % Cleanup SPM generated files during the GLM regression. Keeps only the .nii
 % files of the regressed ROI/whole image time course.
 % SYNTAX
-% cleanupOK = ioi_fc_GLM_on_ROI_cleanup(IOI)
+% cleanupOK = ioi_fc_GLM_on_ROI_cleanup(IOI, job)
 % INPUT
 % IOI       IOI structure
 % OUTPUT
@@ -27,26 +27,28 @@ try
                     'RPV.img'
                     'SPM.mat'
                     };
-    % --------------------------------------------------------------------------
-    % Clean-up files from whole image regression
-    % --------------------------------------------------------------------------
-    % Loop over sessions
-    for iSessions = 1:size(IOI.fcIOS.SPM.fnameSPM, 1)
-        % Loop over colors
-        for iColors = 1:size(IOI.fcIOS.SPM.fnameSPM, 2)
-            % Only remove SPM files if regression was succesful
-            if IOI.fcIOS.SPM.wholeImageRegressOK{iSessions, iColors}
-                % Loop over files to delete
-                for iFiles = 1:numel(files2Delete)
-                    fName = fullfile(IOI.fcIOS.SPM.fnameSPM{iSessions, iColors},...
-                        files2Delete{iFiles});
-                    % Undocumented MATLAB feature to delete files with Java
-                    java.io.File(fName).delete();
+	if job.wholeImage
+        % ----------------------------------------------------------------------
+        % Clean-up files from whole image regression
+        % ----------------------------------------------------------------------
+        % Loop over sessions
+        for iSessions = 1:size(IOI.fcIOS.SPM.fnameSPM, 1)
+            % Loop over colors
+            for iColors = 1:size(IOI.fcIOS.SPM.fnameSPM, 2)
+                % Only remove SPM files if regression was succesful
+                if IOI.fcIOS.SPM.wholeImageRegressOK{iSessions, iColors}
+                    % Loop over files to delete
+                    for iFiles = 1:numel(files2Delete)
+                        fName = fullfile(IOI.fcIOS.SPM.fnameSPM{iSessions, iColors},...
+                            files2Delete{iFiles});
+                        % Undocumented MATLAB feature to delete files with Java
+                        java.io.File(fName).delete();
+                    end
                 end
             end
         end
-    end
-    % --------------------------------------------------------------------------
+        % ----------------------------------------------------------------------
+	end
     
     % --------------------------------------------------------------------------
     % Clean-up files from ROIs regression

@@ -227,9 +227,9 @@ for SubjIdx=1:length(job.IOImat)
                                                         disp(exception.stack(1))
                                                     end
                                                 end
-                                            end
+                                            end % ROI loop
                                         end
-                                    end % ROI loop
+                                    end 
                                 end % colors loop
                             end
                         end % sessions loop
@@ -240,7 +240,7 @@ for SubjIdx=1:length(job.IOImat)
                         end
                         if job.cleanupGLM
                             % Keeps only NIfTI files of succesfully regressed ROIs
-                            IOI.fcIOS.SPM.cleanupOK = ioi_fc_GLM_on_ROI_cleanup(IOI);
+                            IOI.fcIOS.SPM.cleanupOK = ioi_fc_GLM_on_ROI_cleanup(IOI, job);
                         end
                         % Save IOI matrix
                         save(IOImat,'IOI');

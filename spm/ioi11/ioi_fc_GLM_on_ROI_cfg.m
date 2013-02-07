@@ -39,7 +39,7 @@ wholeImage.name             = 'Regress signal from whole image time-course';
 wholeImage.labels           = {'Yes','No'};
 wholeImage.values           = {1,0};
 wholeImage.val              = {1};
-wholeImage.help             = {'Regress signal from whole image time-course. It creates a new sub-folder for each session'};
+wholeImage.help             = {'Regress signal from whole image time-course. It creates a new sub-folder for each session. If not selected, GLM will be performed only on ROIs'};
 
 % Clean-up redundant SPM files if regression is succesful
 cleanupGLM                  = cfg_menu;
