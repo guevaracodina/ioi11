@@ -124,7 +124,7 @@ for SubjIdx = 1:size(job.IOImat, 1)
                 end % paired seeds loop
                 
                 % Loop over available colors
-                for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
+                for c1 = 1:size(seed2seedCorrMat{1}, 2)
                     doColor = ioi_doColor(IOI,c1,IC);
                     if doColor
                         % Loop over sessions
@@ -280,7 +280,7 @@ yTotalDiff      = [];
 eTotalRaw       = [];
 yTotalRaw       = [];
 
-for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
+for c1 = 1:size(seed2seedCorrMat{1}, 2)
     doColor = ioi_doColor(IOI,c1,IC);
     if doColor
         fileName = fullfile(job.parent_results_dir{1},['fcGroup_C'  num2str(c1) '_' colorNames{1+c1} '.csv']);

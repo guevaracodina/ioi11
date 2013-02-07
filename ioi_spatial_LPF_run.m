@@ -78,6 +78,10 @@ for SubjIdx=1:length(job.IOImat)
                                                 for t1 = 1:nt,
                                                     imagesTimeCourseLPF(:,:,1,t1) = ioi_spatial_LPF('lpf', K, squeeze(imagesTimeCourse(:,:,1,t1)));
                                                 end
+                                                
+                                                % Backup original files
+                                                local_backup_nifti(IOI, s1, c1, f1)
+                                                
                                                 % Overwrite the image
                                                 ioi_save_nifti(imagesTimeCourseLPF, fname, vx);
                                                 % Update progress bar
@@ -157,6 +161,10 @@ for SubjIdx=1:length(job.IOImat)
                                             for t1 = 1:nt,
                                                 imagesTimeCourseLPF(:,:,1,t1) = ioi_spatial_LPF('lpf', K, squeeze(imagesTimeCourse(:,:,1,t1)));
                                             end
+                                            
+                                            % Backup original files
+                                            local_backup_nifti(IOI, s1, c1, f1)
+                                                
                                             % Overwrite the image
                                             ioi_save_nifti(imagesTimeCourseLPF, fname, vx);
                                             % Update progress bar
@@ -189,6 +197,13 @@ for SubjIdx=1:length(job.IOImat)
         disp(exception.identifier)
         disp(exception.stack(1))
     end
-end
+end % End subjects loop
 
+function local_backup_nifti(IOI, s1, c1, f1)
+% Backup NIfTI files, they will be copied with the extension .nolpf, and the
+% low-pass filtered data will be overwritten to the original NIfTI files.
+[pathName, fileName, fileExt] = fileparts(IOI.sess_res{s1}.fname{c1}{f1});
+backupName = fullfile(pathName, [fileName '.nolpf' fileExt]);
+copyfile(IOI.sess_res{s1}.fname{c1}{f1}, backupName);
+end
 % EOF

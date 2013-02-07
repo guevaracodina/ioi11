@@ -1,7 +1,7 @@
-function Yfilt = temporalBPF(type, fs, cutoff, FilterOrder, Y, varargin)
+function [z, p, k] = temporalBPFconfig(type, fs, cutoff, FilterOrder, varargin)
 % Butterworth type Band-pass filter (1-D)
 % SYNTAX
-% Yfilt = temporalBPF(type, fs, cutoff, FilterOrder, Y, [Rp Rs])
+% [z, p, k] = temporalBPFconfig(type, fs, cutoff, FilterOrder, [Rp Rs])
 % INPUTS
 % type          String specifying the type of filter to use:
 %               'butter'
@@ -11,11 +11,12 @@ function Yfilt = temporalBPF(type, fs, cutoff, FilterOrder, Y, varargin)
 % fs            Sampling frequency(in seconds)
 % cutoff        A two-element vector fn (in Hz) that must be 0.0 < fn < fs/2
 % FilterOrder   An integer (usually N=4)
-% Y             The 1-D signal to be filtered
 % [Rp Rs]       OPTIONAL: 2-element vector with Rp dB of ripple in the passband,
 %               and a stopband Rs dB down from the peak value in the passband.
 % OUTPUTS
-% Yfilt         The filtered 1-D signal
+% z             zeros
+% p             poles
+% k             gain
 %_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
@@ -24,7 +25,7 @@ try
     % only want 1 optional input at most
     numVarArgs = length(varargin);
     if numVarArgs > 1
-        error('ioi_bpf_cfg:TooManyInputs', ...
+        error('temporalBPFconfig:TooManyInputs', ...
             'requires at most 1 optional input: [Rp Rs]');
     end
     
@@ -55,45 +56,16 @@ try
         case 'ellip'                    % Elliptic filter
             % Rp dB of ripple in the passband, and a stopband Rs dB down from
             % the peak value in the passband
-                        
-            % Following lines deprecated, kept just in case //EGC
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            % [b,a] = ellip(FilterOrder, Rp, Rs, Wn, 'bandpass');
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            
+
             % Due to edge artifacts, one should use the [z,p,k] syntax to design
             % IIR filters.
             [z, p, k] = ellip(FilterOrder, Rp, Rs, Wn, 'bandpass');
         otherwise
             fprintf('Filter %s not available \n',type);
-            Yfilt = Y;
             return
     end
-    
-    % Following lines deprecated, kept just in case //EGC
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Yfilt = filtfilt(b, a, Y);
-    % Zero-phase forward and reverse digital filtering filtfilt disabled because
-    % the method is not implemented in the dfilt object, only filter is.
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    % Convert zero-pole-gain filter parameters to second-order sections form
-    [sos, g] = zp2sos(z,p,k);
-    
-    % Following lines deprecated, kept just in case //EGC
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % Create a dicrete-time filter object
-    % hFilt = dfilt.df2sos(sos,g);
-    % % Perform the filtering
-    % Yfilt = filter(hFilt, Y);
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    % Zero-phase forward and reverse digital IIR filtering using digital filter
-    % object to keep maximum numerical accuracy. //EGC
-    Yfilt = ioi_filtfilt(sos, g, Y);
-    
 catch exception
-    Yfilt = Y;
+    z = []; p = []; k = [];
     disp(exception.identifier)
     disp(exception.stack(1))
 end

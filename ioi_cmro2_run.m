@@ -60,6 +60,24 @@ for SubjIdx = 1:length(job.IOImat)
                 if ~(IOI.color.eng==str_CMRO2)
                     IOI.color.eng = [IOI.color.eng str_CMRO2];
                 end
+                % Band-pass filter configuration
+                [z, p, k] = temporalBPFconfig(fType, fs, BPFfreq, filterOrder, Rp_Rs);
+                if isfield(IOI,'fcIOS')
+                    if isfield(IOI.fcIOS,'mask')
+                        % Check if a brain mask has already been selected
+                        if IOI.fcIOS.mask.maskOK
+                            % Read brain mask file
+                            vol = spm_vol(IOI.fcIOS.mask.fname);
+                            brainMask = logical(spm_read_vols(vol));
+                        else
+                            brainMask = [];
+                        end
+                    else
+                        brainMask = [];
+                    end
+                else
+                    brainMask = [];
+                end
                 % Check that sessions have been processed
                 if isfield(IOI,'sess_res')
                     % Loop over sessions
@@ -85,10 +103,21 @@ for SubjIdx = 1:length(job.IOImat)
                                             [imagesHbR nx(3) ny(3) nt(3)]  = local_read_NIfTI(fname_list_HbR{f1});
                                             % If HbO, HbR & flow data have the same size
                                             if all(nx == nx(1)) && all(ny == ny(1)) && all(nt == nt(1))
+                                                if ~isempty(brainMask)
+                                                    % Test if there was shrinkage
+                                                    if size(brainMask,1)~= nx(1) || size(brainMask,2)~= ny(1)
+                                                        brainMask = ioi_MYimresize(brainMask, [size(y,1) size(y,2)]);
+                                                    end
+                                                else
+                                                    brainMask = [];
+                                                end
                                                 %% Data filtering
-                                                imagesFlow = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesFlow, Rp_Rs, s1);
-                                                imagesHbO  = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesHbO, Rp_Rs, s1);
-                                                imagesHbR  = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesHbR, Rp_Rs, s1);
+                                                % imagesFlow = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesFlow, Rp_Rs, s1);
+                                                % imagesHbO  = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesHbO, Rp_Rs, s1);
+                                                % imagesHbR  = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesHbR, Rp_Rs, s1);
+                                                imagesFlow = local_filter_time_course(imagesFlow, z, p, k, s1, brainMask);
+                                                imagesHbO  = local_filter_time_course(imagesHbO, z, p, k, s1, brainMask);
+                                                imagesHbR  = local_filter_time_course(imagesHbR, z, p, k, s1, brainMask);
                                                 %% CMRO2 computation
                                                 imagesCMRO2 = ioi_cmro2_compute(imagesFlow, imagesHbO, imagesHbR, gammaT, gammaR, IOI.conc.baseline_hbt, IOI.conc.baseline_hbr);
                                             else
@@ -196,7 +225,7 @@ end
 % end
 end % local_check_shrinkage
 
-function filtY = local_filter_time_course(fType, fs, BPFfreq, filterOrder, Y, Rp_Rs, s1)
+function filtY = local_filter_time_course(Y, z, p, k, s1, brainMask)
 slice2D = false;
 % Filters an images time-course along the time dimension.
 if ndims(Y) == 4,
@@ -214,8 +243,16 @@ if ~slice2D
     % Can these loops be vectorized? //EGC
     for iX = 1:size(filtY,1)
         for iY = 1:size(filtY,2)
-            % Filtering
-            filtY(iX,iY,1,:) = temporalBPF(fType, fs, BPFfreq, filterOrder, squeeze(Y(iX,iY,:)), Rp_Rs);
+            if ~isempty(brainMask)
+                if brainMask(iX,iY) == 1
+                    % Only non-masked pixels are band-passs filtered
+                    % filtY(iX,iY,1,:) = temporalBPF(fType, fs, BPFfreq, filterOrder, squeeze(Y(iX,iY,:)), Rp_Rs);
+                    filtY(iX,iY,1,:) = temporalBPFrun(squeeze(Y(iX,iY,:)), z, p, k);
+                end
+            else
+                % filtY(iX,iY,1,:) = temporalBPF(fType, fs, BPFfreq, filterOrder, squeeze(Y(iX,iY,:)), Rp_Rs);
+                filtY(iX,iY,1,:) = temporalBPFrun(squeeze(Y(iX,iY,:)), z, p, k);
+            end
         end
     end
 else
