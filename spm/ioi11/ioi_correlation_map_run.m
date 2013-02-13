@@ -170,13 +170,14 @@ for SubjIdx=1:length(job.IOImat)
                                                             spm_figure('Print', 'Graphics', fullfile(dir_corrfigDiff,newName));
                                                             % Save as nifti
                                                             ioi_save_nifti(tempCorrMap, fullfile(dir_corrfigDiff,[newName oldExt]), vx);
-                                                            IOI.fcIOS.corr(1).corrMapName{r1}{s1, c1} = fullfile(dir_corrfigDiff,[newName oldExt]);
+                                                            IOI.fcIOS.corr(1).corrMapNameDiff{r1}{s1, c1} = fullfile(dir_corrfigDiff,[newName oldExt]);
                                                         end
                                                     end
-                                                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                                                end % Derivative processing
+                                                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                                                    % Derivative processing
+                                                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                                                end
                                                 
-                                                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                                                 if job.generate_figures
                                                     % Improve display
                                                     tempCorrMap(~brainMask) = median(tempCorrMap(:));
@@ -305,8 +306,6 @@ for SubjIdx=1:length(job.IOImat)
                                                         end
                                                     end
                                                 end
- 
-                                               
                                                 % correlation map succesful!
                                                 fprintf('Pearson''s correlation coefficient computed. Seed %d (%s) session %d C%d (%s)\n',r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1});
                                                 IOI.fcIOS.corr(1).corrMapOK{r1}{s1, c1} = true;
