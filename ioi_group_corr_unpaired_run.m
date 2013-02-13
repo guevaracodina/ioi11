@@ -52,12 +52,12 @@ if job.bonferroni
 end
 
 %Big loop over subjects
-for SubjIdx = 1:size(job.IOImat, 1)
+% for SubjIdx = 1:size(job.IOImat, 1)
+for SubjIdx = 1:numel(job.IOImat)
     try
         tic
         %Load IOI.mat information
         [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);
-        
         if ~isfield(IOI.fcIOS.corr,'corrMatrixOK') % correlation matrix OK
             disp(['No seed-to-seed correlation matrix available for subject ' int2str(SubjIdx) ' ... skipping correlation map']);
         else
@@ -65,31 +65,23 @@ for SubjIdx = 1:size(job.IOImat, 1)
                 % Get colors to include information
                 IC = job.IC;
                 colorNames = fieldnames(IOI.color);
-                
                 % File name where correlation data is saved
                 IOI.fcIOS.corr(1).fnameGroup = fullfile(job.parent_results_dir{1},'group_corr_pair_seeds.mat');
-                
                 % File name where correlation data of 1st derivative is saved
                 if isfield(job,'derivative')
                     IOI.fcIOS.corr(1).fnameGroupDiff = fullfile(job.parent_results_dir{1},'group_corr_pair_seeds_diff.mat');
                 end
-                
                 if isfield(job, 'rawData')
                     IOI.fcIOS.corr(1).fnameGroupRaw = fullfile(job.parent_results_dir{1},'group_corr_pair_seeds_raw.mat');
                 end
-                
                 % Check if mouse is tratment (1) or control (0)
                 isTreatment(SubjIdx,1) = ~isempty(regexp(IOI.subj_name, [job.treatmentString '[0-9]+'], 'once'));
-                
                 % Treatment/control sessions is always 1
                 idxSess(1,1:2) = 1;
-                
                 % Additional 3rd column with subject index
                 idxSess(:,3) = SubjIdx;
-                
                 % Get the seed-to-seed correlation matrix (seed2seedCorrMat)
                 load(IOI.fcIOS.corr.corrMatrixFname)
-                
                 if isfield (job,'derivative')
                     if job.derivative
                         % Get the seed-to-seed correlation of 1st derivative matrix
@@ -97,7 +89,6 @@ for SubjIdx = 1:size(job.IOImat, 1)
                         load(IOI.fcIOS.corr.corrMatrixDiffFname)
                     end
                 end
-                
                 if isfield(job, 'rawData')
                     if job.rawData
                         % Compute the seed-to-seed correlation of raw data
@@ -106,7 +97,6 @@ for SubjIdx = 1:size(job.IOImat, 1)
                         save(IOI.fcIOS.corr(1).corrMatrixRawFname, 'seed2seedCorrMatRaw')
                     end
                 end
-                
                 % Initialize cell to hold paired seeds correlation data
                 pairedSeeds = cell([size(job.paired_seeds, 1) 1]);
                 for iCell = 1:size(job.paired_seeds, 1),
@@ -122,6 +112,10 @@ for SubjIdx = 1:size(job.IOImat, 1)
                     subjectName{SubjIdx,1}{iCell,1} = IOI.subj_name;
                     groupID{SubjIdx,1}{iCell,1} = isTreatment(SubjIdx,1);
                 end % paired seeds loop
+                
+%                 if SubjIdx == 17 && c1 == 8
+%                     keyboard
+%                 end % Error in SubBand2 analysis IOI.fcIOS.corr.corrMapName missing CMRO2 //EGC
                 
                 % Loop over available colors
                 for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
@@ -144,7 +138,6 @@ for SubjIdx = 1:size(job.IOImat, 1)
                                     pairedSeeds{iROI}{s1,c1} = currCorrMat(job.paired_seeds(iROI,1), job.paired_seeds(iROI,2));
                                 end
                             end % paired ROIs loop
-                            
                             if isfield (job,'derivative')
                                 if job.derivative
                                     % Get current correlation matrix
@@ -164,7 +157,6 @@ for SubjIdx = 1:size(job.IOImat, 1)
                                     end % paired ROIs loop
                                 end
                             end % derivative
-                            
                             if isfield (job,'rawData')
                                 if job.rawData
                                     % Get current correlation matrix
@@ -184,9 +176,7 @@ for SubjIdx = 1:size(job.IOImat, 1)
                                     end % paired ROIs loop
                                 end
                             end % raw time course
-                            
                         end % sessions loop
-                        
                         % Arrange the paired seeds according to idxSessions
                         fprintf('Retrieving data %s C%d (%s)...\n',IOI.subj_name, c1,colorNames{1+c1});
                         tmpArray = zeros([size(job.paired_seeds, 1), 1]);
@@ -213,25 +203,39 @@ for SubjIdx = 1:size(job.IOImat, 1)
                                         tmpArrayRaw(iROI,iSess,1) = pairedSeedsRaw{iROI}{idxSess(iSess,1), c1};
                                     end
                                 end
-                            end
-                        end
+                            end % sessions loop
+                        end % paired-seeds loop
                         for iROI = 1:size(job.paired_seeds, 1)
-                            % Full group data
-                            groupCorrData{iROI,c1} = [groupCorrData{iROI,c1}; squeeze(tmpArray(iROI,:,:))];
                             % Full group index
                             groupCorrIdx{iROI,c1} = [groupCorrIdx{iROI,c1}; SubjIdx];
+                            if c1 == 8
+                               fprintf('\ntmpArray = %f Subject: %d (%s)\n', squeeze(tmpArray(iROI,:,:)), SubjIdx, IOI.subj_name);
+                            end
+                            if ~isempty(squeeze(tmpArray(iROI,:,:)))
+                                % Full group data
+                                groupCorrData{iROI,c1} = [groupCorrData{iROI,c1}; squeeze(tmpArray(iROI,:,:))];
+                            else
+                                groupCorrData{iROI,c1} = [groupCorrData{iROI,c1}; NaN];
+                            end
                             if isfield (job,'derivative')
                                 if job.derivative
-                                    groupCorrDataDiff{iROI,c1} = [groupCorrDataDiff{iROI,c1}; squeeze(tmpArrayDiff(iROI,:,:))];
+                                    if ~isempty(squeeze(tmpArrayDiff(iROI,:,:)))
+                                        groupCorrDataDiff{iROI,c1} = [groupCorrDataDiff{iROI,c1}; squeeze(tmpArrayDiff(iROI,:,:))];
+                                    else
+                                        groupCorrDataDiff{iROI,c1} = [groupCorrDataDiff{iROI,c1}; NaN];
+                                    end
                                 end
                             end
                             if isfield (job,'rawData')
                                 if job.rawData
-                                    groupCorrDataRaw{iROI,c1} = [groupCorrDataRaw{iROI,c1}; squeeze(tmpArrayRaw(iROI,:,:))];
+                                    if ~isempty(squeeze(tmpArrayRaw(iROI,:,:)))
+                                        groupCorrDataRaw{iROI,c1} = [groupCorrDataRaw{iROI,c1}; squeeze(tmpArrayRaw(iROI,:,:))];
+                                    else
+                                        groupCorrDataRaw{iROI,c1} = [groupCorrDataRaw{iROI,c1}; NaN];
+                                    end
                                 end
                             end
-                        end
-                        
+                        end % paired-seeds loop
                     end
                 end % colors loop
                 % Save group correlation data data (data is appended for more subjects)
@@ -279,6 +283,8 @@ eTotalDiff      = [];
 yTotalDiff      = [];
 eTotalRaw       = [];
 yTotalRaw       = [];
+
+dbstop if error
 
 for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
     doColor = ioi_doColor(IOI,c1,IC);
@@ -421,12 +427,20 @@ for iSeeds = 1:size(job.paired_seeds, 1)
     
     % Unpaired-sample t-test
     if job.ttest1
-        [statTest(1).t(1).H{iSeeds,c1}, statTest(1).t(1).P{iSeeds,c1}, ...
-            statTest(1).t(1).CI{iSeeds,c1}, statTest(1).t(1).STATS{iSeeds,c1}] ...
-            = ttest2(...
-            groupCorrData{iSeeds,c1}(~isTreatment), groupCorrData{iSeeds,c1}(isTreatment),...
-            job.alpha,'both');
-        statTest(1).t(1).id = 'Unpaired-sample t-test';
+        if isempty(groupCorrData{iSeeds,c1}(~isTreatment)) || isempty(groupCorrData{iSeeds,c1}(isTreatment))
+            statTest(1).t(1).H{iSeeds,c1} = false;
+            statTest(1).t(1).P{iSeeds,c1} = NaN;
+            statTest(1).t(1).CI{iSeeds,c1} = NaN;
+            statTest(1).t(1).STATS{iSeeds,c1} = NaN;
+            statTest(1).t(1).id = 'Empty group';
+        else
+            [statTest(1).t(1).H{iSeeds,c1}, statTest(1).t(1).P{iSeeds,c1}, ...
+                statTest(1).t(1).CI{iSeeds,c1}, statTest(1).t(1).STATS{iSeeds,c1}] ...
+                = ttest2(...
+                groupCorrData{iSeeds,c1}(~isTreatment), groupCorrData{iSeeds,c1}(isTreatment),...
+                job.alpha,'both');
+            statTest(1).t(1).id = 'Unpaired-sample t-test';
+        end
     end % t-test
     
     % Wilcoxon rank sum test
@@ -437,11 +451,19 @@ for iSeeds = 1:size(job.paired_seeds, 1)
         treatmentGroup = groupCorrData{iSeeds,c1}(isTreatment);
         % ignore NaN values
         treatmentGroup = treatmentGroup(~isnan(treatmentGroup));
-        % Perform such test
-        [statTest(1).w(1).P{iSeeds,c1}, statTest(1).w(1).H{iSeeds,c1},...
-            statTest(1).w(1).STATS{iSeeds,c1}] = ranksum...
-            (ctrlGroup, treatmentGroup, 'alpha', job.alpha);
-        statTest(1).w(1).id = 'Wilcoxon rank sum test';
+        if isempty(ctrlGroup) || isempty(treatmentGroup)
+            statTest(1).w(1).H{iSeeds,c1} = false;
+            statTest(1).w(1).P{iSeeds,c1} = NaN;
+            statTest(1).w(1).CI{iSeeds,c1} = NaN;
+            statTest(1).w(1).STATS{iSeeds,c1} = NaN;
+            statTest(1).w(1).id = 'Empty group';
+        else
+            % Perform such test
+            [statTest(1).w(1).P{iSeeds,c1}, statTest(1).w(1).H{iSeeds,c1},...
+                statTest(1).w(1).STATS{iSeeds,c1}] = ranksum...
+                (ctrlGroup, treatmentGroup, 'alpha', job.alpha);
+            statTest(1).w(1).id = 'Wilcoxon rank sum test';
+        end
     end % Wilcoxon test
     
 end % paired-seeds loop
@@ -484,12 +506,20 @@ if isfield (job,'derivative')
             
             % Paired-sample t-test
             if job.ttest1
-                [statTestDiff(1).t(1).H{iSeeds,c1}, statTestDiff(1).t(1).P{iSeeds,c1}, ...
-                    statTestDiff(1).t(1).CI{iSeeds,c1}, statTestDiff(1).t(1).STATS{iSeeds,c1}] ...
-                    = ttest2(...
-                    groupCorrDataDiff{iSeeds,c1}(~isTreatment), groupCorrDataDiff{iSeeds,c1}(isTreatment),...
-                    job.alpha,'both');
-                statTestDiff(1).t(1).id = 'Unpaired-sample t-test(1st derivative)';
+                if isempty(groupCorrDataDiff{iSeeds,c1}(~isTreatment)) || isempty(groupCorrDataDiff{iSeeds,c1}(isTreatment))
+                    statTestDiff(1).t(1).H{iSeeds,c1} = false;
+                    statTestDiff(1).t(1).P{iSeeds,c1} = NaN;
+                    statTestDiff(1).t(1).CI{iSeeds,c1} = NaN;
+                    statTestDiff(1).t(1).STATS{iSeeds,c1} = NaN;
+                    statTestDiff(1).t(1).id = 'Empty group';
+                else
+                    [statTestDiff(1).t(1).H{iSeeds,c1}, statTestDiff(1).t(1).P{iSeeds,c1}, ...
+                        statTestDiff(1).t(1).CI{iSeeds,c1}, statTestDiff(1).t(1).STATS{iSeeds,c1}] ...
+                        = ttest2(...
+                        groupCorrDataDiff{iSeeds,c1}(~isTreatment), groupCorrDataDiff{iSeeds,c1}(isTreatment),...
+                        job.alpha,'both');
+                    statTestDiff(1).t(1).id = 'Unpaired-sample t-test(1st derivative)';
+                end
             end % t-test
             
             % Wilcoxon rank sum test
@@ -500,11 +530,19 @@ if isfield (job,'derivative')
                 treatmentGroupDiff = groupCorrDataDiff{iSeeds,c1}(isTreatment);
                 % ignore NaN values
                 treatmentGroupDiff = treatmentGroupDiff(~isnan(treatmentGroupDiff));
-                % Perform such test
-                [statTestDiff(1).w(1).P{iSeeds,c1}, statTestDiff(1).w(1).H{iSeeds,c1},...
-                    statTestDiff(1).w(1).STATS{iSeeds,c1}] = ranksum...
-                    (ctrlGroupDiff, treatmentGroupDiff, 'alpha', job.alpha);
-                statTestDiff(1).w(1).id = 'Wilcoxon rank sum test(1st derivative)';
+                if isempty(ctrlGroupDiff) || isempty(treatmentGroupDiff)
+                    statTestDiff(1).w(1).H{iSeeds,c1} = false;
+                    statTestDiff(1).w(1).P{iSeeds,c1} = NaN;
+                    statTestDiff(1).w(1).CI{iSeeds,c1} = NaN;
+                    statTestDiff(1).w(1).STATS{iSeeds,c1} = NaN;
+                    statTestDiff(1).w(1).id = 'Empty group';
+                else
+                    % Perform such test
+                    [statTestDiff(1).w(1).P{iSeeds,c1}, statTestDiff(1).w(1).H{iSeeds,c1},...
+                        statTestDiff(1).w(1).STATS{iSeeds,c1}] = ranksum...
+                        (ctrlGroupDiff, treatmentGroupDiff, 'alpha', job.alpha);
+                    statTestDiff(1).w(1).id = 'Wilcoxon rank sum test(1st derivative)';
+                end
             end % Wilcoxon test
             
         end % paired-seeds loop
@@ -550,12 +588,20 @@ if isfield (job,'rawData')
             
             % Paired-sample t-test
             if job.ttest1
-                [statTestRaw(1).t(1).H{iSeeds,c1}, statTestRaw(1).t(1).P{iSeeds,c1}, ...
-                    statTestRaw(1).t(1).CI{iSeeds,c1}, statTestRaw(1).t(1).STATS{iSeeds,c1}] ...
-                    = ttest2(...
-                    groupCorrDataRaw{iSeeds,c1}(~isTreatment), groupCorrDataRaw{iSeeds,c1}(isTreatment),...
-                    job.alpha,'both');
-                statTestRaw(1).t(1).id = 'Unpaired-sample t-test(raw data)';
+                if isempty(groupCorrDataRaw{iSeeds,c1}(~isTreatment)) || isempty(groupCorrDataRaw{iSeeds,c1}(isTreatment))
+                    statTestRaw(1).t(1).H{iSeeds,c1} = false;
+                    statTestRaw(1).t(1).P{iSeeds,c1} = NaN;
+                    statTestRaw(1).t(1).CI{iSeeds,c1} = NaN;
+                    statTestRaw(1).t(1).STATS{iSeeds,c1} = NaN;
+                    statTestRaw(1).t(1).id = 'Empty group';
+                else
+                    [statTestRaw(1).t(1).H{iSeeds,c1}, statTestRaw(1).t(1).P{iSeeds,c1}, ...
+                        statTestRaw(1).t(1).CI{iSeeds,c1}, statTestRaw(1).t(1).STATS{iSeeds,c1}] ...
+                        = ttest2(...
+                        groupCorrDataRaw{iSeeds,c1}(~isTreatment), groupCorrDataRaw{iSeeds,c1}(isTreatment),...
+                        job.alpha,'both');
+                    statTestRaw(1).t(1).id = 'Unpaired-sample t-test(raw data)';
+                end
             end % t-test
             
             % Wilcoxon rank sum test
@@ -566,11 +612,19 @@ if isfield (job,'rawData')
                 treatmentGroupRaw = groupCorrDataRaw{iSeeds,c1}(isTreatment);
                 % ignore NaN values
                 treatmentGroupRaw = treatmentGroupRaw(~isnan(treatmentGroupRaw));
-                % Perform such test
-                [statTestRaw(1).w(1).P{iSeeds,c1}, statTestRaw(1).w(1).H{iSeeds,c1},...
-                    statTestRaw(1).w(1).STATS{iSeeds,c1}] = ranksum...
-                    (ctrlGroupRaw, treatmentGroupRaw, 'alpha', job.alpha);
-                statTestRaw(1).w(1).id = 'Wilcoxon rank sum test(raw data)';
+                if isempty(ctrlGroupRaw) || isempty(treatmentGroupRaw)
+                    statTestRaw(1).w(1).H{iSeeds,c1} = false;
+                    statTestRaw(1).w(1).P{iSeeds,c1} = NaN;
+                    statTestRaw(1).w(1).CI{iSeeds,c1} = NaN;
+                    statTestRaw(1).w(1).STATS{iSeeds,c1} = NaN;
+                    statTestRaw(1).w(1).id = 'Empty group';
+                else
+                    % Perform such test
+                    [statTestRaw(1).w(1).P{iSeeds,c1}, statTestRaw(1).w(1).H{iSeeds,c1},...
+                        statTestRaw(1).w(1).STATS{iSeeds,c1}] = ranksum...
+                        (ctrlGroupRaw, treatmentGroupRaw, 'alpha', job.alpha);
+                    statTestRaw(1).w(1).id = 'Wilcoxon rank sum test(raw data)';
+                end
             end % Wilcoxon test
             
         end % paired-seeds loop
