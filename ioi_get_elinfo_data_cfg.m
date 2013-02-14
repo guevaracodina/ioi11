@@ -24,7 +24,7 @@ elinfostats1.tag    = 'elinfostats1'; %Very important: tag is used when calling 
 elinfostats1.val    = {IOImat redo1 IOImatCopyChoice session_choice generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 elinfostats1.prog   = @ioi_get_elinfo_data_run;  % A function handle that will be called with the harvested job to run the computation
 elinfostats1.vout   = @ioi_cfg_vout_elinfostats; % A function handle that will be called with the harvested job to determine virtual outputs
-elinfostats1.help   = {'Get stats on ecg and temperature'};
+elinfostats1.help   = {'Get stats on ecg (bpm) and temperature.'};
 
 return
 
