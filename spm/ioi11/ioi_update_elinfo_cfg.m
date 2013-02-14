@@ -21,7 +21,7 @@ elinfo1.tag         = 'elinfo1'; %Very important: tag is used when calling for e
 elinfo1.val         = {IOImat redo1 IOImatCopyChoice session_choice};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 elinfo1.prog        = @ioi_update_elinfo_run;  % A function handle that will be called with the harvested job to run the computation
 elinfo1.vout        = @ioi_cfg_vout_elinfo; % A function handle that will be called with the harvested job to determine virtual outputs
-elinfo1.help        = {'Update elinfo data in IOI matrix'};
+elinfo1.help        = {'Update elinfo data in IOI matrix. This module was useful in early versions when ioi_msread_new_format did not include IOI.res.elinfo{sC} = elfile_info;'};
 
 return
 

@@ -149,7 +149,7 @@ transM.help                 = {
 
 % Executable Branch
 fcIOS_maps                  = cfg_exbranch; % This is the branch that has information about how to run this module
-fcIOS_maps.name             = 'fcIOS maps'; % The display name
+fcIOS_maps.name             = 'Plot multiple correlation maps'; % The display name
 fcIOS_maps.tag              = 'fcIOS_maps'; %Very important: tag is used when calling for execution
 fcIOS_maps.val              = {IOImat IOImatCopyChoice ROI_choice ...
     IC session_choice parent_results_dir figSize figRes figRange figAlpha ...
