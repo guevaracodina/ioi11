@@ -47,7 +47,7 @@ paired_seeds.help           = {'Choose the pairs of seeds to compare. Usually:'
                                 ' 9,10: Retrosplenial'
                                 '11,12: Visual'};
                             
-% Multiple comparisons correction
+% Multiple comparisons correction (Bonferroni)
 bonferroni              	= cfg_menu;
 bonferroni.tag              = 'bonferroni';
 bonferroni.name             = 'Bonferroni correction';
