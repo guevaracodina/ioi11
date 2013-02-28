@@ -92,6 +92,7 @@ for SubjIdx=1:length(job.IOImat)
                                         IOI.HDM{s1,r1}.HDMfname = HDMfname;
                                         if ~O.only_display
                                             HDM0 = [];
+                                            HDM0.job=job;
                                             %Various options
                                             HDM0.O = O;
                                             HDM0.DO = DO;

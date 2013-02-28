@@ -399,6 +399,7 @@ try
                                         OPTIONS.Power2Flag = 0;
                                         OPTIONS.Brep = 0;
                                         tmp_laser=single(images{frames(frames(:,1)==(fr1+iC*nColors),2)});
+                                        %tmp_laser = squeeze(laser(:,:,i3));
                                         win2 = ones(wsize,wsize);
                                         std_laser = stdfilt(tmp_laser,win2);
                                         mean_laser = convnfft(tmp_laser,win2,'same',1:2,OPTIONS)/wsize^2;

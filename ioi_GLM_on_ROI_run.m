@@ -19,6 +19,7 @@ use_onset_amplitudes = job.use_onset_amplitudes;
 include_flow = job.IC.include_flow; %other colors not yet supported
 show_mse = job.show_mse;
 onset_choice = job.onset_choice;
+
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
@@ -94,7 +95,7 @@ for SubjIdx=1:length(job.IOImat)
                                         amp = [];
                                     end                                    
                                 case 2   %*************onsets from stim
-                                    ot = 2;
+                                    ot = 1;   %%%%%%%%%have a problem for stim ot=1;
                                     ons= IOI.sess_res{s1}.onsets{ot}; %already in seconds *IOI.dev.TR;
                                     dur = IOI.sess_res{s1}.durations{ot}; %*IOI.dev.TR;
                                     name = IOI.sess_res{s1}.names{ot};
@@ -107,20 +108,26 @@ for SubjIdx=1:length(job.IOImat)
                             
                             %***************end
                             %convolve with hemodynamic response function
-                            [Xtmp U] = ioi_get_X(IOI,name,ons,dur,amp,s1,bases,volt);
+                            if onset_choice
+                                [Xtmp U] = ioi_get_X(IOI,name,ons,dur,amp,s1,bases,volt);
+                            else
+                                [Xtmp U] = ioi_get_X_new(IOI,name,ons,dur,amp,s1,bases,volt);
+                            end
                             IOI.Sess(s1).U = U; %store onsets for each session
                             
                             %loop over available colors
                             for c1=1:length(IOI.sess_res{s1}.fname)
                                 if ~iscell(Xtmp)
                                     X = Xtmp;
-                                else
-%                                     X = Xtmp{c1};
-                                   %**********by Cong
-                                    X_spikes = Xtmp{1};
-                                    X_stim = Xtmp{2};
-                                    X=[X_spikes X_stim];
-                                    %**end
+                                else if ~onset_choice
+                                        %                                     X = Xtmp{c1};
+                                        %**********by Cong
+                                        X_spikes = Xtmp{1};
+                                        X_stim = Xtmp{2};
+                                        X=[X_spikes X_stim];
+                                        %**end
+                                    else X = Xtmp{c1};
+                                    end
                                 end
                                 if ~isempty(X)
                                     IOI.X{s1}.X0 = X;
@@ -282,6 +289,7 @@ for SubjIdx=1:length(job.IOImat)
                             end
                         end
                     end
+                    IOI.job = job;
                     IOI.res.GLMOK = 1;
                     save(IOImat,'IOI');
                     if ~exist('ROI','var')

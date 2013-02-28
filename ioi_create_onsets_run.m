@@ -76,11 +76,12 @@ for SubjIdx=1:length(job.IOImat)
                                 index=find(IOI.sess_res{s1}.onsets{1}~=0);
                                 IOI.sess_res{s1}.onsets{1}=IOI.sess_res{s1}.onsets{1}(index);
                             else if E.szOn_manual
+                                    ot = 1;
                                     dur = E.ta-E.tb; %in seconds
                                     [pkh ons dur] = ioi_get_onsets_from_electrophysiology_manually(IOI,s1,E,dir_ioimat,elDir0);                                   
                                     IOI.sess_res{s1}.E = E; %Electrophysiology structure used for detection
-                                    IOI.sess_res{s1}.names = E.electrophysiology_onset_name;
-                                    IOI.sess_res{s1}.onsets = ons';
+                                    IOI.sess_res{s1}.names{ot} = E.electrophysiology_onset_name;
+                                    IOI.sess_res{s1}.onsets{ot} = ons';
                                   
                                 else
                                     [pkh ons dur] = ioi_get_onsets_from_electrophysiology(IOI,s1,E,dir_ioimat,elDir0); %pk in seconds; pkh in arbitrary units
