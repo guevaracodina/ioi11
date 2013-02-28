@@ -419,6 +419,7 @@ for SubjIdx=1:length(job.IOImat)
                             end
                         end
                     end
+                    IOI.job = job;
                     IOI.res.GLMOK = 1;
                     save(IOImat,'IOI');
                     if image_mode

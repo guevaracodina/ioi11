@@ -190,6 +190,9 @@ end
 function [bf list_color] = get_specific_bf(IOI,bases)
 %[bf p] = spm_hrf_mouse(dt);
 r1 = bases.specific_EM.HRF_ROI;
+% %***by Cong on 13/2/6
+% r1 = bases.specific_EM.HRF_ROI;
+% %*****end
 r2 = find(IOI.res.mean.selected_ROIs==r1);%need correspondance between r1 and r2
 m1 = bases.specific_EM.HRF_selected_stimulus;
 if isfield(bases.specific_EM.HRF_chromophore_choice,'HRF_respective')

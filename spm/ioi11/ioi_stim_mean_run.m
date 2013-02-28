@@ -35,7 +35,7 @@ include_nlinfit = job.include_nlinfit;
 window_offset = job.window_offset;
 add_error_bars = job.add_error_bars;
 apply_lpf_on_flow_only = LPF.lpf_gauss_On;
-
+weigh_amplitude_of_threshold = job.Weigh_amplitude_of_threshold;
 for SubjIdx=1:length(job.IOImat)
     try
         tic
@@ -102,7 +102,7 @@ for SubjIdx=1:length(job.IOImat)
                     end
                 end
                 %restric onsets
-                [IOI onsets_list] = ioi_restrict_onsets(IOI,job,rmi,ust);
+                [IOI onsets_list pars_list] = ioi_restrict_onsets(IOI,job,rmi,ust);
                 %                 onsets_list=onsets_list{2};
                 %Check whether there is the same number of onset types in
                 %each session; this is a
@@ -375,6 +375,9 @@ for SubjIdx=1:length(job.IOImat)
                                                                         tmp1 = tmp1 - slope;
                                                                     else
                                                                         tmp1 = tmp1-tmp_median;
+                                                                    end
+                                                                    if weigh_amplitude_of_threshold
+                                                                        tmp1 = tmp1/pars_list{s1}{m1}(u1);
                                                                     end
                                                                     %normalize to get percent change
                                                                     if job.mult_normalize_choice
@@ -730,7 +733,7 @@ for SubjIdx=1:length(job.IOImat)
                                     %******************figures with all
                                     %stimulations on same figure.- one
                                     %figure per color  by cong on 12/12/10
-                                    plot_each_stimulation = 1;
+                                    plot_each_stimulation = 0;
                                     if plot_each_stimulation
                                         %loop over onset type
                                         for m1=1:length(onsets_list{s1})
