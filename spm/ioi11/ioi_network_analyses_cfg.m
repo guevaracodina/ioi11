@@ -9,22 +9,22 @@ function network1 = ioi_network_analyses_cfg
 IOImat                  = ioi_dfg_IOImat(2);
 
 % String identifying Control (NaCl) group [NC]
-controlString               = cfg_entry;
-controlString.name          = 'Control group ID';
-controlString.tag           = 'controlString';       
-controlString.strtype       = 's';
-controlString.val           = {'NC'}; 
-controlString.num           = [2 2];     
-controlString.help          = {'String to identify Control Group.'}'; 
+controlString           = cfg_entry;
+controlString.name      = 'Control group ID';
+controlString.tag       = 'controlString';       
+controlString.strtype   = 's';
+controlString.val       = {'NC'}; 
+controlString.num       = [2 2];     
+controlString.help      = {'String to identify Control Group.'}'; 
 
 % String identifying treatment (CaCl2) group [CC]
-treatmentString             = cfg_entry;
-treatmentString.name        = 'Treatment group ID';
-treatmentString.tag         = 'treatmentString';       
-treatmentString.strtype     = 's';
-treatmentString.val         = {'CC'}; 
-treatmentString.num         = [2 2];     
-treatmentString.help        = {'String to identify Treatment Group.'}'; 
+treatmentString         = cfg_entry;
+treatmentString.name    = 'Treatment group ID';
+treatmentString.tag     = 'treatmentString';       
+treatmentString.strtype = 's';
+treatmentString.val     = {'CC'}; 
+treatmentString.num     = [2 2];     
+treatmentString.help    = {'String to identify Treatment Group.'}'; 
 
 % Force processing
 redo1                   = ioi_dfg_redo(0);
@@ -36,6 +36,7 @@ ROI_choice              = ioi_dfg_ROI_choice;
 session_choice          = ioi_dfg_session_choice;
 % Colors to include (OD,HbO,HbR,HbT,Flow)
 IC                      = ioi_dfg_include_colors(0,1,1,1,1,1);
+
 % Select directory to save global results
 results_dir             = cfg_files;
 results_dir.tag         = 'results_dir';
@@ -56,7 +57,7 @@ measures.help           = {'Choose whether to perform'
                             '   1: Efficiency/cost measures.'
                             '   2: PathDistance/Clustering measures.'}';
 
-% Normalization Type
+                        % Normalization Type
 normalType           	= cfg_menu;
 normalType.tag          = 'normalType';
 normalType.name         = 'Normalization';
@@ -72,7 +73,7 @@ threshold              	= cfg_entry;
 threshold.tag           = 'threshold';         	% file names
 threshold.name          = 'Threshold';          % The displayed name
 threshold.strtype       = 'r';                  % Real numbers
-threshold.num           = [1 1];                % Number of inputs required
+threshold.num           = [0 1];                % Number of inputs required
 threshold.val           = {0.5};                % Default value
 threshold.help          = {'Threshold value to compute adjacency matrix'};
 

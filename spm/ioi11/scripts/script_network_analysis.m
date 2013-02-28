@@ -16,6 +16,7 @@ roiIndex = 1:99;
 measType = [1 2];
 % 0: uses raw (Fisher-transformed) correlation coefficients; 
 % 1: normalizes across subjects (transform to z-scores)
+% 2: Cost
 normType = [0 1];
 % threshold value to compute adjacency matrix
 thr = [0.5 1 1.5];
