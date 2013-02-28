@@ -134,8 +134,13 @@ for c1=1:length(IOI.sess_res{s1}.fname)
             save(IOI.fcIOS.corr.networkDataFname{s1, c1}, ...
                 'Z', 'names', 'names2');
             % Process network analyses here
+            if job.threshold ~= 0,
             results = conn_network(IOI.fcIOS.corr.networkDataFname{s1, c1}, ...
                 roiIndex, job.measures, job.normalType, job.threshold);
+            else
+                results = conn_network(IOI.fcIOS.corr.networkDataFname{s1, c1}, ...
+                roiIndex, job.measures, job.normalType);
+            end
             fclose('all')
             varName = sprintf('results_S%02d_%s', s1, colorNames{1+c1});
             controlGroupIdx = find(~isTreatment);
