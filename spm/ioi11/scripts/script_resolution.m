@@ -1,8 +1,8 @@
 %% Resolution of intrinsic imaging system
+% Using R3L3S1N - Negative 1951 USAF Test Target, 3" x 3" 
+% http://www.thorlabs.com/catalogpages/V21/1786.PDF
 
 load('E:\Edgar\Data\IOS_Resolution\12_09_28,MT10\S01\all_images.mat')
-
-
 
 %% Plot mean intensities
 avg_Int = zeros([numel(images) 1]);
@@ -13,7 +13,6 @@ end
 %% Plot intensities
 figure; set(gcf,'color','w')
 plot(avg_Int,'k-o')
-
 
 %% Separate images acording to intensities
 Rmean = mean(images{23}(:));
@@ -88,7 +87,6 @@ title('<Yellow>','FontSize',14);
 subplot(224); imagesc(Lavg,imLims); axis image;
 set(gca,'Xtick',[]); set(gca,'yTick',[]); colorbar; 
 title('<Laser>','FontSize',14); 
-
 
 %% Get a 1x1 binning anatomical image
 % 
