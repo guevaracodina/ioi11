@@ -185,6 +185,7 @@ for SubjIdx=1:length(job.IOImat)
                 end
                 while oneMoreROI
                     figure(h2);
+                    spm_input(['Subject ' int2str(SubjIdx) ' (' IOI.subj_name ')' ],'-1','d'); % Update subject display //EGC
                     oneMoreROI = spm_input('Add an ROI?',2*linecount+2,'y/n');
                     if oneMoreROI == 'y', oneMoreROI = 1; else oneMoreROI = 0; end
                     if oneMoreROI

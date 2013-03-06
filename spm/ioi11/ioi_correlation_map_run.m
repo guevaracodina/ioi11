@@ -157,7 +157,15 @@ for SubjIdx=1:length(job.IOImat)
                                                         title(sprintf('%s significant pixels (p<%.2f) Seed %d (%s) S%d C%d (%s) Diff\n',IOI.subj_name,job.pValue,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none', 'FontSize', 14)
                                                         
                                                         if job.save_figures
-                                                            [~, oldName, oldExt] = fileparts(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
+                                                            try
+                                                                if ~isempty(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1})
+                                                                    [~, oldName, oldExt] = fileparts(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
+                                                                else
+                                                                    oldExt = '.nii';
+                                                                end
+                                                            catch
+                                                                oldExt = '.nii';
+                                                            end
                                                             % newName = [oldName '_fcIOS_map'];
                                                             newName = [sprintf('%s_R%02d_S%02d_C%d',IOI.subj_name,r1,s1,c1) '_fcIOS_map_diff'];
                                                             dir_corrfigDiff = fullfile(dir_ioimat,'fig_corrMapDiff');
@@ -229,7 +237,15 @@ for SubjIdx=1:length(job.IOImat)
                                                     title(sprintf('%s significant pixels (p<%.2f) Seed %d (%s) S%d C%d (%s)\n',IOI.subj_name,job.pValue,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1}),'interpreter', 'none', 'FontSize', 14)
                                                     
                                                     if job.save_figures
-                                                        [~, oldName, oldExt] = fileparts(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
+                                                        try
+                                                            if ~isempty(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1})
+                                                                [~, oldName, oldExt] = fileparts(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
+                                                            else
+                                                                oldExt = '.nii';
+                                                            end
+                                                        catch
+                                                            oldExt = '.nii';
+                                                        end
                                                         % newName = [oldName '_fcIOS_map'];
                                                         newName = [sprintf('%s_R%02d_S%02d_C%d',IOI.subj_name,r1,s1,c1) '_fcIOS_map'];
                                                         if isfield(job.IOImatCopyChoice,'IOImatCopy')
@@ -256,7 +272,15 @@ for SubjIdx=1:length(job.IOImat)
                                                 if job.fisherZ
                                                     % Find Pearson's correlation coefficient
                                                     fprintf('Computing Fisher''s Z statistic...\n');
-                                                    [~, oldName, oldExt] = fileparts(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
+                                                    try
+                                                        if ~isempty(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1})
+                                                            [~, oldName, oldExt] = fileparts(IOI.fcIOS.SPM.fnameROInifti{r1}{s1, c1});
+                                                        else
+                                                            oldExt = '.nii';
+                                                        end
+                                                    catch
+                                                        oldExt = '.nii';
+                                                    end
                                                     % newName = [oldName '_fcIOS_Zmap'];
                                                     newName = [sprintf('%s_R%02d_S%02d_C%d',IOI.subj_name,r1,s1,c1) '_fcIOS_Zmap'];
                                                     dir_fisherZfig = fullfile(dir_ioimat,'fig_fisherZ');

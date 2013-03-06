@@ -1,5 +1,5 @@
 function out = ioi_network_analyses_run(job)
-% network analyses
+% Network analyses. Performs graph theoretical measures.
 %_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
@@ -133,7 +133,7 @@ for c1=1:length(IOI.sess_res{s1}.fname)
             % Save resultsROI_Condition*_Color
             save(IOI.fcIOS.corr.networkDataFname{s1, c1}, ...
                 'Z', 'names', 'names2');
-            % Process network analyses here
+            % Process network first-level analyses here (within subject)
             if job.threshold ~= 0,
             results = conn_network(IOI.fcIOS.corr.networkDataFname{s1, c1}, ...
                 roiIndex, job.measures, job.normalType, job.threshold);
@@ -141,13 +141,51 @@ for c1=1:length(IOI.sess_res{s1}.fname)
                 results = conn_network(IOI.fcIOS.corr.networkDataFname{s1, c1}, ...
                 roiIndex, job.measures, job.normalType);
             end
-            fclose('all')
+            fclose('all');
             varName = sprintf('results_S%02d_%s', s1, colorNames{1+c1});
             controlGroupIdx = find(~isTreatment);
             treatmentGroupIdx = find(isTreatment);
-            % Save results in .mat file
-            save(fullfile(job.results_dir{1}, [varName '.mat']), 'results', ...
+            currentResults = fullfile(job.results_dir{1}, [varName '.mat']);
+            
+            % Prepare design matrix ss
+            ss(1).n = numel(isTreatment);
+            % Subjects in group 1 (Control NaCl) and 2 (Treatment CaCl_2)
+            ss(1).X=zeros(ss.n,2);ss.X(controlGroupIdx,1)=1;ss.X(treatmentGroupIdx,2)=1;
+            % 1: one-sample t-test, 2: Two-sample t-test, 3: multiple regression
+            ss(1).model = 2;
+            % Regressor names
+            ss(1).Xname = {'NaCl','CaCl_2';};
+            % Contrast
+            ss(1).C = {[1,-1];};
+            % Contrast name
+            ss(1).Cname = {'Control - Treatment';};
+            ask = 'none';
+            ss(1).ask = ask;
+            
+            % Save results and design matrix ss in .mat file
+            save(currentResults, 'results', 'ss',...
                 'controlGroupIdx', 'treatmentGroupIdx');
+                        
+            % Second-level analysis (updates currentResults file)
+            ss = conn_network_results(currentResults, ask);
+            h = gcf;
+            if job.generate_figures
+                set(h,'Name',varName)
+                if job.save_figures
+                    job.figSize = [13 7];
+                    % Specify window units
+                    set(h, 'units', 'inches')
+                    % Change figure and paper size
+                    set(h, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
+                    set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
+                    % Save as PNG
+                    print(h, '-dpng', fullfile(job.results_dir{1},[varName '_2nd_level.png']), '-r150');
+                    % Save as a figure
+                    saveas(h, fullfile(job.results_dir{1},[varName '_2nd_level.fig']), 'fig');
+                end
+            else
+                close(h)
+            end
             % Update progress bar
             spm_progress_bar('Set', c1);
             % ioi_text_waitbar(c1/length(IOI.sess_res{s1}.fname), sprintf('Processing color %d from %d', c1, length(IOI.sess_res{s1}.fname)));
