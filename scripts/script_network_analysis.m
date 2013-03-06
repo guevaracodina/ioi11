@@ -1,4 +1,5 @@
-%% Network analysis
+%% Network analysis (first=level)
+% Old script superseded by ioi_network_analyses_run
 cd('D:\spm8')
 addpath('D:\spm8')
 spm fmri

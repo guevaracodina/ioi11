@@ -233,7 +233,53 @@ for SubjIdx=1:length(job.IOImat)
                                 end % colors loop
                             end
                         end % sessions loop
-                        % GLM regression succesful!
+                        
+                        %%
+                        % ------------------------------------------------------
+                        % If ROI regression failed, then get ROI time course
+                        % from the whole image regressed series.
+                        % ------------------------------------------------------
+                        % Identify in IOI the file name of the time series
+                        IOI.fcIOS.SPM(1).fnameROIregress = fnameROIregress;
+                        % Get mask for each ROI
+                        [~, mask] = ioi_get_ROImask(IOI,job);
+                        Amask = []; % Initialize activation mask
+                        % We are not extracting brain mask here
+                        job.extractingBrainMask = false;
+                        job.extractBrainMask = false;
+                        % Extract ROI from regressed whole image series.
+                        [ROIregressTmp IOI] = ...
+                            ioi_extract_core(IOI,job,mask,Amask,'regressData');
+                        % Loop over sessions
+                        for s1=1:length(IOI.sess_res)
+                            if all_sessions || sum(s1==selected_sessions)
+                                % Loop over available colors
+                                for c1=1:length(IOI.sess_res{s1}.fname)
+                                    doColor = ioi_doColor(IOI,c1,IC);
+                                    if doColor
+                                        %skip laser - only extract for flow
+                                        if ~(IOI.color.eng(c1)==IOI.color.laser)
+                                            % Loop over ROIs
+                                            for r1=1:length(IOI.res.ROI)
+                                                if all_ROIs || sum(r1==selected_ROIs)
+                                                    if ~IOI.fcIOS.SPM(1).ROIregressOK{r1}{s1, c1}
+                                                        % GLM on ROI not succesful, so
+                                                        % we write the ROI extracted frm
+                                                        % the regressed whole image.
+                                                        ROIregress{r1}{s1, c1} =  ROIregressTmp{r1}{s1, c1};
+                                                        % Brain signal regression succesful!
+                                                        IOI.fcIOS.SPM(1).ROIregressOK{r1}{s1, c1} = true;
+                                                    end
+                                                end
+                                            end % ROI loop
+                                        end
+                                    end
+                                end % colors loop
+                            end
+                        end % sessions loop
+                        % ------------------------------------------------------
+                        
+                        %% GLM regression succesful!
                         IOI.fcIOS.SPM(1).GLMOK = true;
                         if job.regressBrainSignal == 1,
                             save(fnameROIregress,'ROIregress');

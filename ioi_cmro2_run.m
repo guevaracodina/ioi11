@@ -60,7 +60,7 @@ for SubjIdx = 1:length(job.IOImat)
                 if ~(IOI.color.eng==str_CMRO2)
                     IOI.color.eng = [IOI.color.eng str_CMRO2];
                 end
-                % Band-pass filter configuration
+                % Band-pass filter configuration. Computes zpk only once.
                 [z, p, k] = temporalBPFconfig(fType, fs, BPFfreq, filterOrder, Rp_Rs);
                 if isfield(IOI,'fcIOS')
                     if isfield(IOI.fcIOS,'mask')
@@ -112,9 +112,6 @@ for SubjIdx = 1:length(job.IOImat)
                                                     brainMask = [];
                                                 end
                                                 %% Data filtering
-                                                % imagesFlow = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesFlow, Rp_Rs, s1);
-                                                % imagesHbO  = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesHbO, Rp_Rs, s1);
-                                                % imagesHbR  = local_filter_time_course(fType, fs, BPFfreq, filterOrder, imagesHbR, Rp_Rs, s1);
                                                 imagesFlow = local_filter_time_course(imagesFlow, z, p, k, s1, brainMask);
                                                 imagesHbO  = local_filter_time_course(imagesHbO, z, p, k, s1, brainMask);
                                                 imagesHbR  = local_filter_time_course(imagesHbR, z, p, k, s1, brainMask);
@@ -218,11 +215,6 @@ if IOI.res.shrinkageOn
 else
     vx = [1 1 1];
 end
-% if vx(1) > 1 || vx(2) > 1
-%     nx = size(vx(1):vx(1):size(image_CMRO2_in,1),2);
-%     ny = size(vx(2):vx(2):size(image_CMRO2_in,2),2);
-%     image_CMRO2_out = ioi_imresize(image_CMRO2_in, 1, nx, ny, vx(1), vx(2));
-% end
 end % local_check_shrinkage
 
 function filtY = local_filter_time_course(Y, z, p, k, s1, brainMask)
@@ -246,11 +238,9 @@ if ~slice2D
             if ~isempty(brainMask)
                 if brainMask(iX,iY) == 1
                     % Only non-masked pixels are band-passs filtered
-                    % filtY(iX,iY,1,:) = temporalBPF(fType, fs, BPFfreq, filterOrder, squeeze(Y(iX,iY,:)), Rp_Rs);
                     filtY(iX,iY,1,:) = temporalBPFrun(squeeze(Y(iX,iY,:)), z, p, k);
                 end
             else
-                % filtY(iX,iY,1,:) = temporalBPF(fType, fs, BPFfreq, filterOrder, squeeze(Y(iX,iY,:)), Rp_Rs);
                 filtY(iX,iY,1,:) = temporalBPFrun(squeeze(Y(iX,iY,:)), z, p, k);
             end
         end
