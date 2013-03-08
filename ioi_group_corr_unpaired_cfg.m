@@ -157,7 +157,7 @@ figSize.name                = 'Figure size';
 figSize.strtype             = 'r';
 figSize.num                 = [1 2];
 figSize.val                 = {[3.25 3.25]};
-figSize.help                = {'Enter figure size in inches.'};
+figSize.help                = {'Enter figure size in inches [Width Height].'};
 
 % Figure resolution
 figRes                      = cfg_entry;
@@ -166,7 +166,7 @@ figRes.name                 = 'Figure resolution';
 figRes.strtype              = 'r';
 figRes.num                  = [1 1];
 figRes.val                  = {300};
-figRes.help                 = {'Enter figure resolution in dpi [300-1200]'};
+figRes.help                 = {'Enter figure resolution in dpi [150-1200]'};
 
 % ------------------------------------------------------------------------------
 % Choose axis limits

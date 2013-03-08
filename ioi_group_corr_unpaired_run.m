@@ -208,9 +208,9 @@ for SubjIdx = 1:numel(job.IOImat)
                         for iROI = 1:size(job.paired_seeds, 1)
                             % Full group index
                             groupCorrIdx{iROI,c1} = [groupCorrIdx{iROI,c1}; SubjIdx];
-                            if c1 == 8
-                               fprintf('\ntmpArray = %f Subject: %d (%s)\n', squeeze(tmpArray(iROI,:,:)), SubjIdx, IOI.subj_name);
-                            end
+                            % if c1 == 8
+                            %    fprintf('\ntmpArray = %f Subject: %d (%s)\n', squeeze(tmpArray(iROI,:,:)), SubjIdx, IOI.subj_name);
+                            % end
                             if ~isempty(squeeze(tmpArray(iROI,:,:)))
                                 % Full group data
                                 groupCorrData{iROI,c1} = [groupCorrData{iROI,c1}; squeeze(tmpArray(iROI,:,:))];
@@ -290,14 +290,11 @@ for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
     doColor = ioi_doColor(IOI,c1,IC);
     if doColor
         fileName = fullfile(job.parent_results_dir{1},['fcGroup_C'  num2str(c1) '_' colorNames{1+c1} '.csv']);
-        % Arrange all bilateral connectivity measurements in a big cell
-        dataCell = subfunction_full_group_data(c1, subjectName, pairedSeedsNames, groupCorrData, groupCorrDataDiff, groupCorrDataRaw, groupID, groupCorrIdx);
-        % Save this cell into a .csv file (one for each contrast)
-        subfunction_cell2csv(dataCell, fileName);
+        
         % Perform test on ROIs time course
-        [job, IOI, e, y, eTotal, yTotal, statTest, meanCorr, stdCorr] = subfunction_group_corr_test_unpaired(job, IOI, c1, groupCorrData, statTest, meanCorr, stdCorr, eTotal, yTotal, isTreatment);
+        [job, IOI, e, y, eTotal, yTotal, statTest, meanCorr, stdCorr, groupCorrData] = subfunction_group_corr_test_unpaired(job, IOI, c1, groupCorrData, statTest, meanCorr, stdCorr, eTotal, yTotal, isTreatment);
         % Perform tests on the derivative of ROIs time-course
-        [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff] = subfunction_group_corr_test_diff_unpaired(job, IOI, c1, groupCorrDataDiff, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff, isTreatment);
+        [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff, groupCorrDataDiff] = subfunction_group_corr_test_diff_unpaired(job, IOI, c1, groupCorrDataDiff, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff, isTreatment);
         %         % Perform tests on raw data of ROIs time-course
         [job, IOI, eRaw, yRaw, eTotalRaw, yTotalRaw, statTestRaw, meanCorrRaw, stdCorrRaw] = subfunction_group_corr_test_raw_unpaired(job, IOI, c1, groupCorrDataRaw, statTestRaw, meanCorrRaw, stdCorrRaw, eTotalRaw, yTotalRaw, isTreatment);
         %         % Plot results
@@ -306,6 +303,10 @@ for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
         subfunction_plot_group_corr_test_diff(job, IOI, c1, eDiff, yDiff, statTestDiff);
         %         % Plot results based on raw data
         subfunction_plot_group_corr_test_raw(job, IOI, c1, eRaw, yRaw, statTestRaw);
+        % Arrange all bilateral connectivity measurements in a big cell
+        dataCell = subfunction_full_group_data(c1, subjectName, pairedSeedsNames, groupCorrData, groupCorrDataDiff, groupCorrDataRaw, groupID, groupCorrIdx);
+        % Save this cell into a .csv file (one for each contrast)
+        subfunction_cell2csv(dataCell, fileName);
     end
 end % loop over colors
 % Group comparison of bilateral correlation succesful!
@@ -394,7 +395,7 @@ end
 fclose(fid);
 end % subfunction_cell2csv
 
-function [job, IOI, e, y, eTotal, yTotal, statTest, meanCorr, stdCorr] = subfunction_group_corr_test_unpaired(job, IOI, c1, groupCorrData, statTest, meanCorr, stdCorr, eTotal, yTotal, isTreatment)
+function [job, IOI, e, y, eTotal, yTotal, statTest, meanCorr, stdCorr, groupCorrData] = subfunction_group_corr_test_unpaired(job, IOI, c1, groupCorrData, statTest, meanCorr, stdCorr, eTotal, yTotal, isTreatment)
 % Do a separate paired t-test for each seed data
 for iSeeds = 1:size(job.paired_seeds, 1)
     % Average of control group
@@ -483,7 +484,7 @@ save(IOI.fcIOS.corr(1).fnameGroup,'groupCorrData', 'isTreatment',...
     'meanCorr','stdCorr','statTest','yTotal','eTotal');
 end % subfunction_group_corr_test_unpaired
 
-function [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff] = subfunction_group_corr_test_diff_unpaired(job, IOI, c1, groupCorrDataDiff, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff, isTreatment)
+function [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff, groupCorrDataDiff] = subfunction_group_corr_test_diff_unpaired(job, IOI, c1, groupCorrDataDiff, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff, isTreatment)
 % empty outputs
 eDiff = [];
 yDiff = [];
@@ -499,6 +500,21 @@ if isfield (job,'derivative')
             stdCorrDiff{iSeeds,c1}(1) = nanstd(groupCorrDataDiff{iSeeds,c1}(~isTreatment));
             % Standard deviation oftreatment group
             stdCorrDiff{iSeeds,c1}(2) = nanstd(groupCorrDataDiff{iSeeds,c1}(isTreatment));
+            
+            if isfield(job.remOutlier, 'remOutOn')
+                nStdDev = job.remOutlier.remOutOn.stdDevVal;
+                outliers = zeros(size(isTreatment));
+                % Outliers of control group
+                outliers(~isTreatment) = abs(groupCorrDataDiff{iSeeds,c1}(~isTreatment) - meanCorrDiff{iSeeds,c1}(1)) > nStdDev*stdCorrDiff{iSeeds,c1}(1);
+                if any(outliers(~isTreatment))
+                    groupCorrDataDiff{iSeeds,c1}(~isTreatment & outliers) = NaN;
+                end
+                % Outliers of treatment group
+                outliers(isTreatment) = abs(groupCorrDataDiff{iSeeds,c1}(isTreatment) - meanCorrDiff{iSeeds,c1}(2)) > nStdDev*stdCorrDiff{iSeeds,c1}(2);
+                if any(outliers(~isTreatment))
+                    groupCorrDataDiff{iSeeds,c1}(isTreatment & outliers) = NaN;
+                end
+            end
             
             % Used to plot bar graphs with errorbars
             yDiff(iSeeds,:) = meanCorrDiff{iSeeds,c1};

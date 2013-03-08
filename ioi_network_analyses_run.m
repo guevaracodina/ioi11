@@ -1,5 +1,5 @@
 function out = ioi_network_analyses_run(job)
-% Network analyses. Performs graph theoretical measures.
+% Network analysis. Performs graph theoretical measures.
 %_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
 %                    École Polytechnique de Montréal
@@ -40,16 +40,16 @@ REPLACE_ROI_NAME = true;
 %                 'Retrosplenial Left'
 %                 'Visual Right'
 %                 'Visual Left' };
-newROIname = {  'Fr_R'
-                'Fr_L'
+newROIname = {  'F_R'
+                'F_L'
                 'M_R'
                 'M_L'
-                'Cg_R'
-                'Cg_L'
+                'C_R'
+                'C_L'
                 'S_R'
                 'S_L'
-                'RS_R'
-                'RS_L'
+                'R_R'
+                'R_L'
                 'V_R'
                 'V_L' };
 % Get ROIs
@@ -67,8 +67,10 @@ end
 names = newROIname';
 % Variable with the target rois names {1 x nROI}
 names2 = names;
-% Preallocate connectivity values [nROI x nROI x length(job.IOImat)]
+% Preallocate connectivity (Fisher's Z) values [nROI x nROI x length(job.IOImat)]
 Z = zeros([nROI nROI length(job.IOImat)]);
+% Preallocate connectivity (correlation) values [nROI x nROI x length(job.IOImat)]
+r = zeros([nROI nROI length(job.IOImat)]);
 % Go to network results folder
 cd(job.results_dir{1});
 % Loop over sessions
@@ -109,6 +111,8 @@ for c1=1:length(IOI.sess_res{s1}.fname)
                             isTreatment(SubjIdx,1) = ~isempty(regexp(IOI.subj_name, [job.treatmentString '[0-9]+'], 'once'));
                             % Load seed to seed correlation matrix
                             load(IOI.fcIOS.corr(1).corrMatrixFname,'seed2seedCorrMat')
+                            % Update data in r
+                            r(:,:,SubjIdx) = seed2seedCorrMat{1}{s1, c1};
                             % Fisher transform
                             seed2seedCorrMat{1}{s1, c1} = fisherz(seed2seedCorrMat{1}{s1, c1});
                             % Replace Inf by NaN
@@ -132,60 +136,17 @@ for c1=1:length(IOI.sess_res{s1}.fname)
             end % loop over subjects
             % Save resultsROI_Condition*_Color
             save(IOI.fcIOS.corr.networkDataFname{s1, c1}, ...
-                'Z', 'names', 'names2');
-            % Process network first-level analyses here (within subject)
-            if job.threshold ~= 0,
-            results = conn_network(IOI.fcIOS.corr.networkDataFname{s1, c1}, ...
-                roiIndex, job.measures, job.normalType, job.threshold);
-            else
-                results = conn_network(IOI.fcIOS.corr.networkDataFname{s1, c1}, ...
-                roiIndex, job.measures, job.normalType);
-            end
-            fclose('all');
-            varName = sprintf('results_S%02d_%s', s1, colorNames{1+c1});
-            controlGroupIdx = find(~isTreatment);
-            treatmentGroupIdx = find(isTreatment);
-            currentResults = fullfile(job.results_dir{1}, [varName '.mat']);
+                'Z', 'r', 'names', 'names2');
             
-            % Prepare design matrix ss
-            ss(1).n = numel(isTreatment);
-            % Subjects in group 1 (Control NaCl) and 2 (Treatment CaCl_2)
-            ss(1).X=zeros(ss.n,2);ss.X(controlGroupIdx,1)=1;ss.X(treatmentGroupIdx,2)=1;
-            % 1: one-sample t-test, 2: Two-sample t-test, 3: multiple regression
-            ss(1).model = 2;
-            % Regressor names
-            ss(1).Xname = {'NaCl','CaCl_2';};
-            % Contrast
-            ss(1).C = {[1,-1];};
-            % Contrast name
-            ss(1).Cname = {'Control - Treatment';};
-            ask = 'none';
-            ss(1).ask = ask;
+            % First level analysis (within subject)
+            [results, varName] = first_level_analysis(job, IOI, s1, c1, roiIndex);
             
-            % Save results and design matrix ss in .mat file
-            save(currentResults, 'results', 'ss',...
-                'controlGroupIdx', 'treatmentGroupIdx');
-                        
-            % Second-level analysis (updates currentResults file)
-            ss = conn_network_results(currentResults, ask);
-            h = gcf;
-            if job.generate_figures
-                set(h,'Name',varName)
-                if job.save_figures
-                    job.figSize = [13 7];
-                    % Specify window units
-                    set(h, 'units', 'inches')
-                    % Change figure and paper size
-                    set(h, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
-                    set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
-                    % Save as PNG
-                    print(h, '-dpng', fullfile(job.results_dir{1},[varName '_2nd_level.png']), '-r150');
-                    % Save as a figure
-                    saveas(h, fullfile(job.results_dir{1},[varName '_2nd_level.fig']), 'fig');
-                end
-            else
-                close(h)
-            end
+            % Second level analysis
+            ss = second_level_analysis(job, IOI, s1, c1, isTreatment, results);
+            
+            % Functional connectivity diagram
+            fc_diagram(job, IOI, s1, c1, results, ss);
+            
             % Update progress bar
             spm_progress_bar('Set', c1);
             % ioi_text_waitbar(c1/length(IOI.sess_res{s1}.fname), sprintf('Processing color %d from %d', c1, length(IOI.sess_res{s1}.fname)));
@@ -198,5 +159,306 @@ cd(currFolder);
 spm_progress_bar('Clear');
 % ioi_text_waitbar('Clear');
 fprintf('Elapsed time: %s', datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS\n') );
+end % ioi_network_analysis_run
+
+function [results, varName] = first_level_analysis(job, IOI, s1, c1, roiIndex)
+% Process network first-level analysis here (within subject)
+colorNames = fieldnames(IOI.color);
+varName = sprintf('results_S%02d_%s', s1, colorNames{1+c1});
+if job.threshold ~= 0,
+    results = conn_network(IOI.fcIOS.corr.networkDataFname{s1, c1}, ...
+        roiIndex, job.measures, job.normalType, job.threshold);
+else
+    % Creates figure with small-world properties
+    [results, h1] = conn_network(IOI.fcIOS.corr.networkDataFname{s1, c1}, ...
+        roiIndex, job.measures, job.normalType);
+    if job.generate_figures
+        figName = get(h1, 'Name');
+        set(h1, 'Name', [figName ' ' varName]);
+        if job.save_figures
+            % Specify window units
+            set(h1, 'units', 'inches')
+            % Change figure and paper size
+            set(h1, 'Position', [0.1 0.1 job.optFig.figSize(1) job.optFig.figSize(2)])
+            set(h1, 'PaperPosition', [0.1 0.1 job.optFig.figSize(1) job.optFig.figSize(2)])
+            % Save as PNG
+            print(h1, '-dpng', fullfile(job.results_dir{1},[varName '_properties.png']), sprintf('-r%d',job.optFig.figRes));
+            % Save as a figure
+            saveas(h1, fullfile(job.results_dir{1},[varName '_properties.fig']), 'fig');
+            % Return the property to its default
+            set(h1, 'units', 'pixels')
+        end
+    else
+        close(h1);
+    end
+end
+fclose('all');
+end % first_level_analysis
+
+function ss = second_level_analysis(job, IOI, s1, c1, isTreatment, results)
+% Second-level analysis
+colorNames = fieldnames(IOI.color);
+varName = sprintf('results_S%02d_%s', s1, colorNames{1+c1});
+
+controlGroupIdx = find(~isTreatment);
+treatmentGroupIdx = find(isTreatment);
+currentResults = fullfile(job.results_dir{1}, [varName '.mat']);
+
+% Prepare design matrix ss
+ss(1).n = numel(isTreatment);
+% Subjects in group 1 (Control NaCl) and 2 (Treatment CaCl_2)
+ss(1).X=zeros(ss.n,2);ss.X(controlGroupIdx,1)=1;ss.X(treatmentGroupIdx,2)=1;
+% 1: one-sample t-test, 2: Two-sample t-test, 3: multiple regression
+ss(1).model = job.opt2ndLvl.model;
+% Regressor names
+ss(1).Xname = job.opt2ndLvl.Xname;
+% Contrast
+ss(1).C = { job.opt2ndLvl.C };
+% Contrast name (append color name)
+ss(1).Cname = { sprintf('%s_(%s)',job.opt2ndLvl.Cname, colorNames{1+c1}) };
+% ask types: none, missing, all
+ask = job.opt2ndLvl.ask;
+ss(1).ask = ask;
+
+% Save results and design matrix ss in .mat file
+save(currentResults, 'results', 'ss',...
+    'controlGroupIdx', 'treatmentGroupIdx');
+
+% Second-level analysis (updates currentResults file)
+ss = conn_network_results(currentResults, ask);
+h = gcf;
+if job.generate_figures
+    set(h,'Name',varName)
+    if job.save_figures
+        % Specify window units
+        set(h, 'units', 'inches')
+        % Change figure and paper size
+        set(h, 'Position', [0.1 0.1 job.optFig.figSize(1) job.optFig.figSize(2)])
+        set(h, 'PaperPosition', [0.1 0.1 job.optFig.figSize(1) job.optFig.figSize(2)])
+        % Save as PNG
+        print(h, '-dpng', fullfile(job.results_dir{1},[varName '_2nd_level.png']), sprintf('-r%d',job.optFig.figRes));
+        % Save as a figure
+        saveas(h, fullfile(job.results_dir{1},[varName '_2nd_level.fig']), 'fig');
+        % Return the property to its default
+        set(h, 'units', 'pixels')
+    end
+else
+    close(h)
+end
+end % second_level_analysis
+
+function fc_diagram(job, IOI, s1, c1, results, ss)
+% Functional connectivity diagram. Edge thicknesses depend on the average
+% correlation coefficients from the 2 groups. Circle sizes are proportional to
+% global efficiency of each seed. Positive correlations are depicted in warm
+% colors. Negative correlations are depicted in cool colors. The letter in the
+% circle indicates name of the seeds.
+if job.generate_figures
+    % Retrieve correlation values
+    load(IOI.fcIOS.corr.networkDataFname{s1, c1});
+    colorNames = fieldnames(IOI.color);
+    nColors = 256;
+    posCmap = hot(nColors);
+    negCmap = winter(nColors);
+        
+    %% NaCl (control) group fc diagram
+    varName = sprintf('results_S%02d_%s_%s', s1, colorNames{1+c1}, ss.Xname{1});
+    % load control group anatomical template (NC09) idxSubject = 13
+    [IOI IOImat dir_ioimat] = ioi_get_IOI(job,13);
+    % Read anatomical image
+    imAnatVol = spm_vol(IOI.res.file_anat);
+    NaCl_imAnat = spm_read_vols(imAnatVol)';
+    % Read brain mask
+    maskVol = spm_vol(IOI.fcIOS.mask.fname);
+    NaCl_mask = spm_read_vols(maskVol)';
+    % Display anatomical image
+    hCtrl = figure; set(hCtrl,'color','k'); set(hCtrl, 'InvertHardcopy', 'off');
+    set(hCtrl,'Name',[varName '_fc_diagram'])
+    imagesc(NaCl_imAnat .* NaCl_mask); axis image; colormap(gray(256));
+    set(gca, 'XTick', []); set(gca, 'YTick', []); 
+    % Get group indices
+    ctrlIdx = ss.X(:,1);
+    % Get correlation values for controls only
+    rCtrl = r(:,:,find(ctrlIdx));
+    % Get global efficiency values for controls only
+    GeCtrl = results.measures.GlobalEfficiency_roi(find(ctrlIdx),:);
+    % Get average correlation values (for the edges)
+    rMean = nanmean(rCtrl,3);
+    globalrMean = nanmean(r,3);
+    % Get ROI average global efficiency 
+    GE_roiMean = nanmean(GeCtrl);
+    globalGE = nanmean(results.measures.GlobalEfficiency_roi);
+    % Seed coordinates
+    seedCoord = {
+        [183 86];
+        [109 87];
+        [191 122];
+        [103 124];
+        [156 127];
+        [137 127];
+        [239 189];
+        [56 194];
+        [167 236];
+        [143 239];
+        [221 290];
+        [83 293]
+        };
+    
+    % Display edges (correlation values)
+    for iROIsource = 1:numel(results.rois)
+        for iROItarget = 1:numel(results.rois)
+            if iROIsource ~= iROItarget
+                % Draw edge
+                hEdge = line([seedCoord{iROIsource}(1) seedCoord{iROItarget}(1)],...
+                    [seedCoord{iROIsource}(2) seedCoord{iROItarget}(2)],...
+                    'LineStyle','-');
+                % Edge width
+                LW = (job.fc_diagram.edgeMaxThick * abs(rMean(iROIsource, iROItarget))) / max(abs(globalrMean(:)));
+                set(hEdge, 'LineWidth', LW);
+                % Edge color
+                if rMean(iROIsource, iROItarget) > 0
+                    % Warm colors
+                    RGB = ind2rgb(round(nColors*rMean(iROIsource, iROItarget) / max(abs(globalrMean(:)))), posCmap);
+                else
+                    % Cool colors
+                    RGB = ind2rgb(round(nColors*abs(rMean(iROIsource, iROItarget)) /max(abs(globalrMean(:)))), negCmap);
+                end
+                set(hEdge, 'Color', RGB);
+            end
+        end
+    end
+    
+    % Display nodes (seeds)
+    for iROI = 1:numel(results.rois)
+        w = (job.fc_diagram.cirleMaxRad * GE_roiMean(iROI)) / max(globalGE);
+        h = w;
+        % This will center the circles at the true coordinates
+        x = seedCoord{iROI}(1) - w/2;
+        y = seedCoord{iROI}(2) - h/2;
+        % Display ROI
+        hSeed = rectangle('Position',[x y w h],...
+        'Curvature',[1,1],...
+        'LineWidth',job.fc_diagram.circleLW,...
+        'LineStyle',job.fc_diagram.circleLS);
+        set (hSeed, 'FaceColor', job.fc_diagram.circleFC);
+        set (hSeed, 'EdgeColor', job.fc_diagram.circleEC);
+    end
+
+    if job.save_figures
+        % Specify window units
+        set(hCtrl, 'units', 'inches')
+        % Change figure and paper size
+        set(hCtrl, 'Position', [0.1 0.1 job.optFig.figSize(1) job.optFig.figSize(2)])
+        set(hCtrl, 'PaperPosition', [0.1 0.1 job.optFig.figSize(1) job.optFig.figSize(2)])
+        % Save as PNG
+        print(hCtrl, '-dpng', fullfile(job.results_dir{1},[varName '_fc_diagram.png']), sprintf('-r%d',job.optFig.figRes));
+        % Save as a figure
+        saveas(hCtrl, fullfile(job.results_dir{1},[varName '_fc_diagram.fig']), 'fig');
+        % Return the property to its default
+        set(hCtrl, 'units', 'pixels')
+    end
+    
+
+    
+     %% CaCl2 (treatment) group fc diagram
+    varName = sprintf('results_S%02d_%s_%s', s1, colorNames{1+c1}, ss.Xname{2});
+    % load control group anatomical template (CC109) idxSubject = 14
+    [IOI IOImat dir_ioimat] = ioi_get_IOI(job,13);
+    % Read anatomical image
+    imAnatVol = spm_vol(IOI.res.file_anat);
+    CaCl2_imAnat = spm_read_vols(imAnatVol)';
+    % Display anatomical image
+    hTreat = figure; set(hTreat,'color','k'); set(hTreat, 'InvertHardcopy', 'off');
+    set(hTreat,'Name',[varName '_fc_diagram'])
+    % Read brain mask
+    maskVol = spm_vol(IOI.fcIOS.mask.fname);
+    CaCl2_mask = spm_read_vols(maskVol)';
+    imagesc(CaCl2_imAnat .* CaCl2_mask); axis image; colormap(gray(256));
+    set(gca, 'XTick', []); set(gca, 'YTick', []); 
+    % Get group indices
+    treatIdx = ss.X(:,2);
+    % Get correlation values for controls only
+    rTreat = r(:,:,find(treatIdx));
+    % Get global efficiency values for controls only
+    GeTreat = results.measures.GlobalEfficiency_roi(find(treatIdx),:);
+    % Get average correlation values (for the edges)
+    rMean = nanmean(rTreat,3);
+    globalrMean = nanmean(r,3);
+    % Get ROI average global efficiency 
+    GE_roiMean = nanmean(GeTreat);
+    globalGE = nanmean(results.measures.GlobalEfficiency_roi);
+    % Seed coordinates
+    seedCoord = {
+        [183 86];
+        [109 87];
+        [191 122];
+        [103 124];
+        [156 127];
+        [137 127];
+        [239 189];
+        [56 194];
+        [167 236];
+        [143 239];
+        [221 290];
+        [83 293]
+        };
+    
+    % Display edges (correlation values)
+    for iROIsource = 1:numel(results.rois)
+        for iROItarget = 1:numel(results.rois)
+            if iROIsource ~= iROItarget
+                % Draw edge
+                hEdge = line([seedCoord{iROIsource}(1) seedCoord{iROItarget}(1)],...
+                    [seedCoord{iROIsource}(2) seedCoord{iROItarget}(2)],...
+                    'LineStyle','-');
+                % Edge width
+                LW = (job.fc_diagram.edgeMaxThick * abs(rMean(iROIsource, iROItarget))) / max(abs(globalrMean(:)));
+                set(hEdge, 'LineWidth', LW);
+                % Edge color
+                if rMean(iROIsource, iROItarget) > 0
+                    % Warm colors
+                    RGB = ind2rgb(round(nColors*rMean(iROIsource, iROItarget) / max(abs(globalrMean(:)))), posCmap);
+                else
+                    % Cool colors
+                    RGB = ind2rgb(round(nColors*abs(rMean(iROIsource, iROItarget)) /max(abs(globalrMean(:)))), negCmap);
+                end
+                set(hEdge, 'Color', RGB);
+            end
+        end
+    end
+    
+    % Display nodes (seeds)
+    for iROI = 1:numel(results.rois)
+        w = (job.fc_diagram.cirleMaxRad * GE_roiMean(iROI)) / max(globalGE);
+        h = w;
+        % This will center the circles at the true coordinates
+        x = seedCoord{iROI}(1) - w/2;
+        y = seedCoord{iROI}(2) - h/2;
+        % Display ROI
+        hSeed = rectangle('Position',[x y w h],...
+        'Curvature',[1,1],...
+        'LineWidth',job.fc_diagram.circleLW,...
+        'LineStyle',job.fc_diagram.circleLS);
+        set (hSeed, 'FaceColor', job.fc_diagram.circleFC);
+        set (hSeed, 'EdgeColor', job.fc_diagram.circleEC);
+    end
+
+    if job.save_figures
+        % Specify window units
+        set(hTreat, 'units', 'inches')
+        % Change figure and paper size
+        set(hTreat, 'Position', [0.1 0.1 job.optFig.figSize(1) job.optFig.figSize(2)])
+        set(hTreat, 'PaperPosition', [0.1 0.1 job.optFig.figSize(1) job.optFig.figSize(2)])
+        % Save as PNG
+        print(hTreat, '-dpng', fullfile(job.results_dir{1},[varName '_fc_diagram.png']), sprintf('-r%d',job.optFig.figRes));
+        % Save as a figure
+        saveas(hTreat, fullfile(job.results_dir{1},[varName '_fc_diagram.fig']), 'fig');
+        % Return the property to its default
+        set(hTreat, 'units', 'pixels')
+    end
+    
+    
+end % generate figures
+end % fc_diagram
 
 % EOF
