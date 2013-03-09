@@ -165,13 +165,13 @@ function [results, varName] = first_level_analysis(job, IOI, s1, c1, roiIndex)
 % Process network first-level analysis here (within subject)
 colorNames = fieldnames(IOI.color);
 varName = sprintf('results_S%02d_%s', s1, colorNames{1+c1});
-if job.threshold ~= 0,
+if job.opt1stLvl.threshold ~= 0,
     results = conn_network(IOI.fcIOS.corr.networkDataFname{s1, c1}, ...
-        roiIndex, job.measures, job.normalType, job.threshold);
+        roiIndex, job.opt1stLvl.measures, job.opt1stLvl.normalType, job.opt1stLvl.threshold);
 else
     % Creates figure with small-world properties
     [results, h1] = conn_network(IOI.fcIOS.corr.networkDataFname{s1, c1}, ...
-        roiIndex, job.measures, job.normalType);
+        roiIndex, job.opt1stLvl.measures, job.opt1stLvl.normalType);
     if job.generate_figures
         figName = get(h1, 'Name');
         set(h1, 'Name', [figName ' ' varName]);
@@ -242,9 +242,8 @@ if job.generate_figures
         % Return the property to its default
         set(h, 'units', 'pixels')
     end
-else
-    close(h)
 end
+close(h); % close figure anyway
 end % second_level_analysis
 
 function fc_diagram(job, IOI, s1, c1, results, ss)
@@ -260,11 +259,12 @@ if job.generate_figures
     nColors = 256;
     posCmap = hot(nColors);
     negCmap = winter(nColors);
-        
+    
     %% NaCl (control) group fc diagram
     varName = sprintf('results_S%02d_%s_%s', s1, colorNames{1+c1}, ss.Xname{1});
     % load control group anatomical template (NC09) idxSubject = 13
-    [IOI IOImat dir_ioimat] = ioi_get_IOI(job,13);
+    % [IOI IOImat dir_ioimat] = ioi_get_IOI(job,10);
+    load('D:\Edgar\Data\IOS_Carotid_Res\12_10_18,NC09\IOI.mat')
     % Read anatomical image
     imAnatVol = spm_vol(IOI.res.file_anat);
     NaCl_imAnat = spm_read_vols(imAnatVol)';
@@ -272,10 +272,13 @@ if job.generate_figures
     maskVol = spm_vol(IOI.fcIOS.mask.fname);
     NaCl_mask = spm_read_vols(maskVol)';
     % Display anatomical image
-    hCtrl = figure; set(hCtrl,'color','k'); set(hCtrl, 'InvertHardcopy', 'off');
+    hCtrl = figure; set(hCtrl,'color','k');
+    % Allow printing of black background
+    set(hCtrl, 'InvertHardcopy', 'off');
+    % Change window name
     set(hCtrl,'Name',[varName '_fc_diagram'])
     imagesc(NaCl_imAnat .* NaCl_mask); axis image; colormap(gray(256));
-    set(gca, 'XTick', []); set(gca, 'YTick', []); 
+    set(gca, 'XTick', []); set(gca, 'YTick', []);
     % Get group indices
     ctrlIdx = ss.X(:,1);
     % Get correlation values for controls only
@@ -285,7 +288,7 @@ if job.generate_figures
     % Get average correlation values (for the edges)
     rMean = nanmean(rCtrl,3);
     globalrMean = nanmean(r,3);
-    % Get ROI average global efficiency 
+    % Get ROI average global efficiency
     GE_roiMean = nanmean(GeCtrl);
     globalGE = nanmean(results.measures.GlobalEfficiency_roi);
     % Seed coordinates
@@ -337,13 +340,13 @@ if job.generate_figures
         y = seedCoord{iROI}(2) - h/2;
         % Display ROI
         hSeed = rectangle('Position',[x y w h],...
-        'Curvature',[1,1],...
-        'LineWidth',job.fc_diagram.circleLW,...
-        'LineStyle',job.fc_diagram.circleLS);
+            'Curvature',[1,1],...
+            'LineWidth',job.fc_diagram.circleLW,...
+            'LineStyle',job.fc_diagram.circleLS);
         set (hSeed, 'FaceColor', job.fc_diagram.circleFC);
         set (hSeed, 'EdgeColor', job.fc_diagram.circleEC);
     end
-
+    
     if job.save_figures
         % Specify window units
         set(hCtrl, 'units', 'inches')
@@ -357,24 +360,26 @@ if job.generate_figures
         % Return the property to its default
         set(hCtrl, 'units', 'pixels')
     end
+    close(hCtrl);
     
-
-    
-     %% CaCl2 (treatment) group fc diagram
+    %% CaCl2 (treatment) group fc diagram
     varName = sprintf('results_S%02d_%s_%s', s1, colorNames{1+c1}, ss.Xname{2});
-    % load control group anatomical template (CC109) idxSubject = 14
-    [IOI IOImat dir_ioimat] = ioi_get_IOI(job,13);
+    % load control group anatomical template (CC10) idxSubject = 14
+    % [IOI IOImat dir_ioimat] = ioi_get_IOI(job,10);
     % Read anatomical image
     imAnatVol = spm_vol(IOI.res.file_anat);
     CaCl2_imAnat = spm_read_vols(imAnatVol)';
     % Display anatomical image
-    hTreat = figure; set(hTreat,'color','k'); set(hTreat, 'InvertHardcopy', 'off');
+    hTreat = figure; set(hTreat,'color','k');
+    % Allow printing of black background
+    set(hTreat, 'InvertHardcopy', 'off');
+    % Change window name
     set(hTreat,'Name',[varName '_fc_diagram'])
     % Read brain mask
     maskVol = spm_vol(IOI.fcIOS.mask.fname);
     CaCl2_mask = spm_read_vols(maskVol)';
     imagesc(CaCl2_imAnat .* CaCl2_mask); axis image; colormap(gray(256));
-    set(gca, 'XTick', []); set(gca, 'YTick', []); 
+    set(gca, 'XTick', []); set(gca, 'YTick', []);
     % Get group indices
     treatIdx = ss.X(:,2);
     % Get correlation values for controls only
@@ -384,7 +389,7 @@ if job.generate_figures
     % Get average correlation values (for the edges)
     rMean = nanmean(rTreat,3);
     globalrMean = nanmean(r,3);
-    % Get ROI average global efficiency 
+    % Get ROI average global efficiency
     GE_roiMean = nanmean(GeTreat);
     globalGE = nanmean(results.measures.GlobalEfficiency_roi);
     % Seed coordinates
@@ -436,13 +441,13 @@ if job.generate_figures
         y = seedCoord{iROI}(2) - h/2;
         % Display ROI
         hSeed = rectangle('Position',[x y w h],...
-        'Curvature',[1,1],...
-        'LineWidth',job.fc_diagram.circleLW,...
-        'LineStyle',job.fc_diagram.circleLS);
+            'Curvature',[1,1],...
+            'LineWidth',job.fc_diagram.circleLW,...
+            'LineStyle',job.fc_diagram.circleLS);
         set (hSeed, 'FaceColor', job.fc_diagram.circleFC);
         set (hSeed, 'EdgeColor', job.fc_diagram.circleEC);
     end
-
+    
     if job.save_figures
         % Specify window units
         set(hTreat, 'units', 'inches')
@@ -456,8 +461,7 @@ if job.generate_figures
         % Return the property to its default
         set(hTreat, 'units', 'pixels')
     end
-    
-    
+    close(hTreat);
 end % generate figures
 end % fc_diagram
 
