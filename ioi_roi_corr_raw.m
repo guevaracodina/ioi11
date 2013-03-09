@@ -72,25 +72,25 @@ else
                                 set(gca,'xTickLabel',[])
                                 newName = sprintf('%s_S%d_C%d(%s)_s2sCorrMatRaw',IOI.subj_name,s1,c1,colorNames{1+c1});
                                 title(newName,'interpreter','none')
-                                if isfield(job, 'figSize')
+                                if isfield(job.optFig, 'figSize')
                                     % Specify window units
                                     set(h, 'units', 'inches')
                                     % Change figure and paper size
-                                    set(h, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
-                                    set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
+                                    set(h, 'Position', [0.1 0.1 job.optFig.figSize(1) job.optFig.figSize(2)])
+                                    set(h, 'PaperPosition', [0.1 0.1 job.optFig.figSize(1) job.optFig.figSize(2)])
                                 end
                                 if job.save_figures
                                     % Save as EPS
                                     spm_figure('Print', 'Graphics', fullfile(dir_ioimat,newName));
-                                    if isfield(job, 'figSize') && isfield(job, 'figRes')
+                                    if isfield(job.optFig, 'figSize') && isfield(job.optFig, 'figRes')
                                         % Save as PNG
-                                        print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
+                                        print(h, '-dpng', fullfile(dir_ioimat,newName), sprintf('-r%d',job.optFig.figRes));
                                     else
                                         % Save as PNG
-                                        print(h, '-dpng', fullfile(dir_ioimat,newName), sprintf('-r%d',job.figRes));
+                                        print(h, '-dpng', fullfile(dir_ioimat,newName), '-r300');
                                     end
                                 end
-                                if isfield(job, 'figSize') && isfield(job, 'figRes')
+                                if isfield(job.optFig, 'figSize') && isfield(job.optFig, 'figRes')
                                     % Return the property to its default
                                     set(h, 'units', 'pixels')
                                 end

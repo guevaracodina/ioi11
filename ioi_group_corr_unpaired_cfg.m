@@ -11,9 +11,12 @@ IOImat                      = ioi_dfg_IOImat(2);
 redo1                       = ioi_dfg_redo(1);
 % IOI copy/overwrite method
 IOImatCopyChoice            = ioi_dfg_IOImatCopyChoice('groupCorrUnpaired');
-% Colors to include (OD,HbO,HbR,HbT,Flow)
+% Colors to include (OD,HbO,HbR,HbT,Flow,CMRO2)
 IC                          = ioi_dfg_include_colors(0,1,1,1,1,1);
 
+% ------------------------------------------------------------------------------
+% ID groups
+% ------------------------------------------------------------------------------
 % String identifying Control (NaCl) group [NC]
 controlString               = cfg_entry;
 controlString.name          = 'Control group ID';
@@ -32,6 +35,14 @@ treatmentString.val         = {'CC'};
 treatmentString.num         = [2 2];     
 treatmentString.help        = {'String to identify Treatment Group.'}'; 
 
+% ID options
+ID                          = cfg_branch;
+ID.tag                      = 'ID';
+ID.name                     = 'Groups ID';
+ID.val                      = {controlString treatmentString};
+ID.help                     = {'Strings to identify groups. If in doubt, simply keep the default values.'}';
+% ------------------------------------------------------------------------------
+
 % Paired seeds
 paired_seeds                = cfg_entry;
 paired_seeds.name           = 'Paired seeds';       % The displayed name
@@ -47,15 +58,19 @@ paired_seeds.help           = {'Choose the pairs of seeds to compare. Usually:'
                                 ' 9,10: Retrosplenial'
                                 '11,12: Visual'};
                             
-% Multiple comparisons correction (Bonferroni)
-bonferroni              	= cfg_menu;
-bonferroni.tag              = 'bonferroni';
-bonferroni.name             = 'Bonferroni correction';
-bonferroni.labels           = {'No','Yes'};
-bonferroni.values           = {false, true};
-bonferroni.val              = {true};
-bonferroni.help             = {'Perform Bonferroni correction for multiple comparisons.'}';
-                            
+% Select directory to save global results
+parent_results_dir          = cfg_files;
+parent_results_dir.tag      = 'parent_results_dir';
+parent_results_dir.name     = 'Top directory to save group results';
+parent_results_dir.filter   = 'dir';
+parent_results_dir.num      = [1 1];
+parent_results_dir.help     = {'Select the directory where consolidated results will be saved.'}';
+
+% ------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------
+% Statistical test options
+% ------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------
 % Unpaired t-test
 ttest1                      = cfg_menu;
 ttest1.tag                  = 'ttest1';
@@ -84,32 +99,14 @@ alpha.val                   = {0.05};               % Default value
 alpha.help                  = {'Performs the test at the significance level (100*alpha)%.' 
     'alpha must be a scalar'};
 
-% Correlation on 1st derivative
-derivative                  = cfg_menu;
-derivative.tag              = 'derivative';
-derivative.name             = '1st derivative';
-derivative.labels           = {'No', 'Yes'};
-derivative.values           = {false, true};
-derivative.val              = {true};                      % Default value
-derivative.help             = {'Choose whether to perform correlation analysis on 1st derivative of seeds/pixels time-course'}';
-
-% Correlation on raw data time course (before filtering, downsampling and GLM regression)
-rawData                     = cfg_menu;
-rawData.tag                 = 'rawData';
-rawData.name                = 'raw time course';
-rawData.labels              = {'No', 'Yes'};
-rawData.values              = {false, true};
-rawData.val                 = {true};                      % Default value
-rawData.help                = {'Choose whether to perform correlation analysis on seeds raw time course'}';
-
-% Show standard error bar
-stderror                    = cfg_menu;
-stderror.tag                = 'stderror';
-stderror.name               = 'Std. error bars';
-stderror.labels             = {'No','Yes'};
-stderror.values             = {false, true};
-stderror.val                = {true};
-stderror.help               = {'Show standard error bars: sigma/sqrt(N)'}';
+% Multiple comparisons correction (Bonferroni)
+bonferroni              	= cfg_menu;
+bonferroni.tag              = 'bonferroni';
+bonferroni.name             = 'Bonferroni correction';
+bonferroni.labels           = {'No','Yes'};
+bonferroni.values           = {false, true};
+bonferroni.val              = {true};
+bonferroni.help             = {'Perform Bonferroni correction for multiple comparisons.'}';
 
 % ------------------------------------------------------------------------------
 % Remove outliers
@@ -142,14 +139,40 @@ remOutlier.val              = {remOutOff};
 remOutlier.help             = {'Choose whether to remove outliers. An outlier is defined as a value that is more than N standard deviations away from the mean'};
 % ------------------------------------------------------------------------------
 
-% Select directory to save global results
-parent_results_dir          = cfg_files;
-parent_results_dir.tag      = 'parent_results_dir';
-parent_results_dir.name     = 'Top directory to save group results';
-parent_results_dir.filter   = 'dir';
-parent_results_dir.num      = [1 1];
-parent_results_dir.help     = {'Select the directory where consolidated results will be saved.'}';
+% Correlation on 1st derivative
+derivative                  = cfg_menu;
+derivative.tag              = 'derivative';
+derivative.name             = '1st derivative';
+derivative.labels           = {'No', 'Yes'};
+derivative.values           = {false, true};
+derivative.val              = {true};                      % Default value
+derivative.help             = {'Choose whether to perform correlation analysis on 1st derivative of seeds/pixels time-course'}';
 
+% Correlation on raw data time course (before filtering, downsampling and GLM regression)
+rawData                     = cfg_menu;
+rawData.tag                 = 'rawData';
+rawData.name                = 'Raw time course';
+rawData.labels              = {'No', 'Yes'};
+rawData.values              = {false, true};
+rawData.val                 = {true};                      % Default value
+rawData.help                = {'Choose whether to perform correlation analysis on seeds raw time course'}';
+% ------------------------------------------------------------------------------
+optStat                      = cfg_branch;
+optStat.tag                  = 'optStat';
+optStat.name                 = 'Statistical test options';
+optStat.val                  = {ttest1 wilcoxon1  alpha bonferroni remOutlier derivative rawData};
+optStat.help                 = {'Options for 2nd-level analysis. If in doubt, simply keep the default values.'}';
+% ------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------
+
+% Generate / save figures
+[generate_figures ...
+    save_figures]           = ioi_dfg_generate_figures;
+% ------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------
+% Print figure options
+% ------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------
 % Figure size
 figSize                     = cfg_entry;
 figSize.tag                 = 'figSize';
@@ -167,6 +190,15 @@ figRes.strtype              = 'r';
 figRes.num                  = [1 1];
 figRes.val                  = {300};
 figRes.help                 = {'Enter figure resolution in dpi [150-1200]'};
+
+% Show standard error bar
+stderror                    = cfg_menu;
+stderror.tag                = 'stderror';
+stderror.name               = 'Std. error bars';
+stderror.labels             = {'No','Yes'};
+stderror.values             = {false, true};
+stderror.val                = {true};
+stderror.help               = {'Choose to show whether standard error bars [sigma/sqrt(N)] or standard deviation bars [sigma]'}';
 
 % ------------------------------------------------------------------------------
 % Choose axis limits
@@ -281,19 +313,22 @@ legends.values              = {legendShow legendHide};
 legends.val                 = {legendHide};
 legends.help                = {'Choose whether to show legends or not'};
 % ------------------------------------------------------------------------------
-
-% Generate / save figures
-[generate_figures ...
-    save_figures]           = ioi_dfg_generate_figures;
+optFig                      = cfg_branch;
+optFig.tag                  = 'optFig';
+optFig.name                 = 'Print figure options';
+optFig.val                  = {stderror figSize figRes yLimits xAxisLabels xLabelFontSize yLabelFontSize titleFontSize legends};
+optFig.help                 = {'Print figure options. If in doubt, simply keep the default values.'}';
+% ------------------------------------------------------------------------------
+% ------------------------------------------------------------------------------
 
 % Executable Branch
 group_corr2                 = cfg_exbranch; % This is the branch that has information about how to run this module
 group_corr2.name            = 'Bilateral correlation group comparison (unpaired)'; % The display name
 group_corr2.tag             = 'group_corr2'; %Very important: tag is used when calling for execution
-group_corr2.val             = {IOImat redo1 IOImatCopyChoice IC controlString ...
-    treatmentString paired_seeds bonferroni ttest1 wilcoxon1 alpha derivative rawData ...
-    stderror remOutlier parent_results_dir figSize figRes yLimits xAxisLabels xLabelFontSize...
-    yLabelFontSize titleFontSize legends generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+group_corr2.val             = {IOImat redo1 IOImatCopyChoice IC ID paired_seeds...
+    parent_results_dir optStat generate_figures save_figures optFig};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+% bonferroni ttest1 wilcoxon1 alpha derivative rawData remOutlier
+% stderror figSize figRes yLimits xAxisLabels xLabelFontSize yLabelFontSize titleFontSize legends
 group_corr2.prog            = @ioi_group_corr_unpaired_run; % A function handle that will be called with the harvested job to run the computation
 group_corr2.vout            = @ioi_cfg_vout_group_corr_unpaired; % A function handle that will be called with the harvested job to determine virtual outputs
 group_corr2.help            = {'Gets the correlation between each seed and its contralateral homologue. Then performs a non-paired t-test for each seed set, to have a group comparison.'}';

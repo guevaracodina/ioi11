@@ -46,6 +46,9 @@ results_dir.ufilter     = '.*';
 results_dir.num         = [1 1];
 results_dir.help        = {'Select the directory where figures will be saved.'}';
 
+% ------------------------------------------------------------------------------
+% 1st-level analysis Options
+% ------------------------------------------------------------------------------
 % Measures Type
 measures                = cfg_menu;
 measures.tag            = 'measures';
@@ -63,7 +66,7 @@ normalType.tag          = 'normalType';
 normalType.name         = 'Normalization';
 normalType.labels       = {'Raw', 'Z-scores', 'Cost'};
 normalType.values       = {0, 1, 2};
-normalType.val          = {1};                  % Default value
+normalType.val          = {2};                  % Default value
 normalType.help         = { 'Choose normalization type: '
                             '0: Uses raw (Fisher-transformed) correlation coefficients;'
                             '1: Normalizes across subjects (transform to z-scores)'
@@ -77,6 +80,14 @@ threshold.num           = [0 1];                % Number of inputs required
 threshold.val           = {0.3};                % Default value
 threshold.help          = {'Threshold value to compute adjacency matrix. If zero, small-world properties are plotted and user is asked to enter a value for each color.'};
 
+% 1st-level analysis options
+opt1stLvl               = cfg_branch;
+opt1stLvl.tag           = 'opt1stLvl';
+opt1stLvl.name          = '1st level options';
+opt1stLvl.val           = {measures normalType threshold};
+opt1stLvl.help          = {'Various 1st level analysis options. If in doubt, simply keep the default values.'}';
+% ------------------------------------------------------------------------------
+
 % ------------------------------------------------------------------------------
 % 2nd-level analysis Options
 % ------------------------------------------------------------------------------
@@ -86,7 +97,7 @@ model.tag               = 'model';
 model.name              = 'Statistical test';
 model.labels            = {'One-sample t-test', 'Two-sample t-test', 'Multiple regression'};
 model.values            = {0, 1, 2};
-model.val               = {2};                  % Default value
+model.val               = {1};                  % Default value: unpaired t-test
 model.help              = { 'Select statistical test:'
                             '1: One-sample t-test' 
                             '2: Two-sample t-test' 
@@ -130,7 +141,7 @@ ask.help                = { 'Ask for options. Default setting will ask for any m
                             'none' 
                             'missing' 
                             'all'}';
-
+% 2nd-level analysis options
 opt2ndLvl               = cfg_branch;
 opt2ndLvl.tag           = 'opt2ndLvl';
 opt2ndLvl.name          = '2nd level options';
@@ -170,7 +181,6 @@ optFig.val              = {figSize figRes};
 optFig.help             = {'Print figure options. If in doubt, simply keep the default values.'}';
 % ------------------------------------------------------------------------------
 
-
 % ------------------------------------------------------------------------------
 % Seed positions and sizes will be shown with black circles.
 % ------------------------------------------------------------------------------
@@ -209,7 +219,7 @@ circleEC.help           = {'Seed Edge Color'};
 cirleMaxRad             = cfg_entry;
 cirleMaxRad.tag         = 'cirleMaxRad';
 cirleMaxRad.name        = 'Max. Seed Radius';
-cirleMaxRad.val         = {15};
+cirleMaxRad.val         = {18};
 cirleMaxRad.strtype     = 'r';
 cirleMaxRad.num         = [1 1];
 cirleMaxRad.help        = {'Maximum Seed Radius'};
@@ -226,7 +236,7 @@ fc_diagram              = cfg_branch;
 fc_diagram.tag          = 'fc_diagram';
 fc_diagram.name         = 'fc diagram';
 fc_diagram.val          = {circleLW circleLS circleFC circleEC cirleMaxRad edgeMaxThick};
-fc_diagram.help         = {'Functional connectivity diagram options. Functional connectivity diagram. Edge thicknesses depend on the average correlation coefficients from the 2 groups. Circle sizes are proportional to global efficiency of each seed. Positive correlations are depicted in warm colors. Negative correlations are depicted in cool colors. The letter in the circle indicates name of the seeds.'};
+fc_diagram.help         = {'Functional connectivity diagram options. Edge thicknesses depend on the average correlation coefficients from the 2 groups. Circle sizes are proportional to global efficiency of each seed. Positive correlations are depicted in warm colors. Negative correlations are depicted in cool colors. The letter in the circle indicates name of the seeds.'};
 % ------------------------------------------------------------------------------
 
 
@@ -235,11 +245,11 @@ network1                = cfg_exbranch; % This is the branch that has informatio
 network1.name           = 'Network analyses'; % The display name
 network1.tag            = 'network1'; %Very important: tag is used when calling for execution
 network1.val            = {IOImat controlString treatmentString redo1 ...
-    IOImatCopyChoice ROI_choice session_choice IC results_dir measures ...
-    normalType threshold opt2ndLvl fc_diagram generate_figures save_figures optFig};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+    IOImatCopyChoice ROI_choice session_choice IC results_dir opt1stLvl ...
+    opt2ndLvl generate_figures save_figures fc_diagram  optFig};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 network1.prog           = @ioi_network_analyses_run; % A function handle that will be called with the harvested job to run the computation
 network1.vout           = @ioi_cfg_vout_network_analyses; % A function handle that will be called with the harvested job to determine virtual outputs
-network1.help           = {'Network analyses.'}';
+network1.help           = {'Network analyses. Presents several graph theoretical measures. These measures reflect the level of global integration in the network and are generated by averaging seed-level measures across all nodes of the network. These summary network-level measures are then entered in a second-level general linear model to compare functional connectivity patterns between the groups.'}';
 return
 
 % Make IOI.mat available as a dependency
