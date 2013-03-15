@@ -61,12 +61,12 @@ derivative.help         = {'Choose whether to perform correlation analysis on 1s
 
 % Executable Branch
 correlation_map1        = cfg_exbranch; % This is the branch that has information about how to run this module
-correlation_map1.name   = 'Functional connectivity (fcIOS) map'; % The display name
+correlation_map1.name   = 'Functional connectivity (fcOIS) map'; % The display name
 correlation_map1.tag    = 'correlation_map1'; %Very important: tag is used when calling for execution
 correlation_map1.val    = {IOImat redo1 IOImatCopyChoice ROI_choice session_choice IC pValue fisherZ seed2seedCorrMat derivative generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 correlation_map1.prog   = @ioi_correlation_map_run; % A function handle that will be called with the harvested job to run the computation
 correlation_map1.vout   = @ioi_cfg_vout_correlation_map; % A function handle that will be called with the harvested job to determine virtual outputs
-correlation_map1.help   = {'A functional connectivity (fcIOS) map is made by correlating the seed/ROI with all other brain (non-masked) pixels'}';
+correlation_map1.help   = {'A functional connectivity (fcOIS) map is made by correlating the seed/ROI with all other brain (non-masked) pixels'}';
 
 return
 

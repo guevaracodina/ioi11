@@ -99,7 +99,7 @@ params.help         = {'Preferences for your e-mail server (Internet SMTP server
 % ------------------------------------------------------------------------------
 sendmail1           = cfg_exbranch;
 sendmail1.tag       = 'sendmail1';
-sendmail1.name      = 'Send e-mail';
+sendmail1.name      = 'Send e-mail notifier';
 sendmail1.val       = { recipient subject message attachments params };
 sendmail1.prog      = @ioi_sendmail;
 sendmail1.help      = {'Send a mail message (attachments optionals) to an address.'};

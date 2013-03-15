@@ -1,17 +1,26 @@
 function script_alignment
 %% script_alignment
 clc;
+% Always 1 session
 s1 = 1;
+% Color index (5=HbO, 6=HbR, 7=CBF, 8=CMRO2)
 c1 = 5;
-r1 = 1;
-treatmentString = 'NC';
+% ROI index
+r1 = 6;
+% group ID string
+groupID = 'CC';
 
 %% Load manually aligned images with ImageJ plugin TurboReg
 clear imDataArray
 topDir = 'D:\Edgar\Data\IOS_Carotid_Res\alignment';
-currentDir = sprintf('%s_R%02dC%02d', treatmentString, r1, c1);
-[dirAlignment, sts] = cfg_getfile(1,'dir','Select folder',{fullfile(topDir,currentDir)}, topDir, '.*');
-[images2align, sts] = cfg_getfile(Inf,'image','Select folder',[], dirAlignment{1}, '.*');
+currentDir = sprintf('%s_R%02dC%02d', groupID, r1, c1);
+[dirAlignment, sts] = cfg_getfile([1 1],'dir','Select folder',{fullfile(topDir,currentDir)}, topDir, '.*');
+dirListNIfTI = dir(fullfile(topDir,[currentDir filesep '*.nii']));
+dirListAnalyze = dir(fullfile(topDir,[currentDir filesep '*.img']));
+images2align = [struct2cell(dirListAnalyze) struct2cell(dirListNIfTI)];
+images2align = images2align(1,:)';
+images2align = cellfun(@(x) fullfile(dirAlignment{1}, [x ',1']), images2align, 'UniformOutput', false);
+[images2align, sts] = cfg_getfile([1 Inf],'image','Select images',images2align, dirAlignment{1}, '.*');
 V = spm_vol(images2align);
 for iVols = 1:numel(V),
     [imData, imXYZ] = spm_read_vols(V{iVols});
@@ -53,12 +62,12 @@ job.parent_results_dir{1}                       = figFolder;
 
 %% Overlay slover
 % Load IOI matrix of the source image
-if strcmp(treatmentString, 'CC')
+if strcmp(groupID, 'CC')
     load('D:\Edgar\Data\IOS_Carotid_Res\12_10_19,CC10\GLMfcIOS\corrMap\IOI.mat');
-elseif strcmp(treatmentString, 'NC')
+elseif strcmp(groupID, 'NC')
     load('D:\Edgar\Data\IOS_Carotid_Res\12_10_18,NC09\GLMfcIOS\corrMap\IOI.mat');
 else
-    fprintf('No IOI matrix found for %s.\n', treatmentString);
+    fprintf('No IOI matrix found for %s.\n', groupID);
     return
 end
 if IOI.res.shrinkageOn
@@ -97,6 +106,8 @@ if isfield(IOI.res,'shrinkageOn')
     end
 end
 internal_overlay_map(anatomical, corrMap,  job, [currentDir '_avg'], [seedX seedY seedW seedH]);
+colorNames = fieldnames(IOI.color);
+fprintf('Average seed-based correlation map done! Group: %s, R%02d, (%s)\n', groupID, r1, colorNames{c1+1});
 end
 
 function [h, varargout] = internal_overlay_map(anatomical, positiveMap,  job, titleString, seedDims)

@@ -119,7 +119,8 @@ C.name                  = 'Contrast';
 C.strtype               = 'r';
 C.num                   = [1 2];
 C.val{1}                = [1, -1];
-C.help                  = {'Specify the contrast vector/matrix. Default C is [1, -1]'}';
+C.help                  = { 'Specify the contrast vector/matrix. Default C is [1, -1],'
+                            'i.e. sample1 (NaCl) > sample2 (CaCl_2)'}';
 
 % Contrast name
 Cname                   = cfg_entry;
@@ -172,7 +173,7 @@ figRes.name             = 'Figure resolution';
 figRes.strtype          = 'r';
 figRes.num              = [1 1];
 figRes.val{1}           = 150;
-figRes.help             = {'Enter figure resolution in dpi [150-1200]'};
+figRes.help             = {'Enter figure resolution in dpi. Suggested [150-1200]'};
 
 optFig                  = cfg_branch;
 optFig.tag              = 'optFig';
@@ -184,6 +185,14 @@ optFig.help             = {'Print figure options. If in doubt, simply keep the d
 % ------------------------------------------------------------------------------
 % Seed positions and sizes will be shown with black circles.
 % ------------------------------------------------------------------------------
+rThreshold              = cfg_entry;
+rThreshold.tag          = 'rThreshold';
+rThreshold.name         = '|r| threshold';
+rThreshold.val          = {0.3};
+rThreshold.strtype      = 'r';
+rThreshold.num          = [1 1];
+rThreshold.help         = {'Pearson''s coefficient |r| threshold. Only edges with higher absolute connectivity will be displayed.'};
+
 circleLW                = cfg_entry;
 circleLW.tag            = 'circleLW';
 circleLW.name           = 'Seed LineWidth';
@@ -235,7 +244,7 @@ edgeMaxThick.help       = {'Maximum edge thickness'};
 fc_diagram              = cfg_branch;
 fc_diagram.tag          = 'fc_diagram';
 fc_diagram.name         = 'fc diagram';
-fc_diagram.val          = {circleLW circleLS circleFC circleEC cirleMaxRad edgeMaxThick};
+fc_diagram.val          = {rThreshold circleLW circleLS circleFC circleEC cirleMaxRad edgeMaxThick};
 fc_diagram.help         = {'Functional connectivity diagram options. Edge thicknesses depend on the average correlation coefficients from the 2 groups. Circle sizes are proportional to global efficiency of each seed. Positive correlations are depicted in warm colors. Negative correlations are depicted in cool colors. The letter in the circle indicates name of the seeds.'};
 % ------------------------------------------------------------------------------
 
