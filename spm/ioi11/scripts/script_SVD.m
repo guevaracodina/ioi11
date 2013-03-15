@@ -1,12 +1,13 @@
 %% Singular Value Decomposition script
+clc; clear;
 % loading data
 tic
-IOImat = 'E:\Edgar\Data\IOS_Results\12_07_17,NC01\IOI.mat';
+IOImat = 'D:\Edgar\Data\IOS_Carotid_Res\12_10_19,CC10\GLMfcIOS\corrMap\IOI.mat';
 load(IOImat)
 % Session number
 s1 = 1;
 % HbO (5) HbR (6) Flow (7)
-c1 = 7;
+c1 = 8;
 % Get colors to iIOI.fcIOS.masknclude information
 colorNames = fieldnames(IOI.color);
 
@@ -22,6 +23,17 @@ else
         IOI.subj_name,s1,colorNames{1+c1})
 end
 
+% New size
+shrinkFactor = 2;
+nx = round(size(y,1)/shrinkFactor); ny = round(size(y,2)/shrinkFactor);
+
+% Preallocate 
+yR = zeros([nx ny 1 size(y,4)]);
+% Resize
+for iFrames = 1:size(y,4),
+    yR(:,:,1,iFrames) = ioi_MYimresize(squeeze(y(:,:,1,iFrames)), [nx ny]);
+end
+y = yR; clear yR;
 % Check if brain mask was performed
 if IOI.fcIOS.mask.maskOK
     % Load brain mask
@@ -33,6 +45,7 @@ if IOI.fcIOS.mask.maskOK
 else
     fprintf('No regressed time-series for subject %s\n',IOI.subj_name)
 end
+brainMask = ioi_MYimresize(brainMask, [nx ny]);
 disp(['Data loaded in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
 %% Test: Create matrix with only the brain pixels
@@ -53,7 +66,7 @@ for iCols = 1:size(yMatrix,2)
     yMatrix(:, iCols) = ySlice(brainMask);
 end
 % cleanup
-clear y vol
+% clear y vol
 
 %% Create NxN connectivity (auto-correlation) matrix 
 % (N = number of pixels defined as brain)
@@ -62,12 +75,14 @@ tic
 fprintf('Computing connectivity matrix for subject %s, session: %02d (%s)...\n',...
     IOI.subj_name,s1,colorNames{1+c1})
 [rMatrix] = corrcoef(yMatrix');
+% Change NaNs to zeros
+rMatrix(isnan(rMatrix)) = 0;
 disp(['Connectivity (auto-correlation) matrix computed in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 [pathName, ~, ~] = fileparts(IOImat);
 pathName = fullfile(pathName, 'SVD');
 if ~exist(pathName, 'file'), mkdir(pathName); end
 % cleanup
-clear yMatrix
+% clear yMatrix
 fprintf('Writing connectivity matrix to disk for subject %s, session: %02d (%s)...\n',...
     IOI.subj_name,s1,colorNames{1+c1})
 tic
@@ -172,16 +187,18 @@ im_objR = memmapfile(fmemR_name,'format',...
     {'double' size(rMatrix) 'rMatrix'},...
     'writable', false);
 % cleanup
-clear rMatrix
-% pack
+% clear rMatrix
 
 %% Compute largest SVD vectors
 % rMatrix = USV'
 tic
 fprintf('Computing the %d largest SV...\n', nSVD);
 %[im_objU.Data.svdU im_objS.Data.svdS im_objV.Data.svdV] = svds(im_objR.Data.rMatrix, nSVD);
+% Using memmap object
 [U S V] = svds(im_objR.Data.rMatrix, nSVD);
-fprintf('Largest %d SVD computed in: %s\n', nSVD, datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS'));
+% Using variable in memory
+% [U S V] = svds(rMatrix, nSVD);
+fprintf('Largest %d SV computed in: %s\n', nSVD, datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS'));
 % pathName = fullfile(IOI.dir.dir_subj_res, 'SVD');
 % if ~exist(pathName, 'file'), mkdir(pathName); end
 fprintf('Writing SVD data to disk for subject %s, session: %02d (%s)...\n',...
@@ -210,15 +227,17 @@ svdY = U(:,iSVD);
 
 %% Arrange the first 4 singular modes in their correspondent place
 % Preallocate
-yRGB = zeros([size(ySlice), 4]);
-yTmp = zeros(size(ySlice));
+yRGB = nan([size(ySlice), 4]);
+yTmp = nan(size(ySlice));
 % Normalize each channel between 0 and 1
-% svdR = svdR - min(svdR);
-% svdR = svdR ./ max(svdR);
-% svdG = svdG - min(svdG);
-% svdG = svdG ./ max(svdG);
-% svdB = svdB - min(svdB);
-% svdB = svdB ./ max(svdB);
+svdR = svdR - min(svdR);
+svdR = svdR ./ max(svdR);
+svdG = svdG - min(svdG);
+svdG = svdG ./ max(svdG);
+svdB = svdB - min(svdB);
+svdB = svdB ./ max(svdB);
+svdY = svdY - min(svdY);
+svdY = svdY ./ max(svdY);
 % Indexing
 yTmp(brainMask) = svdR;
 yRGB(:,:,1) = yTmp;
@@ -233,38 +252,57 @@ yRGB(:,:,4) = yTmp;
 brainMaskRep = repmat(brainMask,[1 1 4]);
 yRGB = yRGB .* double(brainMaskRep);
 
+% reshape figures
+yRGB = permute(yRGB,[2 1 3]);
 % SVD
 for iSVD = 1:4,
     h = figure;
-    imagesc(squeeze(yRGB(:,:,iSVD))); axis image; colorbar
+    imagesc(squeeze(yRGB(:,:,iSVD))); axis image;
     title(sprintf('%s S%02d C%d (%s) SV%d\n',...
         IOI.subj_name,s1,c1,colorNames{1+c1},iSVD),...
         'interpreter', 'none', 'FontSize', 14)
     set(h,'color','w')
+    % Allow printing of black background
+    set(h, 'InvertHardcopy', 'off');
+    set(gca,'XTick',[]); set(gca,'YTick',[])
     newName = sprintf('%s_S%02d_C%d_(%s)_SVD%02d.PNG',IOI.subj_name,s1,c1,colorNames{1+c1},iSVD);
+    % Specify window units
+    set(h, 'units', 'inches')
+    % Change figure and paper size
+    set(h, 'Position', [0.1 0.1 3 3])
+    set(h, 'PaperPosition', [0.1 0.1 3 3])
     % Save as PNG
-    print(h, '-dpng', '-r300', fullfile(pathName,newName));
+    print(h, '-dpng', fullfile(pathName,newName), '-r300');
     close(h)
 end
 
-% % Maximize figure
-% set(0, 'Units', 'normalized');
-% screenSize = get(0,'Screensize');
-% screenSize = [0  0.0370 screenSize(3) screenSize(4)- 0.0370];
 
-% % Display false RGB image
-% h = figure; imshow(yRGB);
-% title(sprintf('%s S%02d C%d (%s)\n',...
-%     IOI.subj_name,s1,c1,colorNames{1+c1}),...
-%     'interpreter', 'none', 'FontSize', 14)
-% set(h,'color','w')
+fprintf('SVD done!\n\n')
+
+%% Display false RGB image
+h = figure; imshow(yRGB(:,:,1:3));
+title(sprintf('%s S%02d C%d (%s)\n',...
+    IOI.subj_name,s1,c1,colorNames{1+c1}),...
+    'interpreter', 'none', 'FontSize', 14)
+set(h,'color','w')
+% Allow printing of black background
+set(h, 'InvertHardcopy', 'off');
+
 % % Normalized units
 % set(h, 'Units', 'normalized');
+% screenSize = get(0,'Screensize');
+% screenSize = [0  0.0370 screenSize(3) screenSize(4)- 0.0370];
 % % Maximize figure
 % set(h, 'OuterPosition', screenSize);
 
-% newName = sprintf('%s_S%02d_C%d_(%s)',IOI.subj_name,s1,c1,colorNames{1+c1});
+% Specify window units
+set(h, 'units', 'inches')
+% Change figure and paper size
+set(h, 'Position', [0.1 0.1 3 3])
+set(h, 'PaperPosition', [0.1 0.1 3 3])
+
+newName = sprintf('%s_S%02d_C%d_(%s)',IOI.subj_name,s1,c1,colorNames{1+c1});
 % Save as PNG (Maximize before printing)
-% print(h, '-dpng', fullfile(pathName,newName), '-r300', 'WriteMode', 'overwrite');
-% close(h)
-fprintf('SVD done!\n\n')
+print(h, '-dpng', fullfile(pathName,newName), '-r300');
+close(h)
+

@@ -77,7 +77,6 @@ cd(job.results_dir{1});
 s1 = 1;
 % Initialize progress bar
 spm_progress_bar('Init', length(IOI.sess_res{s1}.fname), sprintf('Network analysis'), 'Colors');
-% ioi_text_waitbar(0, sprintf('Network analysis\n'));
 % Loop over available colors
 for c1=1:length(IOI.sess_res{s1}.fname)
     doColor = ioi_doColor(IOI,c1,IC);
@@ -139,9 +138,9 @@ for c1=1:length(IOI.sess_res{s1}.fname)
                 'Z', 'r', 'names', 'names2');
             
             % First level analysis (within subject)
-            [results, varName] = first_level_analysis(job, IOI, s1, c1, roiIndex);
+            results = first_level_analysis(job, IOI, s1, c1, roiIndex);
             
-            % Second level analysis
+            % Second level analysis (between subjects)
             ss = second_level_analysis(job, IOI, s1, c1, isTreatment, results);
             
             % Functional connectivity diagram
@@ -149,7 +148,6 @@ for c1=1:length(IOI.sess_res{s1}.fname)
             
             % Update progress bar
             spm_progress_bar('Set', c1);
-            % ioi_text_waitbar(c1/length(IOI.sess_res{s1}.fname), sprintf('Processing color %d from %d', c1, length(IOI.sess_res{s1}.fname)));
         end
     end
 end % colors loop
@@ -157,11 +155,10 @@ end % colors loop
 cd(currFolder);
 % Clear progress bar
 spm_progress_bar('Clear');
-% ioi_text_waitbar('Clear');
 fprintf('Elapsed time: %s', datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS\n') );
 end % ioi_network_analysis_run
 
-function [results, varName] = first_level_analysis(job, IOI, s1, c1, roiIndex)
+function results = first_level_analysis(job, IOI, s1, c1, roiIndex)
 % Process network first-level analysis here (within subject)
 colorNames = fieldnames(IOI.color);
 varName = sprintf('results_S%02d_%s', s1, colorNames{1+c1});
@@ -224,8 +221,9 @@ ss(1).ask = ask;
 save(currentResults, 'results', 'ss',...
     'controlGroupIdx', 'treatmentGroupIdx');
 
-% Second-level analysis (updates currentResults file)
+% Second-level analysis (between subjects) (updates currentResults .mat file)
 ss = conn_network_results(currentResults, ask);
+
 h = gcf;
 if job.generate_figures
     set(h,'Name',varName)
@@ -241,9 +239,9 @@ if job.generate_figures
         saveas(h, fullfile(job.results_dir{1},[varName '_2nd_level.fig']), 'fig');
         % Return the property to its default
         set(h, 'units', 'pixels')
+        close(h); % close figure anyway
     end
 end
-close(h); % close figure anyway
 end % second_level_analysis
 
 function fc_diagram(job, IOI, s1, c1, results, ss)
@@ -311,22 +309,24 @@ if job.generate_figures
     for iROIsource = 1:numel(results.rois)
         for iROItarget = 1:numel(results.rois)
             if iROIsource ~= iROItarget
-                % Draw edge
-                hEdge = line([seedCoord{iROIsource}(1) seedCoord{iROItarget}(1)],...
-                    [seedCoord{iROIsource}(2) seedCoord{iROItarget}(2)],...
-                    'LineStyle','-');
-                % Edge width
-                LW = (job.fc_diagram.edgeMaxThick * abs(rMean(iROIsource, iROItarget))) / max(abs(globalrMean(:)));
-                set(hEdge, 'LineWidth', LW);
-                % Edge color
-                if rMean(iROIsource, iROItarget) > 0
-                    % Warm colors
-                    RGB = ind2rgb(round(nColors*rMean(iROIsource, iROItarget) / max(abs(globalrMean(:)))), posCmap);
-                else
-                    % Cool colors
-                    RGB = ind2rgb(round(nColors*abs(rMean(iROIsource, iROItarget)) /max(abs(globalrMean(:)))), negCmap);
+                if abs(rMean(iROIsource, iROItarget)) > job.fc_diagram.rThreshold
+                    % Draw edge
+                    hEdge = line([seedCoord{iROIsource}(1) seedCoord{iROItarget}(1)],...
+                        [seedCoord{iROIsource}(2) seedCoord{iROItarget}(2)],...
+                        'LineStyle','-');
+                    % Edge width
+                    LW = (job.fc_diagram.edgeMaxThick * abs(rMean(iROIsource, iROItarget))) / max(abs(globalrMean(:)));
+                    set(hEdge, 'LineWidth', LW);
+                    % Edge color
+                    if rMean(iROIsource, iROItarget) > 0
+                        % Warm colors
+                        RGB = ind2rgb(round(nColors*rMean(iROIsource, iROItarget) / max(abs(globalrMean(:)))), posCmap);
+                    else
+                        % Cool colors
+                        RGB = ind2rgb(round(nColors*abs(rMean(iROIsource, iROItarget)) /max(abs(globalrMean(:)))), negCmap);
+                    end
+                    set(hEdge, 'Color', RGB);
                 end
-                set(hEdge, 'Color', RGB);
             end
         end
     end
@@ -359,8 +359,9 @@ if job.generate_figures
         saveas(hCtrl, fullfile(job.results_dir{1},[varName '_fc_diagram.fig']), 'fig');
         % Return the property to its default
         set(hCtrl, 'units', 'pixels')
+        close(hCtrl);
     end
-    close(hCtrl);
+    
     
     %% CaCl2 (treatment) group fc diagram
     varName = sprintf('results_S%02d_%s_%s', s1, colorNames{1+c1}, ss.Xname{2});
@@ -460,8 +461,9 @@ if job.generate_figures
         saveas(hTreat, fullfile(job.results_dir{1},[varName '_fc_diagram.fig']), 'fig');
         % Return the property to its default
         set(hTreat, 'units', 'pixels')
+        close(hTreat);
     end
-    close(hTreat);
+    
 end % generate figures
 end % fc_diagram
 

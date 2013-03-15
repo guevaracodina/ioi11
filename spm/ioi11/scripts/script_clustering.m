@@ -2,12 +2,14 @@
 addpath(genpath('D:\spm8\toolbox\ioi11'))
 % loading data
 tic
-IOImat = 'E:\Edgar\Data\IOS_Results\12_07_24,RS01\IOI.mat';
+IOImat = 'D:\Edgar\Data\IOS_Carotid_Res\12_10_19,CC10\GLMfcIOS\corrMap\IOI.mat';
+% IOImat = 'E:\Edgar\Data\IOS_Results\12_07_24,RS01\IOI.mat';
+% IOImat = 'D:\Edgar\Data\IOS_Carotid_Res\12_10_18,NC09\GLMfcIOS\corrMap\IOI.mat';
 load(IOImat)
 % Session number
 s1 = 1;
 % HbO (5) HbR (6) Flow (7)
-c1 = 6;
+c1 = 8;
 % Get colors to iIOI.fcIOS.masknclude information
 colorNames = fieldnames(IOI.color);
 
@@ -16,12 +18,26 @@ if IOI.fcIOS.SPM.wholeImageRegressOK{s1, c1}
     fprintf('Loading NIfTI data for subject %s, session: %02d (%s)...\n',...
         IOI.subj_name,s1,colorNames{1+c1})
     % Load filtered, downsampled & regressed image time-course
-    vol = spm_vol(IOI.fcIOS.SPM.fname{s1, c1});
+%     vol = spm_vol(IOI.fcIOS.SPM.fname{s1, c1});
+    % Load filtered % downsampled image
+    vol = spm_vol(IOI.fcIOS.filtNdown.fnameWholeImage{s1, c1});
     y = spm_read_vols(vol);
 else
     fprintf('No regressed time-series for subject %s, session: %02d (%s)\n',...
         IOI.subj_name,s1,colorNames{1+c1})
 end
+
+% New size
+shrinkFactor = 2;
+nx = round(size(y,1)/shrinkFactor); ny = round(size(y,2)/shrinkFactor);
+
+% Preallocate 
+yR = zeros([nx ny 1 size(y,4)]);
+% Resize
+for iFrames = 1:size(y,4),
+    yR(:,:,1,iFrames) = ioi_MYimresize(squeeze(y(:,:,1,iFrames)), [nx ny]);
+end
+y = yR; clear yR;
 
 % Check if brain mask was performed
 if IOI.fcIOS.mask.maskOK
@@ -35,6 +51,8 @@ else
     fprintf('No regressed time-series for subject %s\n',IOI.subj_name)
 end
 
+% Resize
+brainMask = ioi_MYimresize(brainMask, [nx ny]);
 % Load SVD
 % tic
 % fprintf('Loading SVD data for subject %s, session: %02d (%s)...\n',...
@@ -55,18 +73,21 @@ for iCols = 1:size(yMatrix,2)
 end
 % cleanup
 clear y vol
+% Change NaNs to zeros
+yMatrix(isnan(yMatrix)) = 0;
 
 %% k-means clustering
+% Number of independent runs
+nIter           = 1;
 % Number of clusters to form
 nClusters       = 12;
 % Number of iterations
-nRep            = 10;
+% nRep            = 10;
 % Type of distance metric
 distanceType    = 'correlation';
 % Linkage method
 linkageMethod   = 'weighted';
-% Number of independent runs
-nIter = 1;
+
 
 % IDX = zeros([size(yMatrix,1) nIter]);
 % groupsK = zeros([nIter, nClusters]);
@@ -101,7 +122,7 @@ nIter = 1;
 %         end
 % end
 % newName = sprintf('%s_S%02d_C%d_(%s)_kMeansRuns.PNG',IOI.subj_name,s1,c1,colorNames{1+c1});
-%     % Save as PNG
+% Save as PNG
 % print(h, '-dpng', '-r300', fullfile(pathName,newName));
     
 
@@ -111,7 +132,6 @@ nIter = 1;
 T2 = zeros([size(yMatrix,1) nIter]);
 Z2 = zeros([size(yMatrix,1)-1 3 nIter]);
 groupsClusterData = zeros([nIter, nClusters]);
-
 
 for i = 1:nIter,
     fprintf('Computing hierarchical clustering for subject %s, session: %02d (%s)...\n',...
@@ -126,26 +146,37 @@ for i = 1:nIter,
     fprintf('clusterData iter%d computed in: %s\n', i, datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS'));
 end
 
-%% Display dendogram
-% h = figure;
-% set(h, 'color', 'w')
-% [H2, T3] = dendrogram(Z2, nClusters);
-% title('Dendrogram','interpreter', 'none', 'FontSize', 14)
-% set(H2, 'LineWidth', 2);
-% set(gca, 'FontSize', 12);
+%% Display dendrogram
+h1 = figure;
+set(h1, 'color', 'w')
+color = Z2(end-nClusters+2,3)-eps;
+% [H2, T3] = dendrogram(Z2, nClusters, 'colorthreshold', default);
+[H2, T3] = dendrogram(Z2, 0, 'colorthreshold', color);
+title('Dendrogram','interpreter', 'none', 'FontSize', 14)
+set(H2, 'LineWidth', 2);
+set(gca, 'FontSize', 12);
+set(gca, 'XTick',[])
+set(gca, 'XTickLabel',[])
 % xlabel('Cluster', 'FontSize', 12)
-% ylabel('Distance', 'FontSize', 12)
-% newName = sprintf('%s_S%02d_C%d_(%s)_HierarClustDendogram.PNG',IOI.subj_name,s1,c1,colorNames{1+c1});
-% % Save as PNG
-% print(h, '-dpng', '-r300', fullfile(pathName,newName));
+ylabel('Distance', 'FontSize', 12)
+newName = sprintf('%s_S%02d_C%d_(%s)_HierarClustDendogram.PNG',IOI.subj_name,s1,c1,colorNames{1+c1});
+C = cell2mat(get(H2,'Color'));
+Cu = unique(C,'rows');
+[dum,J] = unique(Z2(:,1:2)','first');
+J = ceil(J/2);
+K = J(T3);
+% Cu = unique(C(K(2:end),:),'rows');
+% Save as PNG
+% print(h1, '-dpng', '-r300', fullfile(pathName,newName));
 
 %% Display hierarchical clustering
 newName = sprintf('%s_S%02d_C%d_(%s)_HierarClustRuns.PNG',IOI.subj_name,s1,c1,colorNames{1+c1});
-h = figure; 
-set(h,'color','w')
-set(h,'name',sprintf('%s S%02d C%d (%s) hierarchical clustering\n',...
+h2 = figure; 
+set(h2,'color','w')
+set(h2,'name',sprintf('%s S%02d C%d (%s) hierarchical clustering\n',...
     IOI.subj_name,s1,c1,colorNames{1+c1}))
-colormap([0 0 0; hsv(nClusters)]); 
+% colormap([0 0 0; hsv(nClusters)]); 
+colormap(Cu)
 for i = 1:nIter,
     yTmp = zeros(size(ySlice));
     yTmp(brainMask) = T2(:,i);
@@ -161,8 +192,8 @@ for i = 1:nIter,
     end
 end
 
-% Save as PNG
-print(h, '-dpng', '-r300', fullfile(pathName,newName));
+%% Save as PNG
+% print(h2, '-dpng', '-r300', fullfile(pathName,newName));
 
 % yTmp = zeros(size(ySlice));
 % yTmp(brainMask) = ioi_sort_clusters(T3);
