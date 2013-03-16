@@ -138,11 +138,11 @@ for i = 1:nIter,
         IOI.subj_name,s1,colorNames{1+c1})
     [T2(:,i), Z2(:,:,i)] = ioi_clusterdata(yMatrix,'distance', distanceType,...
         'linkage', linkageMethod, 'maxclust', nClusters);
-    T2(:,i) = ioi_sort_clusters(T2(:,i));
+%     T2(:,i) = ioi_sort_clusters(T2(:,i));
     for j = 1:nClusters,
         groupsClusterData(i,j) = numel(find(T2(:,i)==j));
     end
-    groupsClusterData(i,:) = sort(groupsClusterData(i,:));
+%     groupsClusterData(i,:) = sort(groupsClusterData(i,:));
     fprintf('clusterData iter%d computed in: %s\n', i, datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS'));
 end
 
@@ -166,8 +166,14 @@ Cu = unique(C,'rows');
 J = ceil(J/2);
 K = J(T3);
 % Cu = unique(C(K(2:end),:),'rows');
-% Save as PNG
-% print(h1, '-dpng', '-r300', fullfile(pathName,newName));
+
+%% Save as PNG
+% Specify window units
+set(h1, 'units', 'inches')
+% Change figure and paper size
+set(h1, 'Position', [0.1 0.1 6.25 3])
+set(h1, 'PaperPosition', [0.1 0.1 6.25 3])
+print(h1, '-dpng', '-r300', fullfile(pathName,newName));
 
 %% Display hierarchical clustering
 newName = sprintf('%s_S%02d_C%d_(%s)_HierarClustRuns.PNG',IOI.subj_name,s1,c1,colorNames{1+c1});
@@ -176,10 +182,13 @@ set(h2,'color','w')
 set(h2,'name',sprintf('%s S%02d C%d (%s) hierarchical clustering\n',...
     IOI.subj_name,s1,c1,colorNames{1+c1}))
 % colormap([0 0 0; hsv(nClusters)]); 
-colormap(Cu)
+Cu([4;end],:) = Cu([end;4],:);
+colormap([0 0 0; Cu])
+% colormap([0 0 0; C(K(1:end-1),:)])
 for i = 1:nIter,
     yTmp = zeros(size(ySlice));
     yTmp(brainMask) = T2(:,i);
+    yTmp = yTmp';
     subplot(ceil(sqrt(nIter)), round(nIter/sqrt(nIter)), i)
     imagesc(yTmp); axis image; axis off
     if nIter == 1
@@ -187,13 +196,18 @@ for i = 1:nIter,
     else
         title(sprintf('Run: %d',i))
     end
-    if i == nIter
-        colorbar
-    end
+%     if i == nIter
+%         colorbar
+%     end
 end
 
 %% Save as PNG
-% print(h2, '-dpng', '-r300', fullfile(pathName,newName));
+% Specify window units
+set(h2, 'units', 'inches')
+% Change figure and paper size
+set(h2, 'Position', [0.1 0.1 3 3])
+set(h2, 'PaperPosition', [0.1 0.1 3 3])
+print(h2, '-dpng', '-r300', fullfile(pathName,newName));
 
 % yTmp = zeros(size(ySlice));
 % yTmp(brainMask) = ioi_sort_clusters(T3);

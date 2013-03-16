@@ -6,9 +6,9 @@ s1 = 1;
 % Color index (5=HbO, 6=HbR, 7=CBF, 8=CMRO2)
 c1 = 5;
 % ROI index
-r1 = 6;
+r1 = 8;
 % group ID string
-groupID = 'CC';
+groupID = 'NC';
 
 %% Load manually aligned images with ImageJ plugin TurboReg
 clear imDataArray
@@ -50,7 +50,7 @@ translate = @(a,b) [1 0 a 0; 0 1 b 0; 0 0 1 0; 0 0 0 1];
 % ------------------------------------------------------------------------------
 
 job(1).figCmap                                  = jet(256);
-job(1).figRange                                 = [-1 1];
+job(1).figRange                                 = [-1 1]; % Fixed for correlation values
 job(1).figIntensity                             = 0.8;
 job(1).figAlpha                                 = 1;
 job(1).transM                                   = rotz(pi);
