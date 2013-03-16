@@ -1,5 +1,5 @@
 %% script overlay blend
-groupID = 'NC';
+groupID = 'CC';
 figFolder = 'D:\Edgar\Documents\Dropbox\Docs\Carotid\Figures\aligned';
 
 %% Code
@@ -34,6 +34,7 @@ job(1).figSize                                  = [1.5 1.5];
 job(1).figRes                                   = 300;
 job(1).drawCircle(1).drawCircle_On(1).circleLW  = 0.8;
 job(1).drawCircle(1).drawCircle_On(1).circleLS  = '-';
+job(1).drawCircle(1).drawCircle_On(1).circleEC  = 'w';
 job.parent_results_dir{1}                       = fullfile(figFolder,'overlay');
 
 % Main loop
