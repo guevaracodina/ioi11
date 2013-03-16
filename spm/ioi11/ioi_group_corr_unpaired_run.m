@@ -287,7 +287,7 @@ if ~exist(fullfile(job.parent_results_dir{1},'groupOK.mat'),'file') || job.force
     eTotalRaw       = [];
     yTotalRaw       = [];
     
-    dbstop if error
+    % dbstop if error
     
     for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
         doColor = ioi_doColor(IOI,c1,IC);
@@ -485,9 +485,17 @@ end
 yTotal{c1} = y;
 eTotal{c1} = e;
 
-% Save results in .mat file
-save(IOI.fcIOS.corr(1).fnameGroup,'groupCorrData', 'isTreatment',...
-    'meanCorr','stdCorr','statTest','yTotal','eTotal','-append');
+if exist(IOI.fcIOS.corr(1).fnameGroup,'file')
+    % Append results to .mat file
+    save(IOI.fcIOS.corr(1).fnameGroup,'groupCorrData', 'isTreatment',...
+        'meanCorr','stdCorr','statTest','yTotal','eTotal','-append');
+else
+    % Write results to .mat file
+    save(IOI.fcIOS.corr(1).fnameGroup,'groupCorrData', 'isTreatment',...
+        'meanCorr','stdCorr','statTest','yTotal','eTotal');
+end
+
+
 end % subfunction_group_corr_test_unpaired
 
 function [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorrDiff, stdCorrDiff, groupCorrDataDiff] = subfunction_group_corr_test_diff_unpaired(job, IOI, c1, groupCorrDataDiff, statTestDiff, meanCorrDiff, stdCorrDiff, eTotalDiff, yTotalDiff, isTreatment)
@@ -495,7 +503,7 @@ function [job, IOI, eDiff, yDiff, eTotalDiff, yTotalDiff, statTestDiff, meanCorr
 eDiff = [];
 yDiff = [];
 
-if isfield (job,'derivative')
+if isfield (job.optStat,'derivative')
     if job.optStat.derivative
         for iSeeds = 1:size(job.paired_seeds, 1)
             % Average of control group
@@ -580,10 +588,16 @@ if isfield (job,'derivative')
         yTotalDiff{c1} = yDiff;
         eTotalDiff{c1} = eDiff;
         
-        % Save results in .mat file
-        save(IOI.fcIOS.corr(1).fnameGroupDiff,'groupCorrDataDiff','isTreatment',...
-            'meanCorrDiff','stdCorrDiff','statTestDiff','yTotalDiff','eTotalDiff',...
-            '-append');
+        if exist(IOI.fcIOS.corr(1).fnameGroupDiff,'file')
+            % Append results to .mat file
+            save(IOI.fcIOS.corr(1).fnameGroupDiff,'groupCorrDataDiff','isTreatment',...
+                'meanCorrDiff','stdCorrDiff','statTestDiff','yTotalDiff','eTotalDiff',...
+                '-append');
+        else
+            % Save results to .mat file
+            save(IOI.fcIOS.corr(1).fnameGroupDiff,'groupCorrDataDiff','isTreatment',...
+                'meanCorrDiff','stdCorrDiff','statTestDiff','yTotalDiff','eTotalDiff');
+        end
     end
 end % derivative
 end % subfunction_group_corr_test_diff_unpaired
@@ -662,10 +676,16 @@ if isfield (job,'rawData')
         yTotalRaw{c1} = yRaw;
         eTotalRaw{c1} = eRaw;
         
-        % Save results in .mat file
-        save(IOI.fcIOS.corr(1).fnameGroupRaw,'groupCorrDataRaw','isTreatment',...
-            'meanCorrRaw','stdCorrRaw','statTestRaw', 'yTotalRaw', 'eTotalRaw',...
-            '-append');
+        if exist(IOI.fcIOS.corr(1).fnameGroupRaw, 'file')
+            % Append results to .mat file
+            save(IOI.fcIOS.corr(1).fnameGroupRaw,'groupCorrDataRaw','isTreatment',...
+                'meanCorrRaw','stdCorrRaw','statTestRaw', 'yTotalRaw', 'eTotalRaw',...
+                '-append');
+        else
+            % Save results in .mat file
+            save(IOI.fcIOS.corr(1).fnameGroupRaw,'groupCorrDataRaw','isTreatment',...
+                'meanCorrRaw','stdCorrRaw','statTestRaw', 'yTotalRaw', 'eTotalRaw');
+        end
     end
 end % raw data
 end % subfunction_group_corr_test_raw_unpaired
@@ -818,7 +838,7 @@ end
 end % subfunction_plot_group_corr_test
 
 function subfunction_plot_group_corr_test_diff(job, IOI, c1, eDiff, yDiff, statTestDiff)
-if isfield (job,'derivative')
+if isfield (job.optStat,'derivative')
     if job.optStat.derivative
         % Plots statistical analysis group results
         colorNames = fieldnames(IOI.color);
