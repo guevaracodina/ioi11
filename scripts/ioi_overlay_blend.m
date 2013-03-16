@@ -1,5 +1,7 @@
 function ioi_overlay_blend(IOImat, job, fcMapFile)
 %% Overlay blend
+fcMapRange = [-1 1]; % Fix range for correlation maps
+nColorLevels = 256;
 load(IOImat);
 if ~exist(job.parent_results_dir{1},'dir'),
     mkdir(job.parent_results_dir{1})
@@ -58,9 +60,9 @@ seedDims = [size(fcMap,2) - seedY seedX seedW seedH];
 anatomicalGray      = mat2gray(anatomical);
 anatomicalGray      = repmat(anatomicalGray,[1 1 3]);
 % Convert to RGB
-fcMapGray           = mat2gray(fcMap, [-1 1]); % Fix for correlation
-fcMapX              = gray2ind(fcMapGray, 256);
-fcMapRGB            = ind2rgb(fcMapX, jet(256));
+fcMapGray           = mat2gray(fcMap, fcMapRange); % Fix range for correlation maps
+fcMapX              = gray2ind(fcMapGray, nColorLevels);
+fcMapRGB            = ind2rgb(fcMapX, jet(nColorLevels));
 % Set transparency according to mask
 fcMapRGB(repmat(~brainMask,[1 1 3])) = 0.5;
 
@@ -88,7 +90,7 @@ if isfield(job.drawCircle,'drawCircle_On')
         'Curvature',[1,1],...
         'LineWidth',job.drawCircle.drawCircle_On.circleLW,...
         'LineStyle',job.drawCircle.drawCircle_On.circleLS,...
-        'EdgeColor','w');
+        'EdgeColor',job.drawCircle.drawCircle_On.circleEC);
 end
 % Save as PNG at the user-defined resolution
 print(hFig, '-dpng', ...
@@ -97,5 +99,8 @@ print(hFig, '-dpng', ...
 % Return the property to its default
 set(hFig, 'units', 'pixels')
 close(hFig)
+colorNames = fieldnames(IOI.color);
+c1 = str2double(regexp(fcMapFile, '(?<=(C))(\d+)(?=(_))','match'));
+fprintf('Overlay blend done! File: %s, R%02d, (%s)\n', fName, r1, colorNames{c1+1});
 end % script_overlay_blend
 % EOF

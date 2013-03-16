@@ -6,9 +6,9 @@ s1 = 1;
 % Color index (5=HbO, 6=HbR, 7=CBF, 8=CMRO2)
 c1 = 5;
 % ROI index
-r1 = 8;
+r1 = 12;
 % group ID string
-groupID = 'NC';
+groupID = 'CC';
 
 %% Load manually aligned images with ImageJ plugin TurboReg
 clear imDataArray
