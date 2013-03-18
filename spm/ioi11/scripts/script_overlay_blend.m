@@ -1,5 +1,5 @@
 %% script overlay blend
-groupID = 'CC';
+groupID = 'NC';
 figFolder = 'D:\Edgar\Documents\Dropbox\Docs\Carotid\Figures\aligned';
 
 %% Code
@@ -36,10 +36,12 @@ job(1).drawCircle(1).drawCircle_On(1).circleLW  = 0.8;
 job(1).drawCircle(1).drawCircle_On(1).circleLS  = '-';
 job(1).drawCircle(1).drawCircle_On(1).circleEC  = 'w';
 job.parent_results_dir{1}                       = fullfile(figFolder,'overlay');
+job.generate_figures                            = true;
+job.save_figures                                = false;
 
 % Main loop
 for iFiles = 1:numel(images2overlay)
-    ioi_overlay_blend(IOImat, job, images2overlay{iFiles});
+    ioi_overlay_blend(IOImat, job, images2overlay{iFiles}, [-1 1], [0.5 1]);
 end
 
 % EOF
