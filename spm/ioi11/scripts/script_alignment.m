@@ -4,15 +4,28 @@ clc;
 % Always 1 session
 s1 = 1;
 % Color index (5=HbO, 6=HbR, 7=CBF, 8=CMRO2)
-c1 = 5;
+c1 = 7;
 % ROI index
-r1 = 12;
+r1 = 4;
 % group ID string
-groupID = 'CC';
+groupID = 'NC';
+% Directory where all the maps are found
+switch(c1)
+    case 5,
+        topDir = 'D:\Edgar\Data\IOS_Carotid_Res\alignment\HbO';
+    case 6,
+        topDir = 'D:\Edgar\Data\IOS_Carotid_Res\alignment\HbR';
+    case 7,
+        topDir = 'D:\Edgar\Data\IOS_Carotid_Res\alignment\CBF';
+    case 8,
+        topDir = 'D:\Edgar\Data\IOS_Carotid_Res\alignment\CMRO2';
+    otherwise
+        fprintf('No top folder found for color %d.\n', c1);
+        return
+end
 
 %% Load manually aligned images with ImageJ plugin TurboReg
 clear imDataArray
-topDir = 'D:\Edgar\Data\IOS_Carotid_Res\alignment';
 currentDir = sprintf('%s_R%02dC%02d', groupID, r1, c1);
 [dirAlignment, sts] = cfg_getfile([1 1],'dir','Select folder',{fullfile(topDir,currentDir)}, topDir, '.*');
 dirListNIfTI = dir(fullfile(topDir,[currentDir filesep '*.nii']));
@@ -35,7 +48,19 @@ end
 imAvg = median(imDataArray, 3);
 
 %% Display average image
-figFolder = 'D:\Edgar\Documents\Dropbox\Docs\Carotid\Figures\aligned';
+switch(c1)
+    case 5,
+        figFolder = 'D:\Edgar\Documents\Dropbox\Docs\Carotid\Figures\aligned';
+    case 6,
+        figFolder = 'D:\Edgar\Documents\Dropbox\Docs\Carotid\Figures\aligned_HbR';
+    case 7,
+        figFolder = 'D:\Edgar\Documents\Dropbox\Docs\Carotid\Figures\aligned_CBF';
+    case 8,
+        figFolder = 'D:\Edgar\Documents\Dropbox\Docs\Carotid\Figures\aligned_CMRO2';
+    otherwise
+        fprintf('No target folder found for color %d.\n', c1);
+        return
+end
 % h = figure; imagesc(imAvg, [-1 1]); axis image; colorbar
 figName = fullfile(figFolder,[currentDir '_avg']);
 

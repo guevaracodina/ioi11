@@ -1,14 +1,30 @@
 function ioi_overlay_blend(IOImat, job, fcMapFile, varargin)
 % Overlay/blend a functional image from a NIfTI file onto an anatomical image.
 % SYNTAX
-% ioi_overlay_blend(IOImat, job, fcMapFile, fcMapRange, pixelRange, nColorLevels)
+% ioi_overlay_blend(IOImat, job, fcMapFile, fcMapRange, alphaRange, nColorLevels)
 % INPUTS
 % IOImat        .mat file with IOI structure
-% job           Matlab batch job structure with the necessary fields.
+% job           Matlab batch job structure with the required fields.
+%               For instance:
+%               job(1).figCmap                                  = jet(256);     % colormap
+%               job(1).figIntensity                             = 1;            % [0 - 1]
+%               job(1).transM                                   = rotz(pi);     % affine transform
+%               job(1).figSize                                  = [1.5 1.5];    % inches
+%               job(1).figRes                                   = 300;          % in dpi
+%               job(1).drawCircle(1).drawCircle_On(1).circleLW  = 0.8;          % line width
+%               job(1).drawCircle(1).drawCircle_On(1).circleLS  = '-';          % line style
+%               job(1).drawCircle(1).drawCircle_On(1).circleEC  = 'w';          % line color
+%               job.parent_results_dir{1}                       = fullfile(figFolder,'overlay');
+%               job.generate_figures                            = true;         % display figure
+%               job.save_figures                                = true;         % save figure
 % fcMapFile     NIfTI file name of the functional map (foreground)
-% [fcMapRange]  Range of values to map to the full range of colormap: [minVal maxVal]
-% [pixelRange]  Range of values to map to display non-transparent pixels: [minVal maxVal]
+% [fcMapRange]  Range of values to map to the full range of colormap
+%               if empty, functional map is automatically displayed from [minVal maxVal]
+% [alphaRange]  Range of values to map to display non-transparent pixels.
+%               Useful to set a threshold of displayed pixels.
+%               if empty, alpha values are automatically taken from [minVal maxVal]
 % [nColorLevels]Number of gray levels for the anatomical image (background)
+%               Default: 256 gray levels.
 % OUTPUTS
 % none
 %_______________________________________________________________________________
@@ -26,20 +42,16 @@ if numvarargs > 3
         'Requires at most 3 optional inputs');
 end
 % set defaults for optional inputs
-optargs                     = { [-1 1] [-1 1] 256};
+optargs                     = { [] [] 256};
 % now put these defaults into the optargs cell array, and overwrite the ones
 % specified in varargin.
 optargs(1:numvarargs)       = varargin;
 % Place optional args in memorable variable names
-[fcMapRange pixelRange ...
+[fcMapRange alphaRange ...
     nColorLevels]           = optargs{:};
 % ------------------------------------------------------------------------------
 
 %% Overlay blend
-% fcMapRange      = [-1 1];   % Fix range for correlation maps
-% pixelRange      = [0.7 1];  % Threshold transparent pixels
-% nColorLevels    = 256;
-
 fcColorMap      = job.figCmap;
 load(IOImat);
 if ~exist(job.parent_results_dir{1},'dir'),
@@ -55,6 +67,10 @@ figName = fullfile(job.parent_results_dir{1} ,[currentName{1} '_avg_overlay']);
 % at the point seedX, seedY (the + sign here is due to image rotation)
 seedX = IOI.res.ROI{r1}.center(2) - IOI.res.ROI{r1}.radius;
 seedY = IOI.res.ROI{r1}.center(1) + IOI.res.ROI{r1}.radius;
+if r1 == 12 && ~isempty(regexp(IOImat, 'NC', 'once')), % Manual correction of seed 12 (NC)
+    seedX = seedX - 15;
+    seedY = seedY + 10;
+end
 % Seed width
 seedW = 2*IOI.res.ROI{r1}.radius;
 % Seed height
@@ -68,7 +84,6 @@ if isfield(IOI.res,'shrinkageOn')
 end
 
 %% Read files
-
 % Get anatomical image
 anatomicalFile      = IOI.res.file_anat;
 anatVol             = spm_vol(anatomicalFile);
@@ -99,8 +114,18 @@ fcMap               = fliplr(fcMap');
 brainMask           = fliplr(brainMask');
 seedDims = [size(fcMap,2) - seedY seedX seedW seedH];
 
-%% Convert anatomical image to grayscale
-anatomicalGray      = mat2gray(anatomical);
+%% If values are empty display min/max
+if isempty(fcMapRange)
+    fcMapRange = [min(fcMap(:)) max(fcMap(:))];
+    fprintf('fcMapRange = [%0.4f %0.4f]\n', fcMapRange(1), fcMapRange(2));
+end
+if isempty(alphaRange)
+    alphaRange = [min(fcMap(:)) max(fcMap(:))];
+    fprintf('alphaRange = [%0.4f %0.4f]\n', alphaRange(1), alphaRange(2));
+end
+
+%% Convert anatomical image to grayscale (weighted by job.figIntensity)
+anatomicalGray      = job.figIntensity .* mat2gray(anatomical);
 anatomicalGray      = repmat(anatomicalGray,[1 1 3]);
 % Convert functional image to RGB
 fcMapGray           = mat2gray(fcMap, fcMapRange); % Fix range for correlation maps
@@ -108,7 +133,7 @@ fcMapIdx            = gray2ind(fcMapGray, nColorLevels);
 fcMapRGB            = ind2rgb(fcMapIdx, fcColorMap);
 % Set transparency according to mask and pixels range
 pixelMask = false(size(brainMask));
-pixelMask(fcMap > pixelRange(1) & fcMap < pixelRange(2)) = true;
+pixelMask(fcMap > alphaRange(1) & fcMap < alphaRange(2)) = true;
 fcMapRGB(repmat(~brainMask | ~pixelMask,[1 1 3])) = 0.5;
 % Spatial extension % defined as displayed to brain pixels ratio.
 spatial_extension = nnz(pixelMask) / nnz(brainMask);
@@ -152,7 +177,7 @@ if job.generate_figures
     end
     colorNames = fieldnames(IOI.color);
     c1 = str2double(regexp(fcMapFile, '(?<=(C))(\d+)(?=(_))','match'));
-    fprintf('Overlay blend done! File: %s, R%02d, (%s) %0.2f %%\n', fName, r1, colorNames{c1+1},100*spatial_extension);
+    fprintf('Overlay blend done! File: %s, R%02d, (%s) %0.2f%% brain pixels displayed.\n', fName, r1, colorNames{c1+1},100*spatial_extension);
 %     fprintf('%0.2f %%\n',100*spatial_extension);
 end
 end % ioi_overlay_blend

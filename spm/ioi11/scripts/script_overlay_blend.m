@@ -1,6 +1,12 @@
-%% script overlay blend
+%% script_overlay_blend
+% String to identify the group
 groupID = 'NC';
-figFolder = 'D:\Edgar\Documents\Dropbox\Docs\Carotid\Figures\aligned';
+% Folder where to save the images
+figFolder = 'D:\Edgar\Documents\Dropbox\Docs\Carotid\Figures\aligned_CBF';
+% Range of values to map to the full range of colormap: [minVal maxVal]
+fcMapRange = [];
+% Range of values to map to display non-transparent pixels: [minVal maxVal]
+alphaRange = [];
 
 %% Code
 dirListNIfTI = dir(fullfile(figFolder, [groupID '*.nii']));
@@ -25,23 +31,26 @@ roty = @(theta) [cos(theta) 0 sin(theta) 0; 0 1 0 0; -sin(theta) 0 cos(theta) 0;
 rotz = @(theta) [cos(theta) -sin(theta) 0 0; sin(theta) cos(theta) 0 0; 0 0 1 0; 0 0 0 1];
 translate = @(a,b) [1 0 a 0; 0 1 b 0; 0 0 1 0; 0 0 0 1];
 % ------------------------------------------------------------------------------
-job(1).figCmap                                  = jet(256);
-job(1).figRange                                 = [-1 1]; % Fixed for correlation values
-job(1).figIntensity                             = 0.8;
-job(1).figAlpha                                 = 1;
-job(1).transM                                   = rotz(pi);
-job(1).figSize                                  = [1.5 1.5];
-job(1).figRes                                   = 300;
-job(1).drawCircle(1).drawCircle_On(1).circleLW  = 0.8;
-job(1).drawCircle(1).drawCircle_On(1).circleLS  = '-';
-job(1).drawCircle(1).drawCircle_On(1).circleEC  = 'w';
+
+% ------------------------------------------------------------------------------
+% Define matlab batch job with the required fields
+% ------------------------------------------------------------------------------
+job(1).figCmap                                  = jet(256);     % colormap
+job(1).figIntensity                             = 1;            % [0 - 1]
+job(1).transM                                   = rotz(pi);     % affine transform
+job(1).figSize                                  = [1.5 1.5];    % inches
+job(1).figRes                                   = 300;          % in dpi
+job(1).drawCircle(1).drawCircle_On(1).circleLW  = 0.8;          % line width
+job(1).drawCircle(1).drawCircle_On(1).circleLS  = '-';          % line style
+job(1).drawCircle(1).drawCircle_On(1).circleEC  = 'w';          % line color
 job.parent_results_dir{1}                       = fullfile(figFolder,'overlay');
-job.generate_figures                            = true;
-job.save_figures                                = false;
+job.generate_figures                            = true;         % display figure
+job.save_figures                                = true;         % save figure
+% ------------------------------------------------------------------------------
 
 % Main loop
 for iFiles = 1:numel(images2overlay)
-    ioi_overlay_blend(IOImat, job, images2overlay{iFiles}, [-1 1], [0.5 1]);
+    ioi_overlay_blend(IOImat, job, images2overlay{iFiles}, fcMapRange, alphaRange);
 end
 
 % EOF
