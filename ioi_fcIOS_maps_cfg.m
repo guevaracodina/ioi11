@@ -6,7 +6,7 @@ function fcIOS_maps         = ioi_fcIOS_maps_cfg
 %_______________________________________________________________________________
 
 % Select IOI.mat
-IOImat                      = ioi_dfg_IOImat(2);
+IOImat                      = ioi_dfg_IOImat(1);
 % IOI copy/overwrite method
 IOImatCopyChoice            = ioi_dfg_IOImatCopyChoice('fcIOS_maps');
 % Choose ROI selection method (all/selected)

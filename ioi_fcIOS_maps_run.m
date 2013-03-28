@@ -81,13 +81,14 @@ for SubjIdx = 1:length(job.IOImat)
                                 seedW = 2*IOI.res.ROI{r1}.radius;
                                 % Seed height
                                 seedH = 2*IOI.res.ROI{r1}.radius;
-                                % Change seed circle size if shrunk
-                                if isfield(IOI.res,'shrinkageOn')
-                                    if IOI.res.shrinkageOn == 1
-                                        seedW = seedW * IOI.res.shrink_x;
-                                        seedH = seedH * IOI.res.shrink_y;
-                                    end
-                                end
+                                % Change seed circle size if shrunk // EGC: not
+                                % necessary, I think
+%                                 if isfield(IOI.res,'shrinkageOn')
+%                                     if IOI.res.shrinkageOn == 1
+%                                         seedW = seedW * IOI.res.shrink_x;
+%                                         seedH = seedH * IOI.res.shrink_y;
+%                                     end
+%                                 end
                                 internal_overlay_map(anatomical, corrMap,  job, newName, [seedX seedY seedW seedH]);
                             end
                         end % ROIs loop

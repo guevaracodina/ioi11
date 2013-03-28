@@ -157,11 +157,11 @@ rawData.values              = {false, true};
 rawData.val                 = {true};                      % Default value
 rawData.help                = {'Choose whether to perform correlation analysis on seeds raw time course'}';
 % ------------------------------------------------------------------------------
-optStat                      = cfg_branch;
-optStat.tag                  = 'optStat';
-optStat.name                 = 'Statistical test options';
-optStat.val                  = {ttest1 wilcoxon1  alpha bonferroni remOutlier derivative rawData};
-optStat.help                 = {'Options for 2nd-level analysis. If in doubt, simply keep the default values.'}';
+optStat                     = cfg_branch;
+optStat.tag                 = 'optStat';
+optStat.name                = 'Statistical test options';
+optStat.val                 = {ttest1 wilcoxon1  alpha bonferroni remOutlier derivative rawData};
+optStat.help                = {'Options for 2nd-level analysis. If in doubt, simply keep the default values.'}';
 % ------------------------------------------------------------------------------
 % ------------------------------------------------------------------------------
 
