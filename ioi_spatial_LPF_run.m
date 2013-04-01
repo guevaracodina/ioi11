@@ -198,6 +198,7 @@ for SubjIdx=1:length(job.IOImat)
         disp(exception.stack(1))
     end
 end % End subjects loop
+end
 
 function local_backup_nifti(IOI, s1, c1, f1)
 % Backup NIfTI files, they will be copied with the extension .nolpf, and the

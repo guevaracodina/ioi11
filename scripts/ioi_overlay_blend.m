@@ -23,8 +23,12 @@ function ioi_overlay_blend(IOImat, job, fcMapFile, varargin)
 % [alphaRange]  Range of values to map to display non-transparent pixels.
 %               Useful to set a threshold of displayed pixels.
 %               if empty, alpha values are automatically taken from [minVal maxVal]
+%               Can specify up to two ranges to display [minVal1 maxVal1 minVal2 maxVal2]
+%               Useful for symmetric data ranges, such as in correlation maps.
 % [nColorLevels]Number of gray levels for the anatomical image (background)
 %               Default: 256 gray levels.
+% [r1]          ROI/seed index
+% [c1]          Color/contrast index
 % OUTPUTS
 % none
 %_______________________________________________________________________________
@@ -37,18 +41,18 @@ function ioi_overlay_blend(IOImat, job, fcMapFile, varargin)
 % ------------------------------------------------------------------------------
 % only want 1 optional input at most
 numvarargs                  = length(varargin);
-if numvarargs > 3
+if numvarargs > 5
     error('ioi_overlay_blend:TooManyInputs', ...
-        'Requires at most 3 optional inputs');
+        'Requires at most 5 optional inputs');
 end
 % set defaults for optional inputs
-optargs                     = { [] [] 256};
+optargs                     = { [] [] 256 1 5};
 % now put these defaults into the optargs cell array, and overwrite the ones
 % specified in varargin.
 optargs(1:numvarargs)       = varargin;
 % Place optional args in memorable variable names
 [fcMapRange alphaRange ...
-    nColorLevels]           = optargs{:};
+    nColorLevels r1 c1]     = optargs{:};
 % ------------------------------------------------------------------------------
 
 %% Overlay blend
@@ -58,8 +62,13 @@ if ~exist(job.parent_results_dir{1},'dir'),
     mkdir(job.parent_results_dir{1})
 end
 [~, fName] = fileparts(fcMapFile);
-r1 = str2double(regexp(fName, '(?<=(_R))(\d+)(?=(C))','match'));
+if isempty(varargin{4})
+    r1 = str2double(regexp(fName, '(?<=(_R))(\d+)(?=(C))','match'));
+end
 currentName = regexp(fName, '.*(?=(_avg))', 'match');
+if isempty(currentName)
+    currentName = {fName};
+end
 figName = fullfile(job.parent_results_dir{1} ,[currentName{1} '_avg_overlay']);
 
 %% Seed positions
@@ -119,7 +128,7 @@ if isempty(fcMapRange)
     fcMapRange = [min(fcMap(:)) max(fcMap(:))];
     fprintf('fcMapRange = [%0.4f %0.4f]\n', fcMapRange(1), fcMapRange(2));
 end
-if isempty(alphaRange)
+if isempty(alphaRange) || (numel(alphaRange) ~= 2 && numel(alphaRange) ~= 4)
     alphaRange = [min(fcMap(:)) max(fcMap(:))];
     fprintf('alphaRange = [%0.4f %0.4f]\n', alphaRange(1), alphaRange(2));
 end
@@ -133,7 +142,12 @@ fcMapIdx            = gray2ind(fcMapGray, nColorLevels);
 fcMapRGB            = ind2rgb(fcMapIdx, fcColorMap);
 % Set transparency according to mask and pixels range
 pixelMask = false(size(brainMask));
-pixelMask(fcMap > alphaRange(1) & fcMap < alphaRange(2)) = true;
+if numel(alphaRange) == 2,
+    pixelMask(fcMap > alphaRange(1) & fcMap < alphaRange(2)) = true;
+elseif numel(alphaRange) == 4,
+    pixelMask(fcMap > alphaRange(1) & fcMap < alphaRange(2)) = true;
+    pixelMask(fcMap > alphaRange(3) & fcMap < alphaRange(4)) = true;
+end
 fcMapRGB(repmat(~brainMask | ~pixelMask,[1 1 3])) = 0.5;
 % Spatial extension % defined as displayed to brain pixels ratio.
 spatial_extension = nnz(pixelMask) / nnz(brainMask);
@@ -176,7 +190,11 @@ if job.generate_figures
         close(hFig)
     end
     colorNames = fieldnames(IOI.color);
-    c1 = str2double(regexp(fcMapFile, '(?<=(C))(\d+)(?=(_))','match'));
+    if isempty(varargin{5})
+        c1 = str2double(regexp(fcMapFile, '(?<=(C))(\d+)(?=(_))','match'));
+    else
+        c1 = c1-1;
+    end
     fprintf('Overlay blend done! File: %s, R%02d, (%s) %0.2f%% brain pixels displayed.\n', fName, r1, colorNames{c1+1},100*spatial_extension);
 %     fprintf('%0.2f %%\n',100*spatial_extension);
 end
