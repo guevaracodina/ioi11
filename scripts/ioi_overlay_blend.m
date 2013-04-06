@@ -1,4 +1,4 @@
-function ioi_overlay_blend(IOImat, job, fcMapFile, varargin)
+function [displayed_pixels, total_pixels] = ioi_overlay_blend(IOImat, job, fcMapFile, varargin)
 % Overlay/blend a functional image from a NIfTI file onto an anatomical image.
 % SYNTAX
 % ioi_overlay_blend(IOImat, job, fcMapFile, fcMapRange, alphaRange, nColorLevels)
@@ -46,7 +46,10 @@ if numvarargs > 5
         'Requires at most 5 optional inputs');
 end
 % set defaults for optional inputs
-optargs                     = { [] [] 256 1 5};
+[~, fName]                  = fileparts(fcMapFile);
+optargs                     = { [] [] 256 ...
+    str2double(regexp(fName, '(?<=(_R))(\d+)(?=(C))','match'))...
+    str2double(regexp(fcMapFile, '(?<=(C))(\d+)(?=(_))','match')) + 1 };
 % now put these defaults into the optargs cell array, and overwrite the ones
 % specified in varargin.
 optargs(1:numvarargs)       = varargin;
@@ -61,10 +64,10 @@ load(IOImat);
 if ~exist(job.parent_results_dir{1},'dir'),
     mkdir(job.parent_results_dir{1})
 end
-[~, fName] = fileparts(fcMapFile);
-if isempty(varargin{4})
-    r1 = str2double(regexp(fName, '(?<=(_R))(\d+)(?=(C))','match'));
-end
+
+% if isempty(r1)
+% 	r1 = str2double(regexp(fName, '(?<=(_R))(\d+)(?=(C))','match'));
+% end
 currentName = regexp(fName, '.*(?=(_avg))', 'match');
 if isempty(currentName)
     currentName = {fName};
@@ -151,6 +154,8 @@ end
 fcMapRGB(repmat(~brainMask | ~pixelMask,[1 1 3])) = 0.5;
 % Spatial extension % defined as displayed to brain pixels ratio.
 spatial_extension = nnz(pixelMask) / nnz(brainMask);
+displayed_pixels = fcMap(pixelMask);
+total_pixels = nnz(brainMask);
 
 %% Apply overlay blend algorithm
 fcMapBlend = 1 - 2.*(1 - anatomicalGray).*(1 - fcMapRGB);
@@ -190,13 +195,13 @@ if job.generate_figures
         close(hFig)
     end
     colorNames = fieldnames(IOI.color);
-    if isempty(varargin{5})
-        c1 = str2double(regexp(fcMapFile, '(?<=(C))(\d+)(?=(_))','match'));
-    else
-        c1 = c1-1;
-    end
-    fprintf('Overlay blend done! File: %s, R%02d, (%s) %0.2f%% brain pixels displayed.\n', fName, r1, colorNames{c1+1},100*spatial_extension);
-%     fprintf('%0.2f %%\n',100*spatial_extension);
+%     if isempty(c1)
+%         c1 = str2double(regexp(fcMapFile, '(?<=(C))(\d+)(?=(_))','match'));
+%     else
+%         c1 = c1-1;
+%     end
+    fprintf('Overlay blend done! File: %s, R%02d, (%s) %0.2f%% brain pixels displayed.\n',...
+        fName, r1, colorNames{c1},100*spatial_extension);
 end
 end % ioi_overlay_blend
 % EOF

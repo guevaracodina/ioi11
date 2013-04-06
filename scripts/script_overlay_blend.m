@@ -1,12 +1,12 @@
 %% script_overlay_blend
 % String to identify the group
-groupID = 'NC';
+groupID = 'CC';
 % Folder where to save the images
-figFolder = 'D:\Edgar\Documents\Dropbox\Docs\Carotid\Figures\aligned_CBF';
+figFolder = 'D:\Edgar\Documents\Dropbox\Docs\Carotid\Figures\aligned\';
 % Range of values to map to the full range of colormap: [minVal maxVal]
-fcMapRange = [];
+fcMapRange = [-1 1];
 % Range of values to map to display non-transparent pixels: [minVal maxVal]
-alphaRange = [];
+alphaRange = [0.5 1];
 
 %% Code
 dirListNIfTI = dir(fullfile(figFolder, [groupID '*.nii']));
@@ -45,12 +45,12 @@ job(1).drawCircle(1).drawCircle_On(1).circleLS  = '-';          % line style
 job(1).drawCircle(1).drawCircle_On(1).circleEC  = 'w';          % line color
 job.parent_results_dir{1}                       = fullfile(figFolder,'overlay');
 job.generate_figures                            = true;         % display figure
-job.save_figures                                = true;         % save figure
+job.save_figures                                = false;        % save figure
 % ------------------------------------------------------------------------------
 
 % Main loop
 for iFiles = 1:numel(images2overlay)
-    ioi_overlay_blend(IOImat, job, images2overlay{iFiles}, fcMapRange, alphaRange);
+    [displayed_pixels{iFiles}, total_pixels(iFiles)] = ioi_overlay_blend(IOImat, job, images2overlay{iFiles}, fcMapRange, alphaRange);
 end
 
 % EOF
