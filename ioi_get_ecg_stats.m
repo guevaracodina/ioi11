@@ -1,5 +1,5 @@
 function ecgStats = ioi_get_ecg_stats(job, IOI)
-% Gets ECG stats per subject, such as bpm (mean and standard deviation)
+% Gets ECG stats per subject, such as bpm.
 % SYNTAX
 % ecgStats = ioi_get_ecg_stats(job, IOI)
 % INPUT 
