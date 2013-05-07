@@ -305,7 +305,7 @@ if job.generate_figures
         [83 293]
         };
     
-    % Display edges (correlation values)
+    % Display edges (correlation values in NaCl group)
     for iROIsource = 1:numel(results.rois)
         for iROItarget = 1:numel(results.rois)
             if iROIsource ~= iROItarget
@@ -409,26 +409,28 @@ if job.generate_figures
         [83 293]
         };
     
-    % Display edges (correlation values)
+    % Display edges (correlation values in CaCl2 group)
     for iROIsource = 1:numel(results.rois)
         for iROItarget = 1:numel(results.rois)
             if iROIsource ~= iROItarget
-                % Draw edge
-                hEdge = line([seedCoord{iROIsource}(1) seedCoord{iROItarget}(1)],...
-                    [seedCoord{iROIsource}(2) seedCoord{iROItarget}(2)],...
-                    'LineStyle','-');
-                % Edge width
-                LW = (job.fc_diagram.edgeMaxThick * abs(rMean(iROIsource, iROItarget))) / max(abs(globalrMean(:)));
-                set(hEdge, 'LineWidth', LW);
-                % Edge color
-                if rMean(iROIsource, iROItarget) > 0
-                    % Warm colors
-                    RGB = ind2rgb(round(nColors*rMean(iROIsource, iROItarget) / max(abs(globalrMean(:)))), posCmap);
-                else
-                    % Cool colors
-                    RGB = ind2rgb(round(nColors*abs(rMean(iROIsource, iROItarget)) /max(abs(globalrMean(:)))), negCmap);
+                if abs(rMean(iROIsource, iROItarget)) > job.fc_diagram.rThreshold
+                    % Draw edge
+                    hEdge = line([seedCoord{iROIsource}(1) seedCoord{iROItarget}(1)],...
+                        [seedCoord{iROIsource}(2) seedCoord{iROItarget}(2)],...
+                        'LineStyle','-');
+                    % Edge width
+                    LW = (job.fc_diagram.edgeMaxThick * abs(rMean(iROIsource, iROItarget))) / max(abs(globalrMean(:)));
+                    set(hEdge, 'LineWidth', LW);
+                    % Edge color
+                    if rMean(iROIsource, iROItarget) > 0
+                        % Warm colors
+                        RGB = ind2rgb(round(nColors*rMean(iROIsource, iROItarget) / max(abs(globalrMean(:)))), posCmap);
+                    else
+                        % Cool colors
+                        RGB = ind2rgb(round(nColors*abs(rMean(iROIsource, iROItarget)) /max(abs(globalrMean(:)))), negCmap);
+                    end
+                    set(hEdge, 'Color', RGB);
                 end
-                set(hEdge, 'Color', RGB);
             end
         end
     end

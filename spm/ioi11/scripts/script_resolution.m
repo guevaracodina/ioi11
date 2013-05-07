@@ -88,8 +88,68 @@ subplot(224); imagesc(Lavg,imLims); axis image;
 set(gca,'Xtick',[]); set(gca,'yTick',[]); colorbar; 
 title('<Laser>','FontSize',14); 
 
-%% Get a 1x1 binning anatomical image
-% 
-% addpath(genpath('D:\Edgar\ssoct\Matlab'))
-% export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','LFP_4AP'),'-png',gcf)
+%% Plot single image
+close all
+resTarget = Gavg(45:755,85:795);
+imLims = [118 1217];
+h1 = figure; set(gcf,'color','w')
+colormap (gray(255))
+imagesc(resTarget, imLims); axis image; 
+set(gca,'Xtick',[]); set(gca,'yTick',[]);  
+
+% Zoom on smaller elements
+resTargetZoom = resTarget(284:468, 322:506);
+h2 = figure; set(gcf,'color','w')
+colormap (gray(255))
+imagesc(resTargetZoom, imLims); axis image; 
+set(gca,'Xtick',[]); set(gca,'yTick',[]); 
+
+figure(h2)
+% Profile across Group 2, elements 1:4 (4, 4.49, 5.04, 5.66 line pairs/mm)
+xi = [163.5921; 163.5921];
+yi = [29.4401;  101.3845];
+[cx,cy,resTargetProfile,xi,yi] = improfile(resTargetZoom, xi, yi);
+
+resTargetProfile = resTargetProfile - min(resTargetProfile(:));
+resTargetProfile = resTargetProfile ./ max(resTargetProfile);
+% Group 0, element 1 (1 line pair/mm) => 35.5 - 18 pixels = 500 um
+umPerPixel = 500/(35.5-18);
+distance = (0:numel(resTargetProfile)-1)*umPerPixel;
+
+h3 = figure; set(gcf,'color','w')
+plot(distance, resTargetProfile, 'k-', 'LineWidth', 2)
+axis tight
+set(gca, 'FontSize',10)
+set(gca, 'YTick', [0 0.5 1])
+xlabel('length (\mum)','FontSize',10); 
+ylabel('Intensity [a.u.]','FontSize',10); 
+res = 1/(5.66*2); % FWHM ~70um
+
+%% Save images
+addpath(genpath('D:\Edgar\ssoct\Matlab'))
+figSize = [6.5/3 6.5/3];
+
+figure(h1);
+% Specify window units
+set(h1, 'units', 'inches')
+% Change figure and paper size
+set(h1, 'Position', [0.1 0.1 figSize])
+set(h1, 'PaperPosition', [0.1 0.1 figSize])
+export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Thesis\Figures\OIS_resolution','OIS_resTarget'),'-png',h1)
+
+figure(h2);
+% Specify window units
+set(h2, 'units', 'inches')
+% Change figure and paper size
+set(h2, 'Position', [0.1 0.1 figSize])
+set(h2, 'PaperPosition', [0.1 0.1 figSize])
+export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Thesis\Figures\OIS_resolution','OIS_resTargetZoom'),'-png',h2)
+
+figure(h3);
+% Specify window units
+set(h3, 'units', 'inches')
+% Change figure and paper size
+set(h3, 'Position', [0.1 0.1 figSize])
+set(h3, 'PaperPosition', [0.1 0.1 figSize])
+export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Thesis\Figures\OIS_resolution','OIS_resTargetProfile'),'-png',h3)
 
