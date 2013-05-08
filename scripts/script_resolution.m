@@ -41,9 +41,9 @@ end
 
 %% Average images
 Ravg = mean(Rimages,3);
-Gavg = mean(Rimages,3);
-Yavg = mean(Rimages,3);
-Lavg = mean(Rimages,3);
+Gavg = mean(Gimages,3);
+Yavg = mean(Yimages,3);
+Lavg = mean(Limages,3);
 
 %% Plot single images
 imLims = [0 4095];
@@ -105,7 +105,7 @@ imagesc(resTargetZoom, imLims); axis image;
 set(gca,'Xtick',[]); set(gca,'yTick',[]); 
 
 figure(h2)
-% Profile across Group 2, elements 1:4 (4, 4.49, 5.04, 5.66 line pairs/mm)
+% Profile across Group 3, elements 1:4 (8, 8.98, 10.1, 11.30 line pairs/mm)
 xi = [163.5921; 163.5921];
 yi = [29.4401;  101.3845];
 [cx,cy,resTargetProfile,xi,yi] = improfile(resTargetZoom, xi, yi);
@@ -114,16 +114,25 @@ resTargetProfile = resTargetProfile - min(resTargetProfile(:));
 resTargetProfile = resTargetProfile ./ max(resTargetProfile);
 % Group 0, element 1 (1 line pair/mm) => 35.5 - 18 pixels = 500 um
 umPerPixel = 500/(35.5-18);
+% x-axis
 distance = (0:numel(resTargetProfile)-1)*umPerPixel;
 
 h3 = figure; set(gcf,'color','w')
-plot(distance, resTargetProfile, 'k-', 'LineWidth', 2)
+plot(distance, resTargetProfile, 'k-', 'LineWidth', 1)
 axis tight
 set(gca, 'FontSize',10)
+set(gca,'YAxisLocation','left')
 set(gca, 'YTick', [0 0.5 1])
+set(gca, 'YTickLabel', {'0' '' '1'})
 xlabel('length (\mum)','FontSize',10); 
 ylabel('Intensity [a.u.]','FontSize',10); 
-res = 1/(5.66*2); % FWHM ~70um
+% Resolution of the target
+res = 1000/(10.1*2); % in (um), FWHM ~50um
+signal = resTargetProfile(43:49);
+[FWHM, peak_pos] = compute_FWHM(signal);
+% Computed FWHM = 84.6818 um
+resComp = FWHM * umPerPixel;
+fprintf('Target resolution = %0.2fum, FWHM = %0.2fum\n', res, resComp);
 
 %% Save images
 addpath(genpath('D:\Edgar\ssoct\Matlab'))
@@ -153,3 +162,11 @@ set(h3, 'Position', [0.1 0.1 figSize])
 set(h3, 'PaperPosition', [0.1 0.1 figSize])
 export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Thesis\Figures\OIS_resolution','OIS_resTargetProfile'),'-png',h3)
 
+%% Differential SNR
+figure(h1);
+ft = mean2(resTarget(round(672.3004):round(672.3004+15.3194), round(546.5913):round(546.5913+91.0152)));
+fb = mean2(resTarget(round(569.5703):round(569.5703+15.3194), round(255.5228):round(255.5228+91.0152)));
+sigmab = std2(resTarget(round(569.5703):round(569.5703+15.3194), round(255.5228):round(255.5228+91.0152)));
+SNRdiff = (ft - fb)/sigmab;
+fprintf('SNRdiff = %0.2f (%0.2f dB)\n', SNRdiff, 20*log10(SNRdiff));
+% EOF
