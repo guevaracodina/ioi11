@@ -9,29 +9,18 @@ seizureDuration = num2cell(nan(max(groupCorrIdx{1,5}(:,3)), 5));
 seizureDuration{1, 4} = mean([203-158; 375-332; 660-627; 838-806]);
 seizureDuration{1, 5} = mean([244-209; 433-401; 729-702]);
 
-% seizureDuration{2, 3} = NaN;
-% seizureDuration{2, 4} = NaN;
-
 % Only 1 4AP session
 seizureDuration{3-1, 3} = mean([81-54; 332-299; 852-818]);
 
 seizureDuration{4-1, 3} = mean([334-220]);
 seizureDuration{4-1, 4} = mean([392-321; 812-700]);
 
-% seizureDuration{5, 3} = NaN;
-% seizureDuration{5, 4} = NaN;
-% 
-% seizureDuration{6, 3} = NaN;
-% seizureDuration{6, 4} = NaN;
 
 seizureDuration{7-3, 3} = mean([200-162; 384-354; 748-718]);
 seizureDuration{7-3, 4} = mean([382-349; 566-534]);
 
 seizureDuration{9-4, 3} = mean([459-329]);
 seizureDuration{9-4, 4} = mean([432-271]);
-
-% seizureDuration{10-1, 3} = NaN;
-% seizureDuration{10-1, 4} = NaN;
 
 %% Seizure percentage
 sessionTotalDuration = 863;
@@ -57,19 +46,15 @@ seizurePercent{9-4, 4} = 100*([432-271])/sessionTotalDuration;
 % nSeizureAvg{iSubject, iSession}
 
 nSeizureAvg{1, 4} = mean([numel([203-158; 375-332; 660-627; 838-806]) numel([244-209; 433-401; 729-702])]);
-% nSeizureAvg{1, 5} = mean(numel([244-209; 433-401; 729-702]));
 
 % Only 1 4AP session
 nSeizureAvg{3-1, 3} = mean(numel([81-54; 332-299; 852-818]));
 
 nSeizureAvg{4-1, 3} = mean([numel([334-220]) numel([392-321; 812-700])]);
-% nSeizureAvg{4-1, 4} = mean(numel([392-321; 812-700]));
 
 nSeizureAvg{7-3, 3} = mean([numel([200-162; 384-354; 748-718]) numel([382-349; 566-534])]);
-% nSeizureAvg{7-3, 4} = mean(numel([382-349; 566-534]));
 
 nSeizureAvg{9-4, 3} = mean([numel([459-329]) numel([432-271])]);
-% nSeizureAvg{9-4, 4} = mean(numel([432-271]));
 
 
 %% Only subjects where seizures where observed
@@ -99,48 +84,7 @@ for r1 = 1:size(groupCorrData,1)
     end
 end
 
-% %% Arrange data
-% clear seizureDurationComb
-% for idxSub = 1:size(seizureDuration,1)
-%     for s1 = 3:size(seizureDuration,2)
-%         for r1 = 1:size(groupCorrData,1)
-%             for c1 = 5:size(groupCorrData,2)
-%                 % s2 goes from 1 to 36 , it is the umber of combined sessions
-%                 for s2 = 1:size(groupCorrIdx{r1,c1},1)
-%                     if (groupCorrIdx{r1,c1}(s2,2) == s1) && (groupCorrIdx{r1,c1}(s2,3) == idxSub)
-%                         % 1st column: seizure durations
-%                         seizureDurationComb{s2, 1}{r1,c1} = seizureDuration{idxSub, s1};
-%                         % 2nd column: 4-APsessions
-%                         seizureDurationComb{s2, 2}{r1,c1} = groupCorrIdx{r1,c1}(s2, 2);
-%                         % 3rd column: subject indices
-%                         seizureDurationComb{s2, 3}{r1,c1} = groupCorrIdx{r1,c1}(s2, 3);
-%                         % 4th column: Absolute loss of correlation
-%                         seizureDurationComb{s2, 4}{r1,c1} = (groupCorrData{r1,c1}(s2,2) - groupCorrData{r1,c1}(s2,1));
-%                         % 5th column: combined vectors: 1st row duration, 2nd
-%                         % row loss of correlation
-%                         seizureDurationComb{s2, 5}{r1,c1} = CombVec (seizureDurationComb{s2, 1}{r1,c1}', seizureDurationComb{s2, 4}{r1,c1})';
-%                         % 6th column, 
-%                         seizureDurationComb{s2, 6}{r1,c1} = [mean(seizureDurationComb{s2, 1}{r1,c1}) mean(seizureDurationComb{s2, 4}{r1,c1})];
-%                     end
-%                 end
-%             end
-%         end
-%     end
-% end
-% 
-% % Arrange final results
-% lossVSseiz = cell(size(groupCorrData));
-% for s2 = 1:size(groupCorrIdx{r1,c1},1)
-%     for r1 = 1:size(groupCorrData,1)
-%         for c1 = 5:size(groupCorrData,2)
-%             lossVSseiz{r1, c1} = [lossVSseiz{r1, c1};  seizureDurationComb{s2, 6}{r1,c1}];
-%         end
-%     end
-% end
-
 %% Plot results change in correlation vs, seizures
-% Load saved data
-load('E:\Edgar\Data\IOS_Results\corr_Results_seizures\seizDur.mat');
 plotTitles = {{'F'}; {'M'}; {'C'}; {'S'}; {'R'}; {'V'}};
 % Font sizes
 axisFont = 22;
@@ -152,8 +96,9 @@ markSize = 12;
 % Preallocate cells
 p = cell(size(groupCorrData));
 R = cell(size(groupCorrData));
+% p-values of correlation
+pVals = cell(size(groupCorrData));
 f = cell(size(groupCorrData));
-finterp = cell(size(groupCorrData));
 yLimits = [-2.2 2];
 xLimits = [0.8*min(seizDurationVector) 1.05*max(seizDurationVector)];
 % # points to interpolate fitted line
@@ -178,24 +123,22 @@ for r1=1:6,
         plot(x, y, plotType, 'LineWidth', dottedLineWidth, 'MarkerSize', markSize)
         p{r1,c1} = polyfit(x,y,1);
         % Measure of correlation r^2
-        R{r1,c1} = corr(x,y).^2;
+        [R{r1,c1} pVals{r1,c1}] = corr(x,y);
+        R{r1,c1} = R{r1,c1} .^ 2;
         if c1 == 5 
-            text(40, -0.8, ['r^2(HbO_2)=', sprintf('%0.2f',R{r1,c1})],...
+            text(40, -0.8, sprintf('r^2(HbO_2)=%0.2f,p=%0.2f', R{r1,c1}, pVals{r1,c1}),...
                 'FontSize', textFont, 'Color', 'r')
         elseif c1 == 6
-            text(40, -1.25, ['r^2(HbR)=', sprintf('%0.2f',R{r1,c1})],...
+            text(40, -1.25, sprintf('r^2(HbR)=%0.2f,p=%0.2f', R{r1,c1}, pVals{r1,c1}),...
                 'FontSize', textFont, 'Color', 'b')
         else
-            text(40, -1.70, ['r^2(CBF)=', sprintf('%0.2f',R{r1,c1})],...
+            text(40, -1.70, sprintf('r^2(CBF)=%0.2f,p=%0.2f', R{r1,c1}, pVals{r1,c1}),...
                 'FontSize', textFont, 'Color', 'k')
         end
         hold on
         f{r1,c1} = polyval(p{r1,c1},x);
         xinterp = linspace(x(1), x(end), nPoints);
-%         finterp{r1,c1} = interp1q(x,f{r1,c1},xinterp);
-%         finterp{r1,c1} = interpft(f{r1,c1},nPoints);
         plot(x, f{r1,c1}, lineType, 'LineWidth', dottedLineWidth)
-%         plot(xinterp, finterp{r1,c1}, lineType, 'LineWidth', dottedLineWidth)
         title(plotTitles{r1}, 'FontSize', axisLabelFont);
         set(gca,'FontSize',axisFont);
         ylim(yLimits)
@@ -225,10 +168,11 @@ export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','z_vs_seizur
 %% Save results
 save (fullfile('E:\Edgar\Data\IOS_Results\corr_Results_seizures','seizDur.mat'),...
     'seizureDuration', 'seizDurationVector','groupCorrData', 'groupCorrDataSubtr',...
-    'groupCorrDataSubtrAvg', 'R', 'p', 'f')
+    'groupCorrDataSubtrAvg', 'seizurePercentVector', 'R', 'p', 'pVals')
 
 
-%% %% Plot results change in correlation vs, seizures duration %
+%% Plot results change in correlation vs, seizures duration % (FIG4 in JBO paper)
+clear
 % Load saved data
 load('E:\Edgar\Data\IOS_Results\corr_Results_seizures\seizDur.mat');
 plotTitles = {{'F'}; {'M'}; {'C'}; {'S'}; {'R'}; {'V'}};
@@ -238,10 +182,10 @@ textFont = 20;
 axisLabelFont = 30;
 dottedLineWidth = 3;
 markSize = 14;
+% significance threshold
+alpha = 0.05;
 
 % Preallocate cells
-p = cell(size(groupCorrData));
-R = cell(size(groupCorrData));
 f = cell(size(groupCorrData));
 finterp = cell(size(groupCorrData));
 yLimits = [-2.2 2];
@@ -249,45 +193,50 @@ xLimits = [0.8*min(seizurePercentVector) 1.05*max(seizurePercentVector)];
 % # points to interpolate fitted line
 nPoints = 100;
 
+% New figure
 h = figure; set (gcf,'color','w')
 for r1=1:6,
     for c1=5:7,
         if c1 == 5 
-            plotType = 'ro';
-            lineType = 'r-';
+            plotType = 'o';
+            lineType = '-';
+            % Color red
+            LineColor = [161 0 64]/255;
         elseif c1 == 6
-            plotType = 'bx';
-            lineType = 'b-.';
+            plotType = 'x';
+            lineType = '-.';
+            % Color blue
+            LineColor = [0 138 255]/255;
         else
-            plotType = 'k^';
-            lineType = 'k--';
+            plotType = '^';
+            lineType = '--';
+            % Color black
+            LineColor = 'k';
         end
         subplot(2,3,r1)
         x = seizurePercentVector(~isnan(groupCorrDataSubtrAvg{r1,c1}));
         y = groupCorrDataSubtrAvg{r1,c1}(~isnan(groupCorrDataSubtrAvg{r1,c1}));
-        plot(x, y, plotType, 'LineWidth', dottedLineWidth, 'MarkerSize', markSize)
+        plot(x, y, plotType, 'LineWidth', dottedLineWidth, 'MarkerSize', markSize,...
+            'Color', LineColor)
         p{r1,c1} = polyfit(x,y,1);
-        % Measure of correlation r^2
-        R{r1,c1} = corr(x,y).^2;
-        if c1 == 5 
-            text(5, -0.8, ['r^2(HbO_2)=', sprintf('%0.2f',R{r1,c1})],...
-                'FontSize', textFont, 'Color', 'r')
-        elseif c1 == 6
-            text(5, -1.25, ['r^2(HbR)=', sprintf('%0.2f',R{r1,c1})],...
-                'FontSize', textFont, 'Color', 'b')
-        else
-            text(5, -1.70, ['r^2(CBF)=', sprintf('%0.2f',R{r1,c1})],...
-                'FontSize', textFont, 'Color', 'k')
+        if pVals{r1,c1} <= alpha
+            % Plot only significant results labels
+            if c1 == 5
+                text(5, -0.8, sprintf('r^2(HbO_2)=%0.2f*', R{r1,c1}),...
+                    'FontSize', textFont, 'FontWeight', 'b', 'Color', LineColor)
+            elseif c1 == 6
+                text(5, -1.25, sprintf('r^2(HbR)=%0.2f*', R{r1,c1}),...
+                    'FontSize', textFont, 'FontWeight', 'b',  'Color', LineColor)
+            else
+                text(5, -1.70, sprintf('r^2(CBF)=%0.2f*', R{r1,c1}),...
+                    'FontSize', textFont, 'FontWeight', 'b', 'Color', LineColor)
+            end
         end
         hold on
+        % Fitted line (1st degree polynomial)
         f{r1,c1} = polyval(p{r1,c1},x);
-        xinterp = linspace(x(1), x(end), nPoints);
-        finterp{r1,c1} = linspace(f{r1,c1}(1), f{r1,c1}(end), nPoints);
-%         finterp{r1,c1} = interp1q(x,f{r1,c1},xinterp);
-%         finterp{r1,c1} = interpft(f{r1,c1},nPoints);
-%         plot(x, f{r1,c1}, lineType, 'LineWidth', dottedLineWidth)
-        plot(xinterp, finterp{r1,c1}, lineType, 'LineWidth', dottedLineWidth)
-        % title(plotTitles{r1}, 'FontSize', axisLabelFont);
+        plot(x, f{r1,c1}, lineType, 'LineWidth', dottedLineWidth, 'Color', LineColor)
+        title(plotTitles{r1}, 'FontSize', axisLabelFont);
         set(gca,'FontSize',axisFont);
         ylim(yLimits)
         xlim(xLimits)
@@ -320,8 +269,8 @@ set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
 
 %% Print graphics
 
-% addpath(genpath('D:\Edgar\ssoct\Matlab'))
-% export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','z_vs_seizurePerc'),'-png',gcf)
+addpath(genpath('D:\Edgar\ssoct\Matlab'))
+export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','z_vs_seizurePerc'),'-png',gcf)
 
 clc
 % Save as PNG at the user-defined resolution
@@ -389,14 +338,14 @@ set(h, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
 set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
 
 % Save as PNG at the user-defined resolution
-print(h, '-dpng', ...
-    fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','resting_state_somato_Seizure'),...
-    sprintf('-r%d',job.figRes));
+% print(h, '-dpng', ...
+%     fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','resting_state_somato_Seizure'),...
+%     sprintf('-r%d',job.figRes));
 % Return the property to its default
 set(h, 'units', 'pixels')
 
 %% Print graphics
 addpath(genpath('D:\Edgar\ssoct\Matlab'))
-export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','resting_state_somato'),'-png',gcf)
+% export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','resting_state_somato'),'-png',gcf)
 
 % EOF
