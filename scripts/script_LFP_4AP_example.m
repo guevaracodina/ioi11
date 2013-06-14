@@ -103,6 +103,9 @@ set(h, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
 print(h, '-dpng', ...
     fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','LFP_4AP'),...
     sprintf('-r%d',job.figRes));
+% .fig file huge (~195 Mb)
+% saveas(h, fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','LFP_4AP.fig'), 'fig');
+
 % Return the property to its default
 set(h, 'units', 'pixels')
 
