@@ -1,7 +1,10 @@
 %% script_SNR
 load('E:\Edgar\Data\IOS_Resolution\12_09_28,MT11\IOI.mat')
+imagePath = 'D:\Edgar\Documents\Dropbox\Docs\Thesis\Figures\OIS_SNR';
+imSize = [0.1 0.1 3 3];
 
 %% NIfTI volumes
+% Only 1 session
 s1 = 1;
 % IOI.color.eng = 'RGYL'
 c1 = 1;
@@ -15,20 +18,25 @@ L = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,'E:\Edgar\Data\IOS_Reso
 
 %% SNR computation
 h = figure();  set(gcf, 'color', 'w')
-c1 = 2;
+% Choose color IOI.color.eng = 'RGYL'
+c1 = 3;
 switch(c1)
     case 1
-        imagesc(R)
+        OISimg = squeeze(R(:,:,randi(size(R,3), 1)));
+        imagesc(OISimg)
     case 2
-        Gimg = squeeze(G(:,:,400));
-        imagesc(Gimg)
+        OISimg = squeeze(G(:,:,randi(size(G,3), 1)));
+        imagesc(OISimg)
     case 3
-        imagesc(Y)
+        OISimg = squeeze(Y(:,:,randi(size(Y,3), 1)));
+        imagesc(OISimg)
     case 4
-        imagesc(L)
+        OISimg = squeeze(L(:,:,randi(size(L,3), 1)));
+        imagesc(OISimg)
 end
-colormap(jet(256))
+colormap(gray(256))
 set(gca,'XTick',[])
+set(gca,'YTick',[])
 axis image
 % Rectangular ROI
 title('Choose signal ROI')
@@ -39,45 +47,8 @@ y2 = roiPos(2) + roiPos(4);
 x1 = roiPos(1);
 x2 = roiPos(1) + roiPos(3);
 % ROI signal
-Gsignal = Gimg(y1:y2,x1:x2);
-Gsignal = mean2(Gsignal);
-title('Choose background ROI')
-roiPos = round(wait(imrect));
-% ROI coordinates
-y1 = roiPos(2);
-y2 = roiPos(2) + roiPos(4);
-x1 = roiPos(1);
-x2 = roiPos(1) + roiPos(3);
-% ROI signal
-Gnoise = Gimg(y1:y2,x1:x2);
-Gnoise = std2(Gnoise);
-title(sprintf('SNR(G) = %0.2f dB',20*log10(Gsignal / Gnoise)),'FontSize',12); 
-fprintf('SNR(%c) = %f dB\n',IOI.color.eng(c1), 20*log10(Gsignal / Gnoise));
-
-% Specify window units
-set(h, 'units', 'inches')
-% Change figure and paper size
-set(h, 'Position', [0.1 0.1 3 3])
-set(h, 'PaperPosition', [0.1 0.1 3 3])
-
-%% Print images
-% Save as PNG
-print(h, '-dpng', fullfile('D:\Edgar\Documents\Dropbox\Docs\Thesis\Figures\OIS_SNR', 'OIS_SNR'), '-r300');
-% Save as a figure
-saveas(h, fullfile('D:\Edgar\Documents\Dropbox\Docs\Thesis\Figures\OIS_SNR', 'OIS_SNR'), 'fig');
-
-
-%% Rectangular ROI (OIS)
-title('Choose signal ROI')
-roiPos = round(wait(imrect));
-% ROI coordinates
-y1 = roiPos(2);
-y2 = roiPos(2) + roiPos(4);
-x1 = roiPos(1);
-x2 = roiPos(1) + roiPos(3);
-% ROI signal
 OISsignal = OISimg(y1:y2,x1:x2);
-OISsignal = mean(OISsignal(:));
+OISsignal = mean2(OISsignal);
 title('Choose background ROI')
 roiPos = round(wait(imrect));
 % ROI coordinates
@@ -87,45 +58,63 @@ x1 = roiPos(1);
 x2 = roiPos(1) + roiPos(3);
 % ROI signal
 OISnoise = OISimg(y1:y2,x1:x2);
-OISnoise = std(OISnoise(:));
-title('')
-fprintf('SNR(OIS) = %f dB\n',20*log10(OISsignal / OISnoise));
+OISnoise = std2(OISnoise);
+title(sprintf('SNR(%c) = %0.2f dB',IOI.color.eng(c1), 20*log10(OISsignal / OISnoise)),'FontSize',12); 
+fprintf('SNR(%c) = %f dB\n',IOI.color.eng(c1), 20*log10(OISsignal / OISnoise));
 
-%% SNR map
-HbTmean = mean(squeeze(HbT(:,:,1,:)),3);
-HbTstd = std(squeeze(HbT(:,:,1,:)), 0, 3);
-HbTSNR = 20*log10(HbTmean ./ HbTstd);
+% Specify window units
+set(h, 'units', 'inches')
+% Change figure and paper size
+set(h, 'Position', imSize)
+set(h, 'PaperPosition', imSize)
 
-SO2mean = mean(squeeze(SO2(:,:,1,:)),3);
-SO2std = std(squeeze(SO2(:,:,1,:)), 0, 3);
-SO2SNR = 20*log10(SO2mean ./ SO2std);
+%% Print images
+% Save as PNG
+print(h, '-dpng', fullfile(imagePath, sprintf('OIS_SNR_%c', IOI.color.eng(c1))), '-r300');
+% Save as a figure
+saveas(h, fullfile(imagePath, sprintf('OIS_SNR_%c', IOI.color.eng(c1))), 'fig');
 
+%% Temporal SNR map
+% Choose color IOI.color.eng = 'RGYL'
+switch(c1)
+    case 1
+        OISmean = mean(R, 3);
+        OISstd = std(R, 0, 3);
+    case 2
+        OISmean = mean(G, 3);
+        OISstd = std(G, 0, 3);
+    case 3
+        OISmean = mean(Y, 3);
+        OISstd = std(Y, 0, 3);
+    case 4
+        OISmean = mean(L, 3);
+        OISstd = std(L, 0, 3);
+end
+
+% Temporal SNR
+OIS_SNR = 20*log10(OISmean ./ OISstd);
+
+%% Temporal SNR figure
 h = figure;  set(gcf, 'color', 'w')
-subplot(121)
-imagesc(PAT.PAparam.WidthAxis, PAT.PAparam.DepthAxis, HbTSNR)
-colormap(gray); colorbar
-xlabel('[mm]','FontSize',12); ylabel('[mm]','FontSize',12); 
-title('HbT','FontSize',12);
-axis image
-
-subplot(122)
-imagesc(PAT.PAparam.WidthAxis, PAT.PAparam.DepthAxis, SO2SNR)
-colormap(gray); colorbar
-xlabel('[mm]','FontSize',12); ylabel('[mm]','FontSize',12); 
-title('SO_2','FontSize',12);
+imagesc(OIS_SNR)
+colormap(gray(256));
+set(gca,'XTick',[])
+set(gca,'YTick',[])
+t = colorbar; 
+set(get(t,'title'),'String', 'dB', 'FontSize', 12);
+title(sprintf('SNR map(%c)',IOI.color.eng(c1)),'FontSize',12);
 axis image
 
 % Specify window units
 set(h, 'units', 'inches')
 % Change figure and paper size
-set(h, 'Position', [0.1 0.1 6 3])
-set(h, 'PaperPosition', [0.1 0.1 6 3])
+set(h, 'Position', imSize)
+set(h, 'PaperPosition', imSize)
 
 %% Print images
 % Save as PNG
-print(h, '-dpng', fullfile('D:\Edgar\Documents\Dropbox\Docs\Thesis\Figures\OIS_SNR', 'OIS_SNR_map'), '-r300');
+print(h, '-dpng', fullfile(imagePath, sprintf('OIS_SNR_map_%c', IOI.color.eng(c1))), '-r300');
 % Save as a figure
-saveas(h, fullfile('D:\Edgar\Documents\Dropbox\Docs\Thesis\Figures\OIS_SNR', 'OIS_SNR_map'), 'fig');
-
+saveas(h, fullfile(imagePath, sprintf('OIS_SNR_map_%c', IOI.color.eng(c1))), 'fig');
 
 % EOF
