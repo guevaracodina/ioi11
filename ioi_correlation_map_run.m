@@ -353,13 +353,16 @@ for SubjIdx=1:length(job.IOImat)
                 IOI.fcIOS.corr(1).corrOK = true;
                 % Compute seed to seed correlation matrix
                 if job.seed2seedCorrMat
-                    [seed2seedCorrMat seed2seedCorrMatDiff IOI.fcIOS.corr(1).corrMatrixFname IOI.fcIOS.corr(1).corrMatrixDiffFname] = ioi_roi_corr(job, SubjIdx);
+                    [seed2seedCorrMat seed2seedCorrMatDiff ...
+                        IOI.fcIOS.corr(1).corrMatrixFname ...
+                        IOI.fcIOS.corr(1).corrMatrixDiffFname ...
+                        pMatrixMat pMatrixMatDiff] = ioi_roi_corr(job, SubjIdx);
                     % seed-to-seed correlation succesful!
                     IOI.fcIOS.corr(1).corrMatrixOK = true;
                     % Save seed-to-seed correlation data
-                    save(IOI.fcIOS.corr(1).corrMatrixFname,'seed2seedCorrMat')
+                    save(IOI.fcIOS.corr(1).corrMatrixFname,'seed2seedCorrMat', 'pMatrixMat')
                     % Save seed-to-seed derivatives correlation data
-                    save(IOI.fcIOS.corr(1).corrMatrixDiffFname,'seed2seedCorrMatDiff')
+                    save(IOI.fcIOS.corr(1).corrMatrixDiffFname,'seed2seedCorrMatDiff', 'pMatrixMatDiff')
                 end
                 % Save fcIOS data
                 save(IOI.fcIOS.corr(1).fname,'seed_based_fcIOS_map')
