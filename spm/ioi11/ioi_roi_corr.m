@@ -1,4 +1,4 @@
-function [corrMatrix corrMatrixDiff corrMatrixFname corrMatrixDiffFname] = ioi_roi_corr(job,SubjIdx)
+function [corrMatrix corrMatrixDiff corrMatrixFname corrMatrixDiffFname pMatrix pMatrixDiff] = ioi_roi_corr(job,SubjIdx)
 % Gets the correlation matrix for every seed/ROI time trace.
 %_______________________________________________________________________________
 % Copyright (C) 2012 LIOM Laboratoire d'Imagerie Optique et Moléculaire
@@ -67,9 +67,9 @@ else
                             end
                         end % loop over sessions
                         % Compute seed-to-seed correlation matrix
-                        corrMatrix{1}{s1,c1} = corrcoef(roiMatrix);
+                        [corrMatrix{1}{s1,c1} pMatrix{1}{s1,c1}]= corrcoef(roiMatrix);
                         if isfield (job,'derivative')
-                            corrMatrixDiff{1}{s1,c1} = corrcoef(roiMatrixDiff);
+                            [corrMatrixDiff{1}{s1,c1} pMatrixDiff{1}{s1,c1}]= corrcoef(roiMatrixDiff);
                         end
                         if IOI.fcIOS.SPM.ROIregressOK{r1}{s1,c1}
                             if job.generate_figures
@@ -111,8 +111,10 @@ else
                         end
                     else
                         % No ROIs are correctly regressed
-                        corrMatrix{1}{s1,c1} = [];
-                        corrMatrixDiff{1}{s1,c1} = [];
+                        corrMatrix{1}{s1,c1}        = [];
+                        pMatrix{1}{s1,c1}           = [];
+                        corrMatrixDiff{1}{s1,c1}    = [];
+                        pMatrixDiff{1}{s1,c1}       = [];
                     end
                 end
             end % loop over colors
