@@ -175,7 +175,7 @@ for SubjIdx=1:length(job.IOImat)
                                                             % Save as a figure
                                                             saveas(h, fullfile(dir_corrfigDiff,newName), 'fig');
                                                             % Save as EPS
-                                                            spm_figure('Print', 'Graphics', fullfile(dir_corrfigDiff,newName));
+%                                                             spm_figure('Print', 'Graphics', fullfile(dir_corrfigDiff,newName));
                                                             % Save as nifti
                                                             ioi_save_nifti(tempCorrMap, fullfile(dir_corrfigDiff,[newName oldExt]), vx);
                                                             IOI.fcIOS.corr(1).corrMapNameDiff{r1}{s1, c1} = fullfile(dir_corrfigDiff,[newName oldExt]);
@@ -259,7 +259,7 @@ for SubjIdx=1:length(job.IOImat)
                                                         % Save as a figure
                                                         saveas(h, fullfile(dir_corrfig,newName), 'fig');
                                                         % Save as EPS
-                                                        spm_figure('Print', 'Graphics', fullfile(dir_corrfig,newName));
+%                                                         spm_figure('Print', 'Graphics', fullfile(dir_corrfig,newName));
                                                         % Save as nifti
                                                         ioi_save_nifti(tempCorrMap, fullfile(dir_corrfig,[newName oldExt]), vx);
                                                         IOI.fcIOS.corr(1).corrMapName{r1}{s1, c1} = fullfile(dir_corrfig,[newName oldExt]);
@@ -326,7 +326,7 @@ for SubjIdx=1:length(job.IOImat)
                                                             % Save as a figure
                                                             saveas(h, fullfile(dir_fisherZfig,newName), 'fig');
                                                             % Save as EPS
-                                                            spm_figure('Print', 'Graphics', fullfile(dir_fisherZfig,newName));
+%                                                             spm_figure('Print', 'Graphics', fullfile(dir_fisherZfig,newName));
                                                         end
                                                     end
                                                 end
