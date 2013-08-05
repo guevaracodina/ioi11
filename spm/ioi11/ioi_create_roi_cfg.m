@@ -146,7 +146,7 @@ use_gray_contrast.help = {'Use gray contrast.'}';
 % Choose whether interface should ask whether to use a previously saved list of ROI
 SelectPreviousROI       = cfg_menu;
 SelectPreviousROI.tag   = 'SelectPreviousROI';
-SelectPreviousROI.name  = 'Select whether interface should ask for a possible previous list of ROIs';
+SelectPreviousROI.name  = 'Ask for a possible previous list of ROIs';
 SelectPreviousROI.labels = {'No','Yes'};
 SelectPreviousROI.values = {0,1};
 SelectPreviousROI.val   = {0};

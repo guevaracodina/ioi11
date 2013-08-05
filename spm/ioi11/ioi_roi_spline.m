@@ -33,8 +33,10 @@ if nargin < 4,
 end
 
 siz=size(I);
+% Grayscale colormap for contrast enhancement
 cmap = contrast(I);
-imagesc(I); colormap(cmap);
+imagesc(I); 
+colormap(cmap);
 axis image
 title(titleText,'FontSize',13)
 hold on;

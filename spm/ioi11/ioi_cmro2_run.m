@@ -106,7 +106,7 @@ for SubjIdx = 1:length(job.IOImat)
                                                 if ~isempty(brainMask)
                                                     % Test if there was shrinkage
                                                     if size(brainMask,1)~= nx(1) || size(brainMask,2)~= ny(1)
-                                                        brainMask = ioi_MYimresize(brainMask, [size(y,1) size(y,2)]);
+                                                        brainMask = ioi_MYimresize(brainMask, [nx(1) ny(1)]);
                                                     end
                                                 else
                                                     brainMask = [];
