@@ -8,14 +8,6 @@ function out = ioi_group_corr_unpaired_run(job)
 %                    École Polytechnique de Montréal
 %_______________________________________________________________________________
 
-% ------------------------------------------------------------------------------
-% REMOVE AFTER FINISHING THE FUNCTION //EGC
-% ------------------------------------------------------------------------------
-% fprintf('Work in progress...\nEGC\n')
-% out.IOImat = job.IOImat;
-% return
-% ------------------------------------------------------------------------------
-
 % For each subject:
 % Define string to ID a group (NC, CC, etc.)
 % - choose the pairs of ROIs (1-2, 3-4, ..., 11-12 by default) (batch)
@@ -30,12 +22,19 @@ function out = ioi_group_corr_unpaired_run(job)
 % - Display a graph with ROI labels
 % - Save a .csv file in parent folder for each contrast
 
+% Choose groups at random
+RANDOMGROUPS = true;
+idxTmp = [1 1];
+
 % Load first IOI matrix to check the number of colors
 [IOI IOImat dir_ioimat]= ioi_get_IOI(job,1);
 
 % Initialize cell to hold group data {pairs_of_seeds, nColors}
 groupCorrData = cell([size(job.paired_seeds, 1) numel(IOI.color.eng)]);
 groupCorrIdx = cell([size(job.paired_seeds, 1) numel(IOI.color.eng)]);
+
+% Initialize group index
+isTreatment = false([numel(job.IOImat) 1]);
 
 % Process data from the derivative of the seeds time course
 if isfield (job.optStat,'derivative')
@@ -74,8 +73,15 @@ for SubjIdx = 1:numel(job.IOImat)
                 if isfield(job.optStat, 'rawData')
                     IOI.fcIOS.corr(1).fnameGroupRaw = fullfile(job.parent_results_dir{1},'group_corr_pair_seeds_raw.mat');
                 end
-                % Check if mouse is tratment (1) or control (0)
-                isTreatment(SubjIdx,1) = ~isempty(regexp(IOI.subj_name, [job.ID.treatmentString '[0-9]+'], 'once'));
+                if RANDOMGROUPS
+                    while numel(idxTmp) ~= numel(unique(idxTmp))
+                        idxTmp = randi([1 numel(job.IOImat)],[round(numel(job.IOImat)/2) 1]);
+                    end
+                    isTreatment(idxTmp) = true;
+                else
+                    % Check if mouse is tratment (1) or control (0)
+                    isTreatment(SubjIdx,1) = ~isempty(regexp(IOI.subj_name, [job.ID.treatmentString '[0-9]+'], 'once'));
+                end
                 % Treatment/control sessions is always 1
                 idxSess(1,1:2) = 1;
                 % Additional 3rd column with subject index
@@ -112,11 +118,7 @@ for SubjIdx = 1:numel(job.IOImat)
                     subjectName{SubjIdx,1}{iCell,1} = IOI.subj_name;
                     groupID{SubjIdx,1}{iCell,1} = isTreatment(SubjIdx,1);
                 end % paired seeds loop
-                
-%                 if SubjIdx == 17 && c1 == 8
-%                     keyboard
-%                 end % Error in SubBand2 analysis IOI.fcIOS.corr.corrMapName missing CMRO2 //EGC
-                
+                             
                 % Loop over available colors
                 for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
                     doColor = ioi_doColor(IOI,c1,IC);
@@ -261,6 +263,10 @@ for SubjIdx = 1:numel(job.IOImat)
         disp(exception.stack(1))
     end
 end % Big loop over subjects
+
+if RANDOMGROUPS
+    fprintf('Subject ID (Ctrl=0) : %d\n',isTreatment);
+end
 
 if ~exist(fullfile(job.parent_results_dir{1},'groupOK.mat'),'file') || job.force_redo
     % ------------------------------------------------------------------------------
