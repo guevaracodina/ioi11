@@ -76,15 +76,22 @@ for SubjIdx=1:length(job.top_bin_dir)
                         ~isempty(strfind(files_txt{1},'resumeExp.txt')))
                     data_format = 1; %new format
                 else
-                    subj_OK = 0;
-                    disp(['Data format unrecognized for Subject ' int2str(SubjIdx)]);
-                    disp('Start by checking if resume.txt (new) or resume_manip.txt (old) file is missing');
+                    if ~isempty(dir(fullfile(acqPath,'*.blk')))
+                        data_format = 2; %blk format (Casanova's lab)
+                    else
+                        subj_OK = 0;
+                        disp(['Data format unrecognized for Subject ' int2str(SubjIdx)]);
+                        disp('Start by checking if resume.txt (new) or resume_manip.txt (old) file is missing');
+                    end
                 end
             end
             if subj_OK
                 IOI.subj_OK = subj_OK;
                 if data_format
                     IOI = ioi_msread_new_format(IOI,job);
+                elseif data_format == 2
+                    % blk format (Casanova's lab)
+                    IOI = ioi_msread_blk_format(IOI,job);
                 else
                     IOI = ioi_msread_old_format(IOI,job);
                 end
