@@ -88,7 +88,13 @@ for SubjIdx = 1:length(job.IOImat)
                 
                 % Start interactive ROI tool to choose spline brain mask
                 % ------------------------------------------------------------------
-                BW_mask = ioi_roi_spline(im_anat);
+                % BW_mask = ioi_roi_spline(im_anat);
+                % ioi_roi_spline disabled beause of unactive spline toolbox // EGC
+                imagesc(im_anat);
+                axis image
+                colormap gray
+                title('Choose a mask containing only brain pixels','FontSize',13)
+                BW_mask = roipoly;
                 % ------------------------------------------------------------------
                 
                 % Display masked image on SPM graphics window

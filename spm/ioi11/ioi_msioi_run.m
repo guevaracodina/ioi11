@@ -76,23 +76,28 @@ for SubjIdx=1:length(job.top_bin_dir)
                         ~isempty(strfind(files_txt{1},'resumeExp.txt')))
                     data_format = 1; %new format
                 else
-                    if ~isempty(dir(fullfile(acqPath,'*.blk')))
+                    currDir = pwd; cd(dir_subj_raw);
+                    if ~system('dir *.blk /s')
                         data_format = 2; %blk format (Casanova's lab)
                     else
                         subj_OK = 0;
                         disp(['Data format unrecognized for Subject ' int2str(SubjIdx)]);
                         disp('Start by checking if resume.txt (new) or resume_manip.txt (old) file is missing');
                     end
+                    cd(currDir)
                 end
             end
             if subj_OK
                 IOI.subj_OK = subj_OK;
-                if data_format
+                if data_format == 1
+                    fprintf('Reading IOI new format (Montreal Heart Institute)...\n');
                     IOI = ioi_msread_new_format(IOI,job);
                 elseif data_format == 2
                     % blk format (Casanova's lab)
+                    fprintf('Reading IOI .BLK format (Optometry school)...\n');
                     IOI = ioi_msread_blk_format(IOI,job);
                 else
+                    fprintf('Reading IOI old format (Sacre-Coeur)...\n');
                     IOI = ioi_msread_old_format(IOI,job);
                 end
                 % Write out IOI in .mat file format at the subject results path location
