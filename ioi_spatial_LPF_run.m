@@ -15,7 +15,7 @@ for SubjIdx=1:length(job.IOImat)
         %Load IOI.mat information
         [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);
         
-        if ~isfield(IOI.res,'concOK') % Concentrations OK
+        if ~isfield(IOI.res,'concOK') && (~isfield(IOI.sess_res{1},'availCol') && job.IC.include_OD)% Concentrations OK
             disp(['No concentrations available for subject ' int2str(SubjIdx) ' ... skipping low-pass filtering']);
         else
             % Check if laser is recorded
@@ -44,7 +44,7 @@ for SubjIdx=1:length(job.IOImat)
                                         colorOK = true;
                                         %skip laser - only extract for flow
                                         if ~(IOI.color.eng(c1)==IOI.color.laser)
-                                            %% Correlation map
+                                            %% Spatial Low-Pass Filter
                                             % Results filenames
                                             fname_list = IOI.sess_res{s1}.fname{c1};
                                             % Color names
@@ -68,7 +68,9 @@ for SubjIdx=1:length(job.IOImat)
                                                 %time dimension in 3rd dimension for colors
                                                 %R, G, Y, but in 4th dimension for O, D, F
                                                 if c1==1 || c1==2 || c1==3
-                                                    nt = d3;
+                                                    % Removed for BLK files
+                                                    % nt = d3;
+                                                    nt = d4;
                                                 else
                                                     nt = d4;
                                                 end
@@ -127,7 +129,7 @@ for SubjIdx=1:length(job.IOImat)
                                     colorOK = true;
                                     %skip laser - only extract for flow
                                     if ~(IOI.color.eng(c1)==IOI.color.laser)
-                                        %% Correlation map
+                                        %% Spatial Low-Pass Filter
                                         % Results filenames
                                         fname_list = IOI.sess_res{s1}.fname{c1};
                                         % Color names
@@ -151,7 +153,9 @@ for SubjIdx=1:length(job.IOImat)
                                             %time dimension in 3rd dimension for colors
                                             %R, G, Y, but in 4th dimension for O, D, F
                                             if c1==1 || c1==2 || c1==3
-                                                nt = d3;
+                                                % Removed for BLK files
+                                                % nt = d3; 
+                                                nt = d4;
                                             else
                                                 nt = d4;
                                             end

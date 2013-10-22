@@ -77,7 +77,8 @@ for SubjIdx=1:length(job.top_bin_dir)
                     data_format = 1; %new format
                 else
                     currDir = pwd; cd(dir_subj_raw);
-                    if ~system('dir *.blk /s')
+                    isBLK = ~system('dir *.blk /s');
+                    if isBLK
                         data_format = 2; %blk format (Casanova's lab)
                     else
                         subj_OK = 0;
