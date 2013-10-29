@@ -32,10 +32,13 @@ else
                     % Loop over ROI/seeds
                     for r1 = nROI,
                         if IOI.fcIOS.SPM.ROIregressOK{r1}{s1,c1}
-                            % Preallocate map for the seed-to-seed correlation matrix
-                            tVector = numel(ROIregress{r1}{s1,c1});
-                            if isfield (job,'derivative')
-                                tVectorDiff = numel(ROIregress{r1}{s1,c1})-1;
+                            if ~isempty(ROIregress{r1}) % //EGC - avoid empty cells
+                                % e.g. when only some ROIs are selected
+                                % Preallocate map for the seed-to-seed correlation matrix
+                                tVector = numel(ROIregress{r1}{s1,c1});
+                                if isfield (job,'derivative')
+                                    tVectorDiff = numel(ROIregress{r1}{s1,c1})-1;
+                                end
                             end
                             % fprintf('time vector size found for seed
                             % %d\n',r1);
