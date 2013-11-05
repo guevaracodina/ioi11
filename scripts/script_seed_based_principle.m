@@ -38,9 +38,8 @@ job(1).drawCircle(1).drawCircle_On(1).circleLS  = '-';          % line style
 job(1).drawCircle(1).drawCircle_On(1).circleEC  = 'r';          % line color
 job.parent_results_dir{1}                       = fullfile(figFolder,'overlay');
 job.generate_figures                            = true;         % display figure
-job.save_figures                                = true;         % save figure
+job.save_figures                                = false;         % save figure
 % ------------------------------------------------------------------------------
-
 
 %% Display overlay map
 ioi_overlay_blend(IOImat, job, images2overlay, fcMapRange, alphaRange, 256, r1, c1);
