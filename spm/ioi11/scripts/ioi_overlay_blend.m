@@ -1,4 +1,4 @@
-function [displayed_pixels, total_pixels] = ioi_overlay_blend(IOImat, job, fcMapFile, varargin)
+function [displayed_pixels, total_pixels, h] = ioi_overlay_blend(IOImat, job, fcMapFile, varargin)
 % Overlay/blend a functional image from a NIfTI file onto an anatomical image.
 % SYNTAX
 % ioi_overlay_blend(IOImat, job, fcMapFile, fcMapRange, alphaRange, nColorLevels)
@@ -17,7 +17,8 @@ function [displayed_pixels, total_pixels] = ioi_overlay_blend(IOImat, job, fcMap
 %               job.parent_results_dir{1}                       = fullfile(figFolder,'overlay');
 %               job.generate_figures                            = true;         % display figure
 %               job.save_figures                                = true;         % save figure
-% fcMapFile     NIfTI file name of the functional map (foreground)
+% fcMapFile     NIfTI file name of the functional map (foreground). If you add a
+%               coma, you can choose specific frame from 4-D NIfTI data.
 % [fcMapRange]  Range of values to map to the full range of colormap
 %               if empty, functional map is automatically displayed from [minVal maxVal]
 % [alphaRange]  Range of values to map to display non-transparent pixels.
@@ -49,13 +50,13 @@ end
 [~, fName]                  = fileparts(fcMapFile);
 optargs                     = { [] [] 256 ...
     str2double(regexp(fName, '(?<=(_R))(\d+)(?=(C))','match'))...
-    str2double(regexp(fcMapFile, '(?<=(C))(\d+)(?=(_))','match')) + 1 };
+    str2double(regexp(fcMapFile, '(?<=(C))(\d+)(?=(_))','match')) + 1};
 % now put these defaults into the optargs cell array, and overwrite the ones
 % specified in varargin.
 optargs(1:numvarargs)       = varargin;
 % Place optional args in memorable variable names
 [fcMapRange alphaRange ...
-    nColorLevels r1 c1]     = optargs{:};
+    nColorLevels r1 c1]= optargs{:};
 % ------------------------------------------------------------------------------
 
 %% Overlay blend
@@ -163,7 +164,8 @@ fcMapBlend(anatomicalGray<0.5) = 2.*anatomicalGray(anatomicalGray<0.5).*fcMapRGB
 
 %% Generate/Print figures
 if job.generate_figures
-    h = figure;
+    % h = figure;
+    h = gcf;
     h = imshow(fcMapBlend, 'InitialMagnification', 'fit', 'border', 'tight');
     hFig = gcf;
     set(hFig, 'color', 'k')
@@ -201,7 +203,7 @@ if job.generate_figures
 %         c1 = c1-1;
 %     end
     fprintf('Overlay blend done! File: %s, R%02d, (%s) %0.2f%% brain pixels displayed.\n',...
-        fName, r1, colorNames{c1},100*spatial_extension);
+        fName, r1, colorNames{c1+1},100*spatial_extension);
 end
 end % ioi_overlay_blend
 % EOF
