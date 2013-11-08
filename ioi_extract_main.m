@@ -27,7 +27,7 @@ for r1 = nROI,
                 
                 if ~isfield(IOI.color,'contrast') || (isfield(IOI.color,'contrast') && ~(IOI.color.eng(c1)==IOI.color.contrast))
                     try
-                        e = mean(tmp_d(mask{r1}));
+                        e = mean(mean(tmp_d.*mask{r1},1),2);
                     catch
                         if msg_ColorNotOK
                             msg = ['Problem extracting for color ' int2str(c1) ', session ' int2str(s1) ...
@@ -47,7 +47,7 @@ for r1 = nROI,
                                     tmp_mask = ioi_MYimresize(mask{r1},size(tmp_d));
                                     tmp_mask_done = 1;
                                 end
-                                e = mean(tmp_d(tmp_mask));
+                                e = mean(mean(tmp_d.*tmp_mask,1),2);
                             catch
                                 msg = ['Unable to extract color ' int2str(c1) ', session ' int2str(s1)];
                                 IOI = disp_msg(IOI,msg);
@@ -61,7 +61,7 @@ for r1 = nROI,
                     % ioi_MYimresize works with no image processing toolbox
                     % //EGC
                     tmask = ioi_MYimresize(mask{r1},[d1 d2]);
-                    e = mean(tmp_d(tmask));
+                    e = mean(mean(tmp_d.*tmask,1),2);
                 end
                 if colorOK
                     ROI{r1}{s1,c1} = [ROI{r1}{s1,c1} e];
