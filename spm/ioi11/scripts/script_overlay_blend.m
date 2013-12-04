@@ -46,7 +46,7 @@ job(1).drawCircle(1).drawCircle_On(1).circleLS  = '-';          % line style
 job(1).drawCircle(1).drawCircle_On(1).circleEC  = 'w';          % line color
 job.parent_results_dir{1}                       = fullfile(figFolder,'overlay');
 job.generate_figures                            = true;         % display figure
-job.save_figures                                = true;        % save figure
+job.save_figures                                = false;        % save figure
 % ------------------------------------------------------------------------------
 
 % Main loop
