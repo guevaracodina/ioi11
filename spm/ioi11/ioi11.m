@@ -7,7 +7,7 @@ function ioi11
 %______________________________________________________________________
 rev = '$Rev: 1 $';
 SPMid = spm('FnBanner',mfilename,rev);
-[~, Fgraph, ~] = spm('FnUIsetup','IOI11');
+[bob, Fgraph, bob2] = spm('FnUIsetup','IOI11');
 spm_help('!ContextHelp',mfilename);
 spm_help('!Disp','ioi11.man','',Fgraph,'IOI11');
 fig = spm_figure('GetWin','Interactive');
