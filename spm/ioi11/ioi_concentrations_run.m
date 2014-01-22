@@ -55,6 +55,8 @@ for SubjIdx=1:length(job.IOImat)
                 whichSystem = 1; %new
             end
             eps_pathlength = ioi_epsilon_pathlength(lambda1,lambda2,npoints,whichSystem,whichCurve,baseline_hbt,baseline_hbo,baseline_hbr);
+            % TEST MICHÈLE :
+            %eps_pathlength = 1.05*eps_pathlength;
             
             %Loop over sessions
             if isfield(IOI,'sess_res')
