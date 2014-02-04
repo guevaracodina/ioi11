@@ -3,7 +3,7 @@ addpath(genpath('D:\spm8\toolbox\ioi11'))
 % loading data
 tic
 IOImat = 'D:\Edgar\Data\IOS_Carotid_Res\12_10_19,CC10\GLMfcIOS\corrMap\IOI.mat';
-% IOImat = 'E:\Edgar\Data\IOS_Results\12_07_24,RS01\IOI.mat';
+% IOImat = 'F:\Edgar\Data\IOS_Results\12_07_24,RS01\IOI.mat';
 % IOImat = 'D:\Edgar\Data\IOS_Carotid_Res\12_10_18,NC09\GLMfcIOS\corrMap\IOI.mat';
 load(IOImat)
 % Session number

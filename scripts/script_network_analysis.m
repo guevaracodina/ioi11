@@ -5,7 +5,7 @@ addpath('D:\spm8')
 spm fmri
 spm quit
 addpath(genpath('D:\Edgar\conn'))
-pathName = 'E:\Edgar\Data\conn\DATA\conn_NYU\results\firstlevel\ANALYSIS_01\';
+pathName = 'F:\Edgar\Data\conn\DATA\conn_NYU\results\firstlevel\ANALYSIS_01\';
 currentPath = pwd;
 cd(pathName);
 fileName{1} = fullfile(pathName, 'resultsROI_Condition001.mat');

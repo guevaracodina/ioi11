@@ -1,15 +1,15 @@
 %% Load IOI matrices
 job.IOImat = {
-    'E:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL01\GLMfcIOS\corrMap\IOI.mat'
-    'E:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL02\GLMfcIOS\corrMap\IOI.mat'
-    'E:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL03\GLMfcIOS\corrMap\IOI.mat'
-    'E:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL04\GLMfcIOS\corrMap\IOI.mat'
-    'E:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL05\GLMfcIOS\corrMap\IOI.mat'
-    'E:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL06\GLMfcIOS\corrMap\IOI.mat'
-    'E:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL07\GLMfcIOS\corrMap\IOI.mat'
-    'E:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL08\GLMfcIOS\corrMap\IOI.mat'
-    'E:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL09\GLMfcIOS\corrMap\IOI.mat'
-    'E:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL10\GLMfcIOS\corrMap\IOI.mat'
+    'F:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL01\GLMfcIOS\corrMap\IOI.mat'
+    'F:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL02\GLMfcIOS\corrMap\IOI.mat'
+    'F:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL03\GLMfcIOS\corrMap\IOI.mat'
+    'F:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL04\GLMfcIOS\corrMap\IOI.mat'
+    'F:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL05\GLMfcIOS\corrMap\IOI.mat'
+    'F:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL06\GLMfcIOS\corrMap\IOI.mat'
+    'F:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL07\GLMfcIOS\corrMap\IOI.mat'
+    'F:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL08\GLMfcIOS\corrMap\IOI.mat'
+    'F:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL09\GLMfcIOS\corrMap\IOI.mat'
+    'F:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL10\GLMfcIOS\corrMap\IOI.mat'
 	};
 job.IOImatCopyChoice = [];
 % CBF only

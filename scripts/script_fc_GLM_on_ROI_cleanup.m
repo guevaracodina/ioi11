@@ -1,6 +1,6 @@
 %% script that cleans up SPM generated files during GLM regression of ROIs/whole
 % image
-topDir = 'E:\Edgar\Data\IOS_Results\';
+topDir = 'F:\Edgar\Data\IOS_Results\';
 clear IOI
 % Prompts user to select IOI.mat files
 [IOImatList, sts] = cfg_getfile(Inf,'mat','Select IOI mat',[], topDir, '^IOI.mat$');

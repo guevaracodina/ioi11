@@ -2,7 +2,7 @@
 % Using R3L3S1N - Negative 1951 USAF Test Target, 3" x 3" 
 % http://www.thorlabs.com/catalogpages/V21/1786.PDF
 
-load('E:\Edgar\Data\IOS_Resolution\12_09_28,MT10\S01\all_images.mat')
+load('F:\Edgar\Data\IOS_Resolution\12_09_28,MT10\S01\all_images.mat')
 
 %% Plot mean intensities
 avg_Int = zeros([numel(images) 1]);
