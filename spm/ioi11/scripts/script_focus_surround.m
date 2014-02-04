@@ -1,7 +1,7 @@
 %% script_focus_surround
 % Recordings in the focus and surround
 % IOI matrix
-ioiMat = 'E:\Edgar\Data\IOS_Results\12_08_24,EG03\FiltNDown\GLMfcIOS\corrMap\ROI\Series\IOI.mat';
+ioiMat = 'F:\Edgar\Data\IOS_Results\12_08_24,EG03\FiltNDown\GLMfcIOS\corrMap\ROI\Series\IOI.mat';
 load(ioiMat)
 
 % Read anatomical NIFTI file
@@ -87,8 +87,8 @@ set(h3, 'units', 'pixels')
 
 
 %% Load ROI 13 time traces
-% ioiMat = 'E:\Edgar\Data\IOS_Results\12_08_24,EG03\FiltNDown\GLMfcIOS\corrMap\ROI\Series\IOI.mat';
-ioiMat = 'E:\Edgar\Data\IOS_Results\12_09_28,EG09\Onsets\GLMfcIOS\corrMap\ROI\Series\IOI.mat';
+% ioiMat = 'F:\Edgar\Data\IOS_Results\12_08_24,EG03\FiltNDown\GLMfcIOS\corrMap\ROI\Series\IOI.mat';
+ioiMat = 'F:\Edgar\Data\IOS_Results\12_09_28,EG09\Onsets\GLMfcIOS\corrMap\ROI\Series\IOI.mat';
 load(ioiMat)
 % Define session and color to use later
 s1 = 4;
@@ -102,8 +102,8 @@ load(IOI.ROI.ROIfname)
 roi13=ROI{r1};
 
 %% Load ROI 8 time trace
-% load('E:\Edgar\Data\IOS_Results\12_08_24,EG03\FiltNDown\IOI.mat')
-ioiMat = 'E:\Edgar\Data\IOS_Results\12_09_28,EG09\Onsets\IOI.mat';
+% load('F:\Edgar\Data\IOS_Results\12_08_24,EG03\FiltNDown\IOI.mat')
+ioiMat = 'F:\Edgar\Data\IOS_Results\12_09_28,EG09\Onsets\IOI.mat';
 load(ioiMat)
 load(IOI.ROI.ROIfname)
 ROI{r1} = roi13; clear roi13

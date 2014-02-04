@@ -1,5 +1,5 @@
 %% script_SNR
-load('E:\Edgar\Data\IOS_Resolution\12_09_28,MT11\IOI.mat')
+load('F:\Edgar\Data\IOS_Resolution\12_09_28,MT11\IOI.mat')
 imagePath = 'D:\Edgar\Documents\Dropbox\Docs\Thesis\Figures\OIS_SNR';
 imSize = [0.1 0.1 3 3];
 
@@ -8,13 +8,13 @@ imSize = [0.1 0.1 3 3];
 s1 = 1;
 % IOI.color.eng = 'RGYL'
 c1 = 1;
-R = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,'E:\Edgar\Data\IOS_Resolution\12_09_28,MT11\',false);
+R = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,'F:\Edgar\Data\IOS_Resolution\12_09_28,MT11\',false);
 c1 = 2;
-G = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,'E:\Edgar\Data\IOS_Resolution\12_09_28,MT11\',false);
+G = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,'F:\Edgar\Data\IOS_Resolution\12_09_28,MT11\',false);
 c1 = 3;
-Y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,'E:\Edgar\Data\IOS_Resolution\12_09_28,MT11\',false);
+Y = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,'F:\Edgar\Data\IOS_Resolution\12_09_28,MT11\',false);
 c1 = 4;
-L = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,'E:\Edgar\Data\IOS_Resolution\12_09_28,MT11\',false);
+L = ioi_get_images(IOI,1:IOI.sess_res{s1}.n_frames,c1,s1,'F:\Edgar\Data\IOS_Resolution\12_09_28,MT11\',false);
 
 %% SNR computation
 h = figure();  set(gcf, 'color', 'w')

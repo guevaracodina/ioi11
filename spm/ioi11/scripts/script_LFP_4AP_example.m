@@ -1,6 +1,6 @@
 %% Load data
 clear all
-load('E:\Edgar\Data\IOS_Results\12_08_24,EG04\Onsets\IOI.mat')
+load('F:\Edgar\Data\IOS_Results\12_08_24,EG04\Onsets\IOI.mat')
 % third session (post 4-AP)
 s1 = 3;
 load(IOI.res.el2{s1})

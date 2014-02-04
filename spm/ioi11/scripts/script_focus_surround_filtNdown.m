@@ -1,5 +1,5 @@
 %% Filtered & downsampled data Load ROI 13 time traces
-ioiMat='E:\Edgar\Data\IOS_Results\12_09_28,EG09\Onsets\GLMfcIOS\corrMap\ROI\Series\FiltNDown\IOI.mat';
+ioiMat='F:\Edgar\Data\IOS_Results\12_09_28,EG09\Onsets\GLMfcIOS\corrMap\ROI\Series\FiltNDown\IOI.mat';
 load(ioiMat)
 % Define session and color to use later
 s1 = 3;
@@ -13,7 +13,7 @@ load(IOI.fcIOS.filtNdown.fname)
 roi13 = filtNdownROI{r1};
 
 %% Load ROI 8 time trace
-ioiMat = 'E:\Edgar\Data\IOS_Results\12_09_28,EG09\Onsets\IOI.mat';
+ioiMat = 'F:\Edgar\Data\IOS_Results\12_09_28,EG09\Onsets\IOI.mat';
 load(ioiMat)
 load(IOI.fcIOS.filtNdown.fname)
 filtNdownROI{r1} = roi13; clear roi13

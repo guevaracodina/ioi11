@@ -1,5 +1,5 @@
 %% Load data
-load('E:\Edgar\Data\IOS_Results\12_08_24,EG04\ROI_Fig1\ROI.mat');
+load('F:\Edgar\Data\IOS_Results\12_08_24,EG04\ROI_Fig1\ROI.mat');
 % Region 1 (At the injection site)
 r1 = 1;
 % Session 3

@@ -1,11 +1,11 @@
 %% script_seizure_duration
-load('E:\Edgar\Data\IOS_Results\corr_Results_seizuresReviewers\group_corr_pair_seeds.mat')
-load('E:\Edgar\Data\IOS_Results\corr_Results_seizuresReviewers\group_corr_pair_seeds_diff.mat')
+load('F:\Edgar\Data\IOS_Results\corr_Results_seizuresReviewers\group_corr_pair_seeds.mat')
+load('F:\Edgar\Data\IOS_Results\corr_Results_seizuresReviewers\group_corr_pair_seeds_diff.mat')
 
 %% Fix correlation data on EG03 and EG04
 % CBF
 c1 = 7;
-load('E:\Edgar\Data\IOS_Results\12_08_24,EG03\FiltNDown\GLMfcIOS\corrMap\IOI.mat')
+load('F:\Edgar\Data\IOS_Results\12_08_24,EG03\FiltNDown\GLMfcIOS\corrMap\IOI.mat')
 load(IOI.fcIOS.filtNdown.fname)
 CBFrS02 = [];
 % Loop over sessions
@@ -18,7 +18,7 @@ for s1=1:length(IOI.sess_res)
     end
 end
 
-load('E:\Edgar\Data\IOS_Results\12_08_24,EG04\FiltNDown\IOI.mat')
+load('F:\Edgar\Data\IOS_Results\12_08_24,EG04\FiltNDown\IOI.mat')
 load(IOI.fcIOS.filtNdown.fname)
 CBFrS03 = [];
 % Loop over sessions
@@ -217,7 +217,7 @@ end
 % export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','z_vs_seizureReviewers'),'-png',gcf)
 
 %% Save results
-save (fullfile('E:\Edgar\Data\IOS_Results\corr_Results_seizuresReviewers','seizDur.mat'),...
+save (fullfile('F:\Edgar\Data\IOS_Results\corr_Results_seizuresReviewers','seizDur.mat'),...
     'seizureDuration', 'seizDurationVector','groupCorrData', 'groupCorrDataSubtr',...
     'groupCorrDataSubtrAvg', 'seizurePercentVector', 'R', 'p', 'pVals')
 
@@ -225,7 +225,7 @@ save (fullfile('E:\Edgar\Data\IOS_Results\corr_Results_seizuresReviewers','seizD
 %% Plot results change in correlation vs, seizures duration % (FIG4 in JBO paper)
 clear
 % Load saved data
-load('E:\Edgar\Data\IOS_Results\corr_Results_seizuresReviewers\seizDur.mat');
+load('F:\Edgar\Data\IOS_Results\corr_Results_seizuresReviewers\seizDur.mat');
 plotTitles = {{'F'}; {'M'}; {'C'}; {'S'}; {'R'}; {'V'}};
 % Font sizes
 axisFont = 22;

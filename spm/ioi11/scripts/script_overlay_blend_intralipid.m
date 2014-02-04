@@ -2,7 +2,7 @@
 % String to identify the group
 groupID = 'WL';
 % Folder where to save the images
-figFolder = 'E:\Edgar\Data\IOS_Resolution\Results\averaged_maps\CBF\R04\';
+figFolder = 'F:\Edgar\Data\IOS_Resolution\Results\averaged_maps\CBF\R04\';
 % Range of values to map to the full range of colormap: [minVal maxVal]
 fcMapRange = [-1 1];
 % Range of values to map to display non-transparent pixels: [minVal maxVal]
@@ -12,7 +12,7 @@ alphaRange = [-1 1];
 dirListNIfTI = dir(fullfile(figFolder, [groupID '*.nii']));
 % Load IOI matrix of the source image
 if strcmp(groupID, 'WL')
-    IOImat = 'E:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL01\IOI.mat';
+    IOImat = 'F:\Edgar\Data\IOS_Resolution\Results\13_07_30,WL01\IOI.mat';
 else
     fprintf('No IOI matrix found for %s.\n', groupID);
     return
@@ -55,9 +55,9 @@ end
 
 %% Average images
 % for i=1:10
-%     vol(i) = spm_vol(fullfile('E:\Edgar\Data\IOS_Resolution\Results\averaged_maps\CBF\R04',['13_07_30,WL' sprintf('%02d',i) '_R04_S01_C7_fcIOS_map.nii']));
+%     vol(i) = spm_vol(fullfile('F:\Edgar\Data\IOS_Resolution\Results\averaged_maps\CBF\R04',['13_07_30,WL' sprintf('%02d',i) '_R04_S01_C7_fcIOS_map.nii']));
 %     I(:,:,i) = spm_read_vols(vol(i));
 % end
 % avg_I = mean(I,3);
-% ioi_save_nifti(avg_I, 'E:\Edgar\Data\IOS_Resolution\Results\averaged_maps\CBF\R04\AVG_R04_C7.nii', [1 1 1]);
+% ioi_save_nifti(avg_I, 'F:\Edgar\Data\IOS_Resolution\Results\averaged_maps\CBF\R04\AVG_R04_C7.nii', [1 1 1]);
 % EOF

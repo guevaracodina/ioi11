@@ -22,7 +22,7 @@ sens = -1;
 % 1 si mise en pourcentage, 0 autrement
 pourcent = 1;
 % Acquisition path
-acqPath = 'E:\Edgar\Data\Visual_RS_Data\13_10_08,RS01\RS01E04';
+acqPath = 'F:\Edgar\Data\Visual_RS_Data\13_10_08,RS01\RS01E04';
 %% Reading file
 dirStruct = dir(fullfile(acqPath,'*.blk'));
 for iFiles = 1:numel(dirStruct),

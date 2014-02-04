@@ -1,6 +1,6 @@
 %% script_seizure_duration
-load('E:\Edgar\Data\IOS_Results\corr_Results_seizures\group_corr_pair_seeds.mat')
-load('E:\Edgar\Data\IOS_Results\corr_Results_seizures\group_corr_pair_seeds_diff.mat')
+load('F:\Edgar\Data\IOS_Results\corr_Results_seizures\group_corr_pair_seeds.mat')
+load('F:\Edgar\Data\IOS_Results\corr_Results_seizures\group_corr_pair_seeds_diff.mat')
 
 %% Average seizure duration 
 % Preallocate and gather data for the sessions after the 4AP injection
@@ -166,7 +166,7 @@ addpath(genpath('D:\Edgar\ssoct\Matlab'))
 export_fig(fullfile('D:\Edgar\Documents\Dropbox\Docs\Epilepsy\figs','z_vs_seizure'),'-png',gcf)
 
 %% Save results
-save (fullfile('E:\Edgar\Data\IOS_Results\corr_Results_seizures','seizDur.mat'),...
+save (fullfile('F:\Edgar\Data\IOS_Results\corr_Results_seizures','seizDur.mat'),...
     'seizureDuration', 'seizDurationVector','groupCorrData', 'groupCorrDataSubtr',...
     'groupCorrDataSubtrAvg', 'seizurePercentVector', 'R', 'p', 'pVals')
 
@@ -174,7 +174,7 @@ save (fullfile('E:\Edgar\Data\IOS_Results\corr_Results_seizures','seizDur.mat'),
 %% Plot results change in correlation vs, seizures duration % (FIG4 in JBO paper)
 clear
 % Load saved data
-load('E:\Edgar\Data\IOS_Results\corr_Results_seizures\seizDur.mat');
+load('F:\Edgar\Data\IOS_Results\corr_Results_seizures\seizDur.mat');
 plotTitles = {{'F'}; {'M'}; {'C'}; {'S'}; {'R'}; {'V'}};
 % Font sizes
 axisFont = 22;
@@ -294,11 +294,11 @@ ictalDischargeLimits = [318-tWin 392+tWin];
 % time vector idx2plot
 idx2plot = (ictalDischargeLimits(1):ictalDischargeLimits(2));
 
-% load('E:\Edgar\Data\IOS_Results\12_08_21,EG01\FiltNDownButter4ff\GLMfcIOS\ROIregress.mat')
+% load('F:\Edgar\Data\IOS_Results\12_08_21,EG01\FiltNDownButter4ff\GLMfcIOS\ROIregress.mat')
 % r1 = 3;
 % s1 = 5;
 
-load('E:\Edgar\Data\IOS_Results\12_08_24,EG04\FiltNDown\GLMfcIOS\ROIregress.mat')
+load('F:\Edgar\Data\IOS_Results\12_08_24,EG04\FiltNDown\GLMfcIOS\ROIregress.mat')
 % Region 3 (Motor)
 r1 = 7;
 % Session 3
