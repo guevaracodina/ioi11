@@ -1,9 +1,12 @@
-%% script_seizure_duration
+%% script_seizure_durationReviewers
 load('F:\Edgar\Data\IOS_Results\corr_Results_seizuresReviewers\group_corr_pair_seeds.mat')
 load('F:\Edgar\Data\IOS_Results\corr_Results_seizuresReviewers\group_corr_pair_seeds_diff.mat')
 
-%% Fix correlation data on EG03 and EG04
-% CBF
+%% Fix correlation CBF data on EG03 and EG04 - Originally, this data was excluded
+% from the connectivity changes vs. seizure duration analysis, which was an
+% error (the fact that the global signal is not significantly present in a given
+% seed should not be an exclusion criteria for the data)
+% CBF contrast
 c1 = 7;
 load('F:\Edgar\Data\IOS_Results\12_08_24,EG03\FiltNDown\GLMfcIOS\corrMap\IOI.mat')
 load(IOI.fcIOS.filtNdown.fname)
