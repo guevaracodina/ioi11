@@ -11,6 +11,7 @@ fcMapRange = [0 1.6];
 alphaRange = [0.5 1.6+ eps] ;
 % Print anatomy
 PRINT_ANATOMICAL = false;
+
 %% Code
 % dirListNIfTI = dir(fullfile(figFolder, [groupID '*.nii']));
 dirListNIfTI = dir(fullfile(figFolder, [groupID '*.img']));
