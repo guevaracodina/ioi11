@@ -78,12 +78,17 @@ for SubjIdx=1:length(job.top_bin_dir)
                 else
                     currDir = pwd; cd(dir_subj_raw);
                     isBLK = ~system('dir *.blk /s');
+                    isSam = ~system('dir *.seq /s');
                     if isBLK
                         data_format = 2; %blk format (Casanova's lab)
                     else
-                        subj_OK = 0;
-                        disp(['Data format unrecognized for Subject ' int2str(SubjIdx)]);
-                        disp('Start by checking if resume.txt (new) or resume_manip.txt (old) file is missing');
+                        if isSam
+                            data_format = 3; %Sam format (Sam's setup)
+                        else
+                            subj_OK = 0;
+                            disp(['Data format unrecognized for Subject ' int2str(SubjIdx)]);
+                            disp('Start by checking if resume.txt (new) or resume_manip.txt (old) file is missing');
+                        end
                     end
                     cd(currDir)
                 end
@@ -97,6 +102,10 @@ for SubjIdx=1:length(job.top_bin_dir)
                     % blk format (Casanova's lab)
                     fprintf('Reading IOI .BLK format (Optometry school)...\n');
                     IOI = ioi_msread_blk_format(IOI,job);
+                elseif data_format == 3
+                    % Sam's IOI setup
+                    fprintf('Reading IOI .SEQ format (Sam''s setup)...\n');
+                    IOI = ioi_msread_sam_format(IOI,job);
                 else
                     fprintf('Reading IOI old format (Sacre-Coeur)...\n');
                     IOI = ioi_msread_old_format(IOI,job);
