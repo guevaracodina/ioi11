@@ -1,6 +1,9 @@
 function IOI = ioi_msread_sam_format(IOI,job)
-% Reads and converts sam data into NIfTI format
-
+% Reads and converts Sam's data into NIfTI format
+%_______________________________________________________________________________
+% Copyright (C) 2014 LIOM Laboratoire d'Imagerie Optique et Moleculaire
+%                    Ecole Polytechnique de Montreal
+%_______________________________________________________________________________
 try
     %select a subset of sessions
     [all_sessions selected_sessions] = ioi_get_sessions(job);
