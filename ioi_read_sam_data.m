@@ -11,10 +11,9 @@ function [Frames, data] = ioi_read_sam_data(ExpeFolder)
 % Copyright (C) 2014 LIOM Laboratoire d'Imagerie Optique et Moleculaire
 %                    Ecole Polytechnique de Montreal
 %_______________________________________________________________________________
+
 try
-    % close all; clear all;
-    % ExpeFolder = uigetdir;
-    
+    %% Standard processing
     NomSeq = [ExpeFolder filesep 'IOI_scan.seq'];
     SizeImage = memmapfile(NomSeq,'Offset',580,'Format','uint32','Repeat',1);
     NombreImage = memmapfile(NomSeq,'Offset',572,'Format','uint32','Repeat',1);
@@ -29,17 +28,17 @@ try
     
     [Path, FolderData] = fileparts(ExpeFolder);
     
-    FolderAnalyse = ['Analyse_' FolderData];
-    % if( ~exist([Path filesep FolderAnalyse],'dir') )
-    %     mkdir([Path filesep FolderAnalyse]);
-    % else
-    %     rmdir([Path filesep FolderAnalyse],'s' );
-    %     mkdir([Path filesep FolderAnalyse]);
-    % end
+    %% Unnecessary folder /EGC
+%     FolderAnalyse = ['Analyse_' FolderData];
     
     %% Images a eliminer...
     figure(1);
     Frames.FrameToSkip_Start = 0;
+    Frames.Stim = [];
+    Frames.FreqR = [];
+    Frames.FreqG = [];
+    Frames.FreqY = [];
+    Frames.FreqF = [];
     for indF = 1:10
         image = data.Data(indF).framej;
         imagesc(image)
@@ -88,19 +87,7 @@ try
         BlocStim(1,1) = 0;
         BlocStim(2,1) = 0;
     end
-    
-    %Lecture des time stamps de la camera
-    % Timing = zeros(NombreImage,1);
-    % for indF = 2:NombreImage
-    %    Timing(indF) = (double(data.Data(indF).headerj(1))*1000000 + double(data.Data(indF).headerj(3))*1000 + double(data.Data(indF).headerj(4))) - ...
-    %        (double(data.Data(indF-1).headerj(1))*1000000 + double(data.Data(indF-1).headerj(3))*1000 + double(data.Data(indF-1).headerj(4)));
-    %  end
-    % figure;
-    % for indF = NombreImage:-1:1
-    %    imagesc(data.Data(indF).framej)
-    %    pause(0.066);
-    % end
-    
+
     %Separation des frames stim et non stim
     Frames.Temps = find(diff(AnalogIN.aux(:,2))>7500);
     %Test Nombre d'images
@@ -205,18 +192,19 @@ try
     disp(['Channels used?: ' Couleur]);
     
     %% Memory clean-up
-    
     clear AnalogIN
+
 catch
-    % Missing analog signal
+    %% Missing analog signal
     fprintf('Missing analog signal, retrying...\n');
-    opengl('software');
+    % opengl('software');
+    clear data SizeImage NombreImage ImRes_XY
     
     %%
     % close all; clear all;
     % ExpeFolder = uigetdir;
     
-    NomSeq = [ExpeFolder filesep 'IOI_scan.seq'];
+%     NomSeq = [ExpeFolder filesep 'IOI_scan.seq'];
     SizeImage = memmapfile(NomSeq,'Offset',580,'Format','uint32','Repeat',1);
     NombreImage = memmapfile(NomSeq,'Offset',572,'Format','uint32','Repeat',1);
     ImRes_XY = memmapfile(NomSeq,'Offset',548,'Format','uint32','Repeat',2);
@@ -229,18 +217,23 @@ catch
     AnalogIN = load([ExpeFolder filesep 'IOI_aux.mat']);
     
     [Path, FolderData] = fileparts(ExpeFolder);
-    
-    FolderAnalyse = ['Analyse_' FolderData];
-    if( ~exist([Path filesep FolderAnalyse],'dir') )
-        mkdir([Path filesep FolderAnalyse]);
-        % else
-        %     rmdir([Path filesep FolderAnalyse],'s' );
-        %     mkdir([Path filesep FolderAnalyse]);
-    end
+%% Unnecessary folder // EGC    
+%     FolderAnalyse = ['Analyse_' FolderData];
+%     if( ~exist([Path filesep FolderAnalyse],'dir') )
+%         mkdir([Path filesep FolderAnalyse]);
+%         % else
+%         %     rmdir([Path filesep FolderAnalyse],'s' );
+%         %     mkdir([Path filesep FolderAnalyse]);
+%     end
     
     %% Images a eliminer...
     figure(1);
     Frames.FrameToSkip_Start = 0;
+    Frames.Stim = [];
+    Frames.FreqR = [];
+    Frames.FreqG = [];
+    Frames.FreqY = [];
+    Frames.FreqF = [];
     for indF = 1:10
         image = data.Data(indF).framej;
         imagesc(image)
@@ -275,33 +268,9 @@ catch
     
     %% Determination des blocs de Stim
     FreqEch = 10000;
-    % StimOn = find(AnalogIN.aux(:,1)>7500);
-    % if( StimOn )
-    %     TempsInterStim = diff(StimOn);
-    %     LimiteStim = find(TempsInterStim > 1*FreqEch);
-    %     BlocStim(1,1) = StimOn(1);
-    %     BlocStim(1,2:length(LimiteStim)+1) = StimOn(LimiteStim+1);
-    %     BlocStim(2,1:length(LimiteStim)) = StimOn(LimiteStim);
-    %     BlocStim(2,end) = StimOn(end);
-    %
-    %     clear LimiteStim TempsInterStim StimOn;
-    % else
     BlocStim(1,1) = 0;
     BlocStim(2,1) = 0;
-    % end
-    
-    %Lecture des time stamps de la camera
-    % Timing = zeros(NombreImage,1);
-    % for indF = 2:NombreImage
-    %    Timing(indF) = (double(data.Data(indF).headerj(1))*1000000 + double(data.Data(indF).headerj(3))*1000 + double(data.Data(indF).headerj(4))) - ...
-    %        (double(data.Data(indF-1).headerj(1))*1000000 + double(data.Data(indF-1).headerj(3))*1000 + double(data.Data(indF-1).headerj(4)));
-    %  end
-    % figure;
-    % for indF = NombreImage:-1:1
-    %    imagesc(data.Data(indF).framej)
-    %    pause(0.066);
-    % end
-    
+
     %Separation des frames stim et non stim
     Frames.Temps = find(diff(AnalogIN.aux(:,1))>7500);
     %Test Nombre d'images
@@ -408,5 +377,9 @@ catch
     %% Memory clean-up
     
     clear AnalogIN
+
+    disp(exception.identifier)
+    disp(exception.stack(1))
+%     out.IOImat{scanIdx} = job.IOImat{scanIdx};
 end
 % EOF
