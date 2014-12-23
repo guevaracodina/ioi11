@@ -79,15 +79,21 @@ for SubjIdx=1:length(job.top_bin_dir)
                     currDir = pwd; cd(dir_subj_raw);
                     isBLK = ~system('dir *.blk /s');
                     isSam = ~system('dir *.seq /s');
+                    isMHI = ~system('dir *.tif /s');
+                    
                     if isBLK
                         data_format = 2; %blk format (Casanova's lab)
                     else
                         if isSam
                             data_format = 3; %Sam format (Sam's setup)
                         else
-                            subj_OK = 0;
-                            disp(['Data format unrecognized for Subject ' int2str(SubjIdx)]);
-                            disp('Start by checking if resume.txt (new) or resume_manip.txt (old) file is missing');
+                            if isMHI
+                                data_format = 4; % MHI format (MHI setup single wavelnegth)
+                            else
+                                subj_OK = 0;
+                                disp(['Data format unrecognized for Subject ' int2str(SubjIdx)]);
+                                disp('Start by checking if resume.txt (new) or resume_manip.txt (old) file is missing');
+                            end
                         end
                     end
                     cd(currDir)
@@ -106,6 +112,10 @@ for SubjIdx=1:length(job.top_bin_dir)
                     % Sam's IOI setup
                     fprintf('Reading IOI .SEQ format (Sam''s setup)...\n');
                     IOI = ioi_msread_sam_format(IOI,job);
+                elseif data_format == 4
+                    % Sam's IOI setup
+                    fprintf('Reading IOI .TIF format (MHI setup, single wavelength)...\n');
+                    IOI = ioi_msread_mhi_format(IOI,job);
                 else
                     fprintf('Reading IOI old format (Sacre-Coeur)...\n');
                     IOI = ioi_msread_old_format(IOI,job);

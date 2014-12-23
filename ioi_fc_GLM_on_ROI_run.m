@@ -109,6 +109,15 @@ for SubjIdx=1:length(job.IOImat)
                                                         % Brain signal regression succesful!
                                                         IOI.fcIOS.SPM(1).wholeImageRegressOK{s1, c1} = true;
                                                         fprintf('\nGlobal brain signal regressed from %s whole images in Session %d Color %d (%s) done!\n',IOI.subj_name,s1,c1,colorNames{1+c1})
+                                                    else
+                                                        %% Just copy the filtered signal
+                                                        yRegress = y;
+                                                        filtNdownfnameRegress = fullfile(sessionDir,[IOI.subj_name '_OD_' IOI.color.eng(c1) '_regress_' sprintf('%05d',1) 'to' sprintf('%05d',IOI.sess_res{s1}.n_frames) '.nii']);
+                                                        % Save NIFTI file
+                                                        ioi_save_nifti(yRegress, filtNdownfnameRegress, dim);
+                                                        % Brain signal regression succesful!
+                                                        IOI.fcIOS.SPM(1).wholeImageRegressOK{s1, c1} = true;
+                                                        fprintf('\nGlobal brain signal NOT regressed from %s whole images in Session %d Color %d (%s) done!\n',IOI.subj_name,s1,c1,colorNames{1+c1})
                                                     end
                                                     
                                                     % Update SPM matrix info
@@ -207,6 +216,20 @@ for SubjIdx=1:length(job.IOImat)
                                                                 subplot(313); plot(ROIregress{r1}{s1, c1});
                                                                 title(sprintf('Global signal regressed from ROI time-course %d, S%d, C%d (%s)',r1,s1,c1,colorNames{1+c1}),'FontSize',14);
                                                             end
+                                                        else
+                                                            %% Just copy the filtered signal
+                                                            ROIregress{r1}{s1, c1} = y;
+                                                            % Brain signal regression succesful!
+                                                            IOI.fcIOS.SPM(1).ROIregressOK{r1}{s1, c1} = true;
+                                                            
+                                                            % Identify in IOI the file name of the time series
+                                                            IOI.fcIOS.SPM(1).fnameROIregress = fnameROIregress;
+                                                            fprintf('\nGlobal brain signal NOT regressed from %s ROI %d (%s) Session %d Color %d (%s) done!\n',IOI.subj_name,r1,IOI.ROIname{r1},s1,c1,colorNames{1+c1})
+                                                            if job.generate_figures
+                                                                spm_figure('GetWin', 'Graphics');
+                                                                subplot(313); plot(ROIregress{r1}{s1, c1});
+                                                                title(sprintf('Global signal NOT regressed from ROI time-course %d, S%d, C%d (%s)',r1,s1,c1,colorNames{1+c1}),'FontSize',14);
+                                                            end
                                                         end
                                                         
                                                         % Update SPM matrix info
@@ -281,9 +304,10 @@ for SubjIdx=1:length(job.IOImat)
                         
                         %% GLM regression succesful!
                         IOI.fcIOS.SPM(1).GLMOK = true;
-                        if job.regressBrainSignal == 1,
+                        % Save IOI.fcIOS.SPM.fnameROIregress anyway!
+                        %if job.regressBrainSignal == 1,
                             save(fnameROIregress,'ROIregress');
-                        end
+                        %end
                         if job.cleanupGLM
                             % Keeps only NIfTI files of succesfully regressed ROIs
                             IOI.fcIOS.SPM.cleanupOK = ioi_fc_GLM_on_ROI_cleanup(IOI, job);
