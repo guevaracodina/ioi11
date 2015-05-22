@@ -7,7 +7,7 @@ function [periods_after_qrs_peak,bpm, qrs]=ioi_find_ECG_peaks(acqui_info,display
 %                    École Polytechnique de Montréal
 %_______________________________________________________________________________
 
-threshold=.5; %this is the fraction of the highest peak each peak must be to be detected
+threshold=.5; %this is the fraction (0.5) of the highest peak each peak must be to be detected
 max_bpm=800; % this is the maximum bpm an animal can reach
 time_between_peaks=1/max_bpm*60; %this is the minimum time between peaks in seconds
 
