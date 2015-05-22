@@ -1,12 +1,18 @@
 %% ECG example
+clear; close all; clc
 addpath(genpath('C:\spm8\toolbox\ioi11')); clc
 % 1. Crear un vector tiempo de n puntos muestreado a 1000 Hz
-Fs = 1000; %sampling rate
+Fs = 1000; %sampling rate for ECG
 Ts = 1/Fs; %sampling time interval
+% Il y a 3 dérivées ECG qui sont bonnes, soit ECG2 à 4. Température 1 est
+% la température de surface, température 2 est la température rectale.
+% 
+% Les fréquences d'échantillonnages sont: ECG: 1000 Hz, Respiration: 250
+% Hz, Température: 10 Hz.
 
 % Change to signal of interest (ECG2-ECG4)
 % ECG.mat is just an example from mice
-load('C:\Edgar\Data\OIS_Data\12_10_18,NC09\ECG.mat');
+% load('C:\Edgar\Data\OIS_Data\12_10_18,NC09\ECG.mat');
 
 % Read ECG data and convert to mV
 % Change folder as needed
@@ -71,38 +77,13 @@ fclose(fid);
 % Read sample ECG as column (only first 360 seconds)
 % ECGsignal = ECG(1:360000);      % Example ECG
 ECGsignal = ECG2;             % Rat pups ECG (ECG2/3/4)
-% Convert to column
-ECGsignal = ECGsignal';
-% clear ECG;
-
-%% FFT of ECG signal
+% Convert to Row
+% Convert to Row
+if size(ECGsignal,1)~= 1
+    ECGsignal = ECGsignal';
+end
 n = length(ECGsignal); %number of samples
 t = (0:n-1)*Ts; %time vector
-N=length(ECGsignal);
-%this part of the code generates that frequency axis
-if mod(N,2)==0
-    k=-N/2:N/2-1; % N even
-else
-    k=-(N-1)/2:(N-1)/2; % N odd
-end
-T=N/Fs;
-freq=k/T;  %the frequency axis
-
-figure; set(gcf, 'color', 'w')
-subplot(221)
-plot(t,ECGsignal)
-title('Raw ECG')
-xlabel('t (s)')
-xlim([202 203.5])
-
-%% takes the fft of the signal, and adjusts the amplitude accordingly
-ECGfft=fft(ECGsignal)/N; % normalize the data
-ECGfft=fftshift(ECGfft); %shifts the fft data so that it is centered
-subplot(223)
-plot(freq,abs(ECGfft))
-title('FFTSHIFT(FFT(ECGsignal)))')
-xlabel('f (Hz)')
-xlim([0 Fs/2]);
 
 %% Filter
 fType = 'butter';
@@ -111,40 +92,25 @@ filterOrder = 4;
 % Band-pass filter configuration
 [z, p, k] = temporalBPFconfig(fType, Fs, BPFfreq, filterOrder);
 ECGfilt = temporalBPFrun(ECGsignal, z, p, k);
-subplot(222)
+figure; set(gcf,'color','w')
+subplot(121)
+plot(t, ECGsignal)
+title('Raw ECG')
+xlabel('t (s)')
+xlim([202 203.5])
+
+subplot(122)
 plot(t, ECGfilt)
 title('Filtered ECG')
 xlabel('t (s)')
 xlim([202 203.5])
 
-%% FFT of filtered ECG
-ECGsignal = ECGfilt;
-n = length(ECGsignal); %number of samples
-t = (0:n-1)*Ts; %time vector
-N=length(ECGsignal);
-%this part of the code generates that frequency axis
-if mod(N,2)==0
-    k=-N/2:N/2-1; % N even
-else
-    k=-(N-1)/2:(N-1)/2; % N odd
-end
-T=N/Fs;
-freq=k/T;  %the frequency axis
 
-%takes the fft of the signal, and adjusts the amplitude accordingly
-ECGfft=fft(ECGsignal)/N; % normalize the data
-ECGfft=fftshift(ECGfft); %shifts the fft data so that it is centered
-subplot(224)
-plot(freq,abs(ECGfft))
-title('FFTSHIFT(FFT(Filtered)))')
-xlabel('f (Hz)')
-xlim(BPFfreq)
-
-%% Retrieving bpm
+%% Retrieving bpm (ECG)
 tic
 % addpath(genpath('C:\spm8\toolbox\oct12'))
 % Wrapper function to use OCT tool subfunction_find_ECG_peaks
-acqui_info.ecg_signal = ECGsignal;
+acqui_info.ecg_signal = ECGfilt;
 
 % ECG sampling period in micro-seconds
 acqui_info.line_period_us = Ts*1e6;
@@ -165,5 +131,59 @@ plot(qrs.peaks_position, qrs.peaks_rate)
 ylabel('Heart rate (Hz)');
 xlabel('t (s)')
 toc
+
+%% Retrieving bpm (Respiration)
+tic; clc
+% Convert to Row
+if size(Resp,1)~= 1
+    Resp = Resp';             % Rat pups respiration
+end
+RespN = length(Resp); %number of samples
+RespFs = 250; %sampling rate for ECG
+RespTs = 1/RespFs; %sampling time interval
+RespT = (0:RespN-1)*RespTs; %time vector
+
+% Respiration Filter
+fType = 'butter';
+BPFfreq = [2 20]; % BPFfreq = [0.2 100];
+filterOrder = 8;
+% Band-pass filter configuration
+[z, p, k] = temporalBPFconfig(fType, RespFs, BPFfreq, filterOrder);
+RespFilt = temporalBPFrun(Resp, z, p, k);
+figure; set(gcf,'color','w')
+subplot(121)
+plot(RespT, Resp)
+title('Raw Respiration')
+xlabel('t (s)')
+xlim([202 203.5])
+
+subplot(122)
+plot(RespT, RespFilt)
+title('Filtered Respiration')
+xlabel('t (s)')
+xlim([202 203.5])
+% Wrapper function to use OCT tool subfunction_find_ECG_peaks
+acqui_info.ecg_signal = RespFilt;
+
+% ECG sampling period in micro-seconds
+acqui_info.line_period_us = RespTs*1e6;
+
+% Number of A-lines per ramp
+acqui_info.ramp_length = 100;
+
+% Do not display plot
+display_plots = false;
+
+% Compute instantaneous heart rate
+[~, RespBpm, RespQrs] = ioi_find_ECG_peaks(acqui_info,display_plots);
+
+% Display heart rate
+figure; set(gcf, 'color', 'w')
+plot(RespQrs.peaks_position, RespQrs.peaks_rate)
+% Save qrs to a file
+ylabel('Respiration rate (Hz)');
+xlabel('t (s)')
+toc
+
 % EOF
 

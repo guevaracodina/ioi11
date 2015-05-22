@@ -1,5 +1,5 @@
 %Read ECG data and convert to mV
-pathName = 'C:\Edgar\Data\IOIData20141023\Physio Monitoring\103931_K01';
+pathName = 'C:\Edgar\Data\IOIData20141211\Physio Monitoring\104650';
 cd (pathName)
 fid=fopen('ECG1.bin','r');
 data = uint8(fread(fid));
@@ -59,7 +59,7 @@ fclose(fid);
 Fs = 1000; %sampling rate
 Ts = 1/Fs; %sampling time interval
 % Change to signal of interest (ECG1-ECG4)
-ECGsignal = ECG3;
+ECGsignal = ECG2;
 n = length(ECGsignal); %number of samples
 t = (0:n-1)*Ts; %time vector
 N=length(ECGsignal);
@@ -82,17 +82,16 @@ xlabel('f (Hz)')
 
 %% Filter
 fType = 'butter';
-BPFfreq = [0.2 400];
+BPFfreq = [0.2 58];
 filterOrder = 4;
 % Band-pass filter configuration
 [z, p, k] = temporalBPFconfig(fType, Fs, BPFfreq, filterOrder);
 Yfilt = temporalBPFrun(ECGsignal, z, p, k);
 
 %% FFT of filtered ECG
-ECGsignal = Yfilt;
 n = length(ECGsignal); %number of samples
 t = (0:n-1)*Ts; %time vector
-N=length(ECGsignal);
+N=length(Yfilt);
 %this part of the code generates that frequency axis
 if mod(N,2)==0
     k=-N/2:N/2-1; % N even
@@ -103,11 +102,31 @@ T=N/Fs;
 freq=k/T;  %the frequency axis
 
 %takes the fft of the signal, and adjusts the amplitude accordingly
-Y3=fft(ECGsignal)/N; % normalize the data
+Y3=fft(Yfilt)/N; % normalize the data
 Y3=fftshift(Y3); %shifts the fft data so that it is centered
 subplot(212)
 plot(freq,abs(Y3))
 title('FFTSHIFT(FFT(Filtered)))')
 xlabel('f (Hz)')
 
-
+%% Plot ECG and respiration
+figure; set (gcf,'color','w')
+% ECG
+subplot(211)
+plot(t, ECGsignal, 'k-', 'LineWidth', 1);
+xlabel('t (s)', 'FontSize', 14)
+ylabel('Amplitude (ADC counts)', 'FontSize', 14)
+title('ECG', 'FontSize', 14)
+set(gca, 'FontSize', 14)
+axis tight
+xlim([210 212]);
+% Respiration
+tResp = (0:n-1)*Ts; %time vector
+subplot(212)
+plot(t, ECGsignal, 'k-', 'LineWidth', 1);
+xlabel('t (s)', 'FontSize', 14)
+ylabel('Amplitude (ADC counts)', 'FontSize', 14)
+title('ECG', 'FontSize', 14)
+set(gca, 'FontSize', 14)
+axis tight
+xlim([210 212]);
