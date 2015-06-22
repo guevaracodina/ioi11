@@ -63,7 +63,7 @@ t = 0:resp_Ts:(numel(physio.Resp)-1).*resp_Ts;
 % [z, p, k] = temporalBPFconfig(fType, ECG_freq, BPFfreq, filterOrder);
 % ECGfilt = temporalBPFrun(ECG2, z, p, k);
 
-%%  Optimal Minimum Order Designs
+%%  Optimal Minimum Order Designs (BPF from 0.01 to 30 Hz)
 % Fp1 — frequency at the edge of the start of the pass band. Specified in
 % normalized frequency units. Also called Fpass1. }
 Fp1 = 0.03*2/resp_freq;
@@ -130,27 +130,40 @@ pack
 q = round(resp_freq);
 p = round(Fs);
 % Cut data to experiment length
-respFilt = respFilt(1:size(y,2)*resp_freq+1);
-t = t(1:size(y,2)*resp_freq+1);
+nT = size(y,2)*resp_freq;
+respFilt = respFilt(1:nT);
+t = t(1:nT);
 
 %% Memory-mapping
 tic
+clear im_obj
 fmem_name=fullfile(pathNameParent, [IOI.subj_name '_resampled.dat']);
 fid = fopen(fmem_name,'w');
-fwrite(fid, zeros([size(y,1) size(y,2)*resp_freq+1]), 'int16');
+nPix = size(y,1)+1;             % Number of pixel time-traces
+fwrite(fid, zeros([nPix nT]), 'double');
 fclose(fid);
 im_obj = memmapfile(fmem_name,...
-        'Format',{'double' [size(y,1) size(y,2)*resp_freq+1] 'data'}, ...
+        'Format',{'double' [nPix nT] 'Frames'}, ...
         'writable',true);
 toc    
+
 %% Interpolate & Resample
 % [ECGresamp,b] = resample(ECGfilt,p,q);
-[yResamp,b] = resample(y,q,p);
-
+tic
+ioi_text_waitbar(0, 'Please wait...');
 % Concatenate data
-y = [respFilt'; y];
-% y = y'; % [nChannels x nTimePoints] e.g. [5562 x 360]
+im_obj.Data.Frames(1,:) = respFilt;
+% [yResamp,b] = resample(y,q,p);
+
+for iPix = 2:nPix
+    im_obj.Data.Frames(iPix,:) = resample(y(iPix-1,:),q,p);
+    % Update progress bar
+      ioi_text_waitbar(iPix/nPix, sprintf('Processing event %d from %d', iPix, nPix));
+end
+ioi_text_waitbar('Clear');
+toc
+
 %% Write data to be imported in Analyzer2
-fwrite_NIR(fullfile(pathNameParent,[IOI.subj_name '_ECG_noCB.nir']), y);
+fwrite_NIR(fullfile(pathNameParent,[IOI.subj_name '_resp_noCB.nir']), im_obj.Data.Frames);
 
 % EOF
