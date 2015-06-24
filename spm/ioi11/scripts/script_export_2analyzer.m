@@ -52,7 +52,7 @@ ECG_freq = 1000;        % sampling rate (EKG)
 ECG_Ts = 1/ECG_freq;    % sampling time (EKG) interval
 resp_freq = 250;        % sampling rate (respiration)
 resp_Ts = 1/resp_freq;  % sampling time (respiration) interval
-t = 0:resp_Ts:(numel(physio.Resp)-1).*resp_Ts;
+t = 0:resp_Ts:(numel(physio.Resp)-1)*resp_Ts;
 
 %% ECG filtering
 % % 10-200 Hz, Butterworth three-order filter
