@@ -163,7 +163,7 @@ try
     % [ECGresamp,b] = resample(ECGfilt,p,q);
     tic
     ioi_text_waitbar(0, 'Please wait...');
-    % Concatenate data
+    % Concatenate data, first channel is respiration data
     im_obj.Data.Frames(1,:) = respFilt;
     % [yResamp,b] = resample(y,q,p);
     
@@ -176,19 +176,25 @@ try
     toc
     
     %% Write data to be imported in Analyzer2
-    fwrite_NIR(fullfile(pathNameParent,[IOI.subj_name '_resp_noCB.nir']), im_obj.Data.Frames);
-    % .vhdr parameters
-    OutputFile
-    DataFile
-    CreatingFunction
-    ChannelResolution
-    ChannelUnits
-    ChannelLabels
-    SamplingInterval
+    DataFileNIR         = fullfile(pathNameParent,[IOI.subj_name '_resp_noCB.nir']);
+    fwrite_NIR(DataFileNIR, im_obj.Data.Frames);
+    % Delete memory-mapped file
+    delete(fmem_name);
+    
+    %% .vhdr parameters
+    DataFile            = fullfile('D:\Edgar\IOI_raw\',[IOI.subj_name '_resp_noCB.nir']);
+    OutputFile          = fullfile(pathNameParent,[IOI.subj_name '_resp_noCB.vhdr']);
+    CreatingFunction    = mfilename;
+    ChannelResolution   = '1';
+    ChannelUnits        = 'µV';
+    ChannelLabels       = cellstr(int2str((1:nPix)'));
+    ChannelLabels{1}    = 'Resp';               % 1st channel is respiration
+    SamplingInterval    = round(1e6/resp_freq); % in µs
+    dataPoints          = nT;
     % Create .vhdr file
     ioi_boxy_write_header(OutputFile,DataFile,...
     CreatingFunction,ChannelResolution,ChannelUnits,...
-    ChannelLabels,SamplingInterval)
+    ChannelLabels,SamplingInterval,dataPoints)
     OK = true;
 catch exception
     disp(exception.identifier)
