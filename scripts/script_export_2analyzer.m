@@ -57,15 +57,15 @@ pathNamePhysioList{19} = 'C:\Edgar\Data\IOIData20141211\Physio Monitoring\123555
 pathNamePhysioList{20} = 'C:\Edgar\Data\IOIData20141211\Physio Monitoring\121423';
 
 %% Batch processing of data to be exported to analyzer 2. Do not forget to create the header files
-nSessions = 1;
+nSessions = 3;
 % nSessions =  numel(pathNameParentList);
-for iSessions = 1:nSessions,
-    OK(iSessions) = ioi_export_2analyzer (pathNameParent, pathNamePhysio);
+for iSessions = 3:nSessions,
+    OK(iSessions) = ioi_export_2analyzer (pathNameParentList{iSessions}, pathNamePhysioList{iSessions});
 end
 
 %% Send e-mail
 % List of open inputs
-nrun = X; % enter the number of runs here
+nrun = 1; % enter the number of runs here
 jobfile = {'C:\Edgar\Dropbox\PostDoc\Newborn\script_batch_analyzer_export_job.m'};
 jobs = repmat(jobfile, 1, nrun);
 inputs = cell(0, nrun);
