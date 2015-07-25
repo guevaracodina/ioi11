@@ -1,12 +1,13 @@
 function ioi_boxy_write_header(OutputFile,DataFile,...
     CreatingFunction,ChannelResolution,ChannelUnits,...
-    ChannelLabels,SamplingInterval)
-%info required
-%DataFile
-%MarkerFile
-%NumberOfChannels
-%SamplingInterval
-%Channel Names, given as a column of cells
+    ChannelLabels,SamplingInterval,dataPoints)
+% info required
+% DataFile
+% MarkerFile
+% NumberOfChannels
+% SamplingInterval
+% Channel Labels, given as a column of cells
+% dataPoints
 NumberOfChannels=size(ChannelLabels,1);
 
 fid = fopen(OutputFile,'wt'); %write
@@ -16,9 +17,8 @@ fprintf(fid,'%s\n%s%s\n\n%s\n%s\n',... %
 '; Data created by ',CreatingFunction,...
 '[Common Infos]',...
 'Codepage=UTF-8');
-
 %names of the files associated with the header
-fprintf(fid,'%s%s\n%s%s\n',... %
+fprintf(fid,'%s%s\n',... %
 'DataFile=',DataFile);
 %more text
 fprintf(fid,'%s\n%s\n%s\n%s\n%s%s\n',... %
@@ -27,26 +27,24 @@ fprintf(fid,'%s\n%s\n%s\n%s\n%s%s\n',... %
 'DataOrientation=MULTIPLEXED','DataType=TIMEDOMAIN',...
 'NumberOfChannels=',int2str(NumberOfChannels));
 %more text
-fprintf(fid,'%s\n%s\n%s%s\n\n',... %
+fprintf(fid,'%s\n%s\n%s%s\n',... %
 '; Sampling interval in microseconds if time domain (convert to Hertz:',...
 '; 1000000 / SamplingInterval) or in Hertz if frequency domain:',...
 'SamplingInterval=',int2str(SamplingInterval));
 %more text
-%fprintf(fid,'%s\n%s\n%s\n%s\n\n',... %
-%'Averaged=NO','SegmentDataPoints=0','SegmentationType=NOTSEGMENTED',...
-%'DataPoints=0');
+fprintf(fid,'%s\n%s\n%s\n%s%s\n\n',... %
+'Averaged=NO','SegmentDataPoints=0','SegmentationType=NOTSEGMENTED',...
+'DataPoints=',int2str(dataPoints));
+
 %more text
-% fprintf(fid,'%s\n%s\n%s\n%s\n%s\n%s\n%s\n\n',... %
-% '[ASCII Infos]',...
-% '; Decimal symbol for floating point numbers: the header file always uses a dot (.),',...
-% '; however the data file might use a different one',...
-% 'DecimalSymbol=.',...
-% '; SkipLines, SkipColumns: leading lines and columns with additional informations.',...
-% 'SkipLines=0','SkipColumns=0');
-%more text
-fprintf(fid,'%s\n%s\n\n',... %
+fprintf(fid,'%s\n%s\n%s\n%s\n%s\n%s\n%s\n\n',... %
  '[BINARY Infos]',...
- 'BinaryFormat=IEEE_FLOAT_32'); %INT_16'); %IEEE_FLOAT_32');
+ 'BinaryFormat=IEEE_FLOAT_32',... %INT_16'); %IEEE_FLOAT_32');
+ 'ChannelOffset=0',...
+ 'DataOffset=0',...
+ 'SegmentHeaderSize=0',...
+ 'TrailerSize=0',...
+ 'UseBigEndianOrder=NO');
 
 %more text
 fprintf(fid,'%s\n%s\n%s\n%s\n%s\n',... %
