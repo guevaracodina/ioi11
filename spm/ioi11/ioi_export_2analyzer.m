@@ -32,48 +32,10 @@ try
     Ts = 1/Fs;
     
     %% Load EKG & Respiration Data
-    %  pathNamePhysio = 'C:\Edgar\Data\IOIData20141016\Physio_Monitoring\150642_J03';
-    % pathNamePhysio = 'C:\Edgar\Data\IOIData20141023\Physio Monitoring\111141_K04';
-    % pathNamePhysio = 'C:\Edgar\Data\IOIData20141211\Physio Monitoring\121423';
-    % cd (pathNamePhysio)
     physio = ioi_Bin2Mat(pathNamePhysio);
-    % fid=fopen(fullfile(pathNamePhysio,'ECG1.bin'),'r');
-    % data = uint8(fread(fid));
-    % ECG1 = double(swapbytes(typecast(data,'int32')))/8388608*2400;
-    % fclose(fid);
-    % fid=fopen(fullfile(pathNamePhysio,'ECG2.bin'),'r');
-    % data = uint8(fread(fid));
-    % ECG2 = double(swapbytes(typecast(data,'int32')))/8388608*2400;
-    % fclose(fid);
-    % fid=fopen(fullfile(pathNamePhysio,'ECG3.bin'),'r');
-    % data = uint8(fread(fid));
-    % ECG3 = double(swapbytes(typecast(data,'int32')))/8388608*2400;
-    % fclose(fid);
-    % fid=fopen(fullfile(pathNamePhysio,'ECG4.bin'),'r');
-    % data = uint8(fread(fid));
-    % ECG4 = double(swapbytes(typecast(data,'int32')))/8388608*2400;
-    % fclose(fid);
-    %
-    % %Read resp data
-    % fid=fopen(fullfile(pathNamePhysio,'resp.bin'),'r');
-    % data = uint8(fread(fid));
-    % Resp = double(swapbytes(typecast(data,'int16')));
-    % fclose(fid);
-    
-    % ECG_freq = 1000;        % sampling rate (EKG)
-    % ECG_Ts = 1/ECG_freq;    % sampling time (EKG) interval
     resp_freq = 250;        % sampling rate (respiration)
     resp_Ts = 1/resp_freq;  % sampling time (respiration) interval
     t = 0:resp_Ts:(numel(physio.Resp)-1)*resp_Ts;
-    
-    %% ECG filtering
-    % % 10-200 Hz, Butterworth three-order filter
-    % fType = 'butter';
-    % BPFfreq = [2 100];
-    % filterOrder = 4;
-    % % Band-pass filter configuration
-    % [z, p, k] = temporalBPFconfig(fType, ECG_freq, BPFfreq, filterOrder);
-    % ECGfilt = temporalBPFrun(ECG2, z, p, k);
     
     %%  Optimal Minimum Order Designs (BPF from 0.01 to 30 Hz)
     % Fp1 — frequency at the edge of the start of the pass band. Specified in
@@ -120,7 +82,7 @@ try
     hline = get(haxes,'children');
     set(hline(1), 'Color', [0 0 204]/255, 'LineWidth',2);
     set(hline(2), 'Color',  myColor, 'LineWidth',2);
-    % set(hline(3), 'Color', 'k', 'LineWidth',2);
+    title(pathNameParent);
     
     %% Apply filter to the signal
     b =  get(Hd,'Numerator');   % N = 75
@@ -133,11 +95,13 @@ try
     hold on
     plot(t,respFilt)
     xlim([115 118]);
+    legend({'Raw' 'Filtered'}, 'FontSize', 14)
+    title(pathNameParent);
     
     %% Compute resampling ratio
     % Free up memory
     clear b physio
-    pack
+%     pack
     % resampling at p/q times the original sampling rate
     q = round(resp_freq);
     p = round(Fs);
@@ -179,6 +143,7 @@ try
     DataFileNIR         = fullfile(pathNameParent,[IOI.subj_name '_resp_noCB.nir']);
     fwrite_NIR(DataFileNIR, im_obj.Data.Frames);
     % Delete memory-mapped file
+    clear im_obj
     delete(fmem_name);
     
     %% .vhdr parameters
