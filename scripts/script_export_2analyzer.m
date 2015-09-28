@@ -57,9 +57,9 @@ pathNamePhysioList{19} = 'C:\Edgar\Data\IOIData20141211\Physio Monitoring\123555
 pathNamePhysioList{20} = 'C:\Edgar\Data\IOIData20141211\Physio Monitoring\121423';
 
 %% Batch processing of data to be exported to analyzer 2. Do not forget to create the header files
-nSessions = 3;
+nSessions = 1;
 % nSessions =  numel(pathNameParentList);
-for iSessions = 3:nSessions,
+for iSessions = 1:nSessions,
     OK(iSessions) = ioi_export_2analyzer (pathNameParentList{iSessions}, pathNamePhysioList{iSessions});
 end
 

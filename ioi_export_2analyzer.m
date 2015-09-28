@@ -82,7 +82,7 @@ try
     hline = get(haxes,'children');
     set(hline(1), 'Color', [0 0 204]/255, 'LineWidth',2);
     set(hline(2), 'Color',  myColor, 'LineWidth',2);
-    title(pathNameParent);
+    title(IOI.subj_name);
     
     %% Apply filter to the signal
     b =  get(Hd,'Numerator');   % N = 75
@@ -96,7 +96,7 @@ try
     plot(t,respFilt)
     xlim([115 118]);
     legend({'Raw' 'Filtered'}, 'FontSize', 14)
-    title(pathNameParent);
+    title(IOI.subj_name);
     
     %% Compute resampling ratio
     % Free up memory
@@ -106,7 +106,7 @@ try
     q = round(resp_freq);
     p = round(Fs);
     % Cut data to experiment length
-    nT = size(y,2)*resp_freq;
+    nT = min(size(y,2)*resp_freq, numel(t));
     respFilt = respFilt(1:nT);
     t = t(1:nT);
     

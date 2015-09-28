@@ -1,6 +1,7 @@
 %% script_fcOIS_movie
 % script demonstrating the principle of seed-based functional connectivity
-pathName    = 'F:\Edgar\Dropbox\PhD\Thesis\Figures\fcOIS_movie';
+% pathName    = 'F:\Edgar\Dropbox\PhD\Thesis\Figures\fcOIS_movie';
+pathName    = 'C:\Edgar\OneDrive for Business\Poly\PhD\Thesis\Figures';
 fileName    = 'fcOIS_resting_state.avi';
 vidWidth    = 640/2;
 vidHeight   = 480/2;
