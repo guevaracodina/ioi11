@@ -74,6 +74,13 @@ for SubjIdx=1:length(job.IOImat)
                                                 % signal just to test
                                                 SPM.xX.name = cellstr(['Global Brain Signal']);
                                                 SPM.xX.X = brainSignal';        % Regression is along first dimension. For one regressor it is a column vector.
+                                                if job.heartRate
+                                                    load(IOI.fcIOS.SPM.physioHeartFile{1})
+                                                    heartRate = physio.heartRate(1:numel(brainSignal));
+                                                    SPM.xX.name = {'Global Brain Signal' 'Heart Rate'};
+                                                    selectedRegressorsArray = [brainSignal' heartRate];
+                                                    SPM.xX.X = selectedRegressorsArray;        % Regression is along first dimension. For one regressor it is a column vector.
+                                                end
                                                 
                                                 % A revoir
                                                 SPM.xX.iG = [];
@@ -91,24 +98,51 @@ for SubjIdx=1:length(job.IOImat)
                                                 fprintf('\nPerforming GLM on %s whole images, Session %d Color %d (%s)...\n',IOI.subj_name,s1,c1,colorNames{1+c1})
                                                 try
                                                     % GLM is performed here
+                                                    % at whole image level.
+                                                    % Orlando!
                                                     SPM = spm_spm(SPM);
                                                     
                                                     if job.regressBrainSignal == 1,
+                                                        % EGC: Remember to
+                                                        % uncomment this
+                                                        % section to make a
+                                                        % cleaner code
                                                         % Subtract global brain signal
                                                         % from every pixel time course
-                                                        betaVol = spm_vol(fullfile(SPM.swd,SPM.Vbeta.fname));
-                                                        beta = spm_read_vols(betaVol);
+%                                                         betaVol = spm_vol(fullfile(SPM.swd,SPM.Vbeta.fname));
+%                                                         beta = spm_read_vols(betaVol);
                                                         % Create a single voxel 4-D
                                                         % series
-                                                        brainSignalRep(1,1,1,:) = brainSignal;
-                                                        yRegress = y - repmat(beta,[1 1 1 size(y,4)]) .* repmat(brainSignalRep,[size(beta,1) size(beta,2) 1 1]);
-                                                        
+%                                                         brainSignalRep(1,1,1,:) = brainSignal;
+%                                                         yRegress = y - repmat(beta,[1 1 1 size(y,4)]) .* repmat(brainSignalRep,[size(beta,1) size(beta,2) 1 1]);
+                                                        if job.heartRate
+                                                            beta = [];
+                                                            for iRegressors = 1:size(SPM.xX.X,2)
+                                                                betaVol{iRegressors} = spm_vol(fullfile(SPM.swd,SPM.Vbeta(iRegressors).fname));
+                                                                betaCell{iRegressors} = spm_read_vols(betaVol{iRegressors});
+                                                                beta = [beta, betaCell{iRegressors}(:)];
+                                                            end
+                                                            signaltoRegress = beta * selectedRegressorsArray';
+                                                            % Create a single voxel 4-D series
+                                                            signaltoRegress = reshape(signaltoRegress,[size(y,1) size(y,2) 1 size(y,4)]);
+                                                            % Subtract ROIs signal from every pixel time course
+                                                            yRegress = y - signaltoRegress;
+%                                                             filtNdownfnameRegress = fullfile(sessionDir,[IOI.subj_name '_OD_' IOI.color.eng(c1) '_regress_' sprintf('%05d',1) 'to' sprintf('%05d',IOI.sess_res{s1}.n_frames) '.nii']);
+% 
+%                                                             % Save NIFTI file
+%                                                             ioi_save_nifti(yRegress, filtNdownfnameRegress, dim);
+%                                                             % Brain signal regression succesful!
+%                                                             IOI.fcIOS.SPM(1).wholeImageRegressOK{s1, c1} = true;
+                                                            fprintf('\nHeart rate regressed from %s whole images in Session %d Color %d (%s) done!\n',IOI.subj_name,s1,c1,colorNames{1+c1})
+                                                        end
                                                         filtNdownfnameRegress = fullfile(sessionDir,[IOI.subj_name '_OD_' IOI.color.eng(c1) '_regress_' sprintf('%05d',1) 'to' sprintf('%05d',IOI.sess_res{s1}.n_frames) '.nii']);
                                                         % Save NIFTI file
                                                         ioi_save_nifti(yRegress, filtNdownfnameRegress, dim);
                                                         % Brain signal regression succesful!
                                                         IOI.fcIOS.SPM(1).wholeImageRegressOK{s1, c1} = true;
                                                         fprintf('\nGlobal brain signal regressed from %s whole images in Session %d Color %d (%s) done!\n',IOI.subj_name,s1,c1,colorNames{1+c1})
+
+                                                        
                                                     else
                                                         %% Just copy the filtered signal
                                                         yRegress = y;
@@ -177,6 +211,8 @@ for SubjIdx=1:length(job.IOImat)
                                                     % the mean global signal
                                                     % just to test
                                                     SPM.xX.name = cellstr(['Global Brain Signal']);
+                                                    % Orlando: Add heart
+                                                    % rate signal
                                                     SPM.xX.X = brainSignal';        % Regression is along first dimension. For one regressor it is a column vector.
                                                     
                                                     % A revoir
@@ -203,6 +239,9 @@ for SubjIdx=1:length(job.IOImat)
                                                             % courses
                                                             betaVol = spm_vol(fullfile(SPM.swd,SPM.Vbeta.fname));
                                                             beta = spm_read_vols(betaVol);
+                                                            % Orlando: Add
+                                                            % heart rate
+                                                            % signal
                                                             ROIregress{r1}{s1, c1} = y - beta * brainSignal;
                                                             
                                                             % Brain signal regression succesful!

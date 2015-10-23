@@ -37,56 +37,63 @@ try
     resp_Ts = 1/resp_freq;  % sampling time (respiration) interval
     t = 0:resp_Ts:(numel(physio.Resp)-1)*resp_Ts;
     
-    %%  Optimal Minimum Order Designs (BPF from 0.01 to 30 Hz)
-    % Fp1 — frequency at the edge of the start of the pass band. Specified in
-    % normalized frequency units. Also called Fpass1. }
-    Fp1 = 0.03*2/resp_freq;
-    % Fp2 — frequency at the edge of the end of the pass band. Specified in
-    % normalized frequency units. Also called Fpass2.
-    Fp2 = 28*2/resp_freq;
-    % Fst1 — frequency at the edge of the start of the first stop band.
-    % Specified in normalized frequency units. Also called Fstop1.
-    Fst1 = 0.01*2/resp_freq;
-    % Fst2 — frequency at the edge of the start of the second stop band.
-    % Specified in normalized frequency units. Also called Fstop2.
-    Fst2 = 30*2/resp_freq;
-    % Ap — amount of ripple allowed in the pass band. Also called Apass.
-    Ap = 1;
-    % Ast1 — attenuation in the first stop band in decibels (the default
-    % units). Also called Astop1.
-    Ast1 = 30;
-    Ast2 = Ast1;
-    Hf = fdesign.bandpass('Fst1,Fp1,Fp2,Fst2,Ast1,Ap,Ast2',Fst1,Fp1,Fp2,Fst2,Ast1,Ap,Ast2);
-    % Equiripple designs result in the lowpass
-    % filter with the smallest possible order to meet a set of specifications.
-    Hd = design(Hf,'equiripple','systemobject',true);
-    measure(Hd)
-    hfvt = fvtool(Hd,'Color','White');
-    legend(hfvt,'Equiripple design')
-    
-    % -------------------- Cosmetic changes -----------------------------------
-    % My Red Color
-    myColor = [204 0 0]/255;
-    % set(gca,'FontSize', 12)
-    legend({'Equiripple design'}, 'FontSize', 14)
-    figureHandle = gcf;
-    %# make all text in the figure to size 14 and bold
-    set(findall(figureHandle,'type','text'),'fontSize',14)
-    gcachild = get(gca,'Children');
-    set(gca, 'Xcolor', 'k');
-    set(gca, 'Ycolor', 'k');
-    set(gcachild, 'Linewidth', 2);
-    % Change plot marker
-    hchildren = get(hfvt,'children');
-    haxes = hchildren(strcmpi(get(hchildren,'type'),'axes'));
-    hline = get(haxes,'children');
-    set(hline(1), 'Color', [0 0 204]/255, 'LineWidth',2);
-    set(hline(2), 'Color',  myColor, 'LineWidth',2);
-    title(IOI.subj_name);
-    
+    %% Check if filter coefficients are saved to a file
+    if ~exist(fullfile(fileparts(mfilename('fullpath')), 'resp_filt_coeff.mat'), 'file')
+        %%  Optimal Minimum Order Designs (BPF from 0.01 to 30 Hz)
+        % Fp1 — frequency at the edge of the start of the pass band. Specified in
+        % normalized frequency units. Also called Fpass1. }
+        Fp1 = 0.03*2/resp_freq;
+        % Fp2 — frequency at the edge of the end of the pass band. Specified in
+        % normalized frequency units. Also called Fpass2.
+        Fp2 = 28*2/resp_freq;
+        % Fst1 — frequency at the edge of the start of the first stop band.
+        % Specified in normalized frequency units. Also called Fstop1.
+        Fst1 = 0.01*2/resp_freq;
+        % Fst2 — frequency at the edge of the start of the second stop band.
+        % Specified in normalized frequency units. Also called Fstop2.
+        Fst2 = 30*2/resp_freq;
+        % Ap — amount of ripple allowed in the pass band. Also called Apass.
+        Ap = 1;
+        % Ast1 — attenuation in the first stop band in decibels (the default
+        % units). Also called Astop1.
+        Ast1 = 30;
+        Ast2 = Ast1;
+        Hf = fdesign.bandpass('Fst1,Fp1,Fp2,Fst2,Ast1,Ap,Ast2',Fst1,Fp1,Fp2,Fst2,Ast1,Ap,Ast2);
+        % Equiripple designs result in the lowpass
+        % filter with the smallest possible order to meet a set of specifications.
+        Hd = design(Hf,'equiripple','systemobject',true);
+        measure(Hd)
+        hfvt = fvtool(Hd,'Color','White');
+        legend(hfvt,'Equiripple design')
+        
+        % -------------------- Cosmetic changes -----------------------------------
+        % My Red Color
+        myColor = [204 0 0]/255;
+        % set(gca,'FontSize', 12)
+        legend({'Equiripple design'}, 'FontSize', 14)
+        figureHandle = gcf;
+        %# make all text in the figure to size 14 and bold
+        set(findall(figureHandle,'type','text'),'fontSize',14)
+        gcachild = get(gca,'Children');
+        set(gca, 'Xcolor', 'k');
+        set(gca, 'Ycolor', 'k');
+        set(gcachild, 'Linewidth', 2);
+        % Change plot marker
+        hchildren = get(hfvt,'children');
+        haxes = hchildren(strcmpi(get(hchildren,'type'),'axes'));
+        hline = get(haxes,'children');
+        set(hline(1), 'Color', [0 0 204]/255, 'LineWidth',2);
+        set(hline(2), 'Color',  myColor, 'LineWidth',2);
+        title(IOI.subj_name);
+        
+        % Get filter coefficients for the numerator
+        b =  get(Hd,'Numerator');   % N = 75
+        a = 1;  % The denominator of FIR filters is, by definition, equal to 1
+    else
+        % Retrieve filter coefficients saved in file
+        load(fullfile(fileparts(mfilename('fullpath')), 'resp_filt_coeff.mat'))
+    end
     %% Apply filter to the signal
-    b =  get(Hd,'Numerator');   % N = 75
-    a = 1;
     respFilt = filtfilt(b, a, physio.Resp);
     
     %% Plot filter and unfiltered signals
