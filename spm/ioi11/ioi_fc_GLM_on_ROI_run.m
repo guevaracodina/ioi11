@@ -76,7 +76,14 @@ for SubjIdx=1:length(job.IOImat)
                                                 SPM.xX.X = brainSignal';        % Regression is along first dimension. For one regressor it is a column vector.
                                                 if job.heartRate
                                                     load(IOI.fcIOS.SPM.physioHeartFile{1})
-                                                    heartRate = physio.heartRate(1:numel(brainSignal));
+                                                    if numel(brainSignal) <= numel(physio.heartRate)
+                                                        heartRate = physio.heartRate(1:numel(brainSignal));
+                                                    else
+                                                        heartRateZeros = zeros(size(brainSignal'));
+                                                        heartRateZeros(1:numel(physio.heartRate)) = physio.heartRate;
+                                                        heartRateZeros(numel(physio.heartRate)+1:end) = mean(physio.heartRate);
+                                                        heartRate = heartRateZeros;
+                                                    end
                                                     SPM.xX.name = {'Global Brain Signal' 'Heart Rate'};
                                                     selectedRegressorsArray = [brainSignal' heartRate];
                                                     SPM.xX.X = selectedRegressorsArray;        % Regression is along first dimension. For one regressor it is a column vector.
@@ -214,7 +221,20 @@ for SubjIdx=1:length(job.IOImat)
                                                     % Orlando: Add heart
                                                     % rate signal
                                                     SPM.xX.X = brainSignal';        % Regression is along first dimension. For one regressor it is a column vector.
-                                                    
+                                                    if job.heartRate
+                                                        load(IOI.fcIOS.SPM.physioHeartFile{1})
+                                                        if numel(brainSignal) <= numel(physio.heartRate)
+                                                            heartRate = physio.heartRate(1:numel(brainSignal));
+                                                        else
+                                                            heartRateZeros = zeros(size(brainSignal'));
+                                                            heartRateZeros(1:numel(physio.heartRate)) = physio.heartRate;
+                                                            heartRateZeros(numel(physio.heartRate)+1:end) = mean(physio.heartRate);
+                                                            heartRate = heartRateZeros;
+                                                        end
+                                                        SPM.xX.name = {'Global Brain Signal' 'Heart Rate'};
+                                                        selectedRegressorsArray = [brainSignal' heartRate];
+                                                        SPM.xX.X = selectedRegressorsArray;        % Regression is along first dimension. For one regressor it is a column vector.
+                                                    end
                                                     % A revoir
                                                     SPM.xX.iG = [];
                                                     SPM.xX.iH = [];
@@ -237,13 +257,34 @@ for SubjIdx=1:length(job.IOImat)
                                                             % Subtract global brain
                                                             % signal from ROI time
                                                             % courses
-                                                            betaVol = spm_vol(fullfile(SPM.swd,SPM.Vbeta.fname));
-                                                            beta = spm_read_vols(betaVol);
+%                                                             betaVol = spm_vol(fullfile(SPM.swd,SPM.Vbeta.fname));
+%                                                             beta = spm_read_vols(betaVol);
                                                             % Orlando: Add
                                                             % heart rate
                                                             % signal
-                                                            ROIregress{r1}{s1, c1} = y - beta * brainSignal;
                                                             
+%                                                             ROIregress{r1}{s1, c1} = y - beta * brainSignal;
+                                                            
+                                                            if job.heartRate
+                                                                beta = [];
+                                                                for iRegressors = 1:size(SPM.xX.X,2)
+                                                                    betaVol{iRegressors} = spm_vol(fullfile(SPM.swd,SPM.Vbeta(iRegressors).fname));
+                                                                    betaCell{iRegressors} = spm_read_vols(betaVol{iRegressors});
+                                                                    beta = [beta, betaCell{iRegressors}(:)];
+                                                                end
+                                                                signaltoRegress = beta * selectedRegressorsArray';
+                                                                % Create a single voxel 4-D series
+                                                                signaltoRegress = reshape(signaltoRegress,[size(y,1) size(y,2) 1 size(y,4)]);
+                                                                % Subtract ROIs signal from every pixel time course
+                                                                ROIregress{r1}{s1, c1} = y - signaltoRegress;
+                                                                %                                                             filtNdownfnameRegress = fullfile(sessionDir,[IOI.subj_name '_OD_' IOI.color.eng(c1) '_regress_' sprintf('%05d',1) 'to' sprintf('%05d',IOI.sess_res{s1}.n_frames) '.nii']);
+                                                                %
+                                                                %                                                             % Save NIFTI file
+                                                                %                                                             ioi_save_nifti(yRegress, filtNdownfnameRegress, dim);
+                                                                %                                                             % Brain signal regression succesful!
+                                                                %                                                             IOI.fcIOS.SPM(1).wholeImageRegressOK{s1, c1} = true;
+                                                                fprintf('\nHeart rate regressed from %s whole images in Session %d Color %d (%s) done!\n',IOI.subj_name,s1,c1,colorNames{1+c1})
+                                                            end
                                                             % Brain signal regression succesful!
                                                             IOI.fcIOS.SPM(1).ROIregressOK{r1}{s1, c1} = true;
                                                             
