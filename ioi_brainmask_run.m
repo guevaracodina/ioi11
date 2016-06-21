@@ -139,22 +139,24 @@ end % End of function
 
 %_______________________________________________________________________________
 % Auxiliary functions
+% EGC --> Moved to independent files, so they can be used outside
+% ioi_brainmask_run
 %_______________________________________________________________________________
-function hdr = ioi_create_vol(fname, dim, dt, pinfo, mat, n, data)
-hdr = struct('fname',fname,...
-    'dim', dim,...
-    'dt',   dt,...
-    'pinfo',pinfo,...
-    'mat',  mat,...
-    'n', n);
-hdr = spm_create_vol(hdr);
-spm_write_vol(hdr, data);
-end % End ioi_create_vol
-
-function im_anat = ioi_read_vol(nifti_anat_file)
-% Read anatomical image from nifti file
-vol = spm_vol(nifti_anat_file);
-im_anat = spm_read_vols(vol);
-end % End ioi_read_vol
+% function hdr = ioi_create_vol(fname, dim, dt, pinfo, mat, n, data)
+% hdr = struct('fname',fname,...
+%     'dim', dim,...
+%     'dt',   dt,...
+%     'pinfo',pinfo,...
+%     'mat',  mat,...
+%     'n', n);
+% hdr = spm_create_vol(hdr);
+% spm_write_vol(hdr, data);
+% end % End ioi_create_vol
+% 
+% function im_anat = ioi_read_vol(nifti_anat_file)
+% % Read anatomical image from nifti file
+% vol = spm_vol(nifti_anat_file);
+% im_anat = spm_read_vols(vol);
+% end % End ioi_read_vol
 
 % EOF

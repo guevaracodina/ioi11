@@ -42,10 +42,10 @@ IOI.ROI.ROIfname = 'D:\Edgar\OIS_Results\12_10_18,NC09\ROI.mat';
 %% sess_res field
 IOI.sess_res{1, 1}.names = 'Stim_1';
 IOI.sess_res{1, 1}.onsets = {[]};
-IOI.sess_res{1, 1}.durations{1, 1,} = [];
-IOI.sess_res{1, 1}.parameters
-IOI.sess_res{1, 1}.n_frames
-IOI.sess_res{1, 1}.fname
+IOI.sess_res{1, 1}.durations{1, 1} = [];
+IOI.sess_res{1, 1}.parameters = {[]};
+IOI.sess_res{1, 1}.n_frames = 4313;
+IOI.sess_res{1, 1}.fname{1}
 IOI.sess_res{1, 1}.si
 IOI.sess_res{1, 1}.ei
 IOI.sess_res{1, 1}.fname_median
@@ -53,32 +53,7 @@ IOI.sess_res{1, 1}.hasRGY
 IOI.sess_res{1, 1}.availCol
 IOI.sess_res{1, 1}.missingFrames
 
-ans = 
 
-    
-
-
-ans = 
-
-    
-
-
-ans = 
-
-    [1x0 double]
-
-
-ans = 
-
-    {[]}
-
-
-ans =
-
-        4313
-
-
-ans = 
 
     {1x34 cell}    {1x34 cell}    {1x34 cell}    {1x34 cell}    {34x1 cell}    {34x1 cell}
 
