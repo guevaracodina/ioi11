@@ -12,10 +12,12 @@ IOI.dir.dir_subj_raw = fullfile(IOI.dir.dir_group_raw, IOI.subj_name);
 IOI.dir.dir_subj_res = fullfile(IOI.dir.dir_group_res, IOI.subj_name);
 
 %% Read HbO Data
+tic
 load(fullfile(IOI.dir.dir_subj_raw,'Dim_binFile.mat'));
 fileID=fopen(fullfile(IOI.dir.dir_subj_raw,'HbO.bin'),'r');
 HbO = fread(fileID,'int32');
 HbO = reshape(HbO,Temps_d1,X_d2,Y_d3); %Temps_d1,… are stored in Dim_binFile.mat
+toc
 
 %% Shrinkage preparation and original brainmask
 shrink_factor = 2;
@@ -152,9 +154,28 @@ fname_new_HbO = fullfile(IOI.dir.dir_subj_res,'S01',...
 fname_new_HbO_list = {};
 fname_new_HbO_list = [fname_new_HbO_list; fname_new_HbO];
 HbO = permute(HbO,[2 3 4 1]);
-% size(image_hbo) = 303   321     1   128
-% fname_new_HbO =
-% D:\Edgar\OIS_Results\12_10_18,NC09\S01\12_10_18,NC09_O_S01_00001to00128.nii
+oNaN = sum(isnan(HbO(:)));
+% rNaN = sum(isnan(image_hbr(:)));
+oInf = sum(isinf(HbO(:)));
+% rInf = sum(isinf(image_hbr(:)));
+omax = max(HbO(:));
+% rmax = max(image_hbr(:));
+if oNaN
+    IOI = disp_msg(IOI,[int2str(oNaN) ' NaN in HbO in session ' int2str(s1)]);
+    HbO(isnan(HbO(:))) = omax;
+end
+% if rNaN
+%     IOI = disp_msg(IOI,[int2str(rNaN) ' NaN in HbR in session ' int2str(s1)]);
+%     image_hbr(isnan(image_hbr(:))) = rmax;
+% end
+if oInf
+    IOI = disp_msg(IOI,[int2str(oInf) ' Inf in HbO in session ' int2str(s1)]);
+    HbO(isinf(HbO(:))) = omax;
+end
+% if rInf
+%     IOI = disp_msg(IOI,[int2str(rInf) ' Inf in HbR in session ' int2str(s1)]);
+%     image_hbr(isinf(image_hbr(:))) = rmax;
+% end
 vx_Hb = [2 2 1];
 tic
 ioi_save_nifti(HbO, fname_new_HbO, vx_Hb);
