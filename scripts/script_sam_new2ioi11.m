@@ -10,6 +10,7 @@ IOI.dir.dir_group_raw = 'D:\Edgar\OIS_Data\';
 IOI.dir.dir_group_res = 'D:\Edgar\OIS_Results\';
 IOI.dir.dir_subj_raw = fullfile(IOI.dir.dir_group_raw, IOI.subj_name);
 IOI.dir.dir_subj_res = fullfile(IOI.dir.dir_group_res, IOI.subj_name);
+IOImat = fullfile(IOI.dir.dir_subj_res,'IOI.mat');
 
 %% Read HbO Data
 tic
@@ -22,17 +23,22 @@ toc
 %% Shrinkage preparation and original brainmask
 shrink_factor = 2;
 n_frames = size(HbO,1);
+if n_frames > 2000
+    n_frames = 2000;
+end
 IOI.sess.n_frames = n_frames;
 nx = round(size(HbO,2)/shrink_factor);
 ny = round(size(HbO,3)/shrink_factor);
-HbO_resize = zeros([size(HbO,1) nx ny]);
+HbO_resize = zeros([n_frames nx ny]);
+% Get edge surrounding the brain
 brainMask = mat2gray(squeeze(mean(HbO,1)));
-brainMask = im2bw(brainMask, max(brainMask(:))-eps);
+% Invert pixels
+brainMask = ~im2bw(brainMask, max(brainMask(:))-eps);
 IOI.res.shrinkageOn = 1;
 % Only if shrinkage is chosen //EGC
 IOI.res.shrink_x = shrink_factor;
 IOI.res.shrink_y = shrink_factor;
-save(IOI.dir.dir_subj_res,'IOI');
+save(IOImat,'IOI');
 
 %% Actual Shrinkage
 tic
@@ -70,26 +76,20 @@ IOI.dev.TR = 0.2;
 IOI.conc.baseline_hbt = 100;
 IOI.conc.baseline_hbo = 60;
 IOI.conc.baseline_hbr = 40;
-save(IOI.dir.dir_subj_res,'IOI');
+save(IOImat,'IOI');
+
 %% Anatomical
 % Bregma est environ à la ligne 250, colonne 400 et Lambda: 250, 150.
+% Seed Radius should be about 0.25mm = 17 pixels
+% LPF = 5x5 pixels
 suffix_for_anat_file = 'anat'; %to build anatomical image name
 sess_label = 'S'; %prefix for name of directories for each session
 sess_str = [sess_label gen_num_str(1,2)];
 %leave voxel size in arbitrary units for now, for anatomical image
 vx_anat = [1 1 1];
-% image_anat = mat2gray(squeeze(mean(HbO,1)));
 h = open(fullfile(IOI.dir.dir_subj_res,[IOI.subj_name '.fig']));
 set(h,'units','inch')
 % Image is double, range: [0 4096]
-% anat_fname =
-% D:\Edgar\OIS_Results\12_10_18,NC09\S01\12_10_18,NC09_anat_S01
-% vx_anat =
-% 
-%      1     1     1
-% 
-% 12_10_18,NC09 Anatomical image
-
 image_anat = 2^12*mat2gray(getimage);
 imwrite(mat2gray(getimage), fullfile(IOI.dir.dir_subj_res,[IOI.subj_name '_anat_S01.png']),...
     'BitDepth',16)
@@ -101,7 +101,7 @@ ioi_save_images(image_anat, anat_fname, vx_anat,[],sprintf('%s Anatomical image'
 % It will always point to the last anatomical image
 IOI.res.file_anat = [anat_fname '.nii'];
 % Save IOI matrix
-save(IOI.dir.dir_subj_res,'IOI');
+save(IOImat,'IOI');
 
 %% Brain Mask
 if ~isfield(IOI, 'fcIOS')
@@ -114,8 +114,6 @@ if ~isfield(IOI, 'fcIOS')
     IOI.fcIOS(1).SPM = struct([]);
     IOI.fcIOS(1).corr = struct([]);
 end
-% brainMask = (ioi_MYimresize(squeeze(mean(HbO,1)), shrink_factor*[nx ny]));
-% brainMask=im2bw(brainMask, max(brainMask(:))-eps);
 imwrite(brainMask, fullfile(IOI.dir.dir_subj_res,[IOI.subj_name '_brainMask.png']),...
     'BitDepth',1)
 [dirName fileName fileExt] = fileparts(IOI.res.file_anat);
@@ -137,7 +135,7 @@ IOI.fcIOS.mask.fname = fullfile(dirName, brainMaskName);
 % Mask created succesfully!
 IOI.fcIOS.mask.maskOK = true;
 % Save IOI matrix
-save(IOI.dir.dir_subj_res,'IOI');
+save(IOImat,'IOI');
 
 %% Save concentrations (HbO)
 IOI.sess_res{1, 1}.missingFrames = [];
@@ -177,10 +175,72 @@ end
 %     image_hbr(isinf(image_hbr(:))) = rmax;
 % end
 vx_Hb = [2 2 1];
+% Normalize between 0 and 1, and convert to single
+HbO = single(mat2gray(HbO));
 tic
 ioi_save_nifti(HbO, fname_new_HbO, vx_Hb);
 toc
 IOI.sess_res{1}.fname{IOI.color.eng==str_HbO} = fname_new_HbO_list;
 IOI.res.concOK = 1;
 % Save IOI matrix
-save(IOI.dir.dir_subj_res,'IOI');
+save(IOImat,'IOI');
+
+%% Read HbR Data
+tic
+load(fullfile(IOI.dir.dir_subj_raw,'Dim_binFile.mat'));
+fileID=fopen(fullfile(IOI.dir.dir_subj_raw,'HbR.bin'),'r');
+HbR = fread(fileID,'int32');
+HbR = reshape(HbR,Temps_d1,X_d2,Y_d3); %Temps_d1,… are stored in Dim_binFile.mat
+toc
+
+%% Shrinkage preparation
+% Only necessary one time
+% IOImat = 'D:\Edgar\OIS_Results\FB25E02\IOI.mat';
+% load(IOImat)
+n_frames = IOI.sess.n_frames ;
+nx = round(size(HbR,2)/IOI.res.shrink_x);
+ny = round(size(HbR,3)/IOI.res.shrink_y);
+HbR_resize = zeros([n_frames nx ny]);
+save(IOImat,'IOI');
+
+%% Actual Shrinkage
+tic
+for iFrames = 1:n_frames,
+    HbR_resize(iFrames,:,:) = ioi_MYimresize(squeeze(HbR(iFrames,:,:)), [nx ny]);
+end
+toc
+HbR = HbR_resize;
+clear HbR_resize
+
+%% Save concentrations (HbR)
+nzero_padding = 5;
+image_str_start = gen_num_str(1,nzero_padding);
+image_str_last = gen_num_str(IOI.sess.n_frames,nzero_padding);
+image_str = [image_str_start 'to' image_str_last];
+str_HbR = 'D';
+fname_new_HbR = fullfile(IOI.dir.dir_subj_res,'S01',...
+    [IOI.subj_name '_OD_' str_HbR '_S01_' image_str '.nii']);
+fname_new_HbR_list = {};
+fname_new_HbR_list = [fname_new_HbR_list; fname_new_HbR];
+HbR = permute(HbR,[2 3 4 1]);
+oNaN = sum(isnan(HbR(:)));
+oInf = sum(isinf(HbR(:)));
+omax = max(HbR(:));
+if oNaN
+    IOI = disp_msg(IOI,[int2str(oNaN) ' NaN in HbR in session ' int2str(s1)]);
+    HbR(isnan(HbR(:))) = omax;
+end
+if oInf
+    IOI = disp_msg(IOI,[int2str(oInf) ' Inf in HbR in session ' int2str(s1)]);
+    HbR(isinf(HbR(:))) = omax;
+end
+vx_Hb = [2 2 1];
+% Normalize between 0 and 1, and convert to single
+HbR = single(mat2gray(HbR));
+tic
+ioi_save_nifti(HbR, fname_new_HbR, vx_Hb);
+toc
+IOI.sess_res{1}.fname{IOI.color.eng==str_HbR} = fname_new_HbR_list;
+IOI.res.concOK = 1;
+% Save IOI matrix
+save(IOImat,'IOI');
