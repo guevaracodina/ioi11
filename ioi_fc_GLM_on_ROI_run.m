@@ -74,6 +74,9 @@ for SubjIdx=1:length(job.IOImat)
                                                 % signal just to test
                                                 SPM.xX.name = cellstr(['Global Brain Signal']);
                                                 SPM.xX.X = brainSignal';        % Regression is along first dimension. For one regressor it is a column vector.
+                                                if job.transferRawData
+                                                    yRegress = y;
+                                                end
                                                 if job.heartRate
                                                     load(IOI.fcIOS.SPM.physioHeartFile{1})
                                                     if numel(brainSignal) <= numel(physio.heartRate)
@@ -104,11 +107,14 @@ for SubjIdx=1:length(job.IOImat)
                                                 if ~exist(SPM.swd,'dir'),mkdir(SPM.swd); end
                                                 fprintf('\nPerforming GLM on %s whole images, Session %d Color %d (%s)...\n',IOI.subj_name,s1,c1,colorNames{1+c1})
                                                 try
-                                                    % GLM is performed here
-                                                    % at whole image level.
-                                                    % Orlando!
-                                                    SPM = spm_spm(SPM);
-                                                    
+                                                    if job.transferRawData
+                                                        % do nothing
+                                                    else
+                                                        % GLM is performed here
+                                                        % at whole image level.
+                                                        % Orlando!
+                                                        SPM = spm_spm(SPM);
+                                                    end
                                                     if job.regressBrainSignal == 1,
                                                         % EGC: Remember to
                                                         % uncomment this
@@ -250,8 +256,13 @@ for SubjIdx=1:length(job.IOImat)
                                                     if ~exist(SPM.swd,'dir'),mkdir(SPM.swd); end
                                                     fprintf('\nPerforming GLM for %s ROI %d Session %d Color %d (%s)...\n',IOI.subj_name,r1,s1,c1,colorNames{1+c1})
                                                     try
-                                                        % GLM is performed here
-                                                        SPM = spm_spm(SPM);
+                                                        if job.transferRawData
+                                                            % Do nothing
+                                                        else
+                                                            % GLM is performed here
+                                                            SPM = spm_spm(SPM);
+                                                        end
+                                                            
                                                         
                                                         if job.regressBrainSignal == 1,
                                                             % Subtract global brain

@@ -45,7 +45,8 @@ try
                 if i==1
                     %find number of frames per block %careful, this can vary
                     %if length(IOI.sess_res{s1}.si) > 1
-                    fpb = 500; %IOI.sess_res{s1}.si{2}-IOI.sess_res{s1}.si{1};
+                    % fpb = 500; %IOI.sess_res{s1}.si{2}-IOI.sess_res{s1}.si{1};
+                    fpb = 2000; % New Sam's format (2016)
                     %else
                     %    fpb = IOI.sess_res{s1}.ei{1}-IOI.sess_res{s1}.si{1}+1;
                     %end

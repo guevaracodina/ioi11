@@ -75,7 +75,11 @@ for SubjIdx=1:length(job.IOImat)
                                     filtY = zeros([size(y,1) size(y,2) 1 size(y,3)]);
                                     % Computing lenght of time vector
                                     nT = ceil(size(y,3) / samples2skip);
-                                    filtNdownY = zeros([size(y,1) size(y,2) 1 nT]);
+                                    if job.transferRawData
+                                        filtNdownY = zeros(size(filtY));
+                                    else
+                                        filtNdownY = zeros([size(y,1) size(y,2) 1 nT]);
+                                    end
                                     % Read brain mask file
                                     vol = spm_vol(IOI.fcIOS.mask.fname);
                                     brainMask = logical(spm_read_vols(vol));
@@ -87,16 +91,21 @@ for SubjIdx=1:length(job.IOImat)
                                     colorNames = fieldnames(IOI.color);
                                     % Initialize progress bar
                                     spm_progress_bar('Init', size(filtY,1), sprintf('Filtering & Downsampling session %d, color %d (%s)\n',s1,c1,colorNames{1+c1}), 'Pixels along X');
-                                    for iX = 1:size(filtY,1)
-                                        spm_progress_bar('Set', iX);
-                                        for iY = 1:size(filtY,2)
-                                            if brainMask(iX,iY) == 1
-                                                % Only non-masked pixels are
-                                                % band-passs filtered
-                                                % filtY(iX,iY,1,:) = temporalBPF(fType, fs, BPFfreq, filterOrder, squeeze(y(iX,iY,:)), Rp_Rs);
-                                                filtY(iX,iY,1,:) = temporalBPFrun(squeeze(y(iX,iY,:)), z, p, k);
-                                                % Downsampling
-                                                filtNdownY(iX,iY,1,:) = downsample(squeeze(filtY(iX,iY,1,:)), samples2skip);
+                                    if job.transferRawData
+                                        filtY = y;
+                                        filtNdownY = filtY;
+                                    else
+                                        for iX = 1:size(filtY,1)
+                                            spm_progress_bar('Set', iX);
+                                            for iY = 1:size(filtY,2)
+                                                if brainMask(iX,iY) == 1
+                                                    % Only non-masked pixels are
+                                                    % band-passs filtered
+                                                    % filtY(iX,iY,1,:) = temporalBPF(fType, fs, BPFfreq, filterOrder, squeeze(y(iX,iY,:)), Rp_Rs);
+                                                    filtY(iX,iY,1,:) = temporalBPFrun(squeeze(y(iX,iY,:)), z, p, k);
+                                                    % Downsampling
+                                                    filtNdownY(iX,iY,1,:) = downsample(squeeze(filtY(iX,iY,1,:)), samples2skip);
+                                                end
                                             end
                                         end
                                     end
@@ -113,11 +122,15 @@ for SubjIdx=1:length(job.IOImat)
                                     % Retrieve time-course
                                     % signal for brain mask
                                     brainSignal = brainMaskData{1}{s1, c1};
-                                    % Band-passs filtering
-                                    % brainSignal = temporalBPF(fType, fs, BPFfreq, filterOrder, brainSignal, Rp_Rs);
-                                    brainSignal = temporalBPFrun(brainSignal, z, p, k);
-                                    % Downsampling
-                                    brainSignal = downsample(brainSignal, samples2skip);
+                                    if job.transferRawData
+                                        % do nothing
+                                    else
+                                        % Band-passs filtering
+                                        % brainSignal = temporalBPF(fType, fs, BPFfreq, filterOrder, brainSignal, Rp_Rs);
+                                        brainSignal = temporalBPFrun(brainSignal, z, p, k);
+                                        % Downsampling
+                                        brainSignal = downsample(brainSignal, samples2skip);
+                                    end
                                     % Update data cell
                                     filtNdownBrain{1}{s1,c1} = brainSignal;
                                 end
@@ -138,17 +151,18 @@ for SubjIdx=1:length(job.IOImat)
                                             % Retrieve time-series signal for
                                             % given ROI, session and color
                                             ROIsignal = ROIdata{r1}{s1, c1};
-                                            
-                                            % Band-passs filtering
-                                            % ROIsignal = temporalBPF(fType, fs, BPFfreq, filterOrder, ROIsignal, Rp_Rs);
-                                            ROIsignal = temporalBPFrun(ROIsignal, z, p, k);
-                                            
-                                            % Downsampling
-                                            ROIsignal = downsample(ROIsignal, samples2skip);
-                                            
+                                            if job.transferRawData
+                                                % Do nothing
+                                            else
+                                                % Band-passs filtering
+                                                % ROIsignal = temporalBPF(fType, fs, BPFfreq, filterOrder, ROIsignal, Rp_Rs);
+                                                ROIsignal = temporalBPFrun(ROIsignal, z, p, k);
+                                                
+                                                % Downsampling
+                                                ROIsignal = downsample(ROIsignal, samples2skip);
+                                            end
                                             % Plot and print data if required
                                             subfunction_plot_filtNdown_data(job, IOI, dir_ioimat, ROIdata, ROIsignal, r1, s1, c1);
-                                            
                                         catch
                                             if msg_ColorNotOK
                                                 msg = ['Problem filtering/downsampling for color ' int2str(c1) ', session ' int2str(s1) ...
@@ -163,14 +177,15 @@ for SubjIdx=1:length(job.IOImat)
                                                     % Retrieve time-series signal for
                                                     % given ROI, session and color
                                                     ROIsignal = ROIdata{r1}{s1, c1};
-                                                    
-                                                    % Band-passs filtering
-                                                    % ROIsignal = temporalBPF(fType, fs, BPFfreq, filterOrder, ROIsignal, Rp_Rs);
-                                                    ROIsignal = temporalBPFrun(ROIsignal, z, p, k);
-                                                    
-                                                    % Downsampling
-                                                    ROIsignal = downsample(ROIsignal, samples2skip);
-                                                    
+                                                    if job.transferRawData
+                                                        % Do nothing
+                                                    else
+                                                        % Band-passs filtering
+                                                        % ROIsignal = temporalBPF(fType, fs, BPFfreq, filterOrder, ROIsignal, Rp_Rs);
+                                                        ROIsignal = temporalBPFrun(ROIsignal, z, p, k);
+                                                        % Downsampling
+                                                        ROIsignal = downsample(ROIsignal, samples2skip);
+                                                    end
                                                     % Plot and print data if required
                                                     subfunction_plot_filtNdown_data(job, IOI, dir_ioimat, ROIdata, ROIsignal, r1, s1, c1);
                                                     

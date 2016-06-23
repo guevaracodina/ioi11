@@ -65,6 +65,10 @@ for SubjIdx=1:length(job.IOImat)
                                                 % regressed
                                                 vol = spm_vol(IOI.fcIOS.SPM.fname{s1, c1});
                                                 y = spm_read_vols(vol);
+                                                if ndims(y) == 3
+                                                    % Create 4-D volume
+                                                    y = permute(y,[1 2 4 3]);
+                                                end
                                                 % Load ROI time-course already
                                                 % filtered/downsampled &
                                                 % regressed (column vector)

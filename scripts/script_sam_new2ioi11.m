@@ -27,6 +27,7 @@ if n_frames > 2000
     n_frames = 2000;
 end
 IOI.sess.n_frames = n_frames;
+IOI.sess_res{1}.n_frames = n_frames;
 nx = round(size(HbO,2)/shrink_factor);
 ny = round(size(HbO,3)/shrink_factor);
 HbO_resize = zeros([n_frames nx ny]);
@@ -197,7 +198,7 @@ toc
 % Only necessary one time
 % IOImat = 'D:\Edgar\OIS_Results\FB25E02\IOI.mat';
 % load(IOImat)
-n_frames = IOI.sess.n_frames ;
+% n_frames = IOI.sess.n_frames ;
 nx = round(size(HbR,2)/IOI.res.shrink_x);
 ny = round(size(HbR,3)/IOI.res.shrink_y);
 HbR_resize = zeros([n_frames nx ny]);
@@ -240,7 +241,15 @@ HbR = single(mat2gray(HbR));
 tic
 ioi_save_nifti(HbR, fname_new_HbR, vx_Hb);
 toc
+% Check if cell no. 6 has deoxy filename
 IOI.sess_res{1}.fname{IOI.color.eng==str_HbR} = fname_new_HbR_list;
 IOI.res.concOK = 1;
+% Save IOI matrix
+save(IOImat,'IOI');
+
+%% Missing fields
+% Save available colors
+IOI.sess_res{1}.availCol = 'RGYLOD';
+IOI.res.flowOK = true;
 % Save IOI matrix
 save(IOImat,'IOI');

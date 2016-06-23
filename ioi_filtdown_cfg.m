@@ -41,15 +41,23 @@ wholeImage.values   = {1,0};
 wholeImage.val      = {1};
 wholeImage.help     = {'Filter and downsample whole image time-series. It creates a new sub-folder for each session'};
 
+% Transfer raw data (avoid filtering & downsampling of pre-processed data)
+transferRawData          = cfg_menu;
+transferRawData.tag      = 'transferRawData';
+transferRawData.name     = 'Transfer raw data';
+transferRawData.labels   = {'Yes','No'};
+transferRawData.values   = {1,0};
+transferRawData.val      = {0};
+transferRawData.help     = {'Avoid filtering & downsampling of pre-processed data'};
+
 % Executable Branch
 filtdown1           = cfg_exbranch; % This is the branch that has information about how to run this module
 filtdown1.name      = 'Temporal filtering & downsampling';             % The display name
 filtdown1.tag       = 'filtdown1'; %Very important: tag is used when calling for execution
-filtdown1.val       = {IOImat redo1 IOImatCopyChoice ROI_choice session_choice IC bpf downFreq wholeImage generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+filtdown1.val       = {IOImat redo1 IOImatCopyChoice ROI_choice session_choice IC transferRawData bpf downFreq wholeImage generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 filtdown1.prog      = @ioi_filtdown_run;  % A function handle that will be called with the harvested job to run the computation
 filtdown1.vout      = @ioi_cfg_vout_filtdown; % A function handle that will be called with the harvested job to determine virtual outputs
 filtdown1.help      = {'Temporal band-pass filtering and downsampling of a given time trace [HbO/HbR/Flow], either on a seed or on the whole image series.'};
-
 return
 
 % Make IOI.mat available as a dependency
