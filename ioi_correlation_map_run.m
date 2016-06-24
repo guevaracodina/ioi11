@@ -7,14 +7,14 @@ function out = ioi_correlation_map_run(job)
 %_______________________________________________________________________________
 
 % Get sessions info
-[all_sessions selected_sessions] = ioi_get_sessions(job);
+[all_sessions, selected_sessions] = ioi_get_sessions(job);
 
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
         tic
         %Load IOI.mat information
-        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);  
+        [IOI, IOImat, dir_ioimat]= ioi_get_IOI(job,SubjIdx);  
 
         if ~isfield(IOI.fcIOS.SPM, 'GLMOK') % GLM OK
             disp(['No GLM regression available for subject ' int2str(SubjIdx) ' ... skipping correlation map']);
@@ -135,11 +135,12 @@ for SubjIdx=1:length(job.IOImat)
                                                         % Display plots on SPM graphics window
                                                         h = spm_figure('GetWin', 'Graphics');
                                                         spm_figure('Clear', 'Graphics');
-                                                        spm_figure('ColorMap','jet')
+                                                       %  spm_figure('ColorMap','jet')
                                                         
                                                         % Correlation map
                                                         subplot(211)
                                                         imagesc(tempCorrMapDiff); colorbar; axis image;
+                                                        colormap(job.figCmap)
                                                         % Display ROI
                                                         rectangle('Position',[seedX seedY seedW seedH],...
                                                             'Curvature',[1,1],...
@@ -152,6 +153,7 @@ for SubjIdx=1:length(job.IOImat)
                                                         % pixels
                                                         subplot(212)
                                                         imagesc(tempCorrMapDiff .* (pValuesMapDiff <= job.pValue), [-1 1]); colorbar; axis image;
+                                                        colormap(job.figCmap)
                                                         % Display ROI
                                                         rectangle('Position',[seedX seedY seedW seedH],...
                                                             'Curvature',[1,1],...
@@ -215,11 +217,12 @@ for SubjIdx=1:length(job.IOImat)
                                                     % Display plots on SPM graphics window
                                                     h = spm_figure('GetWin', 'Graphics');
                                                     spm_figure('Clear', 'Graphics');
-                                                    spm_figure('ColorMap','jet')
+                                                    % spm_figure('ColorMap','jet')
                                                     
                                                     % Correlation map
                                                     subplot(211)
                                                     imagesc(tempCorrMap); colorbar; axis image; 
+                                                    colormap(job.figCmap)
                                                     % Display ROI
                                                     rectangle('Position',[seedX seedY seedW seedH],...
                                                         'Curvature',[1,1],...
@@ -232,6 +235,7 @@ for SubjIdx=1:length(job.IOImat)
                                                     % pixels
                                                     subplot(212)
                                                     imagesc(tempCorrMap .* (pValuesMap <= job.pValue), [-1 1]); colorbar; axis image;
+                                                    colormap(job.figCmap)
                                                     % Display ROI
                                                     rectangle('Position',[seedX seedY seedW seedH],...
                                                         'Curvature',[1,1],...

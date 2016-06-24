@@ -3,7 +3,7 @@ addpath(genpath('D:\spm8\toolbox\ioi'))
 
 %% dir field
 IOI.warning = {};
-IOI.subj_name = 'FB25E02';
+IOI.subj_name = '16_02_25,NC01';
 IOI.subj_OK = 1;
 IOI.dir.dir_group_all = 'D:\Edgar\';
 IOI.dir.dir_group_raw = 'D:\Edgar\OIS_Data\';

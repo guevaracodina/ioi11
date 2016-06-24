@@ -59,11 +59,20 @@ derivative.values       = {0, 1};
 derivative.val          = {1};                      % Default value
 derivative.help         = {'Choose whether to perform correlation analysis on 1st derivative of seeds/pixels time-course'}';
 
+% Colormap to use
+figCmap                     = cfg_entry;
+figCmap.tag                 = 'figCmap';
+figCmap.name                = 'Colormap';
+figCmap.strtype             = 'e';
+figCmap.num                 = [Inf 3];
+figCmap.val{1}              = ioi_get_colormap('bipolar');
+figCmap.help                = {'Enter colormap to use. e.g. type ioi_get_colormap(''bipolar''), Input is evaluated'};
+
 % Executable Branch
 correlation_map1        = cfg_exbranch; % This is the branch that has information about how to run this module
 correlation_map1.name   = 'Functional connectivity (fcOIS) map'; % The display name
 correlation_map1.tag    = 'correlation_map1'; %Very important: tag is used when calling for execution
-correlation_map1.val    = {IOImat redo1 IOImatCopyChoice ROI_choice session_choice IC pValue fisherZ seed2seedCorrMat derivative generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
+correlation_map1.val    = {IOImat redo1 IOImatCopyChoice ROI_choice session_choice IC pValue fisherZ seed2seedCorrMat derivative figCmap generate_figures save_figures};    % The items that belong to this branch. All items must be filled before this branch can run or produce virtual outputs
 correlation_map1.prog   = @ioi_correlation_map_run; % A function handle that will be called with the harvested job to run the computation
 correlation_map1.vout   = @ioi_cfg_vout_correlation_map; % A function handle that will be called with the harvested job to determine virtual outputs
 correlation_map1.help   = {'A functional connectivity (fcOIS) map is made by correlating the seed/ROI with all other brain (non-masked) pixels'}';
