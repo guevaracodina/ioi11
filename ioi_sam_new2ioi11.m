@@ -1,16 +1,16 @@
 function ioi_sam_new2ioi11(IOI)
-%% Path (after running spm8)
-addpath(genpath('D:\spm8\toolbox\ioi'))
-
 %% dir field
+fprintf('Processing started for subject %s\n',IOI.subj_name);
 IOI.warning = {};
 IOI.subj_OK = 1;
-% IOI.subj_name = '16_02_25,NC01';
-% IOI.dir.dir_group_all = 'D:\Edgar\';
-% IOI.dir.dir_group_raw = 'D:\Edgar\OIS_Data\';
-% IOI.dir.dir_group_res = 'D:\Edgar\OIS_Results\';
 IOI.dir.dir_subj_raw = fullfile(IOI.dir.dir_group_raw, IOI.subj_name);
 IOI.dir.dir_subj_res = fullfile(IOI.dir.dir_group_res, IOI.subj_name);
+if ~exist(IOI.dir.dir_subj_res,'dir')
+    mkdir(IOI.dir.dir_subj_res);
+end
+if ~exist(fullfile(IOI.dir.dir_subj_res,'S01'),'dir')
+    mkdir(fullfile(IOI.dir.dir_subj_res,'S01'));
+end
 IOImat = fullfile(IOI.dir.dir_subj_res,'IOI.mat');
 
 %% Read HbO Data
@@ -19,7 +19,19 @@ load(fullfile(IOI.dir.dir_subj_raw,'Dim_binFile.mat'));
 fileID=fopen(fullfile(IOI.dir.dir_subj_raw,'HbO.bin'),'r');
 HbO = fread(fileID,'int32');
 HbO = reshape(HbO,Temps_d1,X_d2,Y_d3); %Temps_d1,… are stored in Dim_binFile.mat
-toc
+disp(['Read HbO Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
+
+%% Compute transformation to realign HbO images
+tic
+% Load registered image
+load(fullfile(IOI.dir.dir_subj_raw,[IOI.subj_name '_coregistration.mat']))
+transformationType = 'projective';
+tform = fitgeotrans(movingPoints,fixedPoints,transformationType);
+for iFrames=1:size(HbO,1)
+    % Apply transformation & display registered images
+    HbO(iFrames,:,:) = imwarp(squeeze(HbO(iFrames,:,:)),tform,'OutputView',imref2d(size(atlas_fixed)));
+end
+disp(['Realignment of HbO Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
 %% Shrinkage preparation and original brainmask
 shrink_factor = 2;
@@ -47,9 +59,9 @@ tic
 for iFrames = 1:n_frames,
     HbO_resize(iFrames,:,:) = ioi_MYimresize(squeeze(HbO(iFrames,:,:)), [nx ny]);
 end
-toc
 HbO = HbO_resize;
 clear HbO_resize
+disp(['Shrink HbO Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
 %% Display images
 % maxVal = max(HbO(:));
@@ -89,7 +101,8 @@ sess_label = 'S'; %prefix for name of directories for each session
 sess_str = [sess_label gen_num_str(1,2)];
 %leave voxel size in arbitrary units for now, for anatomical image
 vx_anat = [1 1 1];
-h = open(fullfile(IOI.dir.dir_subj_res,[IOI.subj_name '.fig']));
+% h = open(fullfile(IOI.dir.dir_subj_res,[IOI.subj_name '.fig']));
+h = open(fullfile(IOI.dir.dir_subj_raw,[IOI.subj_name '.fig']));
 set(h,'units','inch')
 % Image is double, range: [0 4096]
 image_anat = 2^12*mat2gray(getimage);
@@ -118,7 +131,7 @@ if ~isfield(IOI, 'fcIOS')
 end
 imwrite(brainMask, fullfile(IOI.dir.dir_subj_res,[IOI.subj_name '_brainMask.png']),...
     'BitDepth',1)
-[dirName fileName fileExt] = fileparts(IOI.res.file_anat);
+[dirName, fileName, fileExt] = fileparts(IOI.res.file_anat);
 fileName = strcat(fileName, fileExt);
 % Create filename according the existing nomenclature at subject level
 brainMaskName = [IOI.subj_name '_anat_brainmask.nii'];
@@ -181,11 +194,11 @@ vx_Hb = [2 2 1];
 HbO = single(mat2gray(HbO));
 tic
 ioi_save_nifti(HbO, fname_new_HbO, vx_Hb);
-toc
 IOI.sess_res{1}.fname{IOI.color.eng==str_HbO} = fname_new_HbO_list;
 IOI.res.concOK = 1;
 % Save IOI matrix
 save(IOImat,'IOI');
+disp(['Saved HbO Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
 %% Read HbR Data
 tic
@@ -193,7 +206,19 @@ load(fullfile(IOI.dir.dir_subj_raw,'Dim_binFile.mat'));
 fileID=fopen(fullfile(IOI.dir.dir_subj_raw,'HbR.bin'),'r');
 HbR = fread(fileID,'int32');
 HbR = reshape(HbR,Temps_d1,X_d2,Y_d3); %Temps_d1,… are stored in Dim_binFile.mat
-toc
+disp(['Read HbR Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
+
+%% Compute transformation to realign HbO images
+tic
+% Load registered image
+load(fullfile(IOI.dir.dir_subj_raw,[IOI.subj_name '_coregistration.mat']))
+transformationType = 'projective';
+tform = fitgeotrans(movingPoints,fixedPoints,transformationType);
+for iFrames=1:size(HbR,1)
+    % Apply transformation & display registered images
+    HbR(iFrames,:,:) = imwarp(squeeze(HbR(iFrames,:,:)),tform,'OutputView',imref2d(size(atlas_fixed)));
+end
+disp(['Realignment of HbR Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
 %% Shrinkage preparation
 % Only necessary one time
@@ -210,9 +235,9 @@ tic
 for iFrames = 1:n_frames,
     HbR_resize(iFrames,:,:) = ioi_MYimresize(squeeze(HbR(iFrames,:,:)), [nx ny]);
 end
-toc
 HbR = HbR_resize;
 clear HbR_resize
+disp(['Shrink HbR Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
 %% Save concentrations (HbR)
 nzero_padding = 5;
@@ -241,12 +266,12 @@ vx_Hb = [2 2 1];
 HbR = single(mat2gray(HbR));
 tic
 ioi_save_nifti(HbR, fname_new_HbR, vx_Hb);
-toc
 % Check if cell no. 6 has deoxy filename
 IOI.sess_res{1}.fname{IOI.color.eng==str_HbR} = fname_new_HbR_list;
 IOI.res.concOK = 1;
 % Save IOI matrix
 save(IOImat,'IOI');
+disp(['Saved HbR Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
 %% Missing fields
 % Save available colors
@@ -254,7 +279,7 @@ IOI.sess_res{1}.availCol = 'RGYLOD';
 IOI.res.flowOK = true;
 % Save IOI matrix
 save(IOImat,'IOI');
-
+fprintf('Processing ended for subject %s\n',IOI.subj_name);
 end
 
 % EOF
