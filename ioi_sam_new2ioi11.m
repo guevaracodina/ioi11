@@ -1,4 +1,8 @@
 function ioi_sam_new2ioi11(IOI)
+% Pre-processing stage of OIS images (IOI).
+% Reads Hb & HbR images, saves anatomical image, brain Mask
+% These images are already band-pass filtered between 1/120 & 1/10Hz
+% and spatially filtered 3x3 pixels FWHM
 %% dir field
 fprintf('Processing started for subject %s\n',IOI.subj_name);
 IOI.warning = {};
@@ -198,6 +202,7 @@ IOI.sess_res{1}.fname{IOI.color.eng==str_HbO} = fname_new_HbO_list;
 IOI.res.concOK = 1;
 % Save IOI matrix
 save(IOImat,'IOI');
+clear HbO
 disp(['Saved HbO Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
 %% Read HbR Data
@@ -271,6 +276,7 @@ IOI.sess_res{1}.fname{IOI.color.eng==str_HbR} = fname_new_HbR_list;
 IOI.res.concOK = 1;
 % Save IOI matrix
 save(IOImat,'IOI');
+clear HbR
 disp(['Saved HbR Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
 %% Missing fields

@@ -1,3 +1,4 @@
+% Pre-processing script before fc processing
 %% Path (after running spm8)
 addpath(genpath('D:\spm8\toolbox\ioi'))
 
@@ -5,11 +6,16 @@ addpath(genpath('D:\spm8\toolbox\ioi'))
 IOI.dir.dir_group_all = 'D:\Edgar\';
 IOI.dir.dir_group_raw = 'D:\Edgar\OIS_Data\';
 IOI.dir.dir_group_res = 'D:\Edgar\OIS_Results\';
-% IOI.subj_name = '16_02_25,NC02';
-subjectList{1} = '16_02_26,NC05a';
-subjectList{2} = '16_02_26,NC05b';
-subjectList{3} = '16_02_26,NC06a';
-subjectList{4} = '16_02_26,NC06b';
+clear subjectList
+subjectList{1} = '16_02_25,LP01a';
+subjectList{2} = '16_02_25,LP01b';
+subjectList{3} = '16_02_25,NC02';
+subjectList{4} = '16_02_25,NC03a';
+subjectList{5} = '16_02_25,NC03b';
+subjectList{6} = '16_02_26,NC05a';
+subjectList{7} = '16_02_26,NC05b';
+subjectList{8} = '16_02_26,NC06a';
+subjectList{9} = '16_02_26,NC06b';
 
 %% Call function
 for iSubjects=1:numel(subjectList)
