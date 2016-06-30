@@ -6,14 +6,14 @@ function out = ioi_spatial_LPF_run(job)
 %_______________________________________________________________________________
 
 % Get sessions info
-[all_sessions selected_sessions] = ioi_get_sessions(job);
+[all_sessions, selected_sessions] = ioi_get_sessions(job);
 
 %Big loop over subjects
 for SubjIdx=1:length(job.IOImat)
     try
         tic
         %Load IOI.mat information
-        [IOI IOImat dir_ioimat]= ioi_get_IOI(job,SubjIdx);
+        [IOI, IOImat, dir_ioimat]= ioi_get_IOI(job,SubjIdx);
         
         if ~isfield(IOI.res,'concOK') && (~isfield(IOI.sess_res{1},'availCol') && job.IC.include_OD)% Concentrations OK
             disp(['No concentrations available for subject ' int2str(SubjIdx) ' ... skipping low-pass filtering']);

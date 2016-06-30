@@ -23,7 +23,7 @@ function out = ioi_group_corr_unpaired_run(job)
 % - Save a .csv file in parent folder for each contrast
 
 % Choose groups at random
-RANDOMGROUPS = true;
+RANDOMGROUPS = false;
 idxTmp = [1 1];
 
 % Load first IOI matrix to check the number of colors
@@ -379,7 +379,8 @@ for iSubjects = 1:size(subjectName,1),
 end
 if nCols == 6,
     % Append header
-    hdr = {'Subject Name' 'Seed Pairs' 'z(r)' 'z(r'')' 'z(r_raw)' 'NaCl=0; CaCl_2=1'};
+    hdr = {'Subject Name' 'Seed Pairs' 'z(r)' 'z(r'')' 'z(r_raw)' ...
+        sprintf('%s=0 %s=1','NaCl','LPS') };
     dataCell = [hdr; dataCell];
 end
 end % subfunction_full_group_data
@@ -410,12 +411,15 @@ end % subfunction_cell2csv
 function [job, IOI, e, y, eTotal, yTotal, statTest, meanCorr, stdCorr, groupCorrData] = subfunction_group_corr_test_unpaired(job, IOI, c1, groupCorrData, statTest, meanCorr, stdCorr, eTotal, yTotal, isTreatment)
 % Do a separate paired t-test for each seed data
 for iSeeds = 1:size(job.paired_seeds, 1)
+    % NOTE: nanmean and nanstdare included as part of spm8/external/fieldtrip
+    % toolbox, they were removed so they would not interfere with matlab's
+    % native functions 2016/06/30
     % Average of control group
-    meanCorr{iSeeds,c1}(1) = nanmean(groupCorrData{iSeeds,c1}(~isTreatment));
+    meanCorr{iSeeds,c1}(1) = nanmean(groupCorrData{iSeeds,c1}(~isTreatment),1);
     % Standard deviation of control group
     stdCorr{iSeeds,c1}(1) = nanstd(groupCorrData{iSeeds,c1}(~isTreatment));
     % Average of treatment group
-    meanCorr{iSeeds,c1}(2) = nanmean(groupCorrData{iSeeds,c1}(isTreatment));
+    meanCorr{iSeeds,c1}(2) = nanmean(groupCorrData{iSeeds,c1}(isTreatment),1);
     % Standard deviation of treatment group
     stdCorr{iSeeds,c1}(2) = nanstd(groupCorrData{iSeeds,c1}(isTreatment));
     
