@@ -262,7 +262,8 @@ if job.generate_figures
     varName = sprintf('results_S%02d_%s_%s', s1, colorNames{1+c1}, ss.Xname{1});
     % load control group anatomical template (NC09) idxSubject = 13
     % [IOI IOImat dir_ioimat] = ioi_get_IOI(job,10);
-    load('D:\Edgar\Data\IOS_Carotid_Res\12_10_18,NC09\IOI.mat')
+%     load('D:\Edgar\Data\IOS_Carotid_Res\12_10_18,NC09\IOI.mat')
+    load('D:\Edgar\OIS_Results\16_02_25,NC01\ROI\LPF\FiltNDown\GLM\corrMap\IOI.mat')
     % Read anatomical image
     imAnatVol = spm_vol(IOI.res.file_anat);
     NaCl_imAnat = spm_read_vols(imAnatVol)';
