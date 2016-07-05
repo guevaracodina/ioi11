@@ -1,6 +1,6 @@
 %% load data
-% load('D:\Edgar\Data\IOS_Carotid_Res\group_results_redo\group_corr_pair_seeds.mat')
-load('D:\Edgar\OIS_Results\groupTest1LPS\group_corr_pair_seeds.mat')
+% load('D:\Edgar\OIS_Results\groupTest1LPS\group_corr_pair_seeds.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\groupTest1LPS\group_corr_pair_seeds.mat')
 % addpath(genpath('D:\Edgar\conn'))
 
 %% FDR
@@ -35,5 +35,38 @@ xlim([0 2])
 set(gca,'XTick',[0 1 2])
 set(gca,'FontSize', 12)
 set(gca,'XTickLabel',{'' 'HbO' 'HbR'})
-legend({'NaCl_{HbO_2}' 'LPS' 'NaCl_{HbR}' 'LPS'},'Location','NorthWest')
+% legend({'NaCl_{HbO_2}' 'LPS 'NaCl_{HbR}' 'LPS'},'Location','NorthWest')
+
+%% Observe repeatability in LPS
+h1=figure; set(h,'color','w')
+hold on
+x(1:2:9) = 1;
+x(2:2:10) = 2;
+y(1:2:9) = LPS_HbO(1:5);
+y(2:2:10) = LPS_HbO(6:10);
+plot(x,y,'r-o','MarkerSize',12,'LineWidth',2)
+title('LPS01','FontSize',14)
+ylabel('z(r)','FontSize',14)
+xlabel('Homotopic fc','FontSize',14);
+xlim([0 2])
+set(gca,'XTick',[0 1 2])
+set(gca,'FontSize', 12)
+set(gca,'XTickLabel',{'' 'LPS_{session_1}' 'LPS_{session_2}'})
+
+%% Observe repeatability in NaCl
+h2=figure; set(h,'color','w')
+hold on
+x(1:2:9) = 1;
+x(2:2:10) = 2;
+y(1:2:9) = LPS_HbO(1:5);
+y(2:2:10) = LPS_HbO(6:10);
+plot(x,y,'r-o','MarkerSize',12,'LineWidth',2)
+title('LPS01','FontSize',14)
+ylabel('z(r)','FontSize',14)
+xlabel('Homotopic fc','FontSize',14);
+xlim([0 2])
+set(gca,'XTick',[0 1 2])
+set(gca,'FontSize', 12)
+set(gca,'XTickLabel',{'' 'LPS_{session_1}' 'LPS_{session_2}'})
+
 % EOF
