@@ -46,7 +46,8 @@ if isfield (job.optStat,'rawData')
     groupCorrDataRaw = cell([size(job.paired_seeds, 1) numel(IOI.color.eng)]);
 end
 
-if job.optStat.bonferroni
+if job.optStat.bonferroni && ~job.optStat.fdr
+    % fdr supersedes bonferroni
     job.optStat.alpha = job.optStat.alpha ./ size(job.paired_seeds, 1);
 end
 
@@ -293,7 +294,7 @@ if ~exist(fullfile(job.parent_results_dir{1},'groupOK.mat'),'file') || job.force
     eTotalRaw       = [];
     yTotalRaw       = [];
     
-    % dbstop if error
+    %  if error
     
     for c1 = 1:size(IOI.fcIOS.corr.corrMapName{1}, 2)
         doColor = ioi_doColor(IOI,c1,IC);
@@ -751,7 +752,13 @@ if job.optStat.ttest1
         if isfield(job.optFig.yLimits, 'yLimManual')
             set(gca, 'ylim', job.optFig.yLimits.yLimManual.yLimValue)
         end
-        % Show a * when a significant difference is found.
+        if job.optStat.fdr
+            P = cell2mat(statTest(1).t(1).P(:,c1));
+            statTest.t.id = strcat(statTest.t.id, ' FDR corrected');
+            Q = ioi_fdr(P); % FDR correction
+            statTest.t.H (:,c1) = mat2cell(Q < job.optStat.alpha,ones([size(job.paired_seeds,1), 1]));
+        end
+        % Show a * when a significant difference is found
         for iSeeds = 1:size(job.paired_seeds, 1)
             if statTest(1).t(1).H{iSeeds,c1}
                 if max(y(iSeeds,:))>=0
@@ -818,6 +825,13 @@ if job.optStat.wilcoxon1
         set(gca, 'xLim', [axMargin size(y,1) + axMargin]);
         if isfield(job.optFig.yLimits, 'yLimManual')
             set(gca, 'ylim', job.optFig.yLimits.yLimManual.yLimValue)
+        end
+        % FDR for Wilcoxon's test
+        if job.optStat.fdr
+            P = cell2mat(statTest(1).w(1).P(:,c1));
+            statTest.w.id = strcat(statTest.w.id, ' FDR corrected');
+            Q = ioi_fdr(P); % FDR correction
+            statTest.w.H (:,c1) = mat2cell(Q < job.optStat.alpha,ones([size(job.paired_seeds,1), 1]));
         end
         % Show a * when a significant difference is found.
         for iSeeds = 1:size(job.paired_seeds, 1)
@@ -900,6 +914,12 @@ if isfield (job.optStat,'derivative')
                 if isfield(job.optFig.yLimits, 'yLimManual')
                     set(gca, 'ylim', job.optFig.yLimits.yLimManual.yLimValue)
                 end
+                if job.optStat.fdr
+                    P = cell2mat(statTestDiff(1).t(1).P(:,c1));
+                    statTestDiff.t.id = strcat(statTestDiff.t.id, ' FDR corrected');
+                    Q = ioi_fdr(P); % FDR correction
+                    statTestDiff.t.H (:,c1) = mat2cell(Q < job.optStat.alpha,ones([size(job.paired_seeds,1), 1]));
+                end
                 % Show a * when a significant difference is found.
                 for iSeeds = 1:size(job.paired_seeds, 1)
                     if statTestDiff(1).t(1).H{iSeeds,c1}
@@ -967,6 +987,12 @@ if isfield (job.optStat,'derivative')
                 set(gca, 'xLim', [axMargin size(yDiff,1) + axMargin]);
                 if isfield(job.optFig.yLimits, 'yLimManual')
                     set(gca, 'ylim', job.optFig.yLimits.yLimManual.yLimValue)
+                end
+                if job.optStat.fdr
+                    P = cell2mat(statTestDiff(1).w(1).P(:,c1));
+                    statTestDiff.w.id = strcat(statTestDiff.w.id, ' FDR corrected');
+                    Q = ioi_fdr(P); % FDR correction
+                    statTestDiff.w.H (:,c1) = mat2cell(Q < job.optStat.alpha,ones([size(job.paired_seeds,1), 1]));
                 end
                 % Show a * when a significant difference is found.
                 for iSeeds = 1:size(job.paired_seeds, 1)
@@ -1051,6 +1077,12 @@ if isfield (job,'rawData')
                 if isfield(job.optFig.yLimits, 'yLimManual')
                     set(gca, 'ylim', job.optFig.yLimits.yLimManual.yLimValue)
                 end
+               if job.optStat.fdr
+                    P = cell2mat(statTestRaw(1).t(1).P(:,c1));
+                    statTestRaw.t.id = strcat(statTestRaw.t.id, ' FDR corrected');
+                    Q = ioi_fdr(P); % FDR correction
+                    statTestRaw.t.H (:,c1) = mat2cell(Q < job.optStat.alpha,ones([size(job.paired_seeds,1), 1]));
+                end
                 % Show a * when a significant difference is found.
                 for iSeeds = 1:size(job.paired_seeds, 1)
                     if statTestRaw(1).t(1).H{iSeeds,c1}
@@ -1118,6 +1150,12 @@ if isfield (job,'rawData')
                 set(gca, 'xLim', [axMargin size(yRaw,1) + axMargin]);
                 if isfield(job.optFig.yLimits, 'yLimManual')
                     set(gca, 'ylim', job.optFig.yLimits.yLimManual.yLimValue)
+                end
+                if job.optStat.fdr
+                    P = cell2mat(statTestRaw(1).w(1).P(:,c1));
+                    statTestRaw.w.id = strcat(statTestRaw.w.id, ' FDR corrected');
+                    Q = ioi_fdr(P); % FDR correction
+                    statTestRaw.w.H (:,c1) = mat2cell(Q < job.optStat.alpha,ones([size(job.paired_seeds,1), 1]));
                 end
                 % Show a * when a significant difference is found.
                 for iSeeds = 1:size(job.paired_seeds, 1)

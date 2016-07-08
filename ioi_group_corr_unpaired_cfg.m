@@ -108,6 +108,15 @@ bonferroni.values           = {false, true};
 bonferroni.val              = {true};
 bonferroni.help             = {'Perform Bonferroni correction for multiple comparisons.'}';
 
+% Multiple comparisons correction (FDR)
+fdr                         = cfg_menu;
+fdr.tag                     = 'fdr';
+fdr.name                    = 'FDR correction';
+fdr.labels                  = {'No','Yes'};
+fdr.values                  = {false, true};
+fdr.val                     = {true};
+fdr.help                    = {'Perform False Discovery Rate correction for multiple comparisons.'}';
+
 % ------------------------------------------------------------------------------
 % Remove outliers
 % ------------------------------------------------------------------------------
@@ -160,7 +169,7 @@ rawData.help                = {'Choose whether to perform correlation analysis o
 optStat                     = cfg_branch;
 optStat.tag                 = 'optStat';
 optStat.name                = 'Statistical test options';
-optStat.val                 = {ttest1 wilcoxon1  alpha bonferroni remOutlier derivative rawData};
+optStat.val                 = {ttest1 wilcoxon1  alpha bonferroni fdr remOutlier derivative rawData};
 optStat.help                = {'Options for 2nd-level analysis. If in doubt, simply keep the default values.'}';
 % ------------------------------------------------------------------------------
 % ------------------------------------------------------------------------------
