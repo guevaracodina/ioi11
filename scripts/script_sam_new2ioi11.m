@@ -1,4 +1,5 @@
-% Pre-processing script before fc processing
+%% Pre-processing script before fc processing
+% Run first script_ioi_realignment, then this script
 %% Path (after running spm8)
 addpath(genpath('D:\spm8\toolbox\ioi'))
 
@@ -16,9 +17,11 @@ subjectList{6} = '16_02_26,NC05a';
 subjectList{7} = '16_02_26,NC05b';
 subjectList{8} = '16_02_26,NC06a';
 subjectList{9} = '16_02_26,NC06b';
+subjectList{10} = '16_07_07,NC07';
 
 %% Call function
-for iSubjects=1:numel(subjectList)
+subjects2Run = 10;      % List of subject numbers to run
+for iSubjects = subjects2Run
     IOI.subj_name = subjectList{iSubjects};
     ioi_sam_new2ioi11(IOI)
 end

@@ -4,6 +4,9 @@ function ioi_sam_new2ioi11(IOI)
 % These images are already band-pass filtered between 1/120 & 1/10Hz
 % and spatially filtered 3x3 pixels FWHM
 %% dir field
+doShrinkage = false;
+shrink_factor = 1;
+doFlip = true;
 fprintf('Processing started for subject %s\n',IOI.subj_name);
 IOI.warning = {};
 IOI.subj_OK = 1;
@@ -25,6 +28,15 @@ HbO = fread(fileID,'int32');
 HbO = reshape(HbO,Temps_d1,X_d2,Y_d3); %Temps_d1,… are stored in Dim_binFile.mat
 disp(['Read HbO Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
+%% Do flip (HbO)
+if doFlip
+    tic
+    for iFrames=1:size(HbO,1)
+        HbO(iFrames,:,:) = rot90(squeeze(HbO(iFrames,:,:)), 2);
+    end
+    disp(['HbO Data Flipped in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
+end
+
 %% Compute transformation to realign HbO images
 tic
 % Load registered image
@@ -38,18 +50,26 @@ end
 disp(['Realignment of HbO Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
 %% Shrinkage preparation and original brainmask
-shrink_factor = 2;
 n_frames = size(HbO,1);
 if n_frames > 2000
     n_frames = 2000;
 end
 IOI.sess.n_frames = n_frames;
 IOI.sess_res{1}.n_frames = n_frames;
-nx = round(size(HbO,2)/shrink_factor);
-ny = round(size(HbO,3)/shrink_factor);
-HbO_resize = zeros([n_frames nx ny]);
+if doShrinkage
+    nx = round(size(HbO,2)/shrink_factor);
+    ny = round(size(HbO,3)/shrink_factor);
+    HbO_resize = zeros([n_frames nx ny]);
+else
+    nx = size(HbO,2);
+    ny = size(HbO,3);
+end
+
 % Get edge surrounding the brain
 brainMask = mat2gray(squeeze(mean(HbO,1)));
+if ~doShrinkage
+    brainMask = ioi_MYimresize(brainMask, 2*[nx ny]);
+end
 % Invert pixels
 brainMask = ~im2bw(brainMask, max(brainMask(:))-eps);
 IOI.res.shrinkageOn = 1;
@@ -59,13 +79,15 @@ IOI.res.shrink_y = shrink_factor;
 save(IOImat,'IOI');
 
 %% Actual Shrinkage
-tic
-for iFrames = 1:n_frames,
-    HbO_resize(iFrames,:,:) = ioi_MYimresize(squeeze(HbO(iFrames,:,:)), [nx ny]);
+if doShrinkage
+    tic
+    for iFrames = 1:n_frames,
+        HbO_resize(iFrames,:,:) = ioi_MYimresize(squeeze(HbO(iFrames,:,:)), [nx ny]);
+    end
+    HbO = HbO_resize;
+    clear HbO_resize
+    disp(['Shrink HbO Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 end
-HbO = HbO_resize;
-clear HbO_resize
-disp(['Shrink HbO Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
 %% Display images
 % maxVal = max(HbO(:));
@@ -104,12 +126,24 @@ suffix_for_anat_file = 'anat'; %to build anatomical image name
 sess_label = 'S'; %prefix for name of directories for each session
 sess_str = [sess_label gen_num_str(1,2)];
 %leave voxel size in arbitrary units for now, for anatomical image
-vx_anat = [1 1 1];
+if doShrinkage
+    vx_anat = [1 1 1];
+else
+%     vx_anat = [2 2 1];
+    vx_anat = [1 1 1];
+end
 % h = open(fullfile(IOI.dir.dir_subj_res,[IOI.subj_name '.fig']));
 h = open(fullfile(IOI.dir.dir_subj_raw,[IOI.subj_name '.fig']));
 set(h,'units','inch')
 % Image is double, range: [0 4096]
 image_anat = 2^12*mat2gray(getimage);
+if ~doShrinkage
+    image_anat = ioi_MYimresize(image_anat, 2*[nx ny]);
+end
+% Do flip (anatomical)
+if doFlip
+    image_anat = rot90(image_anat, 2);
+end
 imwrite(mat2gray(getimage), fullfile(IOI.dir.dir_subj_res,[IOI.subj_name '_anat_S01.png']),...
     'BitDepth',16)
 % First, create S01 folder inside IOI.dir.dir_subj_res
@@ -132,6 +166,9 @@ if ~isfield(IOI, 'fcIOS')
     IOI.fcIOS(1).filtNdown = struct([]);
     IOI.fcIOS(1).SPM = struct([]);
     IOI.fcIOS(1).corr = struct([]);
+end
+if doFlip
+    brainMask = rot90(brainMask, 2);
 end
 imwrite(brainMask, fullfile(IOI.dir.dir_subj_res,[IOI.subj_name '_brainMask.png']),...
     'BitDepth',1)
@@ -213,6 +250,16 @@ HbR = fread(fileID,'int32');
 HbR = reshape(HbR,Temps_d1,X_d2,Y_d3); %Temps_d1,… are stored in Dim_binFile.mat
 disp(['Read HbR Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
+%% Do flip (HbR)
+if doFlip
+    tic
+    for iFrames=1:size(HbR,1)
+        HbR(iFrames,:,:) = rot90(squeeze(HbR(iFrames,:,:)), 2);
+    end
+    disp(['HbR Data Flipped in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
+end
+
+
 %% Compute transformation to realign HbO images
 tic
 % Load registered image
@@ -230,19 +277,26 @@ disp(['Realignment of HbR Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]
 % IOImat = 'D:\Edgar\OIS_Results\FB25E02\IOI.mat';
 % load(IOImat)
 % n_frames = IOI.sess.n_frames ;
-nx = round(size(HbR,2)/IOI.res.shrink_x);
-ny = round(size(HbR,3)/IOI.res.shrink_y);
+if doShrinkage
+    nx = round(size(HbR,2)/IOI.res.shrink_x);
+    ny = round(size(HbR,3)/IOI.res.shrink_y);
+else
+    nx = size(HbR,2);
+    ny = size(HbR,3);
+end
 HbR_resize = zeros([n_frames nx ny]);
 save(IOImat,'IOI');
 
 %% Actual Shrinkage
-tic
-for iFrames = 1:n_frames,
-    HbR_resize(iFrames,:,:) = ioi_MYimresize(squeeze(HbR(iFrames,:,:)), [nx ny]);
+if doShrinkage
+    tic
+    for iFrames = 1:n_frames,
+        HbR_resize(iFrames,:,:) = ioi_MYimresize(squeeze(HbR(iFrames,:,:)), [nx ny]);
+    end
+    HbR = HbR_resize;
+    clear HbR_resize
+    disp(['Shrink HbR Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 end
-HbR = HbR_resize;
-clear HbR_resize
-disp(['Shrink HbR Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
 %% Save concentrations (HbR)
 nzero_padding = 5;
