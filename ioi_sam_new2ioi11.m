@@ -25,6 +25,10 @@ tic
 load(fullfile(IOI.dir.dir_subj_raw,'Dim_binFile.mat'));
 fileID=fopen(fullfile(IOI.dir.dir_subj_raw,'HbO.bin'),'r');
 HbO = fread(fileID,'int32');
+if rem (numel(HbO), X_d2*Y_d3) ~= 0
+    Temps_d1 = fix(numel(HbO) ./ (X_d2*Y_d3));
+    HbO = HbO(1:Temps_d1*X_d2*Y_d3);
+end
 HbO = reshape(HbO,Temps_d1,X_d2,Y_d3); %Temps_d1,… are stored in Dim_binFile.mat
 disp(['Read HbO Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
@@ -247,6 +251,10 @@ tic
 load(fullfile(IOI.dir.dir_subj_raw,'Dim_binFile.mat'));
 fileID=fopen(fullfile(IOI.dir.dir_subj_raw,'HbR.bin'),'r');
 HbR = fread(fileID,'int32');
+if rem (numel(HbR), X_d2*Y_d3) ~= 0
+    Temps_d1 = fix(numel(HbR) ./ (X_d2*Y_d3));
+    HbR = HbR(1:Temps_d1*X_d2*Y_d3);
+end
 HbR = reshape(HbR,Temps_d1,X_d2,Y_d3); %Temps_d1,… are stored in Dim_binFile.mat
 disp(['Read HbR Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
