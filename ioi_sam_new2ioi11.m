@@ -4,9 +4,9 @@ function ioi_sam_new2ioi11(IOI)
 % These images are already band-pass filtered between 1/120 & 1/10Hz
 % and spatially filtered 3x3 pixels FWHM
 %% dir field
-doShrinkage = false;
-shrink_factor = 1;
-doFlip = true;
+doShrinkage = true;     % True when images are 1024x1024
+shrink_factor = 2;
+doFlip = true;          % True for July 2016 experiments
 fprintf('Processing started for subject %s\n',IOI.subj_name);
 IOI.warning = {};
 IOI.subj_OK = 1;
@@ -53,7 +53,7 @@ for iFrames=1:size(HbO,1)
 end
 disp(['Realignment of HbO Data in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
-%% Shrinkage preparation and original brainmask
+%% Shrinkage preparation and computation of original brainmask
 n_frames = size(HbO,1);
 if n_frames > 2000
     n_frames = 2000;
@@ -70,6 +70,7 @@ else
 end
 
 % Get edge surrounding the brain
+tic
 brainMask = mat2gray(squeeze(mean(HbO,1)));
 if ~doShrinkage
     brainMask = ioi_MYimresize(brainMask, 2*[nx ny]);
@@ -81,6 +82,7 @@ IOI.res.shrinkageOn = 1;
 IOI.res.shrink_x = shrink_factor;
 IOI.res.shrink_y = shrink_factor;
 save(IOImat,'IOI');
+disp(['Brain Mask computed in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 
 %% Actual Shrinkage
 if doShrinkage
@@ -144,10 +146,11 @@ image_anat = 2^12*mat2gray(getimage);
 if ~doShrinkage
     image_anat = ioi_MYimresize(image_anat, 2*[nx ny]);
 end
-% Do flip (anatomical)
-if doFlip
-    image_anat = rot90(image_anat, 2);
-end
+% Do flip (anatomical) --> Not necessary, anatomical image is flipped in
+% the realignment step
+% if doFlip
+%     image_anat = rot90(image_anat, 2);
+% end
 imwrite(mat2gray(getimage), fullfile(IOI.dir.dir_subj_res,[IOI.subj_name '_anat_S01.png']),...
     'BitDepth',16)
 % First, create S01 folder inside IOI.dir.dir_subj_res
@@ -171,9 +174,10 @@ if ~isfield(IOI, 'fcIOS')
     IOI.fcIOS(1).SPM = struct([]);
     IOI.fcIOS(1).corr = struct([]);
 end
-if doFlip
-    brainMask = rot90(brainMask, 2);
-end
+% Not necessary, brain mask is createed from flipped HbO images
+% if doFlip
+%     brainMask = rot90(brainMask, 2);
+% end
 imwrite(brainMask, fullfile(IOI.dir.dir_subj_res,[IOI.subj_name '_brainMask.png']),...
     'BitDepth',1)
 [dirName, fileName, fileExt] = fileparts(IOI.res.file_anat);
@@ -266,7 +270,6 @@ if doFlip
     end
     disp(['HbR Data Flipped in: ' datestr(datenum(0,0,0,0,0,toc),'HH:MM:SS')]);
 end
-
 
 %% Compute transformation to realign HbO images
 tic

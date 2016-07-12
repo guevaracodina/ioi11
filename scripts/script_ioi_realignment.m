@@ -1,15 +1,15 @@
 %% script_ioi_realignment
-% Run first this script, then script_sam_new2ioi11
+% Run first this script, then script_sam_new2ioi11.m
 %% Path (after running spm8)
 addpath(genpath('D:\spm8\toolbox\ioi'))
-doShrinkage = false;
-shrink_factor = 1;
-doFlip = true;
+doShrinkage = true; % True when images are 1024x1024
+doFlip = true;      % True for July 2016 experiments
 
 %% dir field
 IOI.dir.dir_group_all = 'D:\Edgar\';
 IOI.dir.dir_group_raw = 'D:\Edgar\OIS_Data\';
 IOI.dir.dir_group_res = 'D:\Edgar\OIS_Results\';
+% File of the reference image
 atlasDir = fullfile(IOI.dir.dir_group_raw, '16_02_25,NC01');
 h =  open(fullfile(atlasDir,['16_02_25,NC01' '.fig']));
 atlas_fixed = mat2gray(getimage);
@@ -38,19 +38,27 @@ end
 
 %% Subject list for realignment
 clear subjectList
-subjectList{1} = '16_02_25,LP01a';
-subjectList{2} = '16_02_25,LP01b';
-subjectList{3} = '16_02_25,NC02';
-subjectList{4} = '16_02_25,NC03a';
-subjectList{5} = '16_02_25,NC03b';
-subjectList{6} = '16_02_26,NC05a';
-subjectList{7} = '16_02_26,NC05b';
-subjectList{8} = '16_02_26,NC06a';
-subjectList{9} = '16_02_26,NC06b';
+subjectList{1}  = '16_02_25,LP01a';
+subjectList{2}  = '16_02_25,LP01b';
+subjectList{3}  = '16_02_25,NC02';
+subjectList{4}  = '16_02_25,NC03a';
+subjectList{5}  = '16_02_25,NC03b';
+subjectList{6}  = '16_02_26,NC05a';
+subjectList{7}  = '16_02_26,NC05b';
+subjectList{8}  = '16_02_26,NC06a';
+subjectList{9}  = '16_02_26,NC06b';
 subjectList{10} = '16_07_07,NC07';
+subjectList{11} = '16_07_07,LP02a';
+subjectList{12} = '16_07_07,LP02b';
+subjectList{13} = '16_07_08,LP03';
+subjectList{14} = '16_07_08,LP04';
+subjectList{15} = '16_07_08,LP05a';
+subjectList{16} = '16_07_08,LP05b';
+subjectList{17} = '16_07_08,NC08';
+subjectList{18} = '16_07_08,NC09';
 
 %% Create alignment points
-subjects2Run = 10;      % List of subject numbers to run
+subjects2Run = 11:18;      % List of subject numbers to run
 for iSubjects = subjects2Run
     IOI.subj_name = subjectList{iSubjects};
     IOI.dir.dir_subj_raw = fullfile(IOI.dir.dir_group_raw, IOI.subj_name);
