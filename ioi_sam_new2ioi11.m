@@ -25,6 +25,7 @@ tic
 load(fullfile(IOI.dir.dir_subj_raw,'Dim_binFile.mat'));
 fileID=fopen(fullfile(IOI.dir.dir_subj_raw,'HbO.bin'),'r');
 HbO = fread(fileID,'int32');
+fclose(fileID);
 if rem (numel(HbO), X_d2*Y_d3) ~= 0
     Temps_d1 = fix(numel(HbO) ./ (X_d2*Y_d3));
     HbO = HbO(1:Temps_d1*X_d2*Y_d3);
@@ -255,6 +256,7 @@ tic
 load(fullfile(IOI.dir.dir_subj_raw,'Dim_binFile.mat'));
 fileID=fopen(fullfile(IOI.dir.dir_subj_raw,'HbR.bin'),'r');
 HbR = fread(fileID,'int32');
+fclose(fileID);
 if rem (numel(HbR), X_d2*Y_d3) ~= 0
     Temps_d1 = fix(numel(HbR) ./ (X_d2*Y_d3));
     HbR = HbR(1:Temps_d1*X_d2*Y_d3);
