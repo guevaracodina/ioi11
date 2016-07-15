@@ -9,8 +9,6 @@ ZNaCl = results.Z(:,:,controlGroupIdx);
 ZLPS = results.Z(:,:,treatmentGroupIdx);
 nNaCl = size(ZNaCl, 3);
 nLPS = size(ZLPS, 3);
-ZNaClVec = [];
-ZLPSVec = [];
 
 %% Make multiple comparisons
 nComp = numel(nonzeros(triu(ZNaCl(:,:,1), 1)'));
@@ -41,6 +39,8 @@ colormap(ioi_get_colormap('redbluecmap'))
 
 %% Plot homotopic functional connectivity values
 close all
+ZLPSVec=[];
+ZNaClVec=[];
 for iLPS = 1:nLPS,
     ZLPSVec = [ZLPSVec; nonzeros(triu(ZLPS(:,:,iLPS), 1)')];
 end
@@ -60,6 +60,9 @@ load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbR.mat')
 ZNaCl = results.Z(:,:,controlGroupIdx);
 ZLPS = results.Z(:,:,treatmentGroupIdx);
 
+ZLPSVec=[];
+ZNaClVec=[];
+
 for iLPS = 1:nLPS,
     ZLPSVec = [ZLPSVec; nonzeros(triu(ZLPS(:,:,iLPS), 1)')];
 end
@@ -77,36 +80,64 @@ set(gca,'FontSize', 12)
 set(gca,'XTickLabel',{'' 'HbO' 'HbR'})
 legend({'NaCl_{HbO_2}' 'LPS' 'NaCl_{HbR}' 'LPS'},'Location','NorthWest')
 
-%% Observe repeatability in LPS
-h1=figure; set(h,'color','w')
-hold on
-x(1:2:9) = 1;
-x(2:2:10) = 2;
-y(1:2:9) = LPS_HbO(1:5);
-y(2:2:10) = LPS_HbO(6:10);
-plot(x,y,'r-o','MarkerSize',12,'LineWidth',2)
-title('LPS01','FontSize',14)
-ylabel('z(r)','FontSize',14)
-xlabel('Homotopic fc','FontSize',14);
-xlim([0 2])
-set(gca,'XTick',[0 1 2])
-set(gca,'FontSize', 12)
-set(gca,'XTickLabel',{'' 'LPS_{session_1}' 'LPS_{session_2}'})
+%% Plot homotopic fc values as a function of CO2
+NaClCO2 = [59.2; 49.4; 41.9; NaN; 62.6; NaN; 56.7; 50];
+LPSCO2 = [NaN; 39.5; 54; 40.3; 80.3];
+bilatROIsIdx = [(1:2:10)' (2:2:10)'];
 
-%% Observe repeatability in NaCl
-h2=figure; set(h,'color','w')
+load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbR.mat')
+% Extract Z for HbR
+ZNaCl = results.Z(:,:,controlGroupIdx);
+ZLPS = results.Z(:,:,treatmentGroupIdx);
+ZLPSVec=[];
+ZNaClVec=[];
+for iLPS = 1:nLPS,
+    for iROI = 1:size(bilatROIsIdx,1)
+        ZLPSVec = [ZLPSVec; ZLPS(bilatROIsIdx(iROI, 1),bilatROIsIdx(iROI, 2), iLPS)];
+    end
+end
+for iNaCl = 1:nNaCl,
+    for iROI = 1:size(bilatROIsIdx,1)
+        ZNaClVec = [ZNaClVec; ZNaCl(bilatROIsIdx(iROI, 1),bilatROIsIdx(iROI, 2), iNaCl)];
+    end
+end
+
+figure; set(gcf,'color','w')
 hold on
-x(1:2:9) = 1;
-x(2:2:10) = 2;
-y(1:2:9) = LPS_HbO(1:5);
-y(2:2:10) = LPS_HbO(6:10);
-plot(x,y,'r-o','MarkerSize',12,'LineWidth',2)
-title('LPS01','FontSize',14)
+% Plot HbR
+plot(NaClCO2,reshape(ZNaClVec, [numel(NaClCO2) numel(ZNaClVec)/size(ZNaCl,3)]),...
+    'bo','MarkerSize',12,'LineWidth',2)
+plot(LPSCO2,reshape(ZLPSVec, [numel(LPSCO2) numel(ZLPSVec)/size(ZLPS,3)]),...
+    'bx','MarkerSize',12,'LineWidth',2)
+
+load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbO.mat')
+% addpath(genpath('D:\Edgar\conn'))
+
+% Extract Z for HbO
+ZNaCl = results.Z(:,:,controlGroupIdx);
+ZLPS = results.Z(:,:,treatmentGroupIdx);
+
+ZLPSVec=[];
+ZNaClVec=[];
+for iLPS = 1:nLPS,
+    for iROI = 1:size(bilatROIsIdx,1)
+        ZLPSVec = [ZLPSVec; ZLPS(bilatROIsIdx(iROI, 1),bilatROIsIdx(iROI, 2), iLPS)];
+    end
+end
+for iNaCl = 1:nNaCl,
+    for iROI = 1:size(bilatROIsIdx,1)
+        ZNaClVec = [ZNaClVec; ZNaCl(bilatROIsIdx(iROI, 1),bilatROIsIdx(iROI, 2), iNaCl)];
+    end
+end
+hold on
+plot(NaClCO2,reshape(ZNaClVec, [numel(NaClCO2) numel(ZNaClVec)/size(ZNaCl,3)]),...
+    'ro','MarkerSize',12,'LineWidth',2)
+plot(LPSCO2,reshape(ZLPSVec, [numel(LPSCO2) numel(ZLPSVec)/size(ZLPS,3)]),...
+    'rx','MarkerSize',12,'LineWidth',2)
+legend
 ylabel('z(r)','FontSize',14)
-xlabel('Homotopic fc','FontSize',14);
-xlim([0 2])
-set(gca,'XTick',[0 1 2])
+xlabel('pCO_2 values','FontSize',14);
 set(gca,'FontSize', 12)
-set(gca,'XTickLabel',{'' 'LPS_{session_1}' 'LPS_{session_2}'})
+% legend({'NaCl_{HbR}  '; 'LPS_{HbR}   '; 'NaCl_{HbO_2}'; 'LPS_{HbO_2} '},'Location','NorthWest')
 
 % EOF

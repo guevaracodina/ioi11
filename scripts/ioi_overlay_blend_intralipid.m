@@ -79,8 +79,9 @@ figName = fullfile(job.parent_results_dir{1} ,[currentName{1} '_avg_overlay']);
 % at the point seedX, seedY (the + sign here is due to image rotation)
 % seedX = IOI.res.ROI{r1}.center(2) - IOI.res.ROI{r1}.radius;
 % seedY = IOI.res.ROI{r1}.center(1) + IOI.res.ROI{r1}.radius;
-seedX = IOI.res.ROI{r1}.center(2) - IOI.res.ROI{r1}.radius;
-seedY = IOI.res.ROI{r1}.center(1) + IOI.res.ROI{r1}.radius;
+seedX = IOI.res.ROI{r1}.center(2) + IOI.res.ROI{r1}.radius;
+seedY = IOI.res.ROI{r1}.center(1) - IOI.res.ROI{r1}.radius;
+
 if r1 == 12 && ~isempty(regexp(IOImat, 'NC', 'once')), % Manual correction of seed 12 (NC)
     seedX = seedX - 15;
     seedY = seedY + 10;
@@ -99,7 +100,8 @@ seedH = 2*IOI.res.ROI{r1}.radius;
 
 %% Read files
 % Get anatomical image
-anatomicalFile      = IOI.res.file_anat;
+% anatomicalFile      = IOI.res.file_anat;
+anatomicalFile      = 'D:\Edgar\OIS_Results\AVG_Atlas.img';
 anatVol             = spm_vol(anatomicalFile);
 anatomical          = spm_read_vols(anatVol);
 
@@ -123,10 +125,11 @@ if size(fcMap,1)~= size(anatomical,1)|| size(fcMap,2)~= size(anatomical,2)
 end
 
 % Orient images
-anatomical          = fliplr(anatomical');
-fcMap               = fliplr(fcMap');
-brainMask           = fliplr(brainMask');
-seedDims = [size(fcMap,2) - seedY, seedX, seedW, seedH];
+anatomical          = rot90(fliplr(anatomical'), 2);
+fcMap               = rot90(fliplr(fcMap'), 2);
+brainMask           = rot90(fliplr(brainMask'), 2);
+% seedDims = [size(fcMap,2) - seedY, seedX, seedW, seedH];
+seedDims =  [seedY, size(fcMap,1) - seedX, seedW, seedH];
 
 %% If values are empty display min/max
 if isempty(fcMapRange)
