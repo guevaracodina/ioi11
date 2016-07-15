@@ -5,13 +5,8 @@ function out = ioi_network_analyses_run(job)
 %                    École Polytechnique de Montréal
 %_______________________________________________________________________________
 
-% ------------------------------------------------------------------------------
-% REMOVE AFTER FINISHING THE FUNCTION //EGC
-% ------------------------------------------------------------------------------
-% fprintf('Work in progress...\nEGC\n')
-% out.IOImat = job.IOImat;
-% return
-% ------------------------------------------------------------------------------
+%  NOTE: The final image has to be flipped Left-Right, and optionally
+%  rotated 180° to display bregma at the bottom
 
 tic
 % CONN toolbox v.13
@@ -26,7 +21,7 @@ currFolder = pwd;
 IC = job.IC;
 colorNames = fieldnames(IOI.color);
 % Flag to indicate replacement of seeds names
-REPLACE_ROI_NAME = true;
+REPLACE_ROI_NAME = false;
 % Seeds names
 % newROIname = {  'Frontal Right'
 %                 'Frontal Left'
@@ -40,18 +35,19 @@ REPLACE_ROI_NAME = true;
 %                 'Retrosplenial Left'
 %                 'Visual Right'
 %                 'Visual Left' };
-newROIname = {  'F_R'
-                'F_L'
-                'M_R'
-                'M_L'
+newROIname = {  'V_R'
+                'V_L'
                 'C_R'
                 'C_L'
                 'S_R'
                 'S_L'
                 'R_R'
                 'R_L'
-                'V_R'
-                'V_L' };
+                'M_R'
+                'M_L'
+%                 'V_R'
+%                 'V_L' }
+};
 % Get ROIs
 [all_ROIs selected_ROIs] = ioi_get_ROIs(job);
 if all_ROIs
@@ -265,11 +261,17 @@ if job.generate_figures
 %     load('D:\Edgar\Data\IOS_Carotid_Res\12_10_18,NC09\IOI.mat')
     load('D:\Edgar\OIS_Results\16_02_25,NC01\ROI\LPF\FiltNDown\GLM\corrMap\IOI.mat')
     % Read anatomical image
-    imAnatVol = spm_vol(IOI.res.file_anat);
+%     imAnatVol = spm_vol(IOI.res.file_anat);
+    % Use an average atlas
+    imAnatVol = spm_vol('D:\Edgar\OIS_Results\AVG_Atlas.img');
     NaCl_imAnat = spm_read_vols(imAnatVol)';
+    % Rotate 180°
+    NaCl_imAnat = rot90(NaCl_imAnat,2);
     % Read brain mask
     maskVol = spm_vol(IOI.fcIOS.mask.fname);
     NaCl_mask = spm_read_vols(maskVol)';
+    % Rotate 180°
+%     NaCl_mask = rot90(NaCl_mask,2);
     % Display anatomical image
     hCtrl = figure; set(hCtrl,'color','k');
     % Allow printing of black background
@@ -292,18 +294,18 @@ if job.generate_figures
     globalGE = nanmean(results.measures.GlobalEfficiency_roi);
     % Seed coordinates
     seedCoord = {
-        [183 86];
-        [109 87];
-        [191 122];
-        [103 124];
-        [156 127];
-        [137 127];
-        [239 189];
-        [56 194];
-        [167 236];
-        [143 239];
-        [221 290];
-        [83 293]
+        [756 276];
+        [294 274];
+        [573 407];
+        [453 407];
+        [841 716];
+        [181 714];
+        [544 870];
+        [462 869];
+        [716 930];
+        [316 928];
+%         [221 290];
+%         [83 293]
         };
     
     % Display edges (correlation values in NaCl group)
@@ -369,8 +371,11 @@ if job.generate_figures
     % load control group anatomical template (CC10) idxSubject = 14
     % [IOI IOImat dir_ioimat] = ioi_get_IOI(job,10);
     % Read anatomical image
-    imAnatVol = spm_vol(IOI.res.file_anat);
+%     imAnatVol = spm_vol(IOI.res.file_anat);
+    imAnatVol = spm_vol('D:\Edgar\OIS_Results\AVG_Atlas.img');
     CaCl2_imAnat = spm_read_vols(imAnatVol)';
+    % Rotate 180°
+    CaCl2_imAnat = rot90(CaCl2_imAnat,2);
     % Display anatomical image
     hTreat = figure; set(hTreat,'color','k');
     % Allow printing of black background
@@ -380,6 +385,8 @@ if job.generate_figures
     % Read brain mask
     maskVol = spm_vol(IOI.fcIOS.mask.fname);
     CaCl2_mask = spm_read_vols(maskVol)';
+    % Rotate 180°
+%     CaCl2_mask = rot90(CaCl2_mask,2);
     imagesc(CaCl2_imAnat .* CaCl2_mask); axis image; colormap(gray(256));
     set(gca, 'XTick', []); set(gca, 'YTick', []);
     % Get group indices
@@ -395,20 +402,20 @@ if job.generate_figures
     GE_roiMean = nanmean(GeTreat);
     globalGE = nanmean(results.measures.GlobalEfficiency_roi);
     % Seed coordinates
-    seedCoord = {
-        [183 86];
-        [109 87];
-        [191 122];
-        [103 124];
-        [156 127];
-        [137 127];
-        [239 189];
-        [56 194];
-        [167 236];
-        [143 239];
-        [221 290];
-        [83 293]
-        };
+%     seedCoord = {
+%         [183 86];
+%         [109 87];
+%         [191 122];
+%         [103 124];
+%         [156 127];
+%         [137 127];
+%         [239 189];
+%         [56 194];
+%         [167 236];
+%         [143 239];
+%         [221 290];
+%         [83 293]
+%         };
     
     % Display edges (correlation values in CaCl2 group)
     for iROIsource = 1:numel(results.rois)
