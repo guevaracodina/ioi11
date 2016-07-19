@@ -1,4 +1,4 @@
-function [displayed_pixels, total_pixels] = ioi_overlay_blend(IOImat, job, fcMapFile, varargin)
+function [displayed_pixels, total_pixels] = ioi_overlay_blend_intralipid(IOImat, job, fcMapFile, varargin)
 % Overlay/blend a functional image from a NIfTI file onto an anatomical image.
 % SYNTAX
 % ioi_overlay_blend(IOImat, job, fcMapFile, fcMapRange, alphaRange, nColorLevels)

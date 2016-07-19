@@ -1,9 +1,9 @@
-%% script_overlay_blend
+%% script_overlay_maps_LPS
 r1 = 1:10;             % ROI index
 for iR = 1:numel(r1)
     c1 = 6;             % Color index
     % Folder where to save the images (Change accordingly to contrast c1)
-    figFolder = fullfile('D:\Edgar\OIS_Results\averaged_maps\HbO\',num2str(r1(iR)));
+    figFolder = fullfile('D:\Edgar\OIS_Results\averaged_maps\HbR\',num2str(r1(iR)));
     % String to identify the group
     groupID = 'LP';
     % Range of values to map to the full range of colormap: [minVal maxVal]
@@ -14,12 +14,7 @@ for iR = 1:numel(r1)
     %% Code
     dirListNIfTI = dir(fullfile(figFolder, ['*' groupID '*.nii']));
     % Load IOI matrix of the source image
-    % if strcmp(groupID, 'LP')
     IOImat = 'D:\Edgar\OIS_Results\16_02_25,NC01\ROI\LPF\FiltNDown\GLM\corrMap\IOI.mat';
-    % else
-    %     fprintf('No IOI matrix found for %s.\n', groupID);
-    %     return
-    % end
     images2overlay = struct2cell(dirListNIfTI);
     images2overlay = images2overlay(1,:)';
     images2overlay = cellfun(@(x) fullfile(figFolder, [x ',1']), images2overlay, 'UniformOutput', false);
@@ -43,7 +38,7 @@ for iR = 1:numel(r1)
     job(1).figRes                                   = 300;          % in dpi
     job(1).drawCircle(1).drawCircle_On(1).circleLW  = 0.8;          % line width
     job(1).drawCircle(1).drawCircle_On(1).circleLS  = '-';          % line style
-    job(1).drawCircle(1).drawCircle_On(1).circleEC  = 'w';          % line color
+    job(1).drawCircle(1).drawCircle_On(1).circleEC  = 'k';          % line color
     job.parent_results_dir{1}                       = fullfile(figFolder,'overlay');
     job.generate_figures                            = true;         % display figure
     job.save_figures                                = true;        % save figure
