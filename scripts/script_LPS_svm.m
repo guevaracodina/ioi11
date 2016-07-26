@@ -1,10 +1,12 @@
-%% load data
+%% Load CO2 data
 clear; clc;
 NaClCO2 = [59.2; 49.4; 41.9; NaN; 62.6; NaN; 56.7; 50];
 LPSCO2 = [NaN; 39.5; 54; 40.3; 80.3];
 bilatROIsIdx = [(1:2:10)' (2:2:10)'];
 
-load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbR.mat')
+%% Load HbR data 
+% load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbR.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOut\results_S01_HbR.mat');
 % Extract Z for HbR
 ZNaClHbR = results.Z(:,:,controlGroupIdx);
 ZLPSHbR = results.Z(:,:,treatmentGroupIdx);
@@ -31,7 +33,9 @@ plot(NaClCO2,reshape(ZNaClVecHbR, [numel(NaClCO2) numel(ZNaClVecHbR)/size(ZNaClH
 plot(LPSCO2,reshape(ZLPSVecHbR, [numel(LPSCO2) numel(ZLPSVecHbR)/size(ZLPSHbR,3)]),...
     'bx','MarkerSize',12,'LineWidth',2)
 
-load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbO.mat')
+%% Load HbO data
+% load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbO.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOut\results_S01_HbO.mat')
 % Extract Z for HbO
 ZNaCl = results.Z(:,:,controlGroupIdx);
 ZLPS = results.Z(:,:,treatmentGroupIdx);
@@ -59,4 +63,11 @@ xlabel('pCO_2 values','FontSize',14);
 set(gca,'FontSize', 12)
 % legend({'NaCl_{HbR}  '; 'LPS_{HbR}   '; 'NaCl_{HbO_2}'; 'LPS_{HbO_2} '},'Location','NorthWest')
 
+%% SVM example - Training
+clear; clc
+load fisheriris
+xdata = meas(51:end,3:4);
+group = species(51:end);
+figure;
+svmStruct = svmtrain(xdata,group,'ShowPlot',true);
 % EOF
