@@ -5,8 +5,8 @@ LPSCO2 = [NaN; 39.5; 54; 40.3; 80.3];
 bilatROIsIdx = [(1:2:10)' (2:2:10)'];
 
 %% Load HbR data 
-% load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbR.mat')
-load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOut\results_S01_HbR.mat');
+load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbR.mat')
+% load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOut\results_S01_HbR.mat');
 % Extract Z for HbR
 ZNaClHbR = results.Z(:,:,controlGroupIdx);
 ZLPSHbR = results.Z(:,:,treatmentGroupIdx);
@@ -34,8 +34,8 @@ plot(LPSCO2,reshape(ZLPSVecHbR, [numel(LPSCO2) numel(ZLPSVecHbR)/size(ZLPSHbR,3)
     'bx','MarkerSize',12,'LineWidth',2)
 
 %% Load HbO data
-% load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbO.mat')
-load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOut\results_S01_HbO.mat')
+load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbO.mat')
+% load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOut\results_S01_HbO.mat')
 % Extract Z for HbO
 ZNaCl = results.Z(:,:,controlGroupIdx);
 ZLPS = results.Z(:,:,treatmentGroupIdx);
@@ -66,8 +66,41 @@ set(gca,'FontSize', 12)
 %% SVM example - Training
 clear; clc
 load fisheriris
+% xdata: matrix with 100 rows (samples) and 2 columns (observations)
 xdata = meas(51:end,3:4);
+% group: column vector (cell) with 100 rows with labels
 group = species(51:end);
 figure;
-svmStruct = svmtrain(xdata,group,'ShowPlot',true);
+svmStruct = svmtrain(xdata,group,'ShowPlot',true, 'kernel_function', 'rbf',...
+    'autoscale', true);
+
+%% SVM example - Classification
+% Classify a new flower with petal length 5 and petal width 2, and circle the new point:
+species = svmclassify(svmStruct,[5 2],'showplot',true)
+hold on;plot(5,2,'ro','MarkerSize',12);hold off
+
+%% SVM training with newborn data
+xdata = [];
+xdata = [xdata, NaClCO2, reshape(ZNaClVec, [numel(NaClCO2) numel(ZNaClVec)/size(ZNaCl,3)]),...
+    reshape(ZNaClVecHbR, [numel(NaClCO2) numel(ZNaClVecHbR)/size(ZNaClHbR,3)]);...
+    LPSCO2, reshape(ZLPSVec, [numel(LPSCO2) numel(ZLPSVec)/size(ZLPS,3)]),...
+    reshape(ZLPSVecHbR, [numel(LPSCO2) numel(ZLPSVecHbR)/size(ZLPSHbR,3)])];
+group = {};
+group(1:8,:) = {'NaCl'};
+group(9:13,:) = {'LPS'};
+figure;
+svmStruct = svmtrain(xdata,group,'ShowPlot', false, 'kernel_function', 'rbf',...
+    'autoscale', true);
+
+%% SVM classification with newborn data
+groupID = svmclassify(svmStruct,xdata(10,:),'showplot',false)
+
+%% SVM cross validation
+SVMModel = fitcsvm(xdata, group,'Standardize',true,'KernelFunction','RBF',...
+    'KernelScale','auto');
+% Cross validate the SVM classifier. By default, the software uses 10-fold
+% cross validation.
+CVSVMModel = crossval(SVMModel);
+classLoss = kfoldLoss(CVSVMModel)
+
 % EOF
