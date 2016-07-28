@@ -120,11 +120,11 @@ set(gca,'FontSize', 12)
 %     reshape(ZLPSVecHbR, [nLPS numel(ZLPSVecHbR)/size(ZLPSHbR,3)])];
 % CO2 & all seed-to-seed correlations class loss: 23%
 
-% xdata = [NaClCO2, reshape(ZNaClVec, [nNaCl numel(ZNaClVec)/size(ZNaCl,3)]),...
-%     reshape(ZNaClVecHbR, [nNaCl numel(ZNaClVecHbR)/size(ZNaClHbR,3)]);...
-%     LPSCO2, reshape(ZLPSVec, [nLPS numel(ZLPSVec)/size(ZLPS,3)]),...
-%     reshape(ZLPSVecHbR, [nLPS numel(ZLPSVecHbR)/size(ZLPSHbR,3)])];
-clear
+xdata = [NaClCO2, reshape(ZNaClVec, [nNaCl numel(ZNaClVec)/size(ZNaCl,3)]),...
+    reshape(ZNaClVecHbR, [nNaCl numel(ZNaClVecHbR)/size(ZNaClHbR,3)]);...
+    LPSCO2, reshape(ZLPSVec, [nLPS numel(ZLPSVec)/size(ZLPS,3)]),...
+    reshape(ZLPSVecHbR, [nLPS numel(ZLPSVecHbR)/size(ZLPSHbR,3)])];
+% clear
 % load('D:\Edgar\OIS_Results\alff\alff_vals.mat')
 % xdata = [HbONaCl HbRNaCl; HbOLPS HbRLPS];
 % load('D:\Edgar\OIS_Results\lateralization\lateral_idx.mat')
@@ -145,9 +145,9 @@ clear
 
 % load('D:\Edgar\OIS_Results\averaged_maps\HbO\10\spatial_extension_R10_C5.mat')
 % xdata = [NaCl_spatial_extension; LPS_spatial_extension];
-xdata = [];
-load('D:\Edgar\OIS_Results\averaged_maps\HbR\10\spatial_extension_R10_C6.mat')
-xdata = [xdata [NaCl_spatial_extension; LPS_spatial_extension]];
+% xdata = [];
+% load('D:\Edgar\OIS_Results\averaged_maps\HbR\10\spatial_extension_R10_C6.mat')
+% xdata = [xdata [NaCl_spatial_extension; LPS_spatial_extension]];
 
 % Remove columns containing NaNs
 [~, NANc] = find(isnan(xdata));
@@ -155,9 +155,9 @@ xdata(:,NANc)=[];
 
 group = {};
 % First 8/11 rows of xdata have NaCl samples
-group(1:12,:) = {'NaCl'};
+group(1:8,:) = {'NaCl'};
 % Last 5/7 rows contain LPS samples
-group(13:20,:) = {'LPS'};
+group(9:13,:) = {'LPS'};
 % svmStruct = svmtrain(xdata,group,'ShowPlot', false, 'kernel_function', 'rbf',...
 %     'autoscale', true);
 
@@ -168,7 +168,7 @@ group(13:20,:) = {'LPS'};
 addpath(genpath('D:\Edgar\biolearning'))
 clc
 k = 10;                                     % Number of folds
-cvFolds = crossvalind('Kfold', group, k);   %# get indices of 10-fold CV
+
 % CVO = cvpartition(group,'k',10);
 % boxconstraint — One strategy is to try a geometric sequence of the box
 % constraint parameter. For example, take 11 values, from 1e-5 to 1e5 by a
@@ -178,8 +178,11 @@ cvFolds = crossvalind('Kfold', group, k);   %# get indices of 10-fold CV
 % rbf_sigma — One strategy is to try a geometric sequence of the RBF sigma
 % parameter. For example, take 11 values, from 1e-5 to 1e5 by a factor of
 % 10.
-for iSigma = logspace(-5, 5, 11),
-    for iBox = logspace(-5, 5, 11)
+SigmaVals = logspace(-5, 5, 11);
+BoxVals = logspace(-5, 5, 11);
+for iSigma = 8,
+    for iBox = 4,
+        cvFolds = crossvalind('Kfold', group, k);   %# get indices of 10-fold CV
         cp = classperf(group);                      %# init performance tracker
         
         for i = 1:k                                 %# for each fold
@@ -200,14 +203,14 @@ for iSigma = logspace(-5, 5, 11),
             % z = exp(searchmin);
             
             % rbf_sigma = z(1); %0.8
-            rbf_sigma = iSigma;
+            rbf_sigma = SigmaVals(iSigma);
             % boxconstraint = z(2); % 2e-1
-            boxconstraint = iBox;
+            boxconstraint = BoxVals(iBox);
             %# train an SVM model over training instances
             svmModel = svmtrain(xtrain, ytrain, ...
                 'Autoscale',true, 'Showplot',false, 'Method','SMO', ...
                 'BoxConstraint',boxconstraint, 'Kernel_Function','rbf', ...
-                'RBF_Sigma',rbf_sigma);
+                'RBF_Sigma',rbf_sigma, 'tolkkt', 1e-6);
             
             %# test using test instances
             pred = svmclassify(svmModel, xtest, 'Showplot',false);
