@@ -66,27 +66,12 @@ load(fullfile(dataFolder,'alff_vals.mat'))
 
 %% job options
 % ------------------------------------------------------------------------------
-% Define anonymous functions for affine transformations
-% ------------------------------------------------------------------------------
-rotx = @(theta) [1 0 0 0; 0 cos(theta) -sin(theta) 0; 0 sin(theta) cos(theta) 0; 0 0 0 1];
-roty = @(theta) [cos(theta) 0 sin(theta) 0; 0 1 0 0; -sin(theta) 0 cos(theta) 0; 0 0 0 1];
-rotz = @(theta) [cos(theta) -sin(theta) 0 0; sin(theta) cos(theta) 0 0; 0 0 1 0; 0 0 0 1];
-translate = @(a,b) [1 0 a 0; 0 1 b 0; 0 0 1 0; 0 0 0 1];
-% ------------------------------------------------------------------------------
-nColorLevels = 256;
-% ------------------------------------------------------------------------------
 % Define matlab batch job with the required fields
 % ------------------------------------------------------------------------------
-job(1).figCmap                                  = ioi_get_colormap('bipolar');     % colormap
-job(1).figIntensity                             = 1;            % [0 - 1]
-job(1).transM                                   = rotz(pi/2)*roty(pi/2);     % affine transform
 job(1).figSize                                  = [6 3];    % inches
 job(1).figRes                                   = 300;          % in dpi
-job(1).drawCircle(1).drawCircle_On(1).circleLW  = 0.8;          % line width
-job(1).drawCircle(1).drawCircle_On(1).circleLS  = '-';          % line style
-job(1).drawCircle(1).drawCircle_On(1).circleEC  = 'k';          % line color
 job.generate_figures                            = true;         % display figure
-job.save_figures                                = false;        % save figure
+job.save_figures                                = true;        % save figure
 % ------------------------------------------------------------------------------
 
 %% Distribution plots (HbO)
