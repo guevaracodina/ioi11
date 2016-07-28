@@ -213,10 +213,10 @@ for iSigma = 8,
                 'RBF_Sigma',rbf_sigma, 'tolkkt', 1e-6);
             
             %# test using test instances
-            pred = svmclassify(svmModel, xtest, 'Showplot',false);
+            pred{i} = svmclassify(svmModel, xtest, 'Showplot',false);
             
             %# evaluate and update performance object
-            cp = classperf(cp, pred, testIdx);
+            cp = classperf(cp, pred{i}, testIdx);
         end
         
         %# get accuracy
