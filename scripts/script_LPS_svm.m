@@ -18,15 +18,18 @@ nLPS = size(ZLPSHbR, 3);
 ZLPSVecHbR=[];
 ZNaClVecHbR=[];
 % Indices of all ROI-to-ROI fc values
-[idxI, idxJ] =  ind2sub(size(squeeze(ZLPSHbR(:,:,1))),...
-    find(~tril(ones(size(squeeze(ZLPSHbR(:,:,1)))))));
+% [idxI, idxJ] =  ind2sub(size(squeeze(ZLPSHbR(:,:,1))),...
+%     find(~tril(ones(size(squeeze(ZLPSHbR(:,:,1)))))));
+idx = find(~tril(ones(size(squeeze(ZLPSHbR(:,:,1))))));
 for iLPS = 1:nLPS,
     if onlyBilateral
         for iROI = 1:size(bilatROIsIdx,1)
             ZLPSVecHbR = [ZLPSVecHbR; ZLPSHbR(bilatROIsIdx(iROI, 1),bilatROIsIdx(iROI, 2), iLPS)];
         end
     else
-        ZLPSVecHbR = [ZLPSVecHbR; ZLPSHbR(idxI, idxJ, iLPS)];
+        tmpVec = squeeze(ZLPSHbR(:,:,iLPS));
+        ZLPSVecHbR = [ZLPSVecHbR; tmpVec(idx)];
+%         ZLPSVecHbR = [ZLPSVecHbR; reshape(ZLPSHbR(idxI, idxJ, iLPS),[numel(idxI) 1])];
     end
 end
 for iNaCl = 1:nNaCl,
@@ -35,7 +38,8 @@ for iNaCl = 1:nNaCl,
             ZNaClVecHbR = [ZNaClVecHbR; ZNaClHbR(bilatROIsIdx(iROI, 1),bilatROIsIdx(iROI, 2), iNaCl)];
         end
     else
-        ZNaClVecHbR = [ZNaClVecHbR; ZNaClHbR(idxI, idxJ, iNaCl)];
+        tmpVec = squeeze(ZNaClHbR(:,:,iNaCl));
+        ZNaClVecHbR = [ZNaClVecHbR; tmpVec(idx)];
     end
 end
 
@@ -63,7 +67,8 @@ for iLPS = 1:nLPS,
             ZLPSVec = [ZLPSVec; ZLPS(bilatROIsIdx(iROI, 1),bilatROIsIdx(iROI, 2), iLPS)];
         end
     else
-        ZLPSVec = [ZLPSVec; ZLPS(idxI, idxJ, iLPS)];
+        tmpVec = squeeze(ZLPS(:,:,iLPS));
+        ZLPSVec = [ZLPSVec; tmpVec(idx)];
     end
 end
 for iNaCl = 1:nNaCl,
@@ -72,7 +77,8 @@ for iNaCl = 1:nNaCl,
             ZNaClVec = [ZNaClVec; ZNaCl(bilatROIsIdx(iROI, 1),bilatROIsIdx(iROI, 2), iNaCl)];
         end
     else
-        ZNaClVec = [ZNaClVec; ZNaCl(idxI, idxJ, iLPS)];
+        tmpVec = squeeze(ZNaCl(:,:,iNaCl));
+        ZNaClVec = [ZNaClVec; tmpVec(idx)];
     end
 end
 hold on
