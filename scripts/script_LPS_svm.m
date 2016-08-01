@@ -1,5 +1,6 @@
 %% Load CO2 data
 clear; clc;
+resultsFolder = 'D:\Edgar\OIS_Results\svm';
 NaClCO2 = [59.2; 49.4; 41.9; NaN; 62.6; NaN; 56.7; 50];
 LPSCO2 = [NaN; 39.5; 54; 40.3; 80.3];
 onlyBilateral = false;
@@ -198,6 +199,7 @@ for iSigma = 8,
             xtrain = xdata(trainIdx,:);
             ytrain = group(trainIdx);
             xtest = xdata(testIdx,:);
+            ytest = group(testIdx);
             
             %     minfn = @(z)crossval('mcr',xdata,group,'Predfun', ...
             %     @(xtrain,ytrain,xtest)crossfun(xtrain,ytrain,...
@@ -218,8 +220,10 @@ for iSigma = 8,
                 'BoxConstraint',boxconstraint, 'Kernel_Function','rbf', ...
                 'RBF_Sigma',rbf_sigma, 'tolkkt', 1e-6);
             
-            %# test using test instances
+            %# test using test instances, save output labels to create confusion matrix
             pred{i} = svmclassify(svmModel, xtest, 'Showplot',false);
+            % Keep target labels to create confusion matrix
+            groundTruth{i} = ytest;
             
             %# evaluate and update performance object
             cp = classperf(cp, pred{i}, testIdx);
@@ -236,6 +240,47 @@ for iSigma = 8,
             cp.CountingMatrix(1,:), cp.ClassLabels{2}, cp.CountingMatrix(2,:), cp.CountingMatrix(3,:));
     end
 end
+
+%% Create confusion plot
+outputsCell = {};
+targetsCell = {};
+clear targets outputs
+for iSample = 1:k,
+    if ~isempty(pred{iSample})
+        outputsCell = [outputsCell; pred{iSample}];
+    end
+    if ~isempty(groundTruth{iSample})
+        targetsCell = [targetsCell; groundTruth{iSample}];
+    end
+end
+for iSample = 1:nLPS + nNaCl
+    % LPS are class 1 and NaCl are class 0
+    targets(iSample) = strcmp(targetsCell{iSample},'LPS');
+    outputs(iSample) = strcmp(outputsCell{iSample},'LPS');
+end
+% cleanup
+clear i iBox iLPS iNaCl iSigma idx results ss tmpVec
+% Save results
+save(fullfile(resultsFolder,'LPS_svm.mat'))
+
+%% Plot confusion matrix
+hConf = figure; set(hConf, 'color', 'w')
+plotconfusion(targets, outputs)
+set(gca, 'YTickLabel', {cp.ClassLabels{1} cp.ClassLabels{2} ' ' },...
+    'XTickLabel', {cp.ClassLabels{1} cp.ClassLabels{2} ' ' },...
+    'FontAngle','bold',...
+	'FontSize',16);
+% Specify window units
+set(hConf, 'units', 'inches')
+% Change figure and paper size
+set(hConf, 'Position', [0.1 0.1 4 4])
+set(hConf, 'PaperPosition', [0.1 0.1 4 4])
+% Save as PNG at the user-defined resolution
+print(hConf, '-dpng', ...
+    fullfile(resultsFolder, 'LPS_svm_confusionplot.png'),...
+    sprintf('-r%d',1200));
+hROC = figure; set(hROC, 'color', 'w')
+plotroc(targets, outputs)
 
 %% SVM cross validation using fitcsvm
 % SVMModel = fitcsvm(zscore(xdata), group,'Standardize',true,'KernelFunction','RBF',...
