@@ -28,7 +28,7 @@ load(fullfile(figFolder, sprintf('stats_R%d_C%d.mat', r1, c1)))
 % load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\averaged_maps\HbR\7\stats_R7_C6.mat')
 
 % Get functional images from ctrl group
-ctrl = NaCl;
+ctrl = LPS;
 
 % Mask out non-brain elements
 ctrl(~repmat(brainMask,[1 1 size(ctrl,3)])) =  nan;
