@@ -1,4 +1,4 @@
-function ioi_dualcodeImage (Underlay, Bmap_N_S, Tmap_N_S, Pmap_N_S, H_range, A_range)
+function [hFig, hBar] = ioi_dualcodeImage (Underlay, Bmap_N_S, Tmap_N_S, Pmap_N_S, H_range, A_range)
 %--------------------------------------------------------------------------
 % Sample Matlab code for creating images with hue and alpha color-mapping.
 %
@@ -48,7 +48,7 @@ CM_over = ioi_get_colormap('bipolar');
 %% 3. Do the actual plotting
 %--------------------------------------------------------------------------
 % Make a figure and set of axes
-F = figure('Color', 'k', 'Units', 'Normalized', 'Position', [0.3, 0.4, 0.2, 0.35]); 
+hFig = figure('Color', 'k', 'Units', 'Normalized', 'Position', [0.3, 0.4, 0.2, 0.35]); 
 axes('Position', [0 0 1 1]); 
 
 % Transform the underlay and beta map to RGB values, based on specified colormaps
@@ -78,7 +78,7 @@ hold on;
 
 %% 4. Create a 2D colorbar for the dual-coded overlay
 %--------------------------------------------------------------------------
-G = figure('color', 'k', 'Units', 'Normalized', 'Position', [0.5, 0.4, 0.06, 0.35]);
+hBar = figure('color', 'k', 'Units', 'Normalized', 'Position', [0.5, 0.4, 0.06, 0.35]);
 x = linspace(A_range(1), A_range(2), 256); 
 % x represents the range in alpha (abs(t-stats))
 y = linspace(H_range(1), H_range(2), size(CM_over,1));

@@ -1,4 +1,4 @@
-function [ tMap, pMapFDR, pMapFDRalpha ] = ioi_stat_map( corrMaps, alphaVal )
+function [tMap, pMapFDR, pMapFDRalpha] = ioi_stat_map(corrMaps, alphaVal)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %% Fisher's transform

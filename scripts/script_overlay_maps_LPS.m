@@ -41,7 +41,7 @@ for iR = 1:numel(r1)
     job(1).drawCircle(1).drawCircle_On(1).circleEC  = 'k';          % line color
     job.parent_results_dir{1}                       = fullfile(figFolder,'overlay');
     job.generate_figures                            = true;         % display figure
-    job.save_figures                                = true;        % save figure
+    job.save_figures                                = false;        % save figure
     % ------------------------------------------------------------------------------
     
     % Main loop
