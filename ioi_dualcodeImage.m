@@ -34,7 +34,7 @@ function [hFig, hBar] = ioi_dualcodeImage (Underlay, Bmap_N_S, Tmap_N_S, Pmap_N_
 % voxels with t-stat magnitudes greater or equal than 5 will be opaque.
 
 % Set the labels for the colorbar
-hue_label = 'Correlation';
+hue_label = 'Correlation \it{(r)}';
 alpha_label = '|t|';
 
 % Choose a colormap for the underlay
@@ -85,11 +85,11 @@ y = linspace(H_range(1), H_range(2), size(CM_over,1));
 % y represents the range in hue (beta weight difference)
 [X,Y] = meshgrid(x,y); % Transform into a 2D matrix
 imagesc(x,y,Y); axis xy; % Plot the colorbar
-set(gca, 'Xcolor', 'w', 'Ycolor', 'w')
+set(gca, 'Xcolor', 'w', 'Ycolor', 'w', 'FontSize', 24)
 colormap(CM_over); 
 alpha(X);
 alpha('scaled');  
-xlabel(alpha_label)
+xlabel(alpha_label, 'FontSize', 24)
 set(gca, 'YAxisLocation', 'right')
-ylabel(hue_label)
+ylabel(hue_label, 'FontSize', 24)
 %--------------------------------------------------------------------------

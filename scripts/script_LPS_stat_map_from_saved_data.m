@@ -51,6 +51,14 @@ for c1 = 5:6,
         close(hBar)
         disp([titleString ' done!'])
         
+        %% Print colorbar
+        set(hBar, 'InvertHardcopy', 'off');
+        set(hBar, 'units', 'inches')
+        set(hBar, 'Position', [0.1 0.1 3 6])
+        set(hBar, 'PaperPosition', [0.1 0.1 3 6])
+        print(hBar, '-dpng', ...
+            fullfile('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\averaged_maps', 'transparency_colorbar'),...
+            sprintf('-r%d', 300));
     end % ROI loop
 end % contrast loop
 
