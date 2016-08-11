@@ -66,7 +66,7 @@ save(fullfile(dataFolder,'avg_vals.mat'))
 
 %% Load data
 clear; clc
-dataFolder = 'D:\Edgar\OIS_Results\so2';
+dataFolder = 'D:\Edgar\OIS_Results\so2NoVis';
 load(fullfile(dataFolder,'avg_vals.mat'))
 
 %% job options
