@@ -1,9 +1,9 @@
 %% script_LPS_stat_map
 % creates images with hue (correlation map) and alpha (T-stats) color-mapping.
 % Contrast loop (5=HbO, 6=HbR)
-for c1 = 5:6,
+for c1 = 6,
     % ROI loop (no visual)
-    for r1 = 3:10,
+    for r1 = 5,
         close all;
         % Significance (height) threshold
         alphaVal = 0.05;
@@ -35,13 +35,13 @@ for c1 = 5:6,
         clear job hSpatial pSpatial LPS_spatial_extension NaCl_spatial_extension ...
             LPSimages NaClimages
         
-        % Get functional images from NaClgroup after loading MAT files
-        groupToPrint = NaCl;
-        groupToPrintString = getVarName(NaCl);
+        % Get functional images from NaCl group after loading MAT files
+%         groupToPrint = NaCl;
+%         groupToPrintString = getVarName(NaCl);
         
-        % Get functional images from NaCl/LPS group after loading MAT files
-        % groupToPrint = LPS;
-        % groupToPrintString = getVarName(LPS);
+        % Get functional images from LPS group after loading MAT files
+        groupToPrint = LPS;
+        groupToPrintString = getVarName(LPS);
         
         % Mask out non-brain elements
         groupToPrint(~repmat(brainMask,[1 1 size(groupToPrint,3)])) =  nan;
@@ -69,8 +69,10 @@ for c1 = 5:6,
         %% Plot maps hue & alpha-coded
         %--------------------------------------------------------------------------
         % Plot
-        [hFig, hBar] = ioi_dualcodeImage(imadjust(mat2gray(Underlay)), Bmap_N_S,...
-            Tmap_N_S, Pmap_N_S, H_range, A_range);
+        brainMaskAnat = 1.*brainMask;
+        brainMaskAnat(~brainMask) = 0.25;
+        [hFig, hBar] = ioi_dualcodeImage(brainMaskAnat.*imadjust(mat2gray(Underlay)), brainMask.*Bmap_N_S,...
+            brainMask.*Tmap_N_S, Pmap_N_S, H_range, A_range);
         %--------------------------------------------------------------------------
         
         %% Add seed size & Location
