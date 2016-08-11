@@ -28,11 +28,11 @@ for iLPS = 1:nLPS,
     load (LPSIOImat{iLPS})
     load(IOI.ROI.ROIfname)
     myIdx = 1;
-    for iR = 1:numel(ROI),
+    for iR = 3:numel(ROI),
         HbOLPS(iLPS, myIdx) = mean(ROI{iR}{5});
         HbRLPS(iLPS, myIdx) = mean(ROI{iR}{6});
-        HbTLPS(iLPS, myIdx) = HbOLPS(iLPS, iR) + HbRLPS(iLPS, iR);
-        sO2LPS(iLPS, myIdx) = HbOLPS(iLPS, iR) ./ HbTLPS(iLPS, iR);
+        HbTLPS(iLPS, myIdx) = HbOLPS(iLPS, myIdx) + HbRLPS(iLPS, myIdx);
+        sO2LPS(iLPS, myIdx) = HbOLPS(iLPS, myIdx) ./ HbTLPS(iLPS, myIdx);
         myIdx = myIdx + 1;
     end
 end
@@ -41,11 +41,11 @@ for iNaCl = 1:nNaCl,
     load (NaClIOImat{iNaCl})
     load(IOI.ROI.ROIfname)
     myIdx = 1;
-    for iR = 1:numel(ROI),
+    for iR = 3:numel(ROI),
         HbONaCl(iNaCl, myIdx) = mean(ROI{iR}{5});
         HbRNaCl(iNaCl, myIdx) = mean(ROI{iR}{6});
-        HbTNaCl(iNaCl, myIdx) = HbONaCl(iNaCl, iR) + HbRNaCl(iNaCl, iR);
-        sO2NaCl(iNaCl, myIdx) = HbONaCl(iNaCl, iR) ./ HbTNaCl(iNaCl, iR);
+        HbTNaCl(iNaCl, myIdx) = HbONaCl(iNaCl, myIdx) + HbRNaCl(iNaCl, myIdx);
+        sO2NaCl(iNaCl, myIdx) = HbONaCl(iNaCl, myIdx) ./ HbTNaCl(iNaCl, myIdx);
         myIdx = myIdx + 1;
     end
 end
@@ -66,7 +66,7 @@ save(fullfile(dataFolder,'avg_vals.mat'))
 
 %% Load data
 clear; clc
-dataFolder = 'D:\Edgar\OIS_Results\so2';
+dataFolder = 'D:\Edgar\OIS_Results\so2NoVis';
 load(fullfile(dataFolder,'avg_vals.mat'))
 
 %% job options
@@ -98,7 +98,8 @@ job.save_figures                                = true;        % save figure
 addpath('D:\Edgar\distributionPlot')
 colorContrast = {[] [] [] [] 'r' 'b' 'g' 'm'};
 % Load cell with data points
-for iR = 1:numel(IOI.ROIname),
+myIdx = 1;
+for iR = 1:8,
     dataPoints{2*iR-1} = HbONaCl(:, iR);
     dataPoints{2*iR} = HbOLPS(:, iR);
 end
@@ -106,10 +107,10 @@ end
 hFig = figure; set(gcf,'color','w');
 distributionPlot( dataPoints, ...
 'color',...
-repmat({colorContrast{5} 0.75*[1 1 1]}, [1, 10]),...
+repmat({colorContrast{5} 0.75*[1 1 1]}, [1, 8]),...
     'addSpread',true,'showMM',6,'variableWidth',true);
 set(gca, 'XTick',1.5:2:20)       
-set(gca, 'XTickLabel',IOI.ROIname,...
+set(gca, 'XTickLabel',IOI.ROIname(3:10),...
     'FontSize',14)
 legend({'NaCl' 'LPS'},'FontSize',14,'Location','NorthEast')
 ylabel('\DeltaHbO_2 [a.u.]','FontSize',14)
@@ -133,7 +134,7 @@ end
 addpath('D:\Edgar\distributionPlot')
 colorContrast = {[] [] [] [] 'r' 'b' 'g' 'm'};
 % Load cell with data points
-for iR = 1:numel(IOI.ROIname),
+for iR = 1:8,
     dataPoints{2*iR-1} = HbRNaCl(:, iR);
     dataPoints{2*iR} = HbRLPS(:, iR);
 end
@@ -141,10 +142,10 @@ end
 hFig = figure; set(gcf,'color','w');
 distributionPlot( dataPoints, ...
 'color',...
-repmat({colorContrast{6} 0.75*[1 1 1]}, [1, 10]),...
+repmat({colorContrast{6} 0.75*[1 1 1]}, [1, 8]),...
     'addSpread',true,'showMM',6,'variableWidth',true);
 set(gca, 'XTick',1.5:2:20)       
-set(gca, 'XTickLabel',IOI.ROIname,...
+set(gca, 'XTickLabel',IOI.ROIname(3:10),...
     'FontSize',14)
 legend({'NaCl' 'LPS'},'FontSize',14,'Location','NorthEast')
 ylabel('\DeltaHbR [a.u.]','FontSize',14)
@@ -168,7 +169,7 @@ end
 addpath('D:\Edgar\distributionPlot')
 colorContrast = {[] [] [] [] 'r' 'b' 'g' 'm'};
 % Load cell with data points
-for iR = 1:numel(IOI.ROIname),
+for iR = 1:8,
     dataPoints{2*iR-1} = HbTNaCl(:, iR);
     dataPoints{2*iR} = HbTLPS(:, iR);
 end
@@ -176,10 +177,10 @@ end
 hFig = figure; set(gcf,'color','w');
 distributionPlot( dataPoints, ...
 'color',...
-repmat({colorContrast{7} 0.75*[1 1 1]}, [1, 10]),...
+repmat({colorContrast{7} 0.75*[1 1 1]}, [1, 8]),...
     'addSpread',true,'showMM',6,'variableWidth',true);
 set(gca, 'XTick',1.5:2:20)       
-set(gca, 'XTickLabel',IOI.ROIname,...
+set(gca, 'XTickLabel',IOI.ROIname(3:10),...
     'FontSize',14)
 legend({'NaCl' 'LPS'},'FontSize',14,'Location','NorthEast')
 ylabel('\DeltaHbT [a.u.]','FontSize',14)
@@ -203,7 +204,7 @@ end
 addpath('D:\Edgar\distributionPlot')
 colorContrast = {[] [] [] [] 'r' 'b' 'g' 'm'};
 % Load cell with data points
-for iR = 1:numel(IOI.ROIname),
+for iR = 1:8,
     dataPoints{2*iR-1} = 100*sO2NaCl(:, iR);
     dataPoints{2*iR} = 100*sO2LPS(:, iR);
 end
@@ -211,10 +212,10 @@ end
 hFig = figure; set(gcf,'color','w');
 distributionPlot( dataPoints, ...
 'color',...
-repmat({colorContrast{8} 0.75*[1 1 1]}, [1, 10]),...
+repmat({colorContrast{8} 0.75*[1 1 1]}, [1, 8]),...
     'addSpread',true,'showMM',6,'variableWidth',true);
 set(gca, 'XTick',1.5:2:20)       
-set(gca, 'XTickLabel',IOI.ROIname,...
+set(gca, 'XTickLabel',IOI.ROIname(3:10),...
     'FontSize',14)
 legend({'NaCl' 'LPS'},'FontSize',14,'Location','NorthEast')
 ylabel('sO_2 [%]','FontSize',14)
