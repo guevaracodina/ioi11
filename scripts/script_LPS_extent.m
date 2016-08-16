@@ -1,4 +1,3 @@
-
 %% Load data
 clear; clc
 dataFolder = 'D:\Edgar\OIS_Results\extent';
@@ -25,7 +24,7 @@ NaClIOImat{11} = 'D:\Edgar\OIS_Results\16_07_08,NC09\ROI\LPF\FiltNDown\GLM\corrM
 
 nLPS = numel(LPSIOImat);
 nNaCl = numel(NaClIOImat);
-alphaVal = 0.01;
+alphaVal = 0.000001;
 
 for c1 = 5:6,                       % Contrast Loop
     %% LPS
@@ -112,7 +111,7 @@ save(fullfile(dataFolder,'spatial_extent_thresh001.mat'), 'p', 'h', 'q', 'LPSext
 job(1).figSize                                  = [6 3];    % inches
 job(1).figRes                                   = 300;          % in dpi
 job.generate_figures                            = true;         % display figure
-job.save_figures                                = false;        % save figure
+job.save_figures                                = true;        % save figure
 % ------------------------------------------------------------------------------
 
 %% Distribution plots (HbO)
