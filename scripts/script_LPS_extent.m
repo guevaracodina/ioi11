@@ -25,7 +25,7 @@ NaClIOImat{11} = 'D:\Edgar\OIS_Results\16_07_08,NC09\ROI\LPF\FiltNDown\GLM\corrM
 
 nLPS = numel(LPSIOImat);
 nNaCl = numel(NaClIOImat);
-alphaVal = 0.05;
+alphaVal = 0.01;
 
 for c1 = 5:6,                       % Contrast Loop
     %% LPS
@@ -103,7 +103,7 @@ q.HbO = ioi_fdr(p.HbO);
 q.HbR = ioi_fdr(p.HbR);
 
 % Save data
-save(fullfile(dataFolder,'spatial_extent.mat'), 'p', 'h', 'q', 'LPSextent', 'NaClextent')
+save(fullfile(dataFolder,'spatial_extent_thresh001.mat'), 'p', 'h', 'q', 'LPSextent', 'NaClextent')
 
 %% job options
 % ------------------------------------------------------------------------------
