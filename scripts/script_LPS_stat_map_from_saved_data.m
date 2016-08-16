@@ -16,7 +16,7 @@ for c1 = 5:6,
         end
         
         %% Load data
-        groupToPrintString = 'LPS';
+        groupToPrintString = 'LPS';         % NOTE: change this string accordingly!
         titleString = sprintf('statMap_%s_C%d_R%02d',groupToPrintString, c1, r1);
         load(fullfile(figFolder,[titleString, '.mat']));
         
@@ -38,27 +38,32 @@ for c1 = 5:6,
             'EdgeColor','w');
         
         %% Print Statistical Map
-        % Specify window units
-        set(hFig, 'units', 'inches')
-        % Change figure and paper size
-        set(hFig, 'Position', [0.1 0.1 3 3])
-        set(hFig, 'PaperPosition', [0.1 0.1 3 3])
-        % Save as PNG at the user-defined resolution
-        print(hFig, '-dpng', ...
-            fullfile(figFolder, titleString),...
-            sprintf('-r%d', 300));
+%         % Specify window units
+%         set(hFig, 'units', 'inches')
+%         % Change figure and paper size
+%         set(hFig, 'Position', [0.1 0.1 3 3])
+%         set(hFig, 'PaperPosition', [0.1 0.1 3 3])
+%         % Save as PNG at the user-defined resolution
+%         print(hFig, '-dpng', ...
+%             fullfile(figFolder, titleString),...
+%             sprintf('-r%d', 300));
         close(hFig)
         close(hBar)
         disp([titleString ' done!'])
         
         %% Print colorbar
-        set(hBar, 'InvertHardcopy', 'off');
-        set(hBar, 'units', 'inches')
-        set(hBar, 'Position', [0.1 0.1 3 6])
-        set(hBar, 'PaperPosition', [0.1 0.1 3 6])
-        print(hBar, '-dpng', ...
-            fullfile('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\averaged_maps', 'transparency_colorbar'),...
-            sprintf('-r%d', 300));
+%         set(hBar, 'InvertHardcopy', 'off');
+%         set(hBar, 'units', 'inches')
+%         set(hBar, 'Position', [0.1 0.1 3 6])
+%         set(hBar, 'PaperPosition', [0.1 0.1 3 6])
+%         print(hBar, '-dpng', ...
+%             fullfile('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\averaged_maps', 'transparency_colorbar'),...
+%             sprintf('-r%d', 300));
+        %% Save number of significant pixels
+        nSignifPixelsLPS(r1,c1) = nSignifPixels;
+        nPixelsLPS(r1,c1) = nnz(brainMask);
+%         nSignifPixelsNaCl(r1,c1) = nSignifPixels;
+%         nPixelsNaCl(r1,c1) = nnz(brainMask);
     end % ROI loop
 end % contrast loop
 

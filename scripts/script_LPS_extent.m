@@ -108,7 +108,7 @@ save(fullfile(dataFolder,'spatial_extent_thresh001.mat'), 'p', 'h', 'q', 'LPSext
 % ------------------------------------------------------------------------------
 % Define matlab batch job with the required fields
 % ------------------------------------------------------------------------------
-job(1).figSize                                  = [6 3];    % inches
+job(1).figSize                                  = [3.5 3.5];    % inches
 job(1).figRes                                   = 300;          % in dpi
 job.generate_figures                            = true;         % display figure
 job.save_figures                                = true;        % save figure
@@ -182,4 +182,59 @@ if job.save_figures
     close(hFig)
 end
 
+
+%% Spatial extent globally
+clear; close all; clc
+load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\averaged_maps\spatial_extent_LPS.mat',...
+    'nSignifPixelsLPS', 'nPixelsLPS')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\averaged_maps\spatial_extent_NaCl.mat',...
+    'nSignifPixelsNaCl', 'nPixelsNaCl')
+nSignifPixelsLPS = nSignifPixelsLPS(3:end, 5:6);
+nPixelsLPS = nPixelsLPS(3:end, 5:6);
+nSignifPixelsNaCl = nSignifPixelsNaCl(3:end, 5:6);
+nPixelsNaCl = nPixelsNaCl(3:end, 5:6);
+extLPS.HbO = nSignifPixelsLPS(:,1) ./ nPixelsLPS(:,1);
+extLPS.HbR = nSignifPixelsLPS(:,2) ./ nPixelsLPS(:,2);
+extNaCl.HbO = nSignifPixelsNaCl(:,1) ./ nPixelsNaCl(:,1);
+extNaCl.HbR = nSignifPixelsNaCl(:,2) ./ nPixelsNaCl(:,2);
+
+%% Stat test
+[p.HbO, h.HbO] = ranksum(extLPS.HbO, extNaCl.HbO);
+[p.HbR, h.HbR] = ranksum(extLPS.HbR, extNaCl.HbR);
+
+%% Prepare data points
+dataPoints{1} = 100*extNaCl.HbO;
+dataPoints{2} = 100*extLPS.HbO;
+dataPoints{3} = 100*extNaCl.HbR;
+dataPoints{4} = 100*extLPS.HbR;
+
+%% Create figure
+% addpath('D:\Edgar\distributionPlot')
+addpath('C:\Edgar\Dropbox\Matlab\distributionPlot')
+hFig = figure; set(gcf,'color','w');
+distributionPlot( dataPoints, ...
+'color',...
+{[1 0 0] 0.75*[1 1 1] [0 0 1] 0.75*[1 1 1]},...
+    'addSpread',true,'showMM',6,'variableWidth',true);
+set(gca, 'XTick',1:4)       
+set(gca, 'XTickLabel',{'NaCl' 'LPS' 'NaCl' 'LPS'},...
+    'FontSize',14)
+% legend({'NaCl' 'LPS'},'FontSize',14,'Location','NorthEast')
+ylabel('Significant pixels [%]','FontSize',14)
+ylim([-20 100])
+% Specify window units
+set(hFig, 'units', 'inches')
+% Change figure and paper size
+set(hFig, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
+set(hFig, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
+if job.save_figures
+    % Save as PNG at the user-defined resolution
+    print(hFig, '-dpng', ...
+        fullfile('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\averaged_maps',...
+        sprintf('spatial_extension_tmp.png')),...
+        sprintf('-r%d',job.figRes));
+    % Return the property to its default
+    set(hFig, 'units', 'pixels')
+    close(hFig)
+end
 % EOF
