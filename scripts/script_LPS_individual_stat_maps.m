@@ -43,10 +43,10 @@ Underlay = rot90(ioi_MYimresize(spm_read_vols(vol), [512, 512]),3);
 %%
 for c1 = 5:6,                       % Contrast Loop
     %% Group loop
-%     for iLPS = [3, 5:7],
-    for iNaCl = 9:11,
-%         load(LPSIOImat{iLPS})
-        load(NaClIOImat{iNaCl})
+    for iLPS = [3, 5:7],
+%     for iNaCl = 9:11,
+        load(LPSIOImat{iLPS})
+%         load(NaClIOImat{iNaCl})
         load(IOI.fcIOS.corr.fname)
         groupToPrintString = IOI.subj_name;
         vol = spm_vol(IOI.fcIOS.mask.fname);
