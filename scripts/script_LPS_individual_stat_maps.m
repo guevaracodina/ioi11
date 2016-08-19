@@ -25,43 +25,43 @@ NaClIOImat{11} = 'D:\Edgar\OIS_Results\16_07_08,NC09\ROI\LPF\FiltNDown\GLM\corrM
 
 nLPS = numel(LPSIOImat);
 nNaCl = numel(NaClIOImat);
-alphaVal = 0.05;
+alphaVal = 1e-10;
 % Set the Min/Max values for hue coding
 absmax = 1; % Pearson's r
 H_range = [-absmax absmax]; % The colormap is symmetric around zero
 % Set the Min/Max T-values for alpha coding
-A_range = [0 1.5];
+A_range = [0 -log10(alphaVal)];
 % Remove objects with fewer pixels than 5% of the total number of
 % suprathreshold voxels (extent threshold)
 minPixelsPerc = 5/100;
 % Brain Mask
 vol = spm_vol('D:\Edgar\OIS_Results\averaged_maps\16_02_25,NC01_anat_brainmask.nii');
-brainMaskAll = logical(fix(ioi_MYimresize(spm_read_vols(vol), [512, 512])));
+brainMaskAll = logical(fix(ioi_MYimresize(rot90(spm_read_vols(vol)), [512, 512])));
 vol = spm_vol('D:\Edgar\OIS_Results\averaged_maps\AVG_Atlas.img');
 Underlay = rot90(ioi_MYimresize(spm_read_vols(vol), [512, 512]),3);
         
 %%
 for c1 = 5:6,                       % Contrast Loop
     %% Group loop
-    for iLPS = [3, 5:7],
-%     for iNaCl = 9:11,
-        load(LPSIOImat{iLPS})
-%         load(NaClIOImat{iNaCl})
+%     for iLPS = [5:7], %3, 5:7
+    for iNaCl = 9:11,
+%         load(LPSIOImat{iLPS})
+        load(NaClIOImat{iNaCl})
         load(IOI.fcIOS.corr.fname)
         groupToPrintString = IOI.subj_name;
         vol = spm_vol(IOI.fcIOS.mask.fname);
-        brainMaskInd = logical(fix(ioi_MYimresize(spm_read_vols(vol), [512, 512])));
-        brainMask = brainMaskAll | brainMaskInd;
+        brainMaskInd = logical(fix(ioi_MYimresize(rot90(spm_read_vols(vol)), [512, 512])));
+        brainMask = brainMaskAll & brainMaskInd;
 %         myIdx = 1;
         for iR = 3:numel(seed_based_fcIOS_map),
-%             pMap = seed_based_fcIOS_map{iR}{c1}.pValue;
+            pMap = seed_based_fcIOS_map{iR}{c1}.pValue;
             zCorrMap = seed_based_fcIOS_map{iR}{c1}.fisher;
             corrMap = seed_based_fcIOS_map{iR}{c1}.pearson;
             % FDR-correction
-%             pMask = ~isnan(pMap) & brainMask;
-%             pMapFDRtmp = ioi_fdr(pMap(pMask));
-%             pMapFDR = nan(size(pMap));
-%             pMapFDR(pMask) = pMapFDRtmp;
+            pMask = ~isnan(pMap) & brainMask;
+            pMapFDRtmp = ioi_fdr(pMap(pMask));
+            pMapFDR = nan(size(pMap));
+            pMapFDR(pMask) = pMapFDRtmp;
             
             % Apply threshold
             % Pmap_N_S: 'Binary map indicating significance at P<0.05 (fdr corrected)'
@@ -78,7 +78,7 @@ for c1 = 5:6,                       % Contrast Loop
 %             myIdx = myIdx + 1;
             
 %             tMap = zeros([size(zCorrMap,1) size(zCorrMap,2)]);
-            tMap = zCorrMap;
+            tMap = -log10(pMapFDR);
 %             ioi_text_waitbar(0, 'Please wait...');
 %             for iRows = 1:size(zCorrMap,1)
 %                 for iCols = 1:size(zCorrMap,2)
@@ -110,7 +110,7 @@ for c1 = 5:6,                       % Contrast Loop
             %--------------------------------------------------------------------------
             % Plot
             brainMaskAnat = 1.*brainMask;
-            brainMaskAnat(~brainMask) = 0.25;
+            brainMaskAnat(~brainMask) = 0.15;
             [hFig, hBar] = ioi_dualcodeImage(brainMaskAnat.*imadjust(mat2gray(Underlay)), brainMask.*Bmap_N_S,...
                 brainMask.*Tmap_N_S, Pmap_N_S, H_range, A_range);
             %--------------------------------------------------------------------------
