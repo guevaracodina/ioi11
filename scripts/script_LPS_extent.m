@@ -28,14 +28,14 @@ alphaVal = 0.000001;
 
 for c1 = 5:6,                       % Contrast Loop
     %% LPS
-    for iLPS = 1:nLPS,
+    for iLPS = 1:nLPS,              % Subjects loop
         load(LPSIOImat{iLPS})
         load(IOI.fcIOS.corr.fname)
         % Brain Mask
         vol = spm_vol(IOI.fcIOS.mask.fname);
         brainMask = logical(fix(ioi_MYimresize(spm_read_vols(vol), [512, 512])));
         myIdx = 1;
-        for iR = 3:numel(seed_based_fcIOS_map),
+        for iR = 3:numel(seed_based_fcIOS_map), % ROI by ROI 
             pMap = seed_based_fcIOS_map{iR}{c1}.pValue;
             
             % FDR-correction
@@ -92,7 +92,7 @@ for c1 = 5:6,                       % Contrast Loop
     end
 end
 
-%% ROI
+%% ROI by ROI comparison
 for iR = 1:8,
     [p.HbO(iR), h.HbO(iR)] = ranksum(LPSextent.HbO(iR, :), NaClextent.HbO(iR, :));
     [p.HbR(iR), h.HbR(iR)] = ranksum(LPSextent.HbR(iR, :), NaClextent.HbR(iR, :));
@@ -114,7 +114,7 @@ job.generate_figures                            = true;         % display figure
 job.save_figures                                = true;        % save figure
 % ------------------------------------------------------------------------------
 
-%% Distribution plots (HbO)
+%% ROI by ROI  Distribution plots (HbO)
 addpath('D:\Edgar\distributionPlot')
 colorContrast = {[] [] [] [] 'r' 'b' 'g' 'm'};
 % Load cell with data points
@@ -149,7 +149,7 @@ if job.save_figures
     close(hFig)
 end
 
-%% Distribution plots (HbR)
+%% ROI by ROI Distribution plots (HbR)
 % Load cell with data points
 for iR = 1:8,
     dataPoints{2*iR-1} = 100*NaClextent.HbR(iR, :);
@@ -182,9 +182,11 @@ if job.save_figures
     close(hFig)
 end
 
-
-%% Spatial extent globally
+% -------------------------------------------------------------------------
+%% Global spatial extent
 clear; close all; clc
+% addpath('D:\Edgar\distributionPlot')
+addpath('C:\Edgar\Dropbox\Matlab\distributionPlot')
 load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\averaged_maps\spatial_extent_LPS.mat',...
     'nSignifPixelsLPS', 'nPixelsLPS')
 load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\averaged_maps\spatial_extent_NaCl.mat',...
@@ -209,8 +211,6 @@ dataPoints{3} = 100*extNaCl.HbR;
 dataPoints{4} = 100*extLPS.HbR;
 
 %% Create figure
-% addpath('D:\Edgar\distributionPlot')
-addpath('C:\Edgar\Dropbox\Matlab\distributionPlot')
 hFig = figure; set(gcf,'color','w');
 distributionPlot( dataPoints, ...
 'color',...
@@ -232,6 +232,78 @@ if job.save_figures
     print(hFig, '-dpng', ...
         fullfile('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\averaged_maps',...
         sprintf('spatial_extension_tmp.png')),...
+        sprintf('-r%d',job.figRes));
+    % Return the property to its default
+    set(hFig, 'units', 'pixels')
+    close(hFig)
+end
+
+%% Create figure to show differences
+clc
+% 'C_R' 'C_L' 'S_R' 'S_L' 'R_R' 'R_L' 'M_R' 'M_L'
+ROInames = {'C_R' 'C_L' 'S_R' 'S_L' 'R_R' 'R_L' 'M_R' 'M_L'};
+hFig = figure; set(hFig,'color','w')
+NaCl_coordinates = 0.5:2:16;
+LPS_coordinates = 1.5:2:16.5;
+MrkSz = 8;
+LinWdt = 2;
+
+% ---------------------------- HbO2 ---------------------------------------
+subplot(211)
+hold on
+% plot([0.75:8, 1.25:8.25],[dataPoints{1}; dataPoints{2}]','--')
+plot(NaCl_coordinates, dataPoints{1},'ro', 'MarkerSize',MrkSz, 'LineWidth',LinWdt,...
+    'MarkerFaceColor','r')
+plot(LPS_coordinates, dataPoints{2},'rx', 'MarkerSize',MrkSz, 'LineWidth',LinWdt)
+j = 1;
+for i=fix((LPS_coordinates + NaCl_coordinates) / 2),
+    plot([NaCl_coordinates(1) LPS_coordinates(1)]'+i-1,[dataPoints{1}(j); dataPoints{2}(j)]','r--')
+    j = j + 1;
+end
+plot(NaCl_coordinates, dataPoints{1},'ro', 'MarkerSize',MrkSz, 'LineWidth',LinWdt,...
+    'MarkerFaceColor','r')
+plot(LPS_coordinates, dataPoints{2},'rx', 'MarkerSize',MrkSz, 'LineWidth',LinWdt)
+set(gca, 'xTick', fix((LPS_coordinates + NaCl_coordinates) / 2), 'xTickLabel', ROInames,'FontSize',14)
+xlabel('ROI','FontSize',14)
+% ylabel('Significant pixels [%]','FontSize',14)
+% legend({'NaCl_{HbO_2}' 'LPS_{HbO_2}'})
+set(gca, 'FontSize', 14)
+ylim([0 70])
+set(gca, 'yTick',[0 35 70]);
+
+% ---------------------------- HbR ---------------------------------------
+subplot(212)
+hold on
+plot(NaCl_coordinates, dataPoints{3},'bo', 'MarkerSize',MrkSz, 'LineWidth',LinWdt,...
+    'MarkerFaceColor','b')
+plot(LPS_coordinates, dataPoints{4},'bx', 'MarkerSize',MrkSz, 'LineWidth',LinWdt)
+j = 1;
+for i=fix((LPS_coordinates + NaCl_coordinates) / 2),
+    plot([NaCl_coordinates(1) LPS_coordinates(1)]'+i-1,[dataPoints{3}(j); dataPoints{4}(j)]','b--')
+    j = j + 1;
+end
+plot(NaCl_coordinates, dataPoints{3},'bo', 'MarkerSize',MrkSz, 'LineWidth',LinWdt,...
+    'MarkerFaceColor','b')
+plot(LPS_coordinates, dataPoints{4},'bx', 'MarkerSize',MrkSz, 'LineWidth',LinWdt)
+set(gca, 'xTick', fix((LPS_coordinates + NaCl_coordinates) / 2), 'xTickLabel', ROInames,'FontSize',14)
+xlabel('ROI','FontSize',14)
+ylabel('Significant pixels [%]','FontSize',14)
+% legend({'NaCl_{HbR}' 'LPS_{HbR}'})
+set(gca, 'FontSize', 14)
+ylim([0 70])
+set(gca, 'yTick',[0 35 70]);
+
+% Specify window units
+set(hFig, 'units', 'inches')
+% Change figure and paper size
+set(hFig, 'Position', [0.1 0.1 job.figSize(1) job.figSize(2)])
+set(hFig, 'PaperPosition', [0.1 0.1 job.figSize(1) job.figSize(2)])
+
+if job.save_figures
+    % Save as PNG at the user-defined resolution
+    print(hFig, '-dpng', ...
+        fullfile('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\averaged_maps',...
+        sprintf('extent_comparison.png')),...
         sprintf('-r%d',job.figRes));
     % Return the property to its default
     set(hFig, 'units', 'pixels')
