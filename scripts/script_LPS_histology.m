@@ -1,5 +1,5 @@
 %% Load connectivity data
-resultsFolder = 'C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\svm';
+resultsFolder = 'C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\ANN';
 % NaClCO2 = [59.2; 49.4; 41.9; NaN; 62.6; NaN; 56.7; 50];
 % LPSCO2 = [NaN; 39.5; 54; 40.3; 80.3];
 onlyBilateral = false;
@@ -117,7 +117,7 @@ xdata = xdata(idx2keep,:);
 ydata = [NaClhist.T; LPShist.T];
 group = group(idx2keep);
 
-%% k-fold Cross validation using SVM classifier
+%% k-fold Cross validation using ANN classifier
 clc
 k = 5;                                     % Number of folds
 cvFolds = crossvalind('Kfold', group, k);   %# get indices of k-fold CV
@@ -155,7 +155,7 @@ RMSEP = sqrt(sum((groundTruth-pred).^2)/size(xdata,1));
 idxLPS = find(~cellfun(@isempty, regexp(targetLabels,'LP')));
 idxNaCl = find(~cellfun(@isempty, regexp(targetLabels,'NC')));
 
-figure; hold on;
+hFig = figure; hold on;
 % Plot Predicted = Measured
 plot(groundTruth, groundTruth, 'k:', 'LineWidth', 3)
 % Plot fit
@@ -166,7 +166,7 @@ plot(groundTruth(idxNaCl), pred(idxNaCl), 'ko', 'LineWidth', 3, 'MarkerSize', 12
 plot(groundTruth(idxLPS), pred(idxLPS), 'rx', 'LineWidth', 3, 'MarkerSize', 12)
 
 axis equal
-legend({'Predicted = Measured' 'Linear fit' 'NaCl' 'LPS' }, 'Location', 'SouthEast')
+% legend({'Predicted = Measured' 'Linear fit' 'NaCl' 'LPS' }, 'Location', 'SouthEast')
 set(gca, 'FontSize', 14)
 xlim([min(groundTruth) max(groundTruth)])
 ylim([min(groundTruth) max(groundTruth)])
@@ -174,4 +174,61 @@ xlabel('Ventricular Lesion Size (pixels)', 'FontSize', 14);
 ylabel('Predicted Ventricular Size (pixels)', 'FontSize', 14)
 title(sprintf('r = %0.4f', r), 'FontSize', 14); 
 
+% Specify window units
+set(hFig, 'units', 'inches')
+% Change figure and paper size
+set(hFig, 'Position', [0.1 0.1 3.5 3.5])
+set(hFig, 'PaperPosition', [0.1 0.1 3.5 3.5])
+
+if true
+    % Save as PNG at the user-defined resolution
+    print(hFig, '-dpng', ...
+        fullfile(resultsFolder,...
+        sprintf('ANN_pred_meas_ventricular.png')),...
+        sprintf('-r%d',300));
+    % Return the property to its default
+    set(hFig, 'units', 'pixels')
+    close(hFig)
+end
+
+%% 
+%# neural net, and view it
+load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\ANN\ANNresults.mat')
+jframe = view(ANNresults.net);
+
+%# create it in a MATLAB figure
+% Specify window units
+hFig = figure('Menubar','none');
+set(hFig, 'units','inches', 'position',[0.1 0.1 6.5 2])
+% hFig = figure('Menubar','none');
+jpanel = get(jframe,'ContentPane');
+[~,h] = javacomponent(jpanel);
+set(h, 'units','inches', 'position',[0.1 0.1 6.5 2])
+
+%# close java window
+jframe.setVisible(false);
+jframe.dispose();
+
+%# print to file
+% set(hFig, 'PaperPositionMode', 'auto')
+% saveas(hFig, 'out.png')
+
+%# close figure
+% close(hFig)
+
+
+% Change figure and paper size
+% set(hFig, 'Position', [0.1 0.1 3.5 1])
+set(hFig, 'PaperPosition', [0.1 0.1 6.5 2])
+
+if true
+    % Save as PNG at the user-defined resolution
+    print(hFig, '-dpng', ...
+        fullfile(resultsFolder,...
+        sprintf('ANN_diagram.png')),...
+        sprintf('-r%d',300));
+    % Return the property to its default
+    set(hFig, 'units', 'pixels')
+%     close(hFig)
+end
 % EOF
