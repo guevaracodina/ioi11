@@ -191,7 +191,7 @@ if true
     close(hFig)
 end
 
-%% 
+%% ANN diagram
 %# neural net, and view it
 load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\ANN\ANNresults.mat')
 jframe = view(ANNresults.net);
