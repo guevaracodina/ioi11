@@ -10,9 +10,13 @@ end
 % Load HbR data 
 % load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbR.mat')
 load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOut\results_S01_HbR.mat');
+load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOutNoVis\resultsROI_Condition01_HbR.mat')
 % Extract Z for HbR
-ZNaClHbR = results.Z(3:end,3:end,controlGroupIdx);
-ZLPSHbR = results.Z(3:end,3:end,treatmentGroupIdx);
+% ZNaClHbR = results.Z(3:end,3:end,controlGroupIdx);
+% ZLPSHbR = results.Z(3:end,3:end,treatmentGroupIdx);
+ZNaClHbR = r(3:end,3:end,controlGroupIdx);
+ZLPSHbR = r(3:end,3:end,treatmentGroupIdx);
+
 nNaCl = size(ZNaClHbR, 3);
 nLPS = size(ZLPSHbR, 3);
 ZLPSVecHbR=[];
@@ -47,9 +51,12 @@ end
 % Load HbO data
 % load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbO.mat')
 load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOut\results_S01_HbO.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOutNoVis\resultsROI_Condition01_HbO.mat')
 % Extract Z for HbO
-ZNaCl = results.Z(3:end,3:end,controlGroupIdx);
-ZLPS = results.Z(3:end,3:end,treatmentGroupIdx);
+% ZNaCl = results.Z(3:end,3:end,controlGroupIdx);
+% ZLPS = results.Z(3:end,3:end,treatmentGroupIdx);
+ZNaCl = r(3:end,3:end,controlGroupIdx);
+ZLPS = r(3:end,3:end,treatmentGroupIdx);
 
 ZLPSVec=[];
 ZNaClVec=[];
@@ -180,7 +187,7 @@ set(hFig, 'units', 'inches')
 set(hFig, 'Position', [0.1 0.1 3.5 3.5])
 set(hFig, 'PaperPosition', [0.1 0.1 3.5 3.5])
 
-if true
+if false
     % Save as PNG at the user-defined resolution
     print(hFig, '-dpng', ...
         fullfile(resultsFolder,...
@@ -221,7 +228,7 @@ jframe.dispose();
 % set(hFig, 'Position', [0.1 0.1 3.5 1])
 set(hFig, 'PaperPosition', [0.1 0.1 6.5 2])
 
-if true
+if false
     % Save as PNG at the user-defined resolution
     print(hFig, '-dpng', ...
         fullfile(resultsFolder,...
@@ -231,4 +238,28 @@ if true
     set(hFig, 'units', 'pixels')
 %     close(hFig)
 end
+
+%% Find correlation
+clear x y;
+i = 1;
+for iRow=1:size(ZLPSHbR,1)
+    for iCol=1:size(ZLPSHbR,2)
+        for iLPS=1:size(ZLPSHbR,3)
+%             plot(squeeze(ZLPSHbR(iRow, iCol, iLPS)), squeeze(ZNaClHbR(iRow, iCol, :)), 'k.');
+%             hold on
+            x(i,:) = squeeze(ZLPS(iRow, iCol, iLPS));
+            y(i,:) = squeeze(ZNaCl(iRow, iCol, iLPS));
+            i = i + 1;
+        end
+    end
+end
+plot(x,y,'k.')
+[rho, p] = corr(x,y,'rows','complete')
+
+%% Circular graph
+addpath(genpath('C:\Edgar\Dropbox\Matlab\'))
+LPSavg = mean(ZLPSHbR,3);
+NaClavg = mean(ZNaClHbR,3);
+h1 = schemaball(LPSavg, names(3:10), [0 0 1; 1 0 0], [1 1 1]);
+h2 = circularGraph(LPSavg,'Colormap',ioi_get_colormap('bipolar', size(LPSavg, 1)),'Label',names(3:10));
 % EOF
