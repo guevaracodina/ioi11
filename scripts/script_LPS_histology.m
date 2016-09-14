@@ -262,4 +262,32 @@ LPSavg = mean(ZLPSHbR,3);
 NaClavg = mean(ZNaClHbR,3);
 h1 = schemaball(LPSavg, names(3:10), [0 0 1; 1 0 0], [1 1 1]);
 h2 = circularGraph(LPSavg,'Colormap',ioi_get_colormap('bipolar', size(LPSavg, 1)),'Label',names(3:10));
+
+%% Circos preparation
+
+% circosData = {
+%     '-'      'C_R'     'C_L'     'S_R'     'S_L'     'R_R'     'R_L'     'M_R'  'M_L' ;
+%     'C_R'    [1000]    [ 751]    [-533]    [-426]    [  72]    [  89]    [-480] [-294];
+%     'C_L'    [ 751]    [1000]    [-511]    [-392]    [ 125]    [ 225]    [-427] [-177];
+%     'S_R'    [-533]    [-511]    [1000]    [ 265]    [  -2]    [ -26]    [ 616] [ 348];
+%     'S_L'    [-426]    [-392]    [ 265]    [1000]    [-310]    [-286]    [ 129] [ 234];
+%     'R_R'    [  72]    [ 125]    [  -2]    [-310]    [1000]    [ 768]    [ 281] [ 218];
+%     'R_L'    [  89]    [ 225]    [ -26]    [-286]    [ 768]    [1000]    [ 199] [ 321];
+%     'M_R'    [-480]    [-427]    [ 616]    [ 129]    [ 281]    [ 199]    [1000] [ 527];
+%     'M_L'    [-294]    [-177]    [ 348]    [ 234]    [ 218]    [ 321]    [ 527] [1000]; };
+
+circosData{1,1} = '-'  ;
+circosData(1, 2:9) = names(3:10);
+circosData(2:9, 1) = names(3:10)';   
+offset = 1000;
+scale = 1000;
+circosData(2:end, 2:end) = num2cell(offset + scale * LPSavg);
+    
+    
+    
+    
+    
+
+    
+
 % EOF
