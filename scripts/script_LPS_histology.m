@@ -264,7 +264,7 @@ h1 = schemaball(LPSavg, names(3:10), [0 0 1; 1 0 0], [1 1 1]);
 h2 = circularGraph(LPSavg,'Colormap',ioi_get_colormap('bipolar', size(LPSavg, 1)),'Label',names(3:10));
 
 %% Circos preparation
-
+clear circosData
 % circosData = {
 %     '-'      'C_R'     'C_L'     'S_R'     'S_L'     'R_R'     'R_L'     'M_R'  'M_L' ;
 %     'C_R'    [1000]    [ 751]    [-533]    [-426]    [  72]    [  89]    [-480] [-294];
@@ -281,7 +281,7 @@ circosData(1, 2:9) = names(3:10);
 circosData(2:9, 1) = names(3:10)';   
 offset = 1000;
 scale = 1000;
-circosData(2:end, 2:end) = num2cell(offset + scale * LPSavg);
+circosData(2:end, 2:end) = num2cell(fix(offset + scale * LPSavg));
 colOrder = {'-' 3 8 4 7 5 6 2 1};
 circosData = [colOrder; circosData];
     
