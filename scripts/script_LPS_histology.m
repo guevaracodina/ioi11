@@ -282,7 +282,8 @@ circosData(2:9, 1) = names(3:10)';
 offset = 1000;
 scale = 1000;
 circosData(2:end, 2:end) = num2cell(offset + scale * LPSavg);
-    
+colOrder = {'-' 3 8 4 7 5 6 2 1};
+circosData = [colOrder; circosData];
     
     
     
