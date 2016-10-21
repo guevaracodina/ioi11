@@ -1,4 +1,4 @@
-function [fcMapBlend hFig] = ioi_overlay_blend(anatomical, fcMap, varargin)
+function [fcMapBlend, hFig] = ioi_overlay_blend(anatomical, fcMap, varargin)
 % Blends a top layer (fcMap) on the base layer (anatomical).
 % The parts of the top layer where base layer is light become lighter, the parts
 % where the base layer is dark become darker. Depending on the value of the base
@@ -44,7 +44,7 @@ newVals = cellfun(@(x) ~isempty(x), varargin);
 % specified in varargin.
 optArgs(newVals) = varargin(newVals);
 % Place optional args in memorable variable names
-[brainMask fcMapRange alphaRange fcColorMap figIntensity] = optArgs{:};
+[brainMask, fcMapRange, alphaRange, fcColorMap, figIntensity] = optArgs{:};
 
 % Correct alpha range
 if numel(alphaRange) ~= 2 && numel(alphaRange) ~= 4
@@ -80,7 +80,7 @@ fcMapBlend = 1 - 2.*(1 - anatomicalGray).*(1 - fcMapRGB);
 fcMapBlend(anatomicalGray<0.5) = 2.*anatomicalGray(anatomicalGray<0.5).*fcMapRGB(anatomicalGray<0.5);
 
 %% Display new figure
-h = imshow(fcMapBlend, 'InitialMagnification', 'fit', 'border', 'tight');
+imshow(fcMapBlend, 'InitialMagnification', 'fit', 'border', 'tight');
 hFig = gcf;
 set(hFig, 'color', 'k')
 % Allow printing of black background
