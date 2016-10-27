@@ -286,9 +286,15 @@ fullFrameHD = uint8(zeros([1080 1920 3]));
 fileName = 'fcOIS_fullHD';
 vidWidth = 1920;
 vidHeight = 1080;
-
+frameRate = 60;
+saveVideo = true;
 %  Begin frame grabbing
 ioi_text_waitbar(0, 'Please wait...');
+if saveVideo
+    writerObj = VideoWriter(fullfile(figFolder,[fileName '.mp4']), 'MPEG-4');
+    writerObj.FrameRate = frameRate;
+    open(writerObj);
+end
 for iFrames=idx,
     % Read HbR maps
     currFig = imread(fullfile(figFolder,sprintf('%s%04d%s', figA_name, iFrames, fileExt)));
@@ -346,13 +352,24 @@ for iFrames=idx,
     % Fill panel C (Top Right)
     fullFrameHD(1:vidHeight/2, vidWidth/2+1:end, :) = currFig;
     
-    % Show HD movie frame (not necessary)
-%     h = imshow(fullFrameHD);
-  
-    imwrite(fullFrameHD, ...
-        fullfile(figFolder,[fileName sprintf('_%04d.png', iFrames)]));
+    % Create video or capture frames
+    if saveVideo
+        % Show HD movie frame (not necessary)
+%         h = imshow(fullFrameHD);
+%         drawnow;
+%         set(gca,'nextplot','replacechildren');
+%         set(h,'Renderer','zbuffer');
+%         frame = getframe(h);
+        writeVideo(writerObj,fullFrameHD);
+    else
+        imwrite(fullFrameHD, ...
+            fullfile(figFolder,[fileName sprintf('_%04d.png', iFrames)]));
+    end
     ioi_text_waitbar(iFrames/numel(idx), sprintf('Processing full-HD frame %d from %d',...
         iFrames, numel(idx)));
+end
+if saveVideo
+    close(writerObj);
 end
 ioi_text_waitbar('Clear');
 fprintf('Processing full-HD video done!...\n');
