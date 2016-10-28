@@ -1,4 +1,6 @@
 %% script_fcOIS_movie
+% TRY USING IMWRITE WHEN SAVING IMAGES! //EGC
+
 % script demonstrating the principle of seed-based functional connectivity
 clear; close all; clc;
 % % pathName    = 'F:\Edgar\Dropbox\PhD\Thesis\Figures\fcOIS_movie';
