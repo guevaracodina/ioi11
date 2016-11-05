@@ -273,7 +273,13 @@ NaCl_extent.HbO = NaCl_spatial_extension;
 load('D:\Edgar\OIS_Results\averaged_maps\stats_C6.mat')
 LPS_extent.HbR = LPS_spatial_extension;
 NaCl_extent.HbR = NaCl_spatial_extension;
-% 70 pixels/mm
 
+% Find smallest difference in spatial extent
+vol = spm_vol('D:\Edgar\OIS_Results\averaged_maps\16_02_25,NC01_anat_brainmask.nii');
+brainMask = spm_read_vols(vol);
+diffPixels = min(abs(NaCl_extent.HbO - LPS_extent.HbO))*nnz(brainMask);
+% 70 pixels/mm
+pix_per_mm = 70;
+diff_mm2 = diffPixels / (pix_per_mm*pix_per_mm);
 
 % EOF
