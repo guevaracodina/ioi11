@@ -1,6 +1,7 @@
 %% Load connectivity data
 % resultsFolder = 'C:\Users\Ramón\Desktop\Edgar\ANN'; 
-resultsFolder = 'D:\Edgar\OIS_Results\ANN';
+% resultsFolder = 'D:\Edgar\OIS_Results\ANN';
+resultsFolder = 'C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\ANN';
 % NaClCO2 = [59.2; 49.4; 41.9; NaN; 62.6; NaN; 56.7; 50];
 % LPSCO2 = [NaN; 39.5; 54; 40.3; 80.3];
 onlyBilateral = false;
@@ -9,10 +10,12 @@ if onlyBilateral
 end
 % -------------------------------------------------------------------------
 % Load HbR data 
-load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbR.mat')
-load('D:\Edgar\OIS_Results\networkResOut\resultsROI_Condition01_HbR.mat')
+% load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbR.mat')
+% load('D:\Edgar\OIS_Results\networkResOut\resultsROI_Condition01_HbR.mat')
 % load('C:\Users\Ramón\Desktop\Edgar\networkResOutNoVis\results_S01_HbR.mat');
 % load('C:\Users\Ramón\Desktop\Edgar\networkResOutNoVis\resultsROI_Condition01_HbR.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOut\results_S01_HbR.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOutNoVis\resultsROI_Condition01_HbR.mat')
 % Extract Z for HbR
 % ZNaClHbR = results.Z(3:end,3:end,controlGroupIdx);
 % ZLPSHbR = results.Z(3:end,3:end,treatmentGroupIdx);
@@ -51,10 +54,12 @@ end
 
 % -------------------------------------------------------------------------
 % Load HbO data
-load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbO.mat')
-load('D:\Edgar\OIS_Results\networkResOut\resultsROI_Condition01_HbO.mat')
+% load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbO.mat')
+% load('D:\Edgar\OIS_Results\networkResOut\resultsROI_Condition01_HbO.mat')
 % load('C:\Users\Ramón\Desktop\Edgar\networkResOutNoVis\results_S01_HbO.mat')
 % load('C:\Users\Ramón\Desktop\Edgar\networkResOutNoVis\resultsROI_Condition01_HbO.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOutNoVis\results_S01_HbO.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOutNoVis\resultsROI_Condition01_HbO.mat')
 % Extract Z for HbO
 % ZNaCl = results.Z(3:end,3:end,controlGroupIdx);
 % ZLPS = results.Z(3:end,3:end,treatmentGroupIdx);
@@ -128,80 +133,85 @@ groupLabels = groupLabels(idx2keep);
 xdata = xdata(idx2keep,:);
 ydata = [NaClhist.T; LPShist.T];
 group = group(idx2keep);
+myVarsPred = [xdata ydata];
+myVarsClass = [xdata strcmp(group, 'NaCl')];
+
+% clearvars -except xdata ydata group myVarsPred myVarsClass
 
 %% k-fold Cross validation using ANN classifier
-% clc
-% k = 5;                                     % Number of folds
-% cvFolds = crossvalind('Kfold', group, k);   %# get indices of k-fold CV
-% % Initialize performance trackers
-% pred = [];
-% groundTruth = [];
-% targetLabels = {};
-% for i = 1:k                                 %# for each fold
-%     testIdx = (cvFolds == i);               %# get indices of test instances
-%     trainIdx = ~testIdx;                    %# get indices training instances
-%     
-%     xtrain = xdata(trainIdx,:);
-%     ytrain = ydata(trainIdx,:);
-%     
-%     xtest = xdata(testIdx,:);
-%     ytest = ydata(testIdx,:);
-%     
-%     % Bayesian regularization (takes a Q x 56 matrix, where Q = No. samples)
-%     pred = [pred; myNeuralNetworkFunction(xtest')'];
-% 
-%     % Keep target values to create correlation plot
-%     groundTruth = [groundTruth; ytest];
-%     
-%     % Keep target labels 
-%     targetLabels = [targetLabels; groupLabels(testIdx)];
-% end
+clc
+k = 5;                                     % Number of folds
+cvFolds = crossvalind('Kfold', group, k);   %# get indices of k-fold CV
+% Initialize performance trackers
+pred = [];
+groundTruth = [];
+targetLabels = {};
+for i = 1:k                                 %# for each fold
+    testIdx = (cvFolds == i);               %# get indices of test instances
+    trainIdx = ~testIdx;                    %# get indices training instances
+    
+    xtrain = xdata(trainIdx,:);
+    ytrain = ydata(trainIdx,:);
+    
+    xtest = xdata(testIdx,:);
+    ytest = ydata(testIdx,:);
+    
+    % Bayesian regularization (takes a Q x 56 matrix, where Q = No. samples)
+    pred = [pred; myNeuralNetworkFunction(xtest)];
+
+    % Keep target values to create correlation plot
+    groundTruth = [groundTruth; ytest];
+    
+    % Keep target labels 
+    targetLabels = [targetLabels; groupLabels(testIdx)];
+end
         
 %% Plot correlation between measured and predicted values
-% p = polyfit(groundTruth, pred, 1);
-% yfit = p(1)*groundTruth + p(2);
-% [rho, pVal] = corr(groundTruth, pred);
-% RMSEP = sqrt(sum((groundTruth-pred).^2)/size(xdata,1));
-% 
-% % Find indices of LPS
-% idxLPS = find(~cellfun(@isempty, regexp(targetLabels,'LP')));
-% idxNaCl = find(~cellfun(@isempty, regexp(targetLabels,'NC')));
-% 
-% hFig = figure; hold on;
-% % Plot Predicted = Measured
-% plot(groundTruth, groundTruth, 'k:', 'LineWidth', 3)
-% % Plot fit
-% plot(groundTruth, yfit, 'b-', 'LineWidth', 3)
-% % Plot NaCl
-% plot(groundTruth(idxNaCl), pred(idxNaCl), 'ko', 'LineWidth', 3, 'MarkerSize', 12)
-% % Plot LPS
-% plot(groundTruth(idxLPS), pred(idxLPS), 'rx', 'LineWidth', 3, 'MarkerSize', 12)
-% 
-% axis equal
-% % legend({'Predicted = Measured' 'Linear fit' 'NaCl' 'LPS' }, 'Location', 'SouthEast')
-% set(gca, 'FontSize', 14)
-% xlim([min(groundTruth) max(groundTruth)])
-% ylim([min(groundTruth) max(groundTruth)])
-% xlabel('Measured (%)', 'FontSize', 14); 
-% ylabel('Predicted(pixels)', 'FontSize', 14)
-% title(sprintf('Fractional Lesion Volume r = %0.4f', rho), 'FontSize', 14); 
-% 
-% % Specify window units
-% set(hFig, 'units', 'inches')
-% % Change figure and paper size
-% set(hFig, 'Position', [0.1 0.1 3.5 3.5])
-% set(hFig, 'PaperPosition', [0.1 0.1 3.5 3.5])
-% 
-% if false
-%     % Save as PNG at the user-defined resolution
-%     print(hFig, '-dpng', ...
-%         fullfile(resultsFolder,...
-%         sprintf('ANN_pred_meas_ventricular.png')),...
-%         sprintf('-r%d',300));
-%     % Return the property to its default
-%     set(hFig, 'units', 'pixels')
-%     close(hFig)
-% end
+p = polyfit(groundTruth, pred, 1);
+yfit = p(1)*groundTruth + p(2);
+[rho, pVal] = corr(groundTruth, pred);
+RMSEP = sqrt(sum((groundTruth-pred).^2)/size(xdata,1));
+
+% Find indices of LPS
+idxLPS = find(~cellfun(@isempty, regexp(targetLabels,'LP')));
+idxNaCl = find(~cellfun(@isempty, regexp(targetLabels,'NC')));
+
+hFig = figure; hold on;
+% Plot Predicted = Measured
+plot(groundTruth, groundTruth, 'k:', 'LineWidth', 3)
+% Plot fit
+plot(groundTruth, yfit, 'b-', 'LineWidth', 3)
+% Plot NaCl
+plot(groundTruth(idxNaCl), pred(idxNaCl), 'ko', 'LineWidth', 3, 'MarkerSize', 12)
+% Plot LPS
+plot(groundTruth(idxLPS), pred(idxLPS), 'rx', 'LineWidth', 3, 'MarkerSize', 12)
+
+axis equal
+% legend({'Predicted = Measured' 'Linear fit' 'NaCl' 'LPS' }, 'Location', 'SouthEast')
+set(gca, 'FontSize', 14)
+xlim([min(groundTruth) max(groundTruth)])
+ylim([min(groundTruth) max(groundTruth)])
+xlabel('Measured (%)', 'FontSize', 14); 
+ylabel('Predicted(pixels)', 'FontSize', 14)
+title(sprintf('Fractional Lesion Volume'), 'FontSize', 14); 
+text(1,18, sprintf('RMSEP=%0.4f%%\nr = %0.4f\np = %0.4e',RMSEP, rho, pVal), 'FontSize', 14)
+
+% Specify window units
+set(hFig, 'units', 'inches')
+% Change figure and paper size
+set(hFig, 'Position', [0.1 0.1 3.5 3.5])
+set(hFig, 'PaperPosition', [0.1 0.1 3.5 3.5])
+
+if false
+    % Save as PNG at the user-defined resolution
+    print(hFig, '-dpng', ...
+        fullfile(resultsFolder,...
+        sprintf('ANN_pred_meas_ventricular_frac.png')),...
+        sprintf('-r%d',300));
+    % Return the property to its default
+    set(hFig, 'units', 'pixels')
+    close(hFig)
+end
 
 %% ANN diagram
 % %# neural net, and view it
