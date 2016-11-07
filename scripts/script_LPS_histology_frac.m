@@ -1,5 +1,5 @@
 %% Load connectivity data
-% resultsFolder = 'C:\Users\Ramón\Desktop\Edgar\ANN';
+% resultsFolder = 'C:\Users\Ramón\Desktop\Edgar\ANN'; 
 resultsFolder = 'D:\Edgar\OIS_Results\ANN';
 % NaClCO2 = [59.2; 49.4; 41.9; NaN; 62.6; NaN; 56.7; 50];
 % LPSCO2 = [NaN; 39.5; 54; 40.3; 80.3];
