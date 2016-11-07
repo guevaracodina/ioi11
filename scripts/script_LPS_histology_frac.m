@@ -133,8 +133,9 @@ groupLabels = groupLabels(idx2keep);
 xdata = xdata(idx2keep,:);
 ydata = [NaClhist.T; LPShist.T];
 group = group(idx2keep);
+isNaCl = strcmp(group, 'NaCl');
 myVarsPred = [xdata ydata];
-myVarsClass = [xdata strcmp(group, 'NaCl')];
+myVarsClass = [xdata isNaCl];
 
 % clearvars -except xdata ydata group myVarsPred myVarsClass
 
