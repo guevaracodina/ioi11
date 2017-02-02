@@ -193,6 +193,23 @@ circosLPS(4:end, 2) = segColor';
 circosLPS(3, 4:end) = names(3:10);
 circosLPS(4:end, 3) = names(3:10)';      
 
+% After FDR correction paste circosLPS to:
+% C:\Edgar\Dropbox\circos\tools\tableviewer\samples\circosHbOLPS.txt
+% 
+% For instance:
+% 
+% -	-	-	3	8	4	7	5	6	2	1
+% -	-	-	0,148,255	0,148,255	255,106,0	255,106,0	178,0,255	178,0,255	76,255,0	76,255,0
+% -	-	-	C_R	C_L	S_R	S_L	R_R	R_L	M_R	M_L
+% 3	0,148,255	C_R	-	-	-	-	-	-	519	577
+% 8	0,148,255	C_L	-	-	-	-	-	-	420	486
+% 4	255,106,0	S_R	-	-	-	-	-	-	-	-
+% 7	255,106,0	S_L	-	-	1	-	-	-	-	1463
+% 5	178,0,255	R_R	-	-	-	-	-	1488	-	-
+% 6	178,0,255	R_L	-	-	-	-	-	-	-	-
+% 2	76,255,0	M_R	-	-	-	-	-	-	-	-
+% 1	76,255,0	M_L	-	-	-	-	-	-	-	-
+
 %% Circos preparation for LPS (HbR)
 clear circosHbRLPS
 % Rescale [-1, 1] to [0, 2000]
@@ -271,4 +288,103 @@ circosNaCl(4:end, 3) = names(3:10)';
 %% Create colormap (12 colors)
 fix(linspace(0, 2000, 12 + 1))
 fix(255*ioi_get_colormap('bipolar',12))
+
+% Modify colormap in 
+% C:\Edgar\Dropbox\circos\tools\tableviewer\etc\parse-table.conf
+
+% <linkcolor>
+% # color_source       = row
+% # percentile_source  = larger
+% # color_transparency = 1
+% color_remap        = yes
+% color_autoremap    = no
+% 
+% # Negative correlations (1-6)
+% #1
+% <value 166>
+% color = 0,0,0	# 0,255,255
+% stroke_color = 0,0,0 # 0,255,255
+% stroke_thickness = 3p
+% # color_transparency = 5
+% </value>
+% #2
+% <value 333>
+% color = 0,162,255
+% stroke_color = 0,162,255
+% stroke_thickness = 3p
+% # color_transparency = 4
+% </value>
+% #3
+% <value 500>
+% color = 0,69,255
+% stroke_color = 0,69,255
+% stroke_thickness = 3p
+% # color_transparency = 3
+% </value>
+% #4
+% <value 666>
+% color = 7,7,239
+% stroke_color = 7,7,239
+% stroke_thickness = 3p
+% # color_transparency = 2
+% </value>
+% #5
+% <value 833>
+% color = 38,38,177
+% stroke_color = 38,38,177
+% stroke_thickness = 3p
+% # color_transparency = 1
+% </value>
+% #6
+% <value 1000>
+% color = 69,69,115
+% stroke_color = 69,69,115
+% stroke_thickness = 1p
+% # color_transparency = 0
+% </value>
+% 
+% # Positive correlations (7-12)
+% #7
+% <value 1166>
+% color = 115,69,69
+% stroke_color =  115,69,69
+% stroke_thickness = 1p
+% # color_transparency = 5
+% </value>
+% #8
+% <value 1333>
+% color = 177,38,38
+% stroke_color = 177,38,38
+% stroke_thickness = 1p
+% # color_transparency = 4
+% </value>
+% #9
+% <value 1500>
+% color = 239,7,7
+% stroke_color = 239,7,7
+% stroke_thickness = 1p
+% # color_transparency = 3
+% </value>
+% #10
+% <value 1666>
+% color = 255,69,0
+% stroke_color = 255,69,0
+% stroke_thickness = 3p
+% # color_transparency = 2
+% </value>
+% #11
+% <value 1833>
+% color = 255,162,0
+% stroke_color = 255,162,0
+% stroke_thickness = 3p
+% # color_transparency = 1
+% </value>
+% #12
+% <value 2000>
+% color = 255,255,0
+% stroke_color = 255,255,0
+% stroke_thickness = 3p
+% # color_transparency = 0
+% </value>
+
 % EOF
