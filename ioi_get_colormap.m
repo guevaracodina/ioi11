@@ -726,7 +726,7 @@ switch lower(map)
     case 'redbluecmap'
         % red represents values above the mean, white represents the mean, and
         % blue represents values below the mean
-        colormapOut = redbluecmap;
+        colormapOut = redbluecmap(ColorMapSize);
         return
     case 'redmap'
         % Red map for HbT contrast in PAT, from VisualSonics
@@ -1395,7 +1395,7 @@ end
 if ~isscalar(m)
     m = m(:);
 end
-
+nColors = 2*m;
 m = max(abs(fix(m)), 3);
 m = min(m, 11);
 
@@ -1474,7 +1474,9 @@ switch (m)
             5       48      97];
 end
 c = flipud(c/255);
-x = round(linspace(1,256,11));
+% c = flipud(c/nColors);
+% x = round(linspace(1,256,11));
+x = round(linspace(1,nColors+1,11));
 % ----------------------- Piecewise linear interpolation -----------------------
 nSegments           = numel(x) - 1;
 samplesPerSegment   = diff(x);
