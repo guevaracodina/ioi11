@@ -6,25 +6,25 @@ function colormapOut = ioi_get_colormap(map, varargin)
 % colormapOut = ioi_get_colormap(map, nColors)
 % INPUTS:
 % map           String that describes the colormap to retrieve:
-%               'octgold'
-%               'fdrainbow'
-%               'tdrainbow'
-%               'wob'
-%               'bow'
-%               'flow'
-%               'rwbdoppler'
-%               'bwrdoppler'
-%               'robdoppler'
-%               'bordoppler'
-%               'redmap'
-%               'greenmap'
-%               'bluemap'
-%               'kredmap'
-%               'kgreenmap'
-%               'kbluemap'
-%               'purplemap'
-%               'redbluecmap'
-%               'so2'
+%               'octgold'       % Needs fix for nColors
+%               'fdrainbow'     % Needs fix for nColors
+%               'tdrainbow'     % Needs fix for nColors
+%               'wob'           % Needs fix for nColors
+%               'bow'           % Needs fix for nColors
+%               'flow'          % Needs fix for nColors
+%               'rwbdoppler'    % Needs fix for nColors
+%               'bwrdoppler'    % Needs fix for nColors
+%               'robdoppler'    % Needs fix for nColors
+%               'bordoppler'    % Needs fix for nColors
+%               'redmap'        % Needs fix for nColors
+%               'greenmap'      % Needs fix for nColors
+%               'bluemap'       % Needs fix for nColors
+%               'kredmap'       % Needs fix for nColors
+%               'kgreenmap'     % Needs fix for nColors
+%               'kbluemap'      % Needs fix for nColors
+%               'purplemap'     % Needs fix for nColors
+%               'redbluecmap'   % Gives one extra level (nColors+1)
+%               'so2'           % Needs fix for nColors
 %               'bipolar'
 %               'warm'
 %               'cold'
@@ -34,9 +34,9 @@ function colormapOut = ioi_get_colormap(map, varargin)
 %               'edge'
 %               'cubicyf'
 %               'linearl'
-%               'iron'
-%               'thermal'
-%               'rainbowhc'
+%               'iron'          % Needs fix for nColors
+%               'thermal'       % Needs fix for nColors
+%               'rainbowhc'     % Needs fix for nColors
 % nColors       Integer number of RGB triplets to be generated, default is
 %               256 color levels
 % OUTPUTS:
