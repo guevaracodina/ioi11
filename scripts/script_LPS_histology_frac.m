@@ -1,7 +1,7 @@
 %% Load connectivity data
 % resultsFolder = 'C:\Users\Ramón\Desktop\Edgar\ANN'; 
 % resultsFolder = 'D:\Edgar\OIS_Results\ANN';
-resultsFolder = 'C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\ANN';
+resultsFolder = 'C:\Edgar\Dropbox\PostDoc\Newborn\2016_OIS\OIS_Results\ANN';
 % NaClCO2 = [59.2; 49.4; 41.9; NaN; 62.6; NaN; 56.7; 50];
 % LPSCO2 = [NaN; 39.5; 54; 40.3; 80.3];
 onlyBilateral = false;
@@ -14,8 +14,8 @@ end
 % load('D:\Edgar\OIS_Results\networkResOut\resultsROI_Condition01_HbR.mat')
 % load('C:\Users\Ramón\Desktop\Edgar\networkResOutNoVis\results_S01_HbR.mat');
 % load('C:\Users\Ramón\Desktop\Edgar\networkResOutNoVis\resultsROI_Condition01_HbR.mat')
-load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOut\results_S01_HbR.mat')
-load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOutNoVis\resultsROI_Condition01_HbR.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\2016_OIS\OIS_Results\networkResOut\results_S01_HbR.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\2016_OIS\OIS_Results\networkResOutNoVis\resultsROI_Condition01_HbR.mat')
 % Extract Z for HbR
 % ZNaClHbR = results.Z(3:end,3:end,controlGroupIdx);
 % ZLPSHbR = results.Z(3:end,3:end,treatmentGroupIdx);
@@ -58,8 +58,8 @@ end
 % load('D:\Edgar\OIS_Results\networkResOut\resultsROI_Condition01_HbO.mat')
 % load('C:\Users\Ramón\Desktop\Edgar\networkResOutNoVis\results_S01_HbO.mat')
 % load('C:\Users\Ramón\Desktop\Edgar\networkResOutNoVis\resultsROI_Condition01_HbO.mat')
-load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOutNoVis\results_S01_HbO.mat')
-load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOutNoVis\resultsROI_Condition01_HbO.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\2016_OIS\OIS_Results\networkResOutNoVis\results_S01_HbO.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\2016_OIS\OIS_Results\networkResOutNoVis\resultsROI_Condition01_HbO.mat')
 % Extract Z for HbO
 % ZNaCl = results.Z(3:end,3:end,controlGroupIdx);
 % ZLPS = results.Z(3:end,3:end,treatmentGroupIdx);
@@ -141,15 +141,15 @@ myVarsClass = [xdata isNaCl];
 
 %% k-fold Cross validation using ANN classifier
 clc
-k = 5;                                     % Number of folds
-cvFolds = crossvalind('Kfold', group, k);   %# get indices of k-fold CV
+k = 10;                                     % Number of folds
+cvFolds = crossvalind('Kfold', group, k);   % get indices of k-fold CV
 % Initialize performance trackers
 pred = [];
 groundTruth = [];
 targetLabels = {};
-for i = 1:k                                 %# for each fold
-    testIdx = (cvFolds == i);               %# get indices of test instances
-    trainIdx = ~testIdx;                    %# get indices training instances
+for i = 1:k                                 % for each fold
+    testIdx = (cvFolds == i);               % get indices of test instances
+    trainIdx = ~testIdx;                    % get indices training instances
     
     xtrain = xdata(trainIdx,:);
     ytrain = ydata(trainIdx,:);
@@ -166,7 +166,56 @@ for i = 1:k                                 %# for each fold
     % Keep target labels 
     targetLabels = [targetLabels; groupLabels(testIdx)];
 end
+
+%% Show partitions
+% Choose a Training Function
+% For a list of all training functions type: help nntrain
+% 'trainlm' is usually fastest.
+% 'trainbr' takes longer but may be better for challenging problems.
+% 'trainscg' uses less memory. NFTOOL falls back to this in low memory situations.
+trainFcn = 'trainbr';  % Bayesian Regularization
+
+% Create a Fitting Network
+hiddenLayerSize = 20;
+net = fitnet(hiddenLayerSize,trainFcn);
+
+% Choose Input and Output Pre/Post-Processing Functions
+% For a list of all processing functions type: help nnprocess
+% net.input.processFcns = {'removeconstantrows','mapminmax'};
+% net.output.processFcns = {'removeconstantrows','mapminmax'};
+
+% Setup Division of Data for Training, Validation, Testing
+% For a list of all data division functions type: help nndivision
+net.divideFcn = 'dividerand';  % Divide data randomly
+net.divideMode = 'sample';  % Divide up every sample
+net.divideParam.trainRatio = 70/100;
+net.divideParam.valRatio = 15/100;
+net.divideParam.testRatio = 15/100;
+
+alreadyTested = false(size(idx2keep));
+clc
+while ~all(alreadyTested)
+    [trainInd,valInd,testInd] = dividerand(numel(idx2keep),net.divideParam.trainRatio,net.divideParam.valRatio,net.divideParam.testRatio);
+    if ~all(alreadyTested(testInd))
+        fprintf('\nTrain: ');
+        fprintf('%d ', trainInd);
+        fprintf('\nTrain: ');
+        fprintf('%s ', targetLabels{trainInd});
         
+        fprintf('\nValidation: ');
+        fprintf('%d ',valInd);
+%         fprintf('\nValidation: ');
+        fprintf('(%s) ', targetLabels{valInd});
+        
+        fprintf('\nTest: ');
+        fprintf('%d ',testInd);
+%         fprintf('\nTest: ');
+        fprintf('(%s) ', targetLabels{testInd});
+        fprintf('\n');
+        alreadyTested(testInd) = true;
+    end
+end
+
 %% Plot correlation between measured and predicted values
 p = polyfit(groundTruth, pred, 1);
 yfit = p(1)*groundTruth + p(2);
@@ -203,7 +252,7 @@ set(hFig, 'units', 'inches')
 set(hFig, 'Position', [0.1 0.1 3.5 3.5])
 set(hFig, 'PaperPosition', [0.1 0.1 3.5 3.5])
 
-if false
+if (false)
     % Save as PNG at the user-defined resolution
     print(hFig, '-dpng', ...
         fullfile(resultsFolder,...
@@ -215,11 +264,11 @@ if false
 end
 
 %% ANN diagram
-% %# neural net, and view it
-% load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\ANN\ANNresults.mat')
+% % neural net, and view it
+% load('C:\Edgar\Dropbox\PostDoc\Newborn\2016_OIS\OIS_Results\ANN\ANNresults.mat')
 % jframe = view(ANNresults.net);
 % 
-% %# create it in a MATLAB figure
+% % create it in a MATLAB figure
 % % Specify window units
 % hFig = figure('Menubar','none');
 % set(hFig, 'units','inches', 'position',[0.1 0.1 6.5 2])
@@ -228,15 +277,15 @@ end
 % [~,h] = javacomponent(jpanel);
 % set(h, 'units','inches', 'position',[0.1 0.1 6.5 2])
 % 
-% %# close java window
+% % close java window
 % jframe.setVisible(false);
 % jframe.dispose();
 % 
-% %# print to file
+% % print to file
 % % set(hFig, 'PaperPositionMode', 'auto')
 % % saveas(hFig, 'out.png')
 % 
-% %# close figure
+% % close figure
 % % close(hFig)
 % 
 % 

@@ -1,5 +1,5 @@
 %% Load connectivity data
-resultsFolder = 'C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\ANN';
+resultsFolder = 'C:\Edgar\Dropbox\PostDoc\Newborn\2016_OIS\OIS_Results\ANN';
 % NaClCO2 = [59.2; 49.4; 41.9; NaN; 62.6; NaN; 56.7; 50];
 % LPSCO2 = [NaN; 39.5; 54; 40.3; 80.3];
 onlyBilateral = false;
@@ -9,8 +9,8 @@ end
 % -------------------------------------------------------------------------
 % Load HbR data 
 % load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbR.mat')
-load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOut\results_S01_HbR.mat');
-load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOutNoVis\resultsROI_Condition01_HbR.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\2016_OIS\OIS_Results\networkResOut\results_S01_HbR.mat');
+load('C:\Edgar\Dropbox\PostDoc\Newborn\2016_OIS\OIS_Results\networkResOutNoVis\resultsROI_Condition01_HbR.mat')
 % Extract Z for HbR
 % ZNaClHbR = results.Z(3:end,3:end,controlGroupIdx);
 % ZLPSHbR = results.Z(3:end,3:end,treatmentGroupIdx);
@@ -50,8 +50,8 @@ end
 % -------------------------------------------------------------------------
 % Load HbO data
 % load('D:\Edgar\OIS_Results\networkResOut\results_S01_HbO.mat')
-load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOut\results_S01_HbO.mat')
-load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\networkResOutNoVis\resultsROI_Condition01_HbO.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\2016_OIS\OIS_Results\networkResOut\results_S01_HbO.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\2016_OIS\OIS_Results\networkResOutNoVis\resultsROI_Condition01_HbO.mat')
 % Extract Z for HbO
 % ZNaCl = results.Z(3:end,3:end,controlGroupIdx);
 % ZLPS = results.Z(3:end,3:end,treatmentGroupIdx);
@@ -143,7 +143,7 @@ for i = 1:k                                 %# for each fold
     ytest = ydata(testIdx,:);
     
     % Bayesian regularization (takes a Q x 56 matrix, where Q = No. samples)
-    pred = [pred; myNeuralNetworkFunction(xtest')'];
+    pred = [pred; myNeuralNetworkFunction(xtest)];
 
     % Keep target values to create correlation plot
     groundTruth = [groundTruth; ytest];
@@ -155,7 +155,7 @@ end
 %% Plot correlation between measured and predicted values
 p = polyfit(groundTruth, pred, 1);
 yfit = p(1)*groundTruth + p(2);
-r = corr(groundTruth, pred);
+[rho, pval] = corr(groundTruth, pred);
 RMSEP = sqrt(sum((groundTruth-pred).^2)/size(xdata,1));
 
 % Find indices of LPS
@@ -179,7 +179,8 @@ xlim([min(groundTruth) max(groundTruth)])
 ylim([min(groundTruth) max(groundTruth)])
 xlabel('Ventricular Lesion Size (pixels)', 'FontSize', 14); 
 ylabel('Predicted Ventricular Size (pixels)', 'FontSize', 14)
-title(sprintf('r = %0.4f', r), 'FontSize', 14); 
+title(sprintf('r = %0.4f', rho), 'FontSize', 14); 
+text(1,18, sprintf('RMSEP=%0.4f%%\nr = %0.4f\np = %0.4e',RMSEP, rho, pVal), 'FontSize', 14)
 
 % Specify window units
 set(hFig, 'units', 'inches')
@@ -200,7 +201,7 @@ end
 
 %% ANN diagram
 %# neural net, and view it
-load('C:\Edgar\Dropbox\PostDoc\Newborn\OIS_Results\ANN\ANNresults.mat')
+load('C:\Edgar\Dropbox\PostDoc\Newborn\2016_OIS\OIS_Results\ANN\ANNresults.mat')
 jframe = view(ANNresults.net);
 
 %# create it in a MATLAB figure
