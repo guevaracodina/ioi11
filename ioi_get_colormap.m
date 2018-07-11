@@ -1272,7 +1272,7 @@ switch lower(scheme)
 end
 idx1 = linspace(1,n,size(baseMap,1));
 idx2 = 1:1:n;
-map = interp1(idx1,baseMap,idx2,'cubic');
+map = interp1(idx1,baseMap,idx2,'pchip');
 
 
 function baseMap = Edge
