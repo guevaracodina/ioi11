@@ -508,7 +508,9 @@ try
                         %save images in nifti format
                         for c1=1:nColors
                             if ~(str_color(c1)==str_laser)
-                                ioi_save_nifti(-log(single(im_obj.Data.image_total(:,:,:,ind0,c1))./repmat(single(median0{c1}),[1 1 1 length(ind0)])),sess.fname{c1}{f1},vx);
+%                                 ioi_save_nifti(-log(single(im_obj.Data.image_total(:,:,:,ind0,c1))./repmat(single(median0{c1}),[1 1 1 length(ind0)])),sess.fname{c1}{f1},vx);
+                                % //EGC Write raw data only
+                                ioi_save_nifti(single(im_obj.Data.image_total(:,:,:,ind0,c1)), sess.fname{c1}{f1}, vx);
                             else
                                 % Here the 10000 is because the INT16
                                 % memmapfile is an issue with contrast

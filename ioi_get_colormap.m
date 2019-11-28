@@ -35,9 +35,9 @@ function colormapOut = ioi_get_colormap(map, varargin)
 %               'cubicyf'
 %               'linearl'
 %               'rainbow'       % FLIR rainbow colormap
-%               'iron'          % Needs fix for nColors
-%               'thermal'       % Needs fix for nColors
-%               'rainbowhc'     % Needs fix for nColors
+%               'iron'          % Evernote Thermographic camera pseudo colormap
+%               'thermal'       % LUT from Fiji (ImageJ)
+%               'rainbowhc'     % FLIR rainbow HC (High Contrast)
 %               'blues'         % matplotlib.pyplot.cm.Blues
 %               'reds'          % matplotlib.pyplot.cm.Reds
 % nColors       Integer number of RGB triplets to be generated, default is
@@ -467,7 +467,7 @@ switch lower(map)
             255	5	3
             255	2	2
             255	2	2]/255;
-        x = round(linspace(1, ColorMapSize, size(rgb,1)));
+        x = round(linspace(1, 2*ColorMapSize, size(rgb,1)));
     case 'iron'
         % Evernote: Infrared camera/ Thermographic camera pseudo colormap
         % Link: https://www.evernote.com/shard/s82/nl/9016199/b73314ad-af9d-442d-b324-d8a278ade985
@@ -712,7 +712,7 @@ switch lower(map)
             255, 253, 228
             255, 254, 239
             255, 255, 249 ]/255;
-        x = round(linspace(1, ColorMapSize, size(rgb,1)));
+        x = round(linspace(1, 2*ColorMapSize, size(rgb,1)));
     case 'octgold'
         % OCT Gold: typical high contrast, high dynamic OCT map
         x = [0 7 60 108 157 190 224 253 254 255] + 1;
@@ -941,14 +941,18 @@ nSegments           = numel(x) - 1;
 samplesPerSegment   = diff(x);
 colormapOut         = zeros([sum(samplesPerSegment) 3]);
 
-for iSegments = 1:nSegments,
-    for iColors = 1:3,
+for iSegments = 1:nSegments
+    for iColors = 1:3
         colormapOut(x(iSegments):x(iSegments+1),iColors) = linspace(rgb(iSegments,iColors),...
             rgb(iSegments+1,iColors),...
             samplesPerSegment(iSegments)+1);
     end
 end
-
+% if ColorMapSize ~= 128
+%     colormapOut = resample(colormapOut, ColorMapSize*2, 256);
+%     colormapOut(colormapOut<0) = 0;         % Get rid of negative numbers
+%     colormapOut(colormapOut>1) = 1;         % Truncate to 1
+% end
 % --------------- uint8 array to export colormaps to LabView -------------------
 % colormapOut = uint8(round(colormapOut*255));
 % figure; plot(colormapOut)
