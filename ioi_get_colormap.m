@@ -45,10 +45,11 @@ function colormapOut = ioi_get_colormap(map, varargin)
 % OUTPUTS:
 % colormapOut   3 columns matrix, which values are in the range from 0 to 1.
 %_______________________________________________________________________________
-% Copyright (C) 2013 LIOM Laboratoire d'Imagerie Optique et Moléculaire
-%                    École Polytechnique de Montréal
+% Copyright (C) 2013 LIOM Laboratoire d'Imagerie Optique et MolÃ©culaire
+%                    Ã‰cole Polytechnique de MontrÃ©al
 % Edgar Guevara
 % 2013/05/22
+% 2021/10/29
 % ------------------------------------------------------------------------------
 % Optional inputs handling
 % ------------------------------------------------------------------------------
