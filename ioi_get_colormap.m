@@ -40,16 +40,16 @@ function colormapOut = ioi_get_colormap(map, varargin)
 %               'rainbowhc'     % FLIR rainbow HC (High Contrast)
 %               'blues'         % matplotlib.pyplot.cm.Blues
 %               'reds'          % matplotlib.pyplot.cm.Reds
+%               'mexflag'       % Mexican flag
 % nColors       Integer number of RGB triplets to be generated, default is
 %               256 color levels
 % OUTPUTS:
 % colormapOut   3 columns matrix, which values are in the range from 0 to 1.
 %_______________________________________________________________________________
-% Copyright (C) 2013 LIOM Laboratoire d'Imagerie Optique et MolÃ©culaire
-%                    Ã‰cole Polytechnique de MontrÃ©al
+% Copyright (C) 2013 LIOM Laboratoire d'Imagerie Optique et Moléculaire
+%                    École Polytechnique de Montréal
 % Edgar Guevara
 % 2013/05/22
-% 2021/10/29
 % ------------------------------------------------------------------------------
 % Optional inputs handling
 % ------------------------------------------------------------------------------
@@ -831,6 +831,22 @@ switch lower(map)
         end
         colormapOut = [int1(1:end-1,:); int2];
         return
+                
+    case 'mexflag'
+        % Green, White and Red as the Mexican Flag
+        minColor    = [0 104 71]/255;   % green
+        medianColor = [1 1 1];          % white
+        maxColor    = [206 17 38]/255;  % red
+        
+        int1 = zeros(ColorMapSize,3);
+        int2 = zeros(ColorMapSize,3);
+        for k=1:3
+            int1(:,k) = linspace(minColor(k), medianColor(k), ColorMapSize);
+            int2(:,k) = linspace(medianColor(k), maxColor(k), ColorMapSize);
+        end
+        colormapOut = [int1(1:end-1,:); int2];
+        return
+        
     case 'bordoppler'
         % Blue on red, with black background for Doppler imaging
         minColor    = [1 0 0]; % red
