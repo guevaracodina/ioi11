@@ -41,6 +41,12 @@ function colormapOut = ioi_get_colormap(map, varargin)
 %               'blues'         % matplotlib.pyplot.cm.Blues
 %               'reds'          % matplotlib.pyplot.cm.Reds
 %               'mexflag'       % Mexican flag
+%               'warhol1'       % Variation 1 on Andy Warhol palette
+%               'warhol2'       % Variation 2 on Andy Warhol palette
+%               'warhol3'       % Variation 3 on Andy Warhol palette
+%               'warhol4'       % Variation 4 on Andy Warhol palette
+%               'warhol5'       % Variation 5 on Andy Warhol palette
+%               'warhol6'       % Variation 6 on Andy Warhol palette
 % nColors       Integer number of RGB triplets to be generated, default is
 %               256 color levels
 % OUTPUTS:
@@ -788,6 +794,73 @@ switch lower(map)
         rgb = [...
             0.3412      0           0.4980;
             1           1           1];
+    case 'warhol1'
+        % Andy Warhol variation 1
+        %         x = [0 69 128 184 255] + 1;
+        colormapOut = [...
+            82,128,199;
+            119,204,98;
+            240,216,72;
+            242,58,58
+            250,140,130;
+            ]/255;
+        return
+        
+    case 'warhol2'
+        % Andy Warhol variation 2
+        colormapOut = [...
+            3,191,172;
+            117,223,202;
+            29,186,204;
+            237,49,146
+            8,127,191;
+            ]/255;
+        return
+        
+    case 'warhol3'
+        % Andy Warhol variation 3
+        colormapOut = [...
+            50 41 173;
+            188 0 14;
+            231 207 183;
+            255 236 4;
+            9 1 9
+            ]/255;
+        return        
+
+    case 'warhol4'
+        % Andy Warhol variation 4
+        colormapOut = [...
+            39 42 42;
+            230 146 83;
+            237 185 49;
+            228 80 46;
+            67 120 160;
+            ]/255;
+        return  
+        
+case 'warhol5'
+        % Andy Warhol variation 5
+        colormapOut = [...
+            242 99 134;
+            245 135 175;
+            164 217 132;
+            252 188 83;
+            253 129 78;
+            ]/255;
+        return  
+        
+case 'warhol6'
+        % Andy Warhol variation 6
+        colormapOut = [...
+            26 52 49;
+            43 64 167;
+            97 131 200;
+            204 199 118;
+            199 173 37
+            ]/255;
+        return  
+        
     case 'rwbdoppler'
         % Red on blue, with white background for Doppler imaging
         % Also for SO2 contrast in photoacosutics
@@ -831,7 +904,7 @@ switch lower(map)
         end
         colormapOut = [int1(1:end-1,:); int2];
         return
-                
+        
     case 'mexflag'
         % Green, White and Red as the Mexican Flag
         minColor    = [0 104 71]/255;   % green
@@ -1638,8 +1711,8 @@ nSegments           = numel(x) - 1;
 samplesPerSegment   = diff(x);
 colormapOut         = zeros([sum(samplesPerSegment) 3]);
 
-for iSegments = 1:nSegments,
-    for iColors = 1:3,
+for iSegments = 1:nSegments
+    for iColors = 1:3
         colormapOut(x(iSegments):x(iSegments+1),iColors) = linspace(c(iSegments,iColors),...
             c(iSegments+1,iColors),...
             samplesPerSegment(iSegments)+1);
